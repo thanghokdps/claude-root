@@ -1,0 +1,5 @@
+# Session state — changes every session
+specs/
+
+# User-specific local permissions
+.claude/settings.local.json
