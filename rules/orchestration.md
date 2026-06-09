@@ -26,6 +26,20 @@ Hard gates (always high-risk, cannot self-downgrade):
 - Do NOT spawn a sub-agent just to avoid doing work yourself
 - Sub-agent results are not visible to the user — summarize findings in your response
 
+## Context budget & headroom
+
+When context is getting large, use headroom to compress before handing off:
+
+| Context state | Action |
+|---|---|
+| Output > ~8KB | `headroom_compress` MCP tool (if installed) or `/compact` |
+| Session ending with failures | `headroom learn` — mines failures into corrections |
+| Starting a new task after long session | `/compact` first, then continue |
+
+Install once: `bash scripts/setup-headroom.sh` — wraps Claude CLI transparently (60–95% fewer tokens).
+
+---
+
 ## Stopping rules (when to pause and ask)
 
 - Confidence drops below medium

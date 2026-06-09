@@ -42,6 +42,22 @@ When fixing a bug:
 - Add a test that reproduces the bug before fixing
 - The test must fail on the buggy code, pass after the fix
 
+## Test coverage enforcement (mandatory on every code change)
+
+**Rule: every implementation file that is created or modified must have a paired test file.**
+
+| Scenario | Action |
+|----------|--------|
+| New component/screen/module created | Create `<file>.test.ts(x)` immediately — use `/gen-tests <path>` if available |
+| Existing file modified | Open its `.test.ts(x)`, update affected test cases to match the change |
+| No test file exists for a modified file | Create it before handing off or committing |
+
+**Skip only for**: config files, type-only files, navigation wiring, constant declarations.
+
+**Commit gate**: if a staged implementation file has no paired test file, the commit hook warns with the missing path and suggests `/gen-tests`.
+
+**QA gate**: before commit, run `/verify-feature` (or equivalent) — it runs the full test suite for all affected workspaces and blocks on failures.
+
 ## What not to add
 
 - Do NOT add tests for things that can't fail (trivial getters, constant returns)

@@ -25,12 +25,22 @@ isolation: worktree
 
 ## Quality gate sequence
 
+**Preferred**: use `/verify-feature` skill if available — it auto-detects affected workspaces, applies cascade rules (e.g. MFE remotes → also check host), and runs all gates automatically.
+
 ```bash
+# Fallback — run manually per affected workspace:
 npx tsc --noEmit           # TS only
 pnpm lint                  # or npm run lint / ruff check .
 pnpm test --run            # or pytest -q / go test ./...
 pnpm eval                  # only if router/retrieval changed
 ```
+
+## Test coverage check
+
+Before reporting PASS, verify:
+- Every implementation file modified in this task has a paired `.test.ts(x)`
+- If missing → flag as gap (do NOT write the test — flag it for developer-agent to fix)
+- Use `/gen-tests <path>` hint in the gap report
 
 ## Output format
 

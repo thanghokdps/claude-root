@@ -22,6 +22,18 @@ Summarize the current session, merge into persistent files, prepare for next ses
 
 ---
 
+## Step 0 — Run headroom learn (if installed)
+
+If `headroom` is available, mine this session's failures before writing HANDOFF:
+
+```bash
+command -v headroom >/dev/null && headroom learn
+```
+
+This extracts corrections from failed tool calls and writes them to headroom's local model — complementing the manual solutions written in Step 3.
+
+---
+
 ## Step 1 — Summarize the session
 
 Write a concise summary covering:
