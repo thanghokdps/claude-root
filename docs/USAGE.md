@@ -1,90 +1,90 @@
-# Hướng dẫn sử dụng Claude Harness
+# Claude Harness — Usage Guide
 
-Từ lần cài đầu tiên đến lúc chạy task hàng ngày.
-
----
-
-## Mục lục
-
-1. [Tổng quan](#1-tổng-quan)
-2. [Yêu cầu](#2-yêu-cầu)
-3. [Bước 1 — Cài harness (1 lần duy nhất)](#3-bước-1--cài-harness-1-lần-duy-nhất)
-4. [Bước 2 — Bootstrap project mới](#4-bước-2--bootstrap-project-mới)
-5. [Bước 3 — Điền thông tin sau khi init](#5-bước-3--điền-thông-tin-sau-khi-init)
-6. [Bước 4 — Phiên làm việc đầu tiên](#6-bước-4--phiên-làm-việc-đầu-tiên)
-7. [Workflow hàng ngày](#7-workflow-hàng-ngày)
-8. [Các task phổ biến](#8-các-task-phổ-biến)
-9. [Làm việc nhóm (team)](#9-làm-việc-nhóm-team)
-10. [Kết thúc phiên làm việc](#10-kết-thúc-phiên-làm-việc)
-11. [Xử lý sự cố thường gặp](#11-xử-lý-sự-cố-thường-gặp)
+From first install to running daily tasks.
 
 ---
 
-## 1. Tổng quan
+## Table of Contents
 
-Claude Harness là một framework quản trị cho Claude Code. Nó gồm hai lớp:
+1. [Overview](#1-overview)
+2. [Prerequisites](#2-prerequisites)
+3. [Step 1 — Install the harness (once)](#3-step-1--install-the-harness-once)
+4. [Step 2 — Bootstrap a new project](#4-step-2--bootstrap-a-new-project)
+5. [Step 3 — Fill in project info after init](#5-step-3--fill-in-project-info-after-init)
+6. [Step 4 — First working session](#6-step-4--first-working-session)
+7. [Daily workflow](#7-daily-workflow)
+8. [Common tasks](#8-common-tasks)
+9. [Team workflow](#9-team-workflow)
+10. [Ending a session](#10-ending-a-session)
+11. [Troubleshooting](#11-troubleshooting)
+
+---
+
+## 1. Overview
+
+Claude Harness is a governance framework for Claude Code. It has two layers:
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │  SKILLS (engine)                                    │
 │  /feature · /fix-bug · /code-review · /ticket ...  │
-│  → trả lời "làm cái này như thế nào?"              │
+│  → answers "how do I do this?"                      │
 ├─────────────────────────────────────────────────────┤
 │  HARNESS (control)                                  │
 │  hooks · rules · memory                             │
-│  → trả lời "cẩn thận đến mức nào? ai phải duyệt?" │
+│  → answers "how careful? who must approve?"         │
 └─────────────────────────────────────────────────────┘
 ```
 
-**Nguyên tắc cốt lõi:** Ceremony (quy trình) tăng theo rủi ro. Human interruption tăng theo sự mơ hồ.
+**Core principle:** Ceremony increases with risk. Human interruption increases with ambiguity.
 
-**Luồng chạy tổng quát:**
+**General flow:**
 
 ```
-prompt người dùng
-  → scope-gate.sh        phân loại rủi ro, kiểm tra memory cũ
-  → /coordinator         phân tích yêu cầu, giao task cho đúng agent
-  → Explorer / Planner   hiểu code, lập kế hoạch
-  → Implementer          viết code
-  → Verifier / Reviewer  kiểm chứng
-  → commit hooks         chặn commit xấu
-  → memory hooks         lưu lại lịch sử
+user prompt
+  → scope-gate.sh        classify risk, check old memory
+  → /coordinator         analyze request, route to the right agent
+  → Explorer / Planner   understand code, build plan
+  → Implementer          write code
+  → Verifier / Reviewer  verify result
+  → commit hooks         block bad commits
+  → memory hooks         save history
 ```
 
 ---
 
-## 2. Yêu cầu
+## 2. Prerequisites
 
-| Thứ | Yêu cầu |
-|-----|---------|
-| Claude Code | CLI hoặc desktop app (https://claude.ai/code) |
-| Git | `git --version` phải có |
-| `jq` | `brew install jq` (dùng bởi các hooks) |
-| Python 3.12 | Chỉ cần nếu muốn cài **headroom** (context compression) |
-| Node.js / Python / Go | Tuỳ stack của project |
+| Item | Requirement |
+|------|-------------|
+| Claude Code | CLI or desktop app (https://claude.ai/code) |
+| Git | `git --version` must work |
+| `jq` | `brew install jq` (used by hooks) |
+| Python 3.12 | Only needed for **headroom** (context compression) |
+| Node.js / Python / Go | Depends on your project stack |
 
 ---
 
-## 3. Bước 1 — Cài harness (1 lần duy nhất)
+## 3. Step 1 — Install the harness (once)
 
-### Tải về và chạy install
+### Download and run install
 
 ```bash
-# Clone hoặc download repo về ~/Downloads/Claude
-# (bạn có thể đổi tên hoặc đặt ở chỗ khác)
+# Clone or download the repo to ~/Downloads/Claude
+# (you can rename or place it elsewhere)
 
 bash ~/Downloads/Claude/scripts/install.sh
 ```
 
-**Script sẽ hỏi nếu đã tồn tại rồi.** Gõ `y` để overwrite, `n` để giữ nguyên.
+**The script will ask if it already exists.** Type `y` to overwrite, `n` to keep existing.
 
-Mặc định cài vào `~/.claude-harness`. Muốn đặt chỗ khác:
+Default install location is `~/.claude-harness`. To install elsewhere:
 
 ```bash
 bash ~/Downloads/Claude/scripts/install.sh ~/my-tools/claude-harness
 ```
 
-### Kết quả sau install
+### Result after install
 
 ```
 🔧 Claude Harness Installer
@@ -106,83 +106,83 @@ bash ~/Downloads/Claude/scripts/install.sh ~/my-tools/claude-harness
 ### Reload shell
 
 ```bash
-source ~/.zshrc     # hoặc mở terminal mới
-echo $HARNESS_DIR   # phải in ra ~/.claude-harness
+source ~/.zshrc     # or open a new terminal
+echo $HARNESS_DIR   # should print ~/.claude-harness
 ```
 
-### (Tuỳ chọn) Cài headroom — context compression
+### (Optional) Install headroom — context compression
 
-Giúp giảm 60–95% token khi context window lớn:
+Reduces token usage by 60–95% when the context window grows large:
 
 ```bash
 bash $HARNESS_DIR/scripts/setup-headroom.sh
 ```
 
-**Yêu cầu:** Python 3.12 (`brew install python@3.12`).
+**Requires:** Python 3.12 (`brew install python@3.12`).
 
-Sau khi cài, hook `headroom-compress.sh` tự động trigger khi output > 8KB.
+After install, the `headroom-compress.sh` hook triggers automatically when output exceeds 8KB.
 
 ---
 
-## 4. Bước 2 — Bootstrap project mới
+## 4. Step 2 — Bootstrap a new project
 
-Chạy **1 lần** cho mỗi project để tạo workspace `.claude/` riêng.
+Run **once** per project to create a dedicated `.claude/` workspace.
 
-### Cách A — Qua Claude Code (khuyến nghị)
+### Method A — Via Claude Code (recommended)
 
 ```bash
 cd ~/my-project
 
-# Mở Claude Code, gõ:
+# Open Claude Code and type:
 /project-init
 ```
 
-Claude sẽ:
-1. Scan `src/`, `package.json`, `requirements.txt`... để detect stack
-2. Tạo toàn bộ `.claude/` workspace (docs, agents, hooks, rules, skills, templates)
-3. Sinh `CLAUDE.md` project-specific với đường dẫn và lệnh thật
+Claude will:
+1. Scan `src/`, `package.json`, `requirements.txt`… to detect the stack
+2. Create the full `.claude/` workspace (docs, agents, hooks, rules, skills, templates)
+3. Generate a project-specific `CLAUDE.md` with real paths and commands
 
-### Cách B — Qua script
+### Method B — Via script
 
 ```bash
 cd ~/my-project
 $HARNESS_DIR/scripts/init.sh
 
-# Hoặc chỉ định đường dẫn cụ thể:
+# Or specify the path explicitly:
 $HARNESS_DIR/scripts/init.sh /path/to/my-project
 ```
 
-### Cách C — Dùng stack bundle có sẵn (React Native / Next.js / Python)
+### Method C — Use an existing stack bundle (React Native / Next.js / Python)
 
-Nếu project của bạn match một trong các stack có sẵn trong `stacks/`:
+If your project matches one of the bundles in `stacks/`:
 
 ```bash
-# Ví dụ: React Native project
+# Example: React Native project
 cp -r $HARNESS_DIR/stacks/react-native/.claude ~/my-rn-project/
 ```
 
-Rồi chỉnh sửa các file để khớp với đường dẫn thực của project.
+Then edit the files to match your project's actual paths.
 
-### Stack được tự động detect
+### Auto-detected stack signals
 
-| Signal | Khi nào |
-|--------|---------|
-| `typescript` | `tsconfig.json` hoặc `"typescript"` trong package.json |
-| `react` | `"react"` trong package.json |
-| `jest` | `"jest"` trong package.json |
-| `nextjs` | `"next"` trong package.json |
-| `python` | `requirements.txt` hoặc `pyproject.toml` |
-| `fastapi` | `fastapi` trong requirements |
-| `langgraph` | `langgraph` trong requirements |
+| Signal | When |
+|--------|------|
+| `typescript` | `tsconfig.json` or `"typescript"` in package.json |
+| `react` | `"react"` in package.json |
+| `jest` | `"jest"` in package.json |
+| `nextjs` | `"next"` in package.json |
+| `python` | `requirements.txt` or `pyproject.toml` |
+| `fastapi` | `fastapi` in requirements |
+| `langgraph` | `langgraph` in requirements |
 
-### Kết quả sau bootstrap
+### Result after bootstrap
 
 ```
 your-project/
-├── CLAUDE.md                  ← cần điền thêm thông tin
+├── CLAUDE.md                  ← needs to be filled in
 └── .claude/
-    ├── settings.json          ← hooks đã đăng ký
-    ├── docs/                  ← knowledge base (viết bởi /project-init)
+    ├── settings.json          ← hooks registered
+    ├── docs/                  ← knowledge base (written by /project-init)
     │   ├── index.md
     │   ├── architecture.md
     │   ├── conventions.md
@@ -190,202 +190,202 @@ your-project/
     │   ├── entry-points.md
     │   └── test-strategy.md
     ├── rules/                 ← universal + stack-specific rules
-    ├── skills/                ← slash commands cho project này
+    ├── skills/                ← slash commands for this project
     ├── hooks/                 ← automation scripts
     └── memory/
-        ├── MEMORY.md          ← index (tự load mỗi session)
-        ├── user.md            ← cần điền
+        ├── MEMORY.md          ← index (auto-loaded every session)
+        ├── user.md            ← needs to be filled in
         └── project/
-            └── context.md     ← cần điền
+            └── context.md     ← needs to be filled in
 ```
 
 ---
 
-## 5. Bước 3 — Điền thông tin sau khi init
+## 5. Step 3 — Fill in project info after init
 
-**Đây là bước quan trọng nhất.** Claude chỉ hoạt động tốt khi có context đúng.
+**This is the most important step.** Claude only works well when it has the right context.
 
-### 5.1 — Điền `CLAUDE.md`
+### 5.1 — Fill in `CLAUDE.md`
 
-Mở `CLAUDE.md` trong project root, điền vào các phần có comment `<!-- ... -->`:
+Open `CLAUDE.md` in the project root and fill in the sections with `<!-- ... -->` comments:
 
 ```markdown
 ## What this project is
-Ứng dụng quản lý đơn hàng nội bộ cho team logistics.
+Internal order management app for the logistics team.
 Stack: Next.js 14 App Router + PostgreSQL + Prisma.
 
 ## Run the project
 ```bash
 pnpm install
-pnpm dev           # dev server tại localhost:3000
+pnpm dev           # dev server at localhost:3000
 pnpm test          # jest
 pnpm typecheck     # tsc --noEmit
 pnpm lint          # eslint
 ```
 
 ## Architecture
-src/app/          ← Next.js App Router (Server Components mặc định)
+src/app/          ← Next.js App Router (Server Components by default)
 src/components/   ← Client Components ("use client")
 src/lib/          ← utilities, db client
 src/server/       ← Server Actions
 
 ## Constraints
-- TypeScript strict — npx tsc --noEmit phải pass trước khi commit
-- pnpm only — không dùng npm hay yarn
-- Không gọi DB trực tiếp trong route handlers — dùng Server Actions
+- TypeScript strict — npx tsc --noEmit must pass before commit
+- pnpm only — do not use npm or yarn
+- Do not call DB directly in route handlers — use Server Actions
 ```
 
-### 5.2 — Điền `.claude/memory/user.md`
+### 5.2 — Fill in `.claude/memory/user.md`
 
 ```markdown
 ## Role & Background
-Senior fullstack engineer. Quen với Next.js và PostgreSQL.
-Đang học về Server Components và React v19 patterns.
+Senior fullstack engineer. Comfortable with Next.js and PostgreSQL.
+Currently learning Server Components and React v19 patterns.
 
 ## Preferences
-- Muốn response ngắn gọn, không cần giải thích từng bước hiển nhiên
-- Ưu tiên TypeScript strict — không dùng `any`
-- Commit message theo format: feat/fix/chore: mô tả ngắn
+- Short, concise responses — no need to explain every obvious step
+- TypeScript strict — never use `any`
+- Commit messages in format: feat/fix/chore: short description
 ```
 
-### 5.3 — Điền `.claude/memory/project/context.md`
+### 5.3 — Fill in `.claude/memory/project/context.md`
 
 ```markdown
 ## Goals
-MVP checkout flow cho mobile app. Deadline: 2026-07-01.
+MVP checkout flow for mobile app. Deadline: 2026-07-01.
 
 ## Active decisions
-- Dùng Server Actions thay vì REST API riêng — **Why:** giảm boilerplate,
-  type-safe end-to-end — **How to apply:** tất cả mutations đi qua actions/
+- Use Server Actions instead of a separate REST API — **Why:** reduces boilerplate,
+  type-safe end-to-end — **How to apply:** all mutations go through actions/
 
 ## Constraints
-- Không dùng Vercel AI SDK — đang dùng CopilotKit
-- Firebase config không được commit (đã gitignore)
+- Do not use Vercel AI SDK — currently using CopilotKit
+- Firebase config must not be committed (already gitignored)
 
 ## Team
 - Thang: frontend + backend
-- Mai: designer, gửi Figma links qua Slack
+- Mai: designer, sends Figma links via Slack
 ```
 
 ---
 
-## 6. Bước 4 — Phiên làm việc đầu tiên
+## 6. Step 4 — First working session
 
-### Mở Claude Code trong project
+### Open Claude Code in the project
 
 ```bash
 cd ~/my-project
 claude          # CLI
-# hoặc mở Claude Code desktop và chọn thư mục
+# or open the Claude Code desktop app and select the folder
 ```
 
-### Kiểm tra context đã load đúng chưa
+### Verify context loaded correctly
 
-Claude tự động đọc `CLAUDE.md` và `MEMORY.md` mỗi session. Bạn có thể hỏi nhanh:
+Claude automatically reads `CLAUDE.md` and `MEMORY.md` each session. Quick check:
 
 ```
-bạn đang làm việc trên project gì?
+what project are you working on?
 ```
 
-Claude nên trả lời đúng tên project, stack, và constraints.
+Claude should answer with the correct project name, stack, and constraints.
 
-### Kiểm tra hooks hoạt động
+### Verify hooks are working
 
 ```bash
-# Thử commit một file bình thường — hooks sẽ kiểm tra
+# Try committing a normal file — hooks will check it
 git add README.md
-git commit -m "test: kiểm tra hooks"
-# Nếu không có vấn đề → commit pass
-# Nếu có secret hay console.log → commit bị chặn với thông báo rõ
+git commit -m "test: verify hooks"
+# No issues → commit passes
+# Secret or console.log detected → commit blocked with a clear message
 ```
 
 ---
 
-## 7. Workflow hàng ngày
+## 7. Daily workflow
 
-### Bắt đầu session
+### Start a session
 
 ```bash
 cd ~/my-project
 claude
 ```
 
-Nếu hôm qua có làm dở, `specs/HANDOFF.md` sẽ tự load và Claude biết tiếp tục từ đâu.
+If you left work unfinished yesterday, `specs/HANDOFF.md` will auto-load and Claude will know where to continue.
 
-Nếu làm việc nhóm — chạy sync trước:
+If working in a team — run sync first:
 
 ```
 /sync-memory
 ```
 
-### Trong session
+### During the session
 
-**Auto-coordinator đã bật sẵn** — bạn không cần gõ `/coordinator`. Chỉ cần nói điều bạn muốn:
+**Auto-coordinator is always on** — you do not need to type `/coordinator`. Just describe what you want:
 
 ```
-thêm chức năng export CSV cho trang báo cáo
+add CSV export to the reports page
 ```
 
-Claude sẽ tự:
-1. Phân loại task (lane: tiny / normal / high-risk)
-2. Tạo task board
-3. Giao cho đúng agent
-4. Chạy theo waves
-5. Verify kết quả
+Claude will automatically:
+1. Classify the task (lane: tiny / normal / high-risk)
+2. Create the task board
+3. Route to the right agent
+4. Execute in waves
+5. Verify the result
 
 ---
 
-## 8. Các task phổ biến
+## 8. Common tasks
 
-### Implement feature mới
-
-```
-thêm dark mode cho settings page
-```
-
-Hoặc explicit hơn:
+### Implement a new feature
 
 ```
-/feature thêm dark mode cho settings page
+add dark mode to the settings page
+```
+
+Or more explicitly:
+
+```
+/feature add dark mode to the settings page
 ```
 
 **Flow:** risk intake → research → plan → build → self-review → commit
 
-Với feature phức tạp (auth, payment, migration) — Claude sẽ hỏi xác nhận trước khi làm.
+For complex features (auth, payment, migration) — Claude will ask for confirmation before proceeding.
 
 ---
 
-### Fix bug
+### Fix a bug
 
 ```
-/fix-bug app crash khi upload file lớn hơn 10MB
+/fix-bug app crashes when uploading files larger than 10MB
 ```
 
-**Flow:** reproduce → root cause (không đoán, trace thật) → minimal fix → verify → commit
+**Flow:** reproduce → root cause (no guessing, real trace) → minimal fix → verify → commit
 
-Commit message tự động: `fix: <mô tả cái gì sai và đã fix gì>`
+Commit message auto-generated: `fix: <what was wrong and what was fixed>`
 
 ---
 
 ### Code review
 
 ```bash
-# Review toàn bộ branch hiện tại
+# Review the full current branch
 /code-review
 
-# Review kỹ hơn
+# More thorough review
 /code-review high
 
-# Review nhanh, chỉ critical issues
+# Quick scan, critical issues only
 /code-review low
 ```
 
-**Kết quả:**
+**Output:**
 ```
 ### 🔴 MUST FIX — SQL injection
 File: src/users/repo.ts:42
-Issue: user input ghép trực tiếp vào SQL string
-Fix: dùng parameterized query: db.query('...', [id])
+Issue: user input concatenated directly into SQL string
+Fix: use parameterized query: db.query('...', [id])
 
 ### 🟡 SHOULD FIX — missing error boundary
 ...
@@ -393,42 +393,42 @@ Fix: dùng parameterized query: db.query('...', [id])
 
 ---
 
-### Implement từ ticket (5-agent pipeline)
+### Implement from a ticket (5-agent pipeline)
 
 ```
-/ticket #123 thêm swipe-to-dismiss trên pending request cards
+/ticket #123 add swipe-to-dismiss on pending request cards
 ```
 
-**Pipeline tự động:**
+**Automated pipeline:**
 ```
-PM Agent      → đọc ticket, tìm code liên quan, xác định rủi ro
+PM Agent      → read ticket, find relevant code, identify risks
     ↓
-Architect     → technical plan với wave-organized tasks
+Architect     → technical plan with wave-organized tasks
     ↓
-Developer     → implement theo plan (parallel waves)
+Developer     → implement following the plan (parallel waves)
     ↓
-Reviewer      → review diff, APPROVED hoặc yêu cầu sửa
+Reviewer      → review diff, APPROVED or request changes
     ↓
 QA/Verifier   → lint + types + tests + golden path + commit
 ```
 
 ---
 
-### Viết test
+### Write tests
 
 ```
 /gen-tests src/services/payment-service.ts
 ```
 
-Hoặc hỏi trực tiếp:
+Or ask directly:
 
 ```
-viết unit test cho hàm calculateDiscount trong src/utils/pricing.ts
+write unit tests for the calculateDiscount function in src/utils/pricing.ts
 ```
 
 ---
 
-### Tạo component từ Figma
+### Create a component from Figma
 
 ```
 /figma-to-screen [Figma URL]
@@ -436,304 +436,304 @@ viết unit test cho hàm calculateDiscount trong src/utils/pricing.ts
 
 ---
 
-### Task nhỏ, không cần ceremony
+### Small task, no ceremony needed
 
 ```
-/task đổi màu primary button từ blue-600 sang indigo-600
+/task change primary button color from blue-600 to indigo-600
 ```
 
-**Flow:** đọc conventions → implement → verify → commit. Không cần plan.
+**Flow:** read conventions → implement → verify → commit. No plan needed.
 
 ---
 
-### Brainstorm trước khi làm feature phức tạp
+### Brainstorm before a complex feature
 
 ```
-/brainstorming thiết kế hệ thống notification real-time
+/brainstorming design a real-time notification system
 ```
 
-**Flow:** hỏi từng câu một → đề xuất 2–3 approaches → thiết kế → viết `specs/<slug>/design.md` → gọi `/writing-plans`
+**Flow:** asks one question at a time → proposes 2–3 approaches → designs → writes `specs/<slug>/design.md` → calls `/writing-plans`
 
 ---
 
-### Tạo implementation plan từ design
+### Generate an implementation plan from a design
 
 ```
 /writing-plans
 ```
 
-Chạy sau `/brainstorming`. Sinh ra `specs/<slug>/PLAN.md` với wave-organized tasks.
+Run after `/brainstorming`. Generates `specs/<slug>/PLAN.md` with wave-organized tasks.
 
 ---
 
-### Generate PR description
+### Generate a PR description
 
 ```
 /create-pr
 ```
 
-Sinh ra `PR_TEMPLATE.md` — điền sẵn title, summary (why not how), files changed, test plan.
+Generates `PR_TEMPLATE.md` — pre-filled with title, summary (why not how), files changed, test plan.
 
 ---
 
-### Dynamic workflow — task quy mô lớn
+### Dynamic workflow — large-scale tasks
 
-Khi task cần thay đổi 10+ file độc lập, audit cả codebase, hoặc migration lớn → dùng dynamic workflow thay vì wave agents thông thường.
+When a task requires 10+ independent file changes, a codebase-wide audit, or a large migration → use a dynamic workflow instead of regular wave agents.
 
 **Trigger:**
 ```
-ultracode: audit toàn bộ API endpoint trong src/routes/ thiếu auth check
+ultracode: audit all API endpoints in src/routes/ for missing auth checks
 ```
 
-Hoặc dùng `/workflow` command của harness:
+Or use the harness `/workflow` command:
 ```
-/workflow migrate tất cả components dùng class sang functional
+/workflow migrate all class components to functional
 ```
 
-**Claude Code sẽ:**
-1. Tự viết một JavaScript script orchestration
-2. Chạy script trong background (session vẫn responsive)
-3. Tạo đến 16 agent song song, tối đa 1000 agent mỗi run
+**Claude Code will:**
+1. Write a JavaScript orchestration script
+2. Execute the script in the background (session stays responsive)
+3. Spawn up to 16 agents in parallel, up to 1000 agents per run
 
 **Monitor:**
 ```
-/workflows        xem tất cả runs đang chạy
+/workflows        list all running workflows
 p                 pause / resume
 x                 stop
-s                 save script thành lệnh tái sử dụng
+s                 save script as a reusable command
 ```
 
-**Save để dùng lại:**
-- `.claude/workflows/<name>.js` — shared với team qua git
-- `~/.claude/workflows/<name>.js` — cá nhân, tất cả projects
+**Save for reuse:**
+- `.claude/workflows/<name>.js` — shared with team via git
+- `~/.claude/workflows/<name>.js` — personal, available in all projects
 
-Workflow đã save trở thành lệnh `/<name>` trong autocomplete.
+Saved workflows become `/<name>` commands in autocomplete.
 
 **Built-in workflow:**
 ```
-/deep-research câu hỏi của bạn
+/deep-research your question here
 ```
 
-Fan-out web search → cross-check nguồn → adversarial vote → report có citation.
+Fan-out web searches → cross-check sources → adversarial vote on each claim → cited report.
 
-> **Lưu ý chi phí**: Dynamic workflows dùng nhiều token hơn đáng kể. Test trên 1 thư mục nhỏ trước khi chạy cả codebase.
+> **Cost note**: Dynamic workflows use significantly more tokens. Test on a small directory before running against the full codebase.
 
 ---
 
-## 9. Làm việc nhóm (team)
+## 9. Team workflow
 
-### Đầu mỗi session
+### At the start of each session
 
 ```
 /sync-memory
 ```
 
-Hoặc chạy script trực tiếp:
+Or run the script directly:
 
 ```bash
 $HARNESS_DIR/scripts/sync-team.sh
 ```
 
-**Thực hiện:**
-1. Stash changes chưa commit
+**What it does:**
+1. Stash uncommitted changes
 2. `git fetch --all --prune` + `git pull`
-3. Quét commits của **bạn** từ lần sync trước → lưu vào memory
-4. Liệt kê commits của teammate → flag files bị đụng
+3. Scan **your** commits since the last sync → save to memory
+4. List teammate commits → flag files that were touched
 5. Pop stash
 
-**Xem kết quả:**
+**View the result:**
 
 ```bash
 cat .claude/memory/commits/$(date +%Y-%m-%d).md
 ```
 
-Sẽ thấy commits của bạn + danh sách thay đổi từ team. Nếu có file bị cả hai touch, Claude sẽ cảnh báo.
+You'll see your commits plus a list of team changes. If a file was touched by both you and a teammate, Claude will warn you.
 
 ---
 
-## 10. Kết thúc phiên làm việc
+## 10. Ending a session
 
-### Trước khi đóng — compact session
+### Before closing — compact the session
 
 ```
 /compact
 ```
 
-**Thực hiện:**
-1. Tóm tắt những gì đã làm trong session
-2. Ghi vào `specs/HANDOFF.md` (session tiếp theo tự đọc)
-3. Merge learnings quan trọng vào `docs/solutions/`
-4. Update memory nếu học được gì về user preferences
+**What it does:**
+1. Summarizes what was done in the session
+2. Writes `specs/HANDOFF.md` (auto-read by the next session)
+3. Merges important learnings into `docs/solutions/`
+4. Updates memory if user preferences were learned
 
-**Session tiếp theo:** Claude tự đọc `HANDOFF.md` → biết tiếp tục từ đâu → xoá file đi.
+**Next session:** Claude auto-reads `HANDOFF.md` → knows where to continue → deletes the file.
 
-### Sau session lớn — compound learnings
+### After a large session — compound learnings
 
 ```
 /compound
 ```
 
-Dùng sau những session có debug phức tạp, sửa bugs khó, hoặc quyết định kiến trúc. Lưu vào `docs/solutions/` để future sessions không lặp lại.
+Use after sessions with complex debugging, hard bugs, or architectural decisions. Saves to `docs/solutions/` so future sessions don't repeat the same mistakes.
 
 ---
 
-## 11. Xử lý sự cố thường gặp
+## 11. Troubleshooting
 
-### Commit bị chặn bởi quality gate
+### Commit blocked by quality gate
 
 ```
 🚫 COMMIT BLOCKED — quality gate failed:
    ❌ OpenAI API key pattern detected in staged code
 ```
 
-**Giải quyết:**
+**Fix:**
 ```bash
-# Tìm file có vấn đề
+# Find the file with the issue
 git diff --cached | grep -n "sk-"
 
-# Xoá key, dùng env var thay thế
-# .env file → gitignore → đọc từ process.env
+# Remove the key, use an env var instead
+# .env file → gitignored → read from process.env
 
-# Stage lại và commit
+# Re-stage and commit
 git add <file>
 git commit -m "..."
 ```
 
 ---
 
-### Hook bị trigger nhầm (false positive)
+### Hook triggering a false positive
 
-Ví dụ: test file có string `"api_key": "test-value"` bị chặn.
+Example: a test file with `"api_key": "test-value"` gets blocked.
 
-**Giải quyết ngắn hạn** — bypass cho lần đó (dùng cẩn thận):
+**Short-term fix** — bypass for that commit (use with care):
 ```bash
 SKIP_QUALITY_GATE=1 git commit -m "test: add fixture with api key pattern"
 ```
 
-**Giải quyết dài hạn** — chỉnh hook để skip thêm pattern:
+**Long-term fix** — update the hook to skip the pattern:
 ```bash
 # .claude/hooks/commit-quality-gate.sh
-# Thêm vào phần STAGED_APP:
+# Add to the STAGED_APP section:
 ':!*.fixture.*' ':!tests/fixtures/*'
 ```
 
 ---
 
-### `specs/HANDOFF.md` không load
+### `specs/HANDOFF.md` not loading
 
-Kiểm tra `CLAUDE.md` có dòng này không:
+Check that `CLAUDE.md` contains this line:
 
 ```bash
 cat specs/HANDOFF.md 2>/dev/null && rm -f specs/HANDOFF.md
 ```
 
-Nếu không có → thêm vào phần "Session Resume" trong `CLAUDE.md`.
+If missing → add it to the "Session Resume" section in `CLAUDE.md`.
 
 ---
 
-### Claude không nhớ context từ session trước
+### Claude doesn't remember context from the previous session
 
-1. Kiểm tra `MEMORY.md` còn chứa entries không: `cat .claude/memory/MEMORY.md`
-2. Kiểm tra `HANDOFF.md` đã được xoá chưa (nếu còn → Claude chưa đọc)
-3. `/compact` chưa được chạy → không có gì được lưu
+1. Check `MEMORY.md` still has entries: `cat .claude/memory/MEMORY.md`
+2. Check `HANDOFF.md` was deleted (if it still exists → Claude hasn't read it yet)
+3. `/compact` was not run → nothing was saved
 
 ---
 
-### Memory index quá dài (>200 dòng)
+### Memory index too long (> 200 lines)
 
-Claude Code truncate `MEMORY.md` sau 200 dòng:
+Claude Code truncates `MEMORY.md` after 200 lines:
 
 ```bash
-# Đếm số dòng
+# Count lines
 wc -l .claude/memory/MEMORY.md
 
-# Dọn entries cũ (>30 ngày, không còn áp dụng)
-# Xoá file memory đi kèm trước, rồi xoá dòng trong MEMORY.md
+# Remove old entries (> 30 days, no longer applicable)
+# Delete the linked memory file first, then remove the line from MEMORY.md
 ```
 
 ---
 
-### Cập nhật harness sau khi source thay đổi
+### Update the harness after source changes
 
 ```bash
-# Chạy lại install.sh — tự detect và update
+# Re-run install.sh — auto-detects and updates
 bash $HARNESS_DIR/scripts/install.sh
 ```
 
-Nếu muốn cập nhật `.claude/` của một project cụ thể:
+To update `.claude/` for a specific project:
 
 ```bash
 cd ~/my-project
 $HARNESS_DIR/scripts/init.sh
-# Script sẽ cảnh báo trước khi overwrite settings.json
+# Script will warn before overwriting settings.json
 ```
 
 ---
 
-## Tổng kết luồng đầy đủ
+## Full flow diagram
 
 ```
-┌─ CÀI ĐẶT (1 lần) ──────────────────────────────────────────┐
+┌─ INSTALL (once) ────────────────────────────────────────────┐
 │                                                              │
 │  bash ~/Downloads/Claude/scripts/install.sh                 │
 │  source ~/.zshrc                                            │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
                           ↓
-┌─ BOOTSTRAP PROJECT (1 lần / project) ──────────────────────┐
+┌─ BOOTSTRAP PROJECT (once per project) ──────────────────────┐
 │                                                             │
 │  cd ~/my-project                                           │
 │  /project-init              ← Claude Code                  │
-│  # hoặc: $HARNESS_DIR/scripts/init.sh                     │
+│  # or: $HARNESS_DIR/scripts/init.sh                       │
 │                                                             │
-│  Điền CLAUDE.md             ← run commands, architecture   │
-│  Điền memory/user.md        ← role, preferences            │
-│  Điền memory/project/*.md   ← goals, decisions             │
+│  Fill in CLAUDE.md          ← run commands, architecture   │
+│  Fill in memory/user.md     ← role, preferences            │
+│  Fill in memory/project/*.md ← goals, decisions            │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
                           ↓
-┌─ MỖI SESSION ──────────────────────────────────────────────┐
+┌─ EVERY SESSION ─────────────────────────────────────────────┐
 │                                                             │
-│  Bắt đầu:                                                  │
-│    claude                   ← mở Claude Code               │
-│    /sync-memory             ← nếu có team                  │
-│    (đọc HANDOFF.md tự động nếu có)                        │
+│  Start:                                                     │
+│    claude                   ← open Claude Code             │
+│    /sync-memory             ← if working in a team         │
+│    (reads HANDOFF.md automatically if present)             │
 │                                                             │
-│  Làm việc:                                                 │
-│    "thêm feature X"         ← auto-coordinator xử lý      │
+│  Work:                                                      │
+│    "add feature X"          ← auto-coordinator handles it  │
 │    /fix-bug <symptom>       ← debug flow                   │
-│    /code-review             ← review trước khi PR          │
+│    /code-review             ← review before PR             │
 │    /ticket #123 <desc>      ← full 5-agent pipeline        │
 │                                                             │
-│  Kết thúc:                                                 │
-│    /compact                 ← lưu session state            │
-│    /compound                ← sau session có learning lớn  │
+│  End:                                                       │
+│    /compact                 ← save session state           │
+│    /compound                ← after a session with big learnings │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
                           ↓
-                   Ngày hôm sau:
-                   Session mới tự đọc HANDOFF.md
-                   → tiếp tục từ "Next steps"
+                   Next day:
+                   New session auto-reads HANDOFF.md
+                   → continues from "Next steps"
 ```
 
 ---
 
-## Cheat sheet — commands hay dùng nhất
+## Cheat sheet — most-used commands
 
-| Lệnh | Khi nào dùng |
-|------|-------------|
-| `/project-init` | Lần đầu setup project |
-| `/sync-memory` | Đầu session khi làm nhóm |
-| `/feature <mô tả>` | Implement feature mới |
-| `/fix-bug <triệu chứng>` | Debug và fix bug |
-| `/code-review` | Review trước khi push PR |
-| `/code-review high` | Review kỹ cho PR quan trọng |
-| `/ticket #N <mô tả>` | Chạy full pipeline từ ticket |
-| `/task <mô tả>` | Fix nhỏ, không cần ceremony |
-| `/brainstorming <ý tưởng>` | Thiết kế trước khi làm feature phức tạp |
-| `/writing-plans` | Sau brainstorming, tạo PLAN.md |
-| `/create-pr` | Tạo PR description |
-| `/checkpoint` | Kiểm tra tiến độ giữa session |
-| `/compact` | Cuối session, lưu state |
-| `/compound` | Sau session lớn, lưu learnings |
-| `/btw <câu hỏi>` | Hỏi nhanh không break flow |
+| Command | When to use |
+|---------|-------------|
+| `/project-init` | First-time project setup |
+| `/sync-memory` | Start of session when working in a team |
+| `/feature <description>` | Implement a new feature |
+| `/fix-bug <symptom>` | Debug and fix a bug |
+| `/code-review` | Review before pushing a PR |
+| `/code-review high` | Thorough review for important PRs |
+| `/ticket #N <description>` | Run the full pipeline from a ticket |
+| `/task <description>` | Small fix, no ceremony needed |
+| `/brainstorming <idea>` | Design before building a complex feature |
+| `/writing-plans` | After brainstorming, generate PLAN.md |
+| `/create-pr` | Generate a PR description |
+| `/checkpoint` | Check progress mid-session |
+| `/compact` | End of session, save state |
+| `/compound` | After a large session, save learnings |
+| `/btw <question>` | Quick question without breaking the flow |
