@@ -665,6 +665,18 @@ After all agents complete:
 - **Pass project context explicitly** to every agent prompt. Agents inherit nothing.
 - **Never let agents re-scan the codebase.** Docs + targeted source files only.
 
+### Scale check — waves vs. dynamic workflows
+
+Before dispatching wave agents, check scale:
+
+| Signal | Route to |
+|--------|----------|
+| 10+ files changed independently OR codebase-wide scope | Dynamic workflow — trigger with `ultracode: <task>` |
+| Orchestration is worth saving and rerunning | Dynamic workflow |
+| < 8 files, one-off, results needed in context | In-context wave agents (default) |
+
+If a dynamic workflow is warranted, tell the user: "This task is codebase-wide. I recommend running it as a dynamic workflow. Rephrasing with `ultracode:` trigger…"
+
 ### Dispatch rules
 - **Never implement yourself.** Classify, route, synthesize. Agents implement.
 - **Parallel tasks MUST be dispatched in ONE message** with `run_in_background: true` on each Agent call. Separate messages = sequential. Sequential when parallel is correct = wasted time.

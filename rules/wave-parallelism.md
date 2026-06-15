@@ -2,6 +2,18 @@
 
 How to organize and execute tasks in parallel waves.
 
+## Waves vs. dynamic workflows
+
+| | Wave parallelism (Agent tool) | Dynamic workflows (`ultracode`) |
+|---|---|---|
+| Who holds the plan | Claude's context window | A JS script the runtime executes |
+| Scale | 2–8 parallel agents | Up to 16 concurrent, 1000 total per run |
+| Intermediate results | Land in Claude's context | Stay in script variables |
+| Resumable | No | Yes (same session) |
+| When to use | In-session, results needed in context | Codebase-wide, worth saving/rerunning |
+
+If the task needs more agents than fit in one context window, or the orchestration is worth rerunning → use a dynamic workflow with the `ultracode` trigger instead.
+
 ## Core Concept
 
 Tasks are organized into sequential **waves**. Same-wave tasks execute in parallel. Wave N+1 must wait for wave N to fully complete and verify.
