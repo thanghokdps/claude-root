@@ -81,17 +81,22 @@ team project: next session
 ## Installing and updating
 
 ```bash
-# Install
-cp -r ~/Downloads/Claude ~/.claude-harness
-chmod +x ~/.claude-harness/scripts/*.sh
-chmod +x ~/.claude-harness/hooks/*.sh
+# Install (copies harness, sets HARNESS_DIR in .zshrc, syncs ~/.claude/)
+bash ~/Downloads/Claude/scripts/install.sh
+
+# Custom install location
+bash ~/Downloads/Claude/scripts/install.sh ~/my-tools/claude-harness
+
+# After install: reload shell, then bootstrap any project
+source ~/.zshrc
+cd my-project && $HARNESS_DIR/scripts/init.sh
 
 # Update an existing project after harness changes
-~/.claude-harness/scripts/init.sh /path/to/project
+$HARNESS_DIR/scripts/init.sh /path/to/project
 # (will warn before overwriting existing .claude/settings.json)
 
 # Add a new stack rule
-# 1. Create ~/.claude-harness/rules/stacks/<name>.md
+# 1. Create $HARNESS_DIR/rules/stacks/<name>.md
 # 2. Add detection in scripts/init.sh (has_signal block)
 # 3. Re-run init.sh on any project that needs it
 ```
