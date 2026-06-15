@@ -16,12 +16,14 @@ A portable governance framework for [Claude Code](https://claude.ai/code). It in
 6. [Hooks reference](#hooks-reference)
 7. [Rules reference](#rules-reference)
 8. [Agents reference](#agents-reference)
-9. [Scripts reference](#scripts-reference)
-10. [Templates reference](#templates-reference)
-11. [Memory system](#memory-system)
-12. [The coordinator flow](#the-coordinator-flow)
-13. [Risk lanes & hard gates](#risk-lanes--hard-gates)
-14. [Extending the harness](#extending-the-harness)
+9. [Commands reference](#commands-reference)
+10. [Stack bundles reference](#stack-bundles-reference)
+11. [Scripts reference](#scripts-reference)
+12. [Templates reference](#templates-reference)
+13. [Memory system](#memory-system)
+14. [The coordinator flow](#the-coordinator-flow)
+15. [Risk lanes & hard gates](#risk-lanes--hard-gates)
+16. [Extending the harness](#extending-the-harness)
 
 ---
 
@@ -66,11 +68,24 @@ Downloads/Claude/                    ← this repo (the source library)
 ├── README.md                        ← this file
 │
 ├── agents/                          ← sub-agent role definitions
-│   ├── architect.md
-│   ├── qa.md
-│   └── reviewer.md
+│   ├── architect.md                 ← design plans, evaluate trade-offs (worktree isolation)
+│   ├── auto-dev.md                  ← autonomous developer, bypassPermissions, 80 turns
+│   ├── developer-agent.md           ← wave-based implementation agent
+│   ├── implementer.md               ← executes approved plan, fills SUMMARY/TEST_MATRIX
+│   ├── pm-agent.md                  ← research phase: context gathering before architect
+│   ├── qa.md                        ← quality assurance: lint, types, tests, golden path
+│   ├── reviewer.md                  ← code review: correctness, security, conventions
+│   └── verifier.md                  ← runs Verify table, confirms no regressions
+│
+├── commands/                        ← prompt files loaded as /commands in Claude Code
+│   ├── auto.md                      ← autonomous single-prompt dev workflow
+│   ├── compact.md                   ← compact session → HANDOFF.md
+│   ├── compound.md                  ← crystallize learnings → solutions/
+│   ├── task.md                      ← lightweight single-task workflow
+│   └── ticket.md                    ← full 5-agent pipeline: PM→Architect→Dev→Review→QA
 │
 ├── hooks/                           ← bash automation scripts
+│   ├── agent-progress.sh            ← colorized live agent/wave progress via stderr
 │   ├── blast-radius-check.sh        ← warn when editing files outside plan scope
 │   ├── branch-guard.sh              ← block force-push to protected branches
 │   ├── commit-quality-gate.sh       ← block secrets / debug artifacts in commits
@@ -107,16 +122,32 @@ Downloads/Claude/                    ← this repo (the source library)
 │   ├── wave-parallelism.md          ← wave-based parallel agent execution
 │   └── stacks/
 │       ├── fastapi.md               ← FastAPI-specific rules
+│       ├── javascript.md            ← JavaScript ES2020+ best practices
+│       ├── jest.md                  ← Jest unit testing rules
 │       ├── langgraph.md             ← LangGraph-specific rules
 │       ├── nextjs.md                ← Next.js-specific rules
 │       ├── python.md                ← Python-specific rules
-│       └── typescript.md            ← TypeScript-specific rules
+│       ├── react.md                 ← React v19 best practices
+│       └── typescript.md            ← TypeScript strict mode + advanced patterns
 │
 ├── scripts/                         ← install / bootstrap scripts
-│   ├── init.sh                      ← main bootstrap script
+│   ├── init.sh                      ← bootstrap .claude/ for a project (stack-aware)
+│   ├── install.sh                   ← one-command harness install + ~/.claude/ sync
 │   ├── save-session-memory.sh       ← manually save session context
 │   ├── setup-headroom.sh            ← install headroom context compression
 │   └── sync-team.sh                 ← team sync: pull + rebuild memory
+│
+├── stacks/                          ← full stack bundles (rules + skills) per project type
+│   ├── nextjs/                      ← Next.js App Router bundle
+│   │   └── rules/nextjs.md
+│   ├── python/                      ← Python/FastAPI/LangGraph bundle
+│   │   └── rules/{fastapi,langgraph,python}.md
+│   └── react-native/                ← React Native bundle (flash-mobile-app reference)
+│       ├── rules/                   ← react-native, module-federation, rn-components,
+│       │                               rn-screens, services, project-conventions
+│       └── skills/                  ← ticket, task, rn-component, rn-testing,
+│                                       rn-performance, tanstack-query, figma-to-screen,
+│                                       gen-tests, debug-runbook, effect-services, verify-feature
 │
 ├── skills/                          ← slash command definitions
 │   ├── README.md
@@ -140,6 +171,7 @@ Downloads/Claude/                    ← this repo (the source library)
 │   └── writing-plans/SKILL.md       ← /writing-plans
 │
 └── templates/                       ← artifact templates copied into each project
+    ├── AGENT_WATCHER.template.md    ← structured doc for monitoring agent run lifecycle
     ├── CLAUDE.md.template
     ├── ESCALATIONS.template.md
     ├── SUMMARY.template.md
@@ -154,12 +186,30 @@ Downloads/Claude/                    ← this repo (the source library)
 ### One-time global install
 
 ```bash
-cp -r ~/Downloads/Claude ~/.claude-harness
-chmod +x ~/.claude-harness/scripts/*.sh
-chmod +x ~/.claude-harness/hooks/*.sh
+# From wherever you cloned/downloaded the harness:
+bash ~/Downloads/Claude/scripts/install.sh
 ```
 
-This makes the harness available system-wide. Skills and rules are installed into individual projects via `init.sh` (see below).
+This copies the harness to `~/.claude-harness`, exports `HARNESS_DIR` in your shell rc, and syncs skills, rules, and hooks into `~/.claude/`.
+
+**Custom install location:**
+
+```bash
+bash ~/Downloads/Claude/scripts/install.sh ~/my-tools/claude-harness
+```
+
+**After install — reload your shell:**
+
+```bash
+source ~/.zshrc     # or open a new terminal
+echo $HARNESS_DIR   # should print your install path
+```
+
+**Update after harness changes:**
+
+```bash
+bash $HARNESS_DIR/scripts/install.sh
+```
 
 ### Optional: context compression (headroom)
 
@@ -219,6 +269,8 @@ The script scans manifests and `src/` for signals:
 | `golang` | `go.mod` |
 | `java` | `pom.xml` or `build.gradle` |
 | `rust` | `Cargo.toml` |
+| `react` | `"react"` in package.json |
+| `jest` | `"jest"` in package.json |
 | `docker` | `Dockerfile` or `docker-compose.yml` |
 | `prisma` | `"prisma"` in package.json or `prisma` in `src/` |
 | `postgres` | `postgres` or `pg` in `src/` |
@@ -642,6 +694,23 @@ The next session reads and deletes this file automatically.
 
 ---
 
+### `agent-progress.sh`
+
+**Trigger:** `PostToolUse(Agent|Edit|Write|Bash)` and `PreToolUse(Agent)`
+
+Prints colorized live progress to the terminal via `stderr` — shows which agent is running, which wave, and which tool calls are being made.
+
+**Output format (stderr):**
+```
+10:30:15 [AGENT] architect → starting (wave 1)
+10:30:22 [TOOL]  Edit src/components/Button.tsx
+10:30:25 [AGENT] architect → done ✓
+```
+
+Non-blocking — exits 0 always. Purely cosmetic: helps track long multi-agent runs in real time.
+
+---
+
 ### `headroom-compress.sh`
 
 **Trigger:** `PostToolUse(Bash|Read)`
@@ -696,13 +765,16 @@ Rules are Markdown files injected into agent prompts as governance constraints.
 
 Copied only when the corresponding signal is detected during init:
 
-| File | Copied when |
-|------|------------|
-| `stacks/typescript.md` | `typescript` signal |
-| `stacks/python.md` | `python` signal |
-| `stacks/fastapi.md` | `fastapi` signal |
-| `stacks/langgraph.md` | `langgraph` signal |
-| `stacks/nextjs.md` | `nextjs` signal |
+| File | Copied when | Key topics |
+|------|------------|-----------|
+| `stacks/typescript.md` | `typescript` signal | Strict mode, utility types, discriminated unions, `satisfies`, React+TS patterns |
+| `stacks/javascript.md` | `nodejs` signal (or any JS project) | ES2020+ syntax, async patterns, naming, immutability, error handling |
+| `stacks/react.md` | `react` signal | v19 APIs (`use`, `useOptimistic`, `useActionState`), Server/Client Components, hooks discipline, a11y |
+| `stacks/jest.md` | `jest` signal | AAA structure, mocking (`jest.fn/spyOn/mock`), async testing, fake timers, factories |
+| `stacks/python.md` | `python` signal | PEP8, type hints, async, error handling |
+| `stacks/fastapi.md` | `fastapi` signal | Route patterns, Pydantic, dependency injection |
+| `stacks/langgraph.md` | `langgraph` signal | Graph construction, state management, tool nodes |
+| `stacks/nextjs.md` | `nextjs` signal | App Router, Server/Client Components, data fetching |
 
 ---
 
@@ -769,7 +841,177 @@ Agent definitions live in `agents/`. Each has YAML frontmatter controlling how C
 
 ---
 
+### `agents/pm-agent.md`
+
+**Role:** Research phase — gathers codebase context before the architect runs.
+
+**Spawned by:** `/ticket` workflow (first agent in the 5-agent pipeline).
+
+**Steps:** Load `.claude/docs/`, read the ticket, identify affected modules/layers, find existing reusable code (file:line), check feature flags, identify risks.
+
+**Output:** Research summary passed to `architect-agent` — affected areas, reuse opportunities, risks, open questions.
+
+---
+
+### `agents/implementer.md`
+
+**Role:** Executes an approved plan precisely — no scope creep.
+
+**Input:** Implementation plan from Planner/Architect + project conventions.
+
+**Workflow:** Read task spec → read conventions → write failing test → implement → run lint/typecheck/tests → fill SUMMARY.md "What changed" + Verify table → update TEST_MATRIX.md → commit.
+
+---
+
+### `agents/developer-agent.md`
+
+**Role:** Wave-based autonomous developer — breaks work into parallel waves and executes.
+
+**Used for:** Complex multi-file tasks where independent subtasks can run in parallel.
+
+**Model selection:** `sonnet` for complex logic, `haiku` for mechanical tasks (tests, types, simple CRUD).
+
+---
+
+### `agents/auto-dev.md`
+
+**Role:** Fully autonomous developer — executes end-to-end without interruption.
+
+| Field | Value |
+|-------|-------|
+| Model | `sonnet` |
+| Mode | `bypassPermissions` |
+| Max turns | 80 |
+
+**Use when:** Task is well-defined and zero permission prompts are wanted.
+
+**Workflow:** Plan (TaskCreate with waves) → implement each wave → verify → commit.
+
+---
+
+### `agents/verifier.md`
+
+**Role:** Final verification before merge — reads SUMMARY.md Verify table and runs every check.
+
+**Checklist:**
+1. Run every command in `specs/<slug>/SUMMARY.md` Verify table → exit 0
+2. Run lint, type check, tests
+3. Confirm no debug statements (`console.log`, `debugger`, `pdb`) in staged files
+4. Trace golden path manually
+5. Check edge cases: empty, error, loading states
+6. Confirm commit message matches project convention
+
+**Output:** `PASS` or `FAIL` with evidence per check.
+
+---
+
+## Commands reference
+
+`commands/` contains prompt files loaded as `/commands` in Claude Code. Unlike skills (which have a `SKILL.md` wrapper with frontmatter), commands are raw prompt text loaded directly — lighter weight for simple workflows.
+
+| Command | Invoke | What it does |
+|---------|--------|-------------|
+| `/ticket` | `/ticket #<issue> <description>` | Full 5-agent pipeline: PM → Architect → Wave Developer → Reviewer → QA |
+| `/task` | `/task <description>` | Lightweight single-task: read conventions → implement → verify → commit |
+| `/auto` | `/auto <description>` | Autonomous single-prompt dev: plan waves → execute → commit (no interruptions) |
+| `/compact` | `/compact` | Summarize session → write HANDOFF.md → merge learnings into solutions/ |
+| `/compound` | `/compound` | Crystallize session learnings → write to docs/solutions/ |
+
+### `/ticket` pipeline detail
+
+```
+PM agent       → research ticket, find affected files, identify reuse
+    ↓
+Architect      → technical plan with wave-organized tasks
+    ↓
+Wave Developer → implement per plan (parallel waves where possible)
+    ↓
+Reviewer       → APPROVED or CHANGES REQUIRED (max 2 retry cycles)
+    ↓
+QA/Verifier    → lint + types + tests + golden path + commit
+```
+
+---
+
+## Stack bundles reference
+
+`stacks/` contains full workspace bundles (rules + skills) for specific project stacks. Unlike `rules/stacks/` (generic single-file rules), these bundles are tailored to a **specific project's real file paths, conventions, and tools**.
+
+### When to use `stacks/` vs `rules/stacks/`
+
+| | `rules/stacks/` | `stacks/` |
+|---|---|---|
+| **Content** | Single `.md` rule file | Full bundle: `rules/` + `skills/` |
+| **Scope** | Generic best practices | Project-specific conventions (real paths, team tools) |
+| **Install** | `init.sh` copies per signal | Copy manually into `.claude/` for the specific project |
+| **Example** | `react.md` — React best practices | `react-native/` — flash-mobile-app workspace |
+
+### `stacks/react-native/`
+
+Complete workspace for a React Native monorepo project.
+
+**Rules included:**
+- `react-native.md` — performance (worklets, FlashList), platform guards, navigation, styling (NativeWind + makeStyles), testing, permissions
+- `module-federation.md` — federated module sharing rules
+- `rn-components.md` — component patterns
+- `rn-screens.md` — screen conventions
+- `services.md` — service layer rules
+- `project-conventions.md` — project-specific naming and patterns
+
+**Skills included:**
+
+| Skill | Purpose |
+|-------|---------|
+| `/ticket` | Full 5-agent pipeline for a feature ticket |
+| `/task` | Lightweight single-task workflow |
+| `/rn-component` | Generate a new React Native component |
+| `/rn-testing` | Generate tests for RN components |
+| `/rn-performance` | Audit and fix performance issues |
+| `/tanstack-query` | TanStack Query patterns and code generation |
+| `/figma-to-screen` | Convert Figma design to RN screen |
+| `/gen-tests` | Generate test file for any module |
+| `/debug-runbook` | Debugging checklist for RN issues |
+| `/effect-services` | Effect-TS service layer patterns |
+| `/module-federation` | Module federation setup and patterns |
+| `/verify-feature` | Verify a feature works before commit |
+
+### `stacks/nextjs/`
+
+Next.js App Router rules: Server/Client Component boundaries, data fetching patterns, metadata API.
+
+### `stacks/python/`
+
+Python bundle: `python.md` (PEP8, type hints, async), `fastapi.md` (routes, Pydantic, DI), `langgraph.md` (graph construction, state management, tool nodes).
+
+---
+
 ## Scripts reference
+
+### `scripts/install.sh`
+
+**Usage:** `bash scripts/install.sh [install-dir]`
+
+**Default install dir:** `~/.claude-harness`
+
+One-command harness setup:
+1. Copies this repo to `install-dir`
+2. Sets `HARNESS_DIR` in `~/.zshrc` / `~/.bashrc`
+3. Syncs skills, rules, and hooks into `~/.claude/`
+4. Makes all hook scripts executable
+
+```bash
+# Default install
+bash ~/Downloads/Claude/scripts/install.sh
+
+# Custom location
+bash ~/Downloads/Claude/scripts/install.sh ~/my-tools/claude-harness
+
+# After install
+source ~/.zshrc
+echo $HARNESS_DIR   # → your install path
+```
+
+---
 
 ### `scripts/init.sh`
 
@@ -933,9 +1175,96 @@ metadata:
 | Type | What it stores | When saved |
 |------|---------------|-----------|
 | `user` | Role, goals, preferences, knowledge level | When user profile details are learned |
-| `feedback` | Corrections and validated approaches | When user corrects Claude or confirms an approach |
+| `feedback` | Corrections and validated approaches (both directions) | When user corrects Claude OR confirms a non-obvious approach worked |
 | `project` | Active goals, decisions, deadlines | When project state changes |
 | `reference` | Pointers to external resources (Linear, Grafana, etc.) | When external system locations are mentioned |
+
+---
+
+### Feedback memory — detailed
+
+Feedback memory is the most important type: it prevents Claude from repeating the same mistakes and from drifting away from approaches the user has already validated.
+
+**Two triggers — corrections AND confirmations:**
+
+| Trigger | Example | Why save |
+|---------|---------|---------|
+| User corrects Claude | "don't mock the database in tests" | Prevents repeating the mistake |
+| User confirms a non-obvious approach | "yes the single bundled PR was right" | Prevents over-cautious or wrong default next time |
+
+Corrections are easy to notice. Confirmations are quieter — watch for the user accepting an unusual choice without pushback, or saying "yes exactly" / "perfect".
+
+**File location:** `.claude/memory/feedback/<YYYY-MM-DD>.md` (one file per day, append)
+
+**Required format — three parts:**
+
+```markdown
+---
+name: feedback-<slug>
+description: <one-line hook — specific enough to know when to apply this>
+metadata:
+  type: feedback
+---
+
+<The rule itself — lead with the behavior to adopt or avoid>
+
+**Why:** <The reason the user gave — often a past incident or strong preference>
+**How to apply:** <When and where this guidance kicks in; how to judge edge cases>
+
+---
+
+*Recorded: YYYY-MM-DD*
+*Source: correction | confirmation*
+```
+
+The `Why:` line is critical — it lets Claude judge edge cases instead of blindly applying the rule.
+
+**Examples:**
+
+```markdown
+---
+name: feedback-no-db-mocks
+description: Integration tests must hit a real database, never mocks
+metadata:
+  type: feedback
+---
+
+Never mock the database in integration tests — use a real local database.
+
+**Why:** Prior incident where mock/prod divergence masked a broken migration. Tests passed, prod failed.
+**How to apply:** For any test that exercises a database query or transaction. Unit tests on pure logic are fine to mock.
+
+---
+*Recorded: 2026-06-15*
+*Source: correction*
+```
+
+```markdown
+---
+name: feedback-bundled-pr
+description: For refactors in this area, prefer one bundled PR over many small ones
+metadata:
+  type: feedback
+---
+
+When refactoring shared infrastructure, ship as a single bundled PR — not split by file or layer.
+
+**Why:** User confirmed this after I chose it: splitting would have been churn without benefit.
+**How to apply:** When planning a multi-file refactor, default to one PR unless files are truly independent.
+
+---
+*Recorded: 2026-06-15*
+*Source: confirmation*
+```
+
+**What NOT to save as feedback:**
+
+- Code patterns, architecture, file paths — these are derivable from the code
+- Debugging solutions or fix recipes — the fix is in the code; the commit message has context
+- Anything already documented in `CLAUDE.md`
+- Ephemeral task details or in-progress state
+
+---
 
 ### Memory lifecycle
 
@@ -953,22 +1282,40 @@ session ends
   ↓ state-breadcrumb.sh → .claude/memory/sessions/YYYY-MM-DD.md
   ↓ session-handoff.sh → specs/HANDOFF.md
   ↓
-user corrects Claude or confirms approach
-  ↓ Claude saves feedback memory → .claude/memory/feedback/
+user corrects Claude OR confirms non-obvious approach
+  ↓ Claude saves feedback memory → .claude/memory/feedback/YYYY-MM-DD.md
   ↓
 team project: next day
   ↓ /sync-memory → git pull + scan commits + flag overlaps
 ```
 
+### Before acting on a memory
+
+Memories reflect what was true when they were written — not necessarily now.
+
+| Memory references | Verify before acting |
+|---|---|
+| A file path | `ls <path>` — the file may have moved or been deleted |
+| A function or flag name | `grep -r <name> src/` — it may have been renamed |
+| Repo state snapshot | Run `git log` — don't trust a stale activity summary |
+
+If a memory conflicts with the current code → **trust the code**, then update or remove the stale memory.
+
 ### `MEMORY.md` index
 
-Loaded into every session's context. The index must stay under 200 lines. Format:
+Loaded into every session's context. Keep it under 200 lines (lines after 200 are truncated by Claude Code).
 
 ```markdown
 # Memory Index
 
-- [Title](path/to/file.md) — one-line hook explaining what's in the file
+- [Title](path/to/file.md) — one-line hook explaining when this memory applies
 ```
+
+Index maintenance rules:
+- One entry per file, ≤150 characters per line
+- Most recent date entries first
+- Remove entries for memories older than ~30 days that no longer apply
+- Do not write memory content into MEMORY.md — only pointers
 
 ---
 
