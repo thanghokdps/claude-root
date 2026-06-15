@@ -476,6 +476,50 @@ Sinh ra `PR_TEMPLATE.md` — điền sẵn title, summary (why not how), files c
 
 ---
 
+### Dynamic workflow — task quy mô lớn
+
+Khi task cần thay đổi 10+ file độc lập, audit cả codebase, hoặc migration lớn → dùng dynamic workflow thay vì wave agents thông thường.
+
+**Trigger:**
+```
+ultracode: audit toàn bộ API endpoint trong src/routes/ thiếu auth check
+```
+
+Hoặc dùng `/workflow` command của harness:
+```
+/workflow migrate tất cả components dùng class sang functional
+```
+
+**Claude Code sẽ:**
+1. Tự viết một JavaScript script orchestration
+2. Chạy script trong background (session vẫn responsive)
+3. Tạo đến 16 agent song song, tối đa 1000 agent mỗi run
+
+**Monitor:**
+```
+/workflows        xem tất cả runs đang chạy
+p                 pause / resume
+x                 stop
+s                 save script thành lệnh tái sử dụng
+```
+
+**Save để dùng lại:**
+- `.claude/workflows/<name>.js` — shared với team qua git
+- `~/.claude/workflows/<name>.js` — cá nhân, tất cả projects
+
+Workflow đã save trở thành lệnh `/<name>` trong autocomplete.
+
+**Built-in workflow:**
+```
+/deep-research câu hỏi của bạn
+```
+
+Fan-out web search → cross-check nguồn → adversarial vote → report có citation.
+
+> **Lưu ý chi phí**: Dynamic workflows dùng nhiều token hơn đáng kể. Test trên 1 thư mục nhỏ trước khi chạy cả codebase.
+
+---
+
 ## 9. Làm việc nhóm (team)
 
 ### Đầu mỗi session

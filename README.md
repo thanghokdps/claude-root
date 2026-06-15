@@ -1408,6 +1408,72 @@ The coordinator stops and asks the human when:
 
 ---
 
+## Dynamic workflows
+
+Dynamic workflows are a Claude Code native feature (v2.1.154+) for orchestrating **dozens to hundreds of subagents** from a JavaScript script Claude writes. The harness integrates them at two levels: the coordinator's scale-check and the `/workflow` command.
+
+### When to use
+
+| Use a dynamic workflow | Use in-context wave agents |
+|------------------------|----------------------------|
+| 10+ files changed independently | < 8 files |
+| Codebase-wide audit or migration | Changes in 1–2 modules |
+| Adversarial cross-check of results | Single linear pipeline |
+| Orchestration worth saving/rerunning | One-off in-session task |
+
+### Trigger
+
+```text
+ultracode: audit every API endpoint under src/routes/ for missing auth checks
+```
+
+Or naturally: "use a workflow for this migration", "run a workflow".
+Or for the whole session: `/effort ultracode`
+
+### Harness command
+
+```text
+/workflow <task description>
+```
+
+Guides you through the decision (workflow vs. waves), triggers the correct path, and explains the save/reuse flow.
+
+### Built-in workflows
+
+| Command | What it does |
+|---------|-------------|
+| `/deep-research <question>` | Fan-out web research → cross-check sources → adversarial vote → cited report |
+
+### Save for reuse
+
+After a run: `/workflows` → select run → `s`
+
+| Save path | Scope |
+|-----------|-------|
+| `.claude/workflows/<name>.js` | Project — shared with team via git |
+| `~/.claude/workflows/<name>.js` | Personal — all projects |
+
+Saved workflows become `/<name>` slash commands.
+
+### Limits
+
+| Constraint | Value |
+|-----------|-------|
+| Concurrent agents | 16 max |
+| Total per run | 1,000 max |
+| Resumable | Within same session only |
+| Mid-run input | Not supported |
+
+### Disable
+
+```json
+{ "disableWorkflows": true }
+```
+
+or `CLAUDE_CODE_DISABLE_WORKFLOWS=1`.
+
+---
+
 ## Extending the harness
 
 ### Add a new skill
