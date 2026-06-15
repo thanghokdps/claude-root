@@ -166,15 +166,25 @@ chmod +x "$CLAUDE_DIR/hooks/"*.sh 2>/dev/null || true
 echo "⚙️  Writing .claude/settings.json..."
 
 EXTRA_HOOKS=""
-has_signal "python"     && EXTRA_HOOKS+='
-      { "matcher": "Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/ruff-on-edit.sh" }] },' || true
-has_signal "typescript" && EXTRA_HOOKS+='
-      { "matcher": "Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/eslint-on-edit.sh" }] },' || true
+has_signal "python"     && EXTRA_HOOKS+=',
+      { "matcher": "Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/ruff-on-edit.sh" }] }' || true
+has_signal "typescript" && EXTRA_HOOKS+=',
+      { "matcher": "Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/eslint-on-edit.sh" }] }' || true
 
 cat > "$CLAUDE_DIR/settings.json" << SETTINGS
 {
   "hooks": {
     "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/agent-progress.sh pre",
+            "statusMessage": "🤖 Spawning agent..."
+          }
+        ]
+      },
       {
         "matcher": "Bash",
         "hooks": [
@@ -191,8 +201,33 @@ cat > "$CLAUDE_DIR/settings.json" << SETTINGS
     ],
     "PostToolUse": [
       {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/agent-progress.sh",
+            "statusMessage": "✅ Agent completed"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/agent-progress.sh",
+            "statusMessage": "📝 Logging edit..."
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/agent-progress.sh",
+            "statusMessage": "💻 Logging command..."
+          },
           {
             "type": "command",
             "command": "echo \"\$CLAUDE_TOOL_INPUT\" | grep -q 'git commit' && .claude/hooks/save-commit-memory.sh || true"
@@ -256,46 +291,258 @@ sed -i '' "s/{{GIT_EMAIL}}/$GIT_EMAIL/g" "$CLAUDE_DIR/memory/user.md" 2>/dev/nul
 echo "📝  Generating CLAUDE.md..."
 STACK_LIST=$(printf '%s, ' "${SIGNALS[@]}" | sed 's/, $//')
 
+# ── Extract scripts from package.json ────────────────────────────────────────
+PKG_SCRIPTS=""
+if [ -f "$PROJECT_DIR/package.json" ] && command -v python3 &>/dev/null; then
+  PKG_SCRIPTS=$(python3 - "$PROJECT_DIR/package.json" <<'PYEOF'
+import json, sys
+try:
+  pkg = json.load(open(sys.argv[1]))
+  scripts = pkg.get("scripts", {})
+  pm = "pnpm" if open(sys.argv[1]).read().find('"pnpm') >= 0 else "npm"
+  lines = []
+  priority = ["dev", "start", "build", "test", "lint", "typecheck", "check-types", "e2e", "eval"]
+  shown = set()
+  for key in priority:
+    if key in scripts:
+      lines.append(f"{pm} {key}")
+      shown.add(key)
+  for key, val in scripts.items():
+    if key not in shown and not key.startswith("post") and not key.startswith("pre"):
+      lines.append(f"{pm} {key}")
+  print("\n".join(f"# {l}" if i > 4 else l for i, l in enumerate(lines)))
+except Exception as e:
+  print("# (could not parse package.json scripts)")
+PYEOF
+)
+fi
+
+# ── Detect key directories ────────────────────────────────────────────────────
+detect_dirs() {
+  local dirs=()
+  [ -d "$PROJECT_DIR/src" ]        && dirs+=("src/")
+  [ -d "$PROJECT_DIR/app" ]        && dirs+=("app/")
+  [ -d "$PROJECT_DIR/apps" ]       && dirs+=("apps/")
+  [ -d "$PROJECT_DIR/packages" ]   && dirs+=("packages/")
+  [ -d "$PROJECT_DIR/lib" ]        && dirs+=("lib/")
+  [ -d "$PROJECT_DIR/server" ]     && dirs+=("server/")
+  [ -d "$PROJECT_DIR/api" ]        && dirs+=("api/")
+  [ -d "$PROJECT_DIR/components" ] && dirs+=("components/")
+  [ -d "$PROJECT_DIR/hooks" ]      && dirs+=("hooks/")
+  [ -d "$PROJECT_DIR/utils" ]      && dirs+=("utils/")
+  [ -d "$PROJECT_DIR/tests" ]      && dirs+=("tests/")
+  [ -d "$PROJECT_DIR/e2e" ]        && dirs+=("e2e/")
+  [ -d "$PROJECT_DIR/docs" ]       && dirs+=("docs/")
+  [ -d "$PROJECT_DIR/scripts" ]    && dirs+=("scripts/")
+  printf '%s\n' "${dirs[@]}"
+}
+
+dir_label() {
+  case "$1" in
+    "src/")        echo "Source code" ;;
+    "app/")        echo "Next.js App Router pages and layouts" ;;
+    "apps/")       echo "Monorepo app packages" ;;
+    "packages/")   echo "Shared library packages" ;;
+    "lib/")        echo "Shared utilities and clients" ;;
+    "server/")     echo "Server-side code and DB" ;;
+    "api/")        echo "API handlers" ;;
+    "components/") echo "React UI components" ;;
+    "hooks/")      echo "React hooks" ;;
+    "utils/")      echo "Utility functions" ;;
+    "tests/")      echo "Test files" ;;
+    "e2e/")        echo "End-to-end tests (Playwright)" ;;
+    "docs/")       echo "Documentation" ;;
+    "scripts/")    echo "Build and utility scripts" ;;
+    *)             echo "<!-- purpose -->" ;;
+  esac
+}
+
+DIR_ROWS=""
+while IFS= read -r dir; do
+  [ -z "$dir" ] && continue
+  label=$(dir_label "$dir")
+  DIR_ROWS="${DIR_ROWS}| \`${dir}\` | ${label} |
+"
+done < <(detect_dirs)
+
+# ── Detect test commands ──────────────────────────────────────────────────────
+TEST_CMD="${PM:-npm} test"
+has_signal "vitest"     && TEST_CMD="pnpm test          # vitest"
+has_signal "jest"       && TEST_CMD="pnpm test          # jest"
+has_signal "pytest"     && TEST_CMD="pytest"
+E2E_CMD=""
+has_signal "playwright" && E2E_CMD="pnpm test:e2e       # playwright"
+
+# ── Package manager ───────────────────────────────────────────────────────────
+PM="npm"
+has_signal "pnpm" && PM="pnpm"
+has_signal "yarn" && PM="yarn"
+
+# ── Monorepo note ─────────────────────────────────────────────────────────────
+MONO_NOTE=""
+( [ -f "$PROJECT_DIR/pnpm-workspace.yaml" ] || [ -f "$PROJECT_DIR/turbo.json" ] ) && \
+  MONO_NOTE="# Monorepo — filter by workspace: ${PM} --filter <workspace> <cmd>"
+
+# ── Lint / typecheck commands ─────────────────────────────────────────────────
+LINT_CMD="${PM} lint"
+has_signal "python"     && LINT_CMD="ruff check ."
+TYPECHECK_CMD="${PM} build"
+has_signal "python"     && TYPECHECK_CMD="mypy ."
+# prefer check-types / typecheck script if it exists
+if has_signal "typescript" && [ -f "$PROJECT_DIR/package.json" ]; then
+  grep -q '"check-types"' "$PROJECT_DIR/package.json" 2>/dev/null && TYPECHECK_CMD="${PM} check-types"
+  grep -q '"typecheck"'   "$PROJECT_DIR/package.json" 2>/dev/null && TYPECHECK_CMD="${PM} typecheck"
+fi
+
+# ── Stack-specific constraints ────────────────────────────────────────────────
+CONSTRAINTS=""
+has_signal "pnpm"       && CONSTRAINTS="${CONSTRAINTS}- \`pnpm\` only — never npm/yarn
+"
+has_signal "typescript" && CONSTRAINTS="${CONSTRAINTS}- TypeScript strict — \`unknown\` over \`any\`, explicit return types on exports
+"
+has_signal "nextjs"     && CONSTRAINTS="${CONSTRAINTS}- Next.js App Router — server components by default; \`\"use client\"\` only when needed
+"
+has_signal "langgraph"  && CONSTRAINTS="${CONSTRAINTS}- LangGraph state: mutate only via node return values, never direct mutation
+"
+has_signal "prisma"     && CONSTRAINTS="${CONSTRAINTS}- Never raw SQL — always use Prisma client; migrations via \`prisma migrate dev\`
+"
+has_signal "python"     && CONSTRAINTS="${CONSTRAINTS}- Always activate virtualenv first; never \`pip install\` globally
+"
+[ -z "$CONSTRAINTS" ] && CONSTRAINTS="<!-- Add project-specific constraints here -->
+"
+
 cat > "$PROJECT_DIR/CLAUDE.md" << CLAUDEMD
-# ${PROJECT_NAME} — Claude Code Guide
+# CLAUDE.md
 
-> Auto-generated by harness init on $(date +%Y-%m-%d). Edit to add project specifics.
+## Auto-Coordinator (applies to every prompt)
 
-## Stack detected
+**You ARE the coordinator by default.**
 
-**${STACK_LIST}**
+**\`TaskCreate\` is mandatory — literal first tool call, before any Read/Bash/Glob.**
 
-## Run the project
+### Step 1 — Classify intent from prompt text
+
+| Intent     | Prompt signals                                        | Pipeline                                         |
+| ---------- | ----------------------------------------------------- | ------------------------------------------------ |
+| \`feat\`     | implement, add, create, build, new feature            | pm → architect → developer → reviewer → qa       |
+| \`fix\`      | fix, bug, broken, error, crash, not working, failing  | pm (root-cause only) → developer → reviewer → qa |
+| \`refactor\` | refactor, clean up, simplify, reorganize, restructure | architect → developer → reviewer → qa            |
+| \`review\`   | review, audit, check, feedback on, look at            | reviewer only                                    |
+| \`chore\`    | update dependency, upgrade, bump, config, tooling     | developer → qa                                   |
+| \`test\`     | write test, add test, coverage, test for              | developer (haiku) → qa                           |
+| \`explain\`  | explain, how does, what is, why, walk me through      | conversational — no agents                       |
+
+### Step 2 — Classify lane
+
+| Lane        | When                                  | Effect on pipeline                                               |
+| ----------- | ------------------------------------- | ---------------------------------------------------------------- |
+| \`tiny\`      | 0–1 risk flags, single file, < 30 min | May collapse to single agent; skip routing summary               |
+| \`normal\`    | 2–3 risk flags                        | Run pipeline as-is; show routing line                            |
+| \`high-risk\` | 4+ flags or hard gate                 | Always full pipeline: pm → architect → developer → reviewer → qa |
+
+**Hard gates** (always \`high-risk\`): \`auth · authz · data-loss · migration · security · external provider · public contract\`
+
+### Step 3 — Dispatch
+
+1. **Create \`TaskCreate\` entries for every step** before any work
+2. Mark \`in_progress\` before each step, \`completed\` immediately after
+3. Load \`.claude/docs/\` + \`.claude/docs/solutions/INDEX.md\`
+4. For \`normal\`/\`high-risk\`: show \`Intent: <type> · Lane: <lane> · Pipeline: <agents>\`
+5. Run agents with wave-based parallel execution (\`run_in_background: true\`)
+
+**Wave model**: \`haiku\` for tests/types/constants; \`sonnet\` for complex logic
+**Pure conversational** (no tool use) → answer directly, no tasks needed
+
+---
+
+## Session Resume (read this FIRST, every session)
 
 \`\`\`bash
-# Fill in your actual run commands here
+cat specs/HANDOFF.md 2>/dev/null && rm -f specs/HANDOFF.md
+cat .claude/docs/solutions/INDEX.md 2>/dev/null
+grep -rl "decision: pending" specs/ 2>/dev/null
 \`\`\`
 
-## Architecture
+If \`specs/HANDOFF.md\` exists → read fully → continue from "Next steps" → delete it.
+Run \`/compact\` before ending a session. Run \`/compound\` after significant debugging.
 
-\`\`\`
-# Describe your project structure here after init
-\`\`\`
+---
 
-## Key directories
+## Agent Context
+
+**All agents MUST read \`.claude/docs/index.md\` before scanning any source file.**
+
+| Doc | Contents |
+|-----|----------|
+| \`.claude/docs/architecture.md\`  | Layers, data flow, key decisions |
+| \`.claude/docs/conventions.md\`   | Naming, imports, anti-patterns |
+| \`.claude/docs/stack.md\`         | Tech stack, run commands, test commands |
+| \`.claude/docs/entry-points.md\`  | API routes, jobs, CLI commands |
+| \`.claude/docs/test-strategy.md\` | Test structure, markers, conventions |
+
+If \`.claude/docs/\` does not exist → run \`/project-init\` first.
+
+---
+
+## Project Overview
+
+**Stack:** ${STACK_LIST}
+
+### Key directories
 
 | Path | Purpose |
 |------|---------|
-| \`src/\` | Main source |
+${DIR_ROWS}
+## Multi-Agent Ticket Workflow
 
-## Available skills
+For any non-trivial task, use \`/ticket #<issue> <description>\` to run the full pipeline:
 
-| Skill | Command | Purpose |
-|-------|---------|---------|
-| feature | \`/feature <description>\` | Intake → plan → build → review |
-| fix-bug | \`/fix-bug <symptom>\` | Root cause → fix → verify → commit |
-| code-review | \`/code-review [low\|medium\|high]\` | Review diff |
-| checkpoint | \`/checkpoint\` | Progress vs plan + quality gates |
-| sync-memory | \`/sync-memory\` | Pull latest + rebuild memory from your commits |
+| Phase | Agent             | Role                                       |
+| ----- | ----------------- | ------------------------------------------ |
+| 1     | \`pm-agent\`        | Research requirements & codebase context   |
+| 2     | \`architect-agent\` | Technical design & implementation plan     |
+| 3     | \`developer-agent\` | Implement the plan                         |
+| 4     | \`reviewer-agent\`  | Code review — APPROVED or CHANGES REQUIRED |
+| 5     | \`qa-agent\`        | Run checks, fix surface errors, commit     |
 
-## Constraints
+For lightweight tasks (small fix, chore), use \`/task\` instead.
 
-<!-- Add project-specific constraints here -->
+## Lightweight Task Workflow
+
+### Step 1 — Break down & track
+Use \`TaskCreate\` before writing any code. Mark \`in_progress\` when starting, \`completed\` when done.
+
+### Step 2 — Implement
+Edit existing files over creating new ones. No comments unless the WHY is non-obvious.
+
+### Step 3 — Verify
+
+\`\`\`bash
+${LINT_CMD}
+${TYPECHECK_CMD}
+${TEST_CMD}
+${E2E_CMD}
+\`\`\`
+
+### Step 4 — Commit
+
+\`\`\`
+<type>: <description>
+\`\`\`
+
+Types: \`feat\` \`fix\` \`refactor\` \`chore\` \`docs\` \`test\`
+
+## Common Commands
+
+\`\`\`bash
+${PKG_SCRIPTS:-# Fill in run commands}
+${MONO_NOTE}
+\`\`\`
+
+## Key Rules
+
+- Keep CLAUDE.md under 200 lines
+${CONSTRAINTS}
 CLAUDEMD
 
 # ─── Summary ─────────────────────────────────────────────────────────────────

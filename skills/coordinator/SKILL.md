@@ -325,42 +325,83 @@ Status:
 
 ### 5b — Execute each wave
 
-**For each wave:**
+**For each wave, follow this exact sequence:**
 
-1. Update status board — mark wave tasks as `🔵 running`
-2. **Dispatch all same-wave tasks in ONE message** using the Agent tool with `run_in_background: true`
-3. Each agent gets a self-contained prompt (full context — no shared state)
-4. Wait for ALL background agents in the wave to complete
-5. Collect results → update status board → verify wave before advancing
+**Step 1 — Announce and print status table before dispatching:**
 
-**Single-message parallel dispatch (critical):**
+Print a sentence like `"T1.1 and T1.2 running in parallel. Updated pipeline status:"` then immediately print the full markdown table:
+
 ```
-// Send ONE message with ALL parallel Agent calls:
+| Task | Status |
+|------|--------|
+| T1.1 | ✅ Done |
+| T1.2 | 🔵 Running (sonnet) |
+| T2.1 | ⬜ Waiting on T1.2 |
+| T3.1 | ⬜ Waiting on T2.1 |
+```
+
+Status cell format — use exactly these strings:
+- `✅ Done` — completed
+- `🔵 Running (sonnet)` or `🔵 Running (haiku)` — in progress, include model
+- `⬜ Waiting on T1.1` — blocked, name the dependency task(s)
+- `❌ Failed` — failed
+
+**Step 2 — Dispatch all same-wave tasks in ONE message:**
+```
 Agent({ prompt: "<T1.1 full prompt>", run_in_background: true })
 Agent({ prompt: "<T1.2 full prompt>", run_in_background: true })
-// DO NOT send these in separate messages — that makes them sequential
 ```
+Print: `"* Waiting for N background agents to finish"`
 
-**Wave completion check** — before advancing to Wave N+1:
-- All Wave N tasks return PASS
+**Step 3 — As each agent completes, narrate inline:**
+
+Each completion gets one line: `"Agent \"T1.1 <description>\" completed · <elapsed>"`
+Then if it unblocks the next task: `"T1.1 done ✅. Spawning T2.1 now (depends on T1.1)."`
+
+**Step 4 — Print updated table after every completion:**
+
+Reprint the full table immediately after each agent returns — show the new state. Do not wait for the whole wave to finish before updating.
+
+**Step 5 — Wave completion check before advancing to Wave N+1:**
+- All Wave N tasks show ✅ Done in the table
 - No task returned a file conflict
-- SUMMARY.md Verify table updated for all completed tasks
+- SUMMARY.md Verify table updated
 
-If any task FAILS → fix it before advancing. Do not start Wave N+1 with a broken Wave N.
+If any task FAILS → fix it before advancing. Print `❌ Failed` in the table.
 
 ---
 
-### 5c — Status table after each wave
+### 5c — Status table format rules
 
-After each wave completes, show the updated board:
+Always use a two-column `| Task | Status |` table. Never use a wider table for the inline status board — keep it scannable.
 
+**Example mid-wave output:**
 ```
-| Task | Description | Model | Status | Commit |
-|------|-------------|-------|--------|--------|
-| T1.1 | <desc> | sonnet | ✅ done | abc1234 |
-| T1.2 | <desc> | haiku  | ✅ done | def5678 |
-| T2.1 | <desc> | sonnet | 🔵 running | — |
-| T3.1 | <desc> | haiku  | ⬜ waiting T2 | — |
+T1.1 and T1.2 running in parallel. Updated pipeline status:
+
+| Task | Status |
+|------|--------|
+| T1.1 | 🔵 Running (sonnet) |
+| T1.2 | 🔵 Running (haiku) |
+| T2.1 | ⬜ Waiting on T1.1 |
+| T3.1 | ⬜ Waiting on T1.1+T1.2 |
+
+* Waiting for 2 background agents to finish
+```
+
+**After T1.1 completes:**
+```
+Agent "T1.1 implement auth middleware" completed · 4m 12s
+T1.1 done ✅. Spawning T2.1 now (depends on T1.1). Still waiting on T1.2 before I can start T3.1.
+
+| Task | Status |
+|------|--------|
+| T1.1 | ✅ Done |
+| T1.2 | 🔵 Running (haiku) |
+| T2.1 | 🔵 Running (sonnet) |
+| T3.1 | ⬜ Waiting on T1.2 |
+
+* Waiting for 2 background agents to finish
 ```
 
 ---

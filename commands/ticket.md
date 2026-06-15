@@ -73,22 +73,40 @@ Parse Wave Plan. Save it. TaskUpdate completed.
 
 TaskCreate per wave task (all start as "pending").
 
-Print status board:
+**Execute wave by wave. For each wave N:**
+
+1. Print a sentence naming the parallel tasks, then print the full status table:
+
 ```
-| Task | Wave | Description | Model | Status |
-|------|------|-------------|-------|--------|
-| T1.1 |  1   | <desc>      | haiku | ⬜ pending |
-| T2.1 |  2   | <desc>      | sonnet| ⬜ waiting Wave 1 |
+T001 and T002 running in parallel. Updated pipeline status:
+
+| Task | Status |
+|------|--------|
+| T001 | 🔵 Running (sonnet) |
+| T002 | 🔵 Running (haiku) |
+| T003 | ⬜ Waiting on T001 |
+| T004 | ⬜ Waiting on T001+T002 |
 ```
 
-**Execute wave by wave:**
+2. **Dispatch ALL wave N tasks in ONE message** (`run_in_background: true`)
+3. Print: `* Waiting for N background agents to finish`
+4. As each agent completes → narrate inline + reprint updated table:
 
-For each wave N:
-1. Mark wave N tasks → 🔵 running
-2. **Dispatch ALL wave N tasks in ONE message** (parallel, `run_in_background: true`)
-3. Wait for all Wave N agents to return
-4. Check: any BLOCKED? → fix before advancing
-5. Update status board → advance to Wave N+1
+```
+Agent "T001 <description>" completed · 3m 45s
+T001 done ✅. Spawning T003 now. Still waiting on T002 before I can start T004.
+
+| Task | Status |
+|------|--------|
+| T001 | ✅ Done |
+| T002 | 🔵 Running (haiku) |
+| T003 | 🔵 Running (sonnet) |
+| T004 | ⬜ Waiting on T002 |
+```
+
+5. All wave N tasks ✅ → advance to Wave N+1
+
+Status cell values: `✅ Done` · `🔵 Running (sonnet)` · `🔵 Running (haiku)` · `⬜ Waiting on TXxx` · `❌ Failed`
 
 ---
 

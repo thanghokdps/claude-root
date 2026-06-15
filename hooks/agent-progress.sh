@@ -1,14 +1,17 @@
 #!/bin/bash
 # PostToolUse(Agent|Edit|Write|Bash) + PreToolUse(Agent)
-# Prints live agent/wave progress to terminal via stderr.
-# Pass "pre" as $1 for PreToolUse, default is post.
+# Shows live agent/wave progress:
+#   - statusMessage appears inline in Claude Code UI
+#   - Full colored log written to ~/.claude/progress.log
+#   - tail -f ~/.claude/progress.log in a separate terminal for live view
 
 INPUT=$(cat /dev/stdin)
 HOOK_TYPE="${1:-post}"
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 TS=$(date "+%H:%M:%S")
+LOG="$HOME/.claude/progress.log"
 
-# ANSI colors
+# ANSI colors (for log file / raw terminal)
 MAG='\033[0;35m'; BOLD_MAG='\033[1;35m'
 GRN='\033[0;32m'; BOLD_GRN='\033[1;32m'
 CYN='\033[0;36m'; BOLD_CYN='\033[1;36m'
@@ -18,6 +21,10 @@ RED='\033[0;31m'
 DIM='\033[2m'; BOLD='\033[1m'
 RST='\033[0m'
 
+log() {
+  printf "%b\n" "$1" >> "$LOG"
+}
+
 # Print wave board from WAVE_STATE.json if it exists
 print_wave_board() {
   STATE_FILE=$(find "$(pwd)/specs" -name "WAVE_STATE.json" 2>/dev/null | xargs ls -t 2>/dev/null | head -1)
@@ -26,9 +33,9 @@ print_wave_board() {
   SLUG=$(python3 -c "import json,sys; d=json.load(open('$STATE_FILE')); print(d.get('slug',''))" 2>/dev/null)
   ISSUE=$(python3 -c "import json,sys; d=json.load(open('$STATE_FILE')); print(d.get('issue',''))" 2>/dev/null)
 
-  echo -e "${BOLD_BLU}┌─ 🌊 WAVE BOARD ── ${ISSUE} ${SLUG} ──────────────────────────${RST}" >&2
+  log "${BOLD_BLU}┌─ 🌊 WAVE BOARD ── ${ISSUE} ${SLUG} ──────────────────────────${RST}"
 
-  python3 - "$STATE_FILE" <<'PYEOF' 1>&2 2>/dev/null
+  python3 - "$STATE_FILE" 2>/dev/null >> "$LOG" <<'PYEOF'
 import json, sys
 
 COLORS = {
@@ -80,10 +87,9 @@ for wi, wave in enumerate(waves):
 
   if wi < len(waves) - 1:
     print(sep)
-
 PYEOF
 
-  echo -e "${BOLD_BLU}└──────────────────────────────────────────────────────────────${RST}" >&2
+  log "${BOLD_BLU}└──────────────────────────────────────────────────────────────${RST}"
 }
 
 case "$TOOL" in
@@ -93,41 +99,49 @@ case "$TOOL" in
     BG=$(echo "$INPUT" | jq -r '.tool_input.run_in_background // false' 2>/dev/null)
 
     if [ "$BG" = "true" ]; then
-      MODE="${YLW}⚡ PARALLEL (background)${RST}"
+      MODE="⚡ PARALLEL (background)"
+      MODE_COLOR="${YLW}⚡ PARALLEL (background)${RST}"
     else
-      MODE="${RED}🔒 SEQUENTIAL (blocking)${RST}"
+      MODE="🔒 SEQUENTIAL (blocking)"
+      MODE_COLOR="${RED}🔒 SEQUENTIAL (blocking)${RST}"
     fi
 
     if [ "$HOOK_TYPE" = "pre" ]; then
-      echo "" >&2
+      # statusMessage is shown inline in Claude Code UI (set via hook registration)
+      # Write full detail to log file for tail -f
+      log ""
       print_wave_board
-      echo "" >&2
-      echo -e "${BOLD_MAG}┌─ 🤖 AGENT SPAWN ─────────────────────────────────────────${RST}" >&2
-      echo -e "${MAG}│  [$TS]  ${BOLD}${SUBTYPE}${RST}" >&2
-      echo -e "${MAG}│  Task: ${DESC}${RST}" >&2
-      echo -e "${MAG}│  Mode: ${MODE}" >&2
-      echo -e "${BOLD_MAG}└──────────────────────────────────────────────────────────${RST}" >&2
+      log ""
+      log "${BOLD_MAG}┌─ 🤖 AGENT SPAWN ─────────────────────────────────────────${RST}"
+      log "${MAG}│  [$TS]  ${BOLD}${SUBTYPE}${RST}"
+      log "${MAG}│  Task: ${DESC}${RST}"
+      log "${MAG}│  Mode: ${MODE_COLOR}"
+      log "${BOLD_MAG}└──────────────────────────────────────────────────────────${RST}"
+
+      # stdout: plain text hint shown to Claude (no ANSI)
+      echo "[agent-progress] Spawning $SUBTYPE — $DESC ($MODE)"
     else
-      echo -e "${BOLD_GRN}✅ [$TS] AGENT DONE  ${DESC}${RST}" >&2
-      echo "" >&2
+      log "${BOLD_GRN}✅ [$TS] AGENT DONE  ${DESC}${RST}"
+      log ""
       print_wave_board
+      echo "[agent-progress] Agent done — $DESC"
     fi
     ;;
 
   Edit)
     FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // "unknown"' 2>/dev/null | sed "s|$(pwd)/||")
-    echo -e "${CYN}  ✏️  [$TS] EDIT   ${FILE}${RST}" >&2
+    log "${CYN}  ✏️  [$TS] EDIT   ${FILE}${RST}"
     ;;
 
   Write)
     FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // "unknown"' 2>/dev/null | sed "s|$(pwd)/||")
-    echo -e "${CYN}  📝 [$TS] WRITE  ${FILE}${RST}" >&2
+    log "${CYN}  📝 [$TS] WRITE  ${FILE}${RST}"
     ;;
 
   Bash)
     CMD=$(echo "$INPUT" | jq -r '.tool_input.command // ""' 2>/dev/null | head -1 | cut -c1-72)
     echo "$CMD" | grep -qE 'npm|pnpm|yarn|git (commit|push|diff|status)|tsc|jest|eslint|pytest|ruff' || exit 0
-    echo -e "${YLW}  💻 [$TS] BASH   ${CMD}${RST}" >&2
+    log "${YLW}  💻 [$TS] BASH   ${CMD}${RST}"
     ;;
 esac
 

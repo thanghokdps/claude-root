@@ -68,6 +68,19 @@ If workspaces are explicitly provided as arguments, skip auto-detection but STIL
 
 ## Step 2 — Run checks per workspace
 
+If 3 or more workspaces are affected, print the status table before dispatching:
+
+```
+Verifying N workspaces in parallel. Current status:
+
+| Workspace | Status |
+|-----------|--------|
+| host      | 🔵 Running |
+| timeOff   | 🔵 Running |
+| @repo/hooks | 🔵 Running |
+| reallocation | ⬜ Queued |
+```
+
 For each affected workspace, run in order:
 
 ### 2a. Lint
@@ -89,11 +102,26 @@ Run 2a → 2b → 2c sequentially per workspace. Stop at first failure and recor
 
 For multiple workspaces, run each workspace's checks in parallel (use `run_in_background: true` on agents if needed).
 
+As each workspace finishes, narrate and reprint the table immediately:
+
+```
+host verified ✅ · 45s
+
+| Workspace | Status |
+|-----------|--------|
+| host      | ✅ Done |
+| timeOff   | 🔵 Running |
+| @repo/hooks | ✅ Done |
+| reallocation | ⬜ Queued |
+
+* Waiting for 1 more workspace to finish
+```
+
 ---
 
 ## Step 3 — Collect results
 
-Build a results table:
+After all workspaces complete, print the final results table:
 
 ```
 ## Verification Report

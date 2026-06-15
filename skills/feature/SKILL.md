@@ -48,6 +48,22 @@ For high-risk: save plan to `specs/<slug>/PLAN.md` and show user before building
 
 Follow the plan step by step.
 
+If the plan has 3 or more tasks/waves, print a status table before starting and update it after each task completes:
+
+```
+Building N tasks across M waves. Current status:
+
+| Task | Status |
+|------|--------|
+| T1.1 | 🔵 Running (sonnet) |
+| T1.2 | 🔵 Running (haiku) |
+| T2.1 | ⬜ Waiting on T1.1+T1.2 |
+| T3.1 | ⬜ Waiting on T2.1 |
+```
+
+After each task: narrate completion + reprint table immediately.
+Status values: `✅ Done` · `🔵 Running (sonnet/haiku)` · `⬜ Waiting on Txx` · `❌ Failed`
+
 Rules:
 - Run quality gates after each logical chunk: `npx tsc --noEmit`, lint, relevant tests
 - If a step fails: diagnose root cause before moving on (don't hack around)
