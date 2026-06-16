@@ -145,6 +145,23 @@ for skill in feature fix-bug code-review checkpoint sync-memory; do
   fi
 done
 
+# ─── Copy Agents ─────────────────────────────────────────────────────────────
+
+echo "🤖  Copying agents..."
+mkdir -p "$CLAUDE_DIR/agents"
+if [ -d "$HARNESS_DIR/agents" ]; then
+  cp "$HARNESS_DIR/agents/"*.md "$CLAUDE_DIR/agents/" 2>/dev/null || true
+fi
+
+# ─── Copy Templates ───────────────────────────────────────────────────────────
+
+echo "📄  Copying templates..."
+mkdir -p "$CLAUDE_DIR/templates"
+if [ -d "$HARNESS_DIR/templates" ]; then
+  cp "$HARNESS_DIR/templates/"*.md   "$CLAUDE_DIR/templates/" 2>/dev/null || true
+  cp "$HARNESS_DIR/templates/"*.json "$CLAUDE_DIR/templates/" 2>/dev/null || true
+fi
+
 # ─── Copy Hooks ──────────────────────────────────────────────────────────────
 
 echo "🪝  Copying hooks..."
@@ -554,6 +571,8 @@ echo "   .claude/"
 echo "   ├── rules/         $(ls "$CLAUDE_DIR/rules/" | wc -l | tr -d ' ') files"
 echo "   ├── skills/        $(ls "$CLAUDE_DIR/skills/" | wc -l | tr -d ' ') skills"
 echo "   ├── hooks/         $(ls "$CLAUDE_DIR/hooks/" | wc -l | tr -d ' ') scripts"
+echo "   ├── agents/        $(ls "$CLAUDE_DIR/agents/" 2>/dev/null | wc -l | tr -d ' ') agents"
+echo "   ├── templates/     $(ls "$CLAUDE_DIR/templates/" 2>/dev/null | wc -l | tr -d ' ') templates"
 echo "   ├── memory/        bootstrapped"
 echo "   └── settings.json  hooks registered"
 echo ""
