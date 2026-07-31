@@ -139,7 +139,7 @@ has_signal "fastapi"    && cp "$HARNESS_DIR/rules/stacks/fastapi.md"     "$CLAUD
 
 echo "🛠  Copying skills..."
 mkdir -p "$CLAUDE_DIR/skills"
-for skill in feature fix-bug code-review checkpoint sync-memory; do
+for skill in coordinator feature fix-bug code-review checkpoint sync-memory brainstorming grill writing-plans blast-radius; do
   if [ -d "$HARNESS_DIR/skills/$skill" ]; then
     cp -r "$HARNESS_DIR/skills/$skill" "$CLAUDE_DIR/skills/"
   fi

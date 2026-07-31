@@ -151,6 +151,7 @@ Downloads/Claude/                    ← this repo (the source library)
 │
 ├── skills/                          ← slash command definitions
 │   ├── README.md
+│   ├── blast-radius/SKILL.md        ← /blast-radius
 │   ├── brainstorming/SKILL.md       ← /brainstorming
 │   ├── btw/SKILL.md                 ← /btw
 │   ├── checkpoint/SKILL.md          ← /checkpoint
@@ -163,6 +164,7 @@ Downloads/Claude/                    ← this repo (the source library)
 │   ├── figma-to-screen/SKILL.md     ← /figma-to-screen
 │   ├── fix-bug/SKILL.md             ← /fix-bug
 │   ├── gen-tests/SKILL.md           ← /gen-tests
+│   ├── grill/SKILL.md               ← /grill
 │   ├── init-project/SKILL.md        ← /init-project (legacy alias)
 │   ├── project-init/SKILL.md        ← /project-init
 │   ├── review-diff/SKILL.md         ← /review-diff
@@ -439,6 +441,32 @@ Specs dir: specs/add-dark-mode/
 **Steps:** Explore context → clarify intent (one question at a time) → propose 2–3 approaches with trade-offs → design the chosen approach → review with user → write `specs/<slug>/design.md` → hand off to `/writing-plans`.
 
 **Rule:** Do NOT write any implementation code during brainstorming.
+
+---
+
+### `/grill` — Stress-test a plan before building it
+
+**Invoke:** `/grill` (grills the most recent `design.md`) or `/grill <plan text>`
+
+**Steps:** Load the target silently → map locked decisions / open branches / unstated assumptions → ask **one** question per turn, each with your recommended answer → push back on weak answers → summarize decisions, deferrals, and what still blocks implementation.
+
+**Core rule:** facts you look up yourself (filesystem, commands, docs); decisions you put to the user and wait. Never spend a question on something `cat package.json` answers.
+
+**Rule:** explicit trigger only — never self-invoked. Nothing is written to disk unless the user asks.
+
+Sits between `/brainstorming` (builds the design, collaborative) and `/writing-plans` (converts it to tasks).
+
+---
+
+### `/blast-radius` — What does this change break?
+
+**Invoke:** `/blast-radius` (branch vs main), `/blast-radius <range|file>`, or describe a proposed change
+
+**Steps:** Extract changed symbols from the diff → trace direct callers, barrel re-exports, event/queue consumers, routes, jobs, feature flags → flag contract surfaces (API shapes, DB schema, env vars, wire formats) → score each node → report with `file:line` anchors, untested paths, required pre-merge actions, and a mandatory rollback table.
+
+**Risk model:** per node — test gap `0.30` · flow participation `0.25` · security surface `0.20` · cross-boundary `0.15` · high fan-in `0.10` (weights sum to `1.00`). Overall verdict **counts nodes** rather than taking the max: 🔴 needs an irreversible migration, or a `≥0.60` node *plus* a contract change, or 3+ nodes at `≥0.30`. Taking the max would return 🔴 on nearly every high-risk change and the signal would be ignored.
+
+**Not the same as `hooks/blast-radius-check.sh`** — that hook polices scope creep against the active `PLAN.md`. This skill analyses what a change reaches.
 
 ---
 

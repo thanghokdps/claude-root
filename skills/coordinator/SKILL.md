@@ -82,6 +82,7 @@ Map the request to exactly one **Intent Category** and one **Lane**:
 | `bug-fix` | "fix", "broken", "error", "crash", "not working", "regression" | Debugger → Implementer → Verifier |
 | `refactor` | "refactor", "clean up", "reorganize", "rename", "simplify", "extract" | Refactorer → Verifier |
 | `code-review` | "review", "check", "audit", "look at", "what do you think of" | Reviewer |
+| `impact-analysis` | "blast radius", "what does this break", "safe to merge", "ảnh hưởng gì" | `/blast-radius` skill |
 | `verify` | "verify", "confirm", "does this work", "test this", "validate" | Verifier |
 | `explore` | "where is", "how does", "explain", "find", "what calls", "understand" | Explorer |
 | `security` | "security", "vuln", "CVE", "injection", "XSS", "auth bypass", "pentest" | Security Reviewer |
@@ -732,6 +733,7 @@ If a dynamic workflow is warranted, tell the user: "This task is codebase-wide. 
 - **End every run with `TaskList`** so the user sees the completed board.
 
 ### Safety
+- **Run `/blast-radius` before the Verifier on every `high-risk` lane change**, and on any change touching a contract surface (API shape, DB schema, env var, wire format). A 🔴 verdict requires an `E00x` entry in `specs/<slug>/ESCALATIONS.md` and a filled `## Rollback` section in SUMMARY.md before the Verifier runs — and since ESCALATIONS.md defaults to deny-on-no-response, that entry holds dispatch until a human decides. Skills advise; only hooks can hard-block.
 - **Never skip the Verifier** when code changes.
 - **Verifier reads SUMMARY.md Verify table** — not just its own checks.
 - **Escalate** when: confidence ≤ 2, hard gate fires, unresolved ESCALATIONS.md entry, Verifier fails twice, scope expands beyond request.

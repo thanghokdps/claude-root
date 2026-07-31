@@ -78,6 +78,7 @@ cp hooks/<name>.sh ~/.claude/hooks/
 | `model` | `sonnet` (complex) or `haiku` (simple/fast) |
 | `effort` | `high` / `medium` / `low` |
 | `when_to_use` | Phrase patterns that trigger auto-invocation |
+| `disable-model-invocation` | `true` = user-invoked only; the model never fires it, and the skill is hidden from the model's skill list. Makes `when_to_use` human-facing documentation rather than a trigger |
 | `background` | `true` = run as background agent |
 | `color` | Display color in task list (blue, green, orange, red) |
 | `isolation` | `worktree` = isolated git worktree for parallel execution |

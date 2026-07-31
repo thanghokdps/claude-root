@@ -438,6 +438,33 @@ write unit tests for the calculateDiscount function in src/utils/pricing.ts
 
 ---
 
+### Poke holes in a plan before building it
+
+```
+/grill
+/grill we're going to cache user permissions in Redis with a 5min TTL
+```
+
+**Flow:** reads the target and the code silently → sorts it into locked decisions / open branches / unstated assumptions → asks **one** question per turn with a recommended answer → pushes back on weak answers → summarizes decisions, deferrals, and what still blocks implementation.
+
+Facts it looks up itself; decisions it puts to you. Explicit trigger only — it never self-invokes, and writes nothing to disk unless you ask.
+
+---
+
+### Check what a change breaks before merging
+
+```
+/blast-radius
+/blast-radius src/auth/session.ts
+/blast-radius if I rename users.role to users.role_id
+```
+
+**Flow:** extracts changed symbols from the diff → traces callers, barrel re-exports, event/queue consumers, routes, jobs → flags contract surfaces (API shapes, DB schema, env vars) → scores each node → reports with `file:line` anchors, untested paths, pre-merge checklist, and a mandatory rollback table.
+
+Verdict 🟢/🟡/🔴 — a 🔴 means the change belongs in the `high-risk` lane.
+
+---
+
 ### Generate an implementation plan from a design
 
 ```
@@ -713,7 +740,9 @@ $HARNESS_DIR/scripts/init.sh
 | `/ticket #N <description>` | Run the full pipeline from a ticket |
 | `/task <description>` | Small fix, no ceremony needed |
 | `/brainstorming <idea>` | Design before building a complex feature |
+| `/grill` | Stress-test a plan before writing any code |
 | `/writing-plans` | After brainstorming, generate PLAN.md |
+| `/blast-radius` | Before merging — what does this change reach? |
 | `/create-pr` | Generate a PR description |
 | `/checkpoint` | Check progress mid-session |
 | `/compact` | End of session, save state |
