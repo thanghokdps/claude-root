@@ -1,0 +1,8 @@
+pyyaml>=6.0
+pytest>=7.0
+# Without ruff the quality tier has only its nesting heuristic left, which almost
+# nothing fails — so the tier marks itself advisory and stops counting. Install it.
+ruff>=0.4
+# Only needed for --judge anthropic; the stub judge runs offline.
+# Install separately:  pip install anthropic
+# anthropic>=0.40
