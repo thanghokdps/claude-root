@@ -1,3 +1,11 @@
+---
+model: opus
+effort: medium
+name: checkpoint
+description: Checks progress against the active PLAN.md and runs every quality gate — typecheck, lint, tests — reporting pass/fail per gate. Use to confirm where a feature stands or before handing work off.
+when_to_use: midway through a PLAN.md, before a commit or PR, or when the user asks how far along something is
+---
+
 # checkpoint — Check progress against plan, run quality gates
 
 **Invoke:** `/checkpoint`

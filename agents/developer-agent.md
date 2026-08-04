@@ -1,7 +1,7 @@
 ---
 name: developer-agent
 description: Developer Agent — executes a single wave task. Dispatched by Wave Executor with run_in_background. Returns Implementation Report. Does NOT commit or run checks.
-model: sonnet
+model: opus
 permissionMode: bypassPermissions
 maxTurns: 60
 background: true

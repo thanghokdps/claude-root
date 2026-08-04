@@ -1,0 +1,21 @@
+id: slugify
+mode: greenfield
+prompt: |
+  Implement slugify(text) in slug.py: lowercase the text, replace runs of
+  non-alphanumeric characters with a single hyphen, and strip leading and
+  trailing hyphens.
+target_files:
+  - slug.py
+symbols:
+  - slugify
+tests:
+  fail_to_pass:
+    - test_slug.py
+  pass_to_pass: []
+  # Never copied into the workspace until after the solver has finished.
+  heldout:
+    - test_slug_heldout.py
+rubric:
+  - "slugify lowercases the input text"
+  - "Runs of non-alphanumeric characters collapse into a single hyphen"
+  - "Leading and trailing hyphens are stripped from the result"

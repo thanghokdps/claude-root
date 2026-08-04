@@ -1,3 +1,11 @@
+---
+model: opus
+effort: low
+name: sync-memory
+description: Pulls the latest commits and rebuilds memory from your own, updating .claude/memory/commits/ and last-sync.txt. Use at the start of a session on a team project.
+when_to_use: starting a session on a shared repo, or after a teammate has pushed work you have not seen
+---
+
 # sync-memory — Pull latest + rebuild memory from your commits
 
 **Invoke:** `/sync-memory`

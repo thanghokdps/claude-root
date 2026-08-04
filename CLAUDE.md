@@ -39,7 +39,7 @@ mkdir -p skills/<name>
 # ---
 # name: <name>
 # description: <trigger condition — what makes Claude invoke this>
-# model: sonnet | haiku
+# model: opus
 # effort: high | medium | low
 # when_to_use: <phrases that trigger this skill>
 # ---
@@ -75,7 +75,7 @@ cp hooks/<name>.sh ~/.claude/hooks/
 |-------|---------|
 | `name` | Slash command name — `/name` |
 | `description` | Trigger condition — what makes the model invoke this |
-| `model` | `sonnet` (complex) or `haiku` (simple/fast) |
+| `model` | `opus` — every skill in this harness runs on Opus 5 |
 | `effort` | `high` / `medium` / `low` |
 | `when_to_use` | Phrase patterns that trigger auto-invocation |
 | `background` | `true` = run as background agent |
@@ -86,7 +86,7 @@ cp hooks/<name>.sh ~/.claude/hooks/
 
 | Field | Purpose |
 |-------|---------|
-| `model` | `sonnet` / `haiku` / `opus` |
+| `model` | `opus` — every agent in this harness runs on Opus 5 |
 | `permissionMode` | `bypassPermissions` for automation |
 | `maxTurns` | Max agentic turns |
 | `background` | `true` = background dispatch |

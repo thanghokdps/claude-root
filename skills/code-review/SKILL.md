@@ -1,3 +1,11 @@
+---
+model: opus
+effort: high
+name: code-review
+description: Reviews the current diff for correctness bugs, security issues, and cleanups, reporting findings ranked by severity. Use when the user asks for a review of uncommitted or branch changes.
+when_to_use: after implementing a change, before opening a PR, or when the user says review this diff
+---
+
 # code-review — Review diff for correctness bugs and cleanups
 
 **Invoke:** `/code-review [low|medium|high]`

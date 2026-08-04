@@ -1,5 +1,5 @@
 ---
-model: sonnet
+model: opus
 effort: high
 name: brainstorming
 description: Design-first brainstorming session before any implementation. Explores intent, proposes multiple approaches, asks clarifying questions one at a time, and produces a design doc (specs/<slug>/design.md) before handing off to /writing-plans.

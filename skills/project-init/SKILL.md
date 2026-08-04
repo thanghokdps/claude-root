@@ -1,5 +1,5 @@
 ---
-model: sonnet
+model: opus
 effort: high
 name: project-init
 description: One-time project scan that bootstraps the full .claude/ workspace — docs, agents, hooks, rules, skills, templates, memory, and CLAUDE.md — all tailored to this specific project. Run once per project. Re-run when architecture changes significantly.

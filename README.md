@@ -133,7 +133,6 @@ Downloads/Claude/                    ← this repo (the source library)
 ├── scripts/                         ← install / bootstrap scripts
 │   ├── init.sh                      ← bootstrap .claude/ for a project (stack-aware)
 │   ├── install.sh                   ← one-command harness install + ~/.claude/ sync
-│   ├── save-session-memory.sh       ← manually save session context
 │   ├── setup-headroom.sh            ← install headroom context compression
 │   └── sync-team.sh                 ← team sync: pull + rebuild memory
 │
@@ -1066,39 +1065,6 @@ After setup, `headroom_compress`, `headroom_retrieve`, and `headroom_stats` are 
 
 **Output:** `.claude/memory/commits/<YYYY-MM-DD>.md` with your commits + team context.
 
----
-
-### `scripts/save-session-memory.sh`
-
-**Usage:** `./save-session-memory.sh [optional-summary-text]`
-
-Manually save session context to memory. Called automatically by `state-breadcrumb.sh` (SessionEnd hook) or run manually after significant work.
-
-**Input:** Optional summary text string
-
-**Output:** Appends to `.claude/memory/sessions/<YYYY-MM-DD>.md`; updates `MEMORY.md` index.
-
----
-
-## Templates reference
-
-Templates in `templates/` are copied into each project by `init.sh` or `/project-init`.
-
-### `SUMMARY.template.md`
-
-The central artifact for every non-trivial task. Fields:
-
-| Field | Who fills it | Purpose |
-|-------|-------------|---------|
-| `Lane:` | Coordinator | tiny / normal / high-risk — drives ceremony |
-| `Confidence:` | Coordinator | high / medium / low — drives whether human is asked |
-| `## What changed` | Implementer/Debugger/Refactorer | Description of the change |
-| `## Rationale` | Planner | Why this approach |
-| `## Alternatives considered` | Planner | What else was considered |
-| `## Deviations` | Any agent | Autonomous fixes under Rules 1–3 |
-| `## Verify` | Implementer + Verifier | Table of commands to run (with expected exit codes) |
-| `## Rollback` | Implementer | `git revert <sha>` or equivalent |
-| `## Harness-Delta` | Any agent | Changes to `.claude/` config |
 
 ---
 

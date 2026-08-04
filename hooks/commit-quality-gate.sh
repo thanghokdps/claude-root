@@ -9,6 +9,23 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 BLOCKED=false
 REASONS=()
 
+# ─── Only act on a git commit ────────────────────────────────────────────────
+# Claude Code delivers the tool call as JSON on stdin. When the command is readable and
+# is not a commit, bail; when it is unreadable, fall through — the staged-diff check
+# below exits 0 on its own if nothing is staged, so the gate errs toward running.
+
+HOOK_INPUT=$(cat 2>/dev/null || echo "")
+TOOL_COMMAND=$(printf '%s' "$HOOK_INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
+[ -z "$TOOL_COMMAND" ] && TOOL_COMMAND=$(printf '%s' "$HOOK_INPUT" \
+  | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+
+if [ -n "$TOOL_COMMAND" ]; then
+  case "$TOOL_COMMAND" in
+    *"git commit"*) ;;
+    *) exit 0 ;;
+  esac
+fi
+
 # ─── Get staged diff ────────────────────────────────────────────────────────
 
 STAGED=$(git -C "$PROJECT_DIR" diff --cached 2>/dev/null || echo "")
