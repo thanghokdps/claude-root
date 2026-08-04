@@ -1,5 +1,5 @@
 ---
-model: sonnet
+model: opus
 effort: high
 name: writing-plans
 description: Converts an approved design doc (specs/<slug>/design.md) into a detailed PLAN.md with wave-organized tasks, file maps, and verifiable acceptance criteria. Run after /brainstorming.

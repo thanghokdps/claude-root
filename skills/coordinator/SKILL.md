@@ -1,5 +1,5 @@
 ---
-model: sonnet
+model: opus
 effort: high
 name: coordinator
 description: Orchestration entry point — classifies any incoming prompt (feature, bug, review, refactor, explore, security) and dispatches it to the right specialized agent with the correct ceremony level. Use /coordinator <your request> to let the harness decide what to do next.

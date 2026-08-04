@@ -1,5 +1,5 @@
 ---
-model: sonnet
+model: opus
 effort: high
 name: create-pr
 description: Generates a structured PR description from the current branch diff. Fills a PR_TEMPLATE.md with title, summary (why not how), tasks completed, file changes table, and notes. Does NOT push or create the PR — outputs the template for review.

@@ -1,7 +1,7 @@
 ---
 name: verify-feature
 description: Automated full-stack verification for flash-mobile-app — detects affected workspaces from git diff, runs lint + typecheck + tests for each, and reports pass/fail. Use /verify-feature [app] to verify before committing or after implementing a feature.
-model: haiku
+model: opus
 effort: medium
 when_to_use: verifying a feature before commit, confirming a fix didn't break other workspaces, pre-PR quality gate, after implementing from a ticket
 ---

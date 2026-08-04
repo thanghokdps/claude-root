@@ -1,5 +1,5 @@
 ---
-model: sonnet
+model: opus
 effort: high
 name: compound
 description: Crystallize learnings from the current session into persistent docs/solutions/ files. Run at the end of any session with significant work — mistakes found, solutions discovered, patterns identified. Prevents agents from repeating the same mistakes across sessions.

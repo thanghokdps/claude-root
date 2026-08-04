@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: reviewer agent — spawned by coordinator/ticket workflow
-model: sonnet
+model: opus
 permissionMode: bypassPermissions
 maxTurns: 50
 background: true

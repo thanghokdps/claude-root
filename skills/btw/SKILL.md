@@ -1,7 +1,7 @@
 ---
 name: btw
 description: Answer a quick question or do a quick lookup without interrupting the current task or losing context. Use /btw <question> for fast one-off queries while an agent is working. Does NOT create tasks, specs, or side effects.
-model: haiku
+model: opus
 effort: low
 when_to_use: user asks a quick question mid-task, needs a fast lookup, wants to check something without breaking flow
 ---
