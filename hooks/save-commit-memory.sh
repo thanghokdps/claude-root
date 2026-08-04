@@ -51,7 +51,9 @@ fi
 
 {
   echo ""
+  # The full hash is the idempotency key the guard above greps for — keep it in the entry.
   echo "## \`$HASH\` — $NOW"
+  echo "<!-- $LONG_HASH -->"
   echo ""
   echo "**$SUBJECT**"
   echo ""

@@ -8,7 +8,13 @@ set -uo pipefail
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 
 CURRENT_BRANCH=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
-PUSH_COMMAND="${CLAUDE_TOOL_INPUT:-}"
+
+# Claude Code delivers the tool call as JSON on stdin. There is no CLAUDE_TOOL_INPUT env
+# var — reading one left PUSH_COMMAND empty, so no branch was ever guarded.
+HOOK_INPUT=$(cat 2>/dev/null || echo "")
+PUSH_COMMAND=$(printf '%s' "$HOOK_INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
+[ -z "$PUSH_COMMAND" ] && PUSH_COMMAND=$(printf '%s' "$HOOK_INPUT" \
+  | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 
 # ─── Detect force push to protected branches ─────────────────────────────────
 
