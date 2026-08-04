@@ -99,30 +99,40 @@ detect_stack() {
 
 has_signal() {
   local needle="$1"
+  [ ${#SIGNALS[@]} -eq 0 ] && return 1
   for s in "${SIGNALS[@]}"; do [[ "$s" == "$needle" ]] && return 0; done
   return 1
 }
 
 detect_stack
 
-# Deduplicate
-SIGNALS=($(printf '%s\n' "${SIGNALS[@]}" | sort -u))
-
-echo "📦 Detected signals:"
-printf '   %s\n' "${SIGNALS[@]}"
+# Deduplicate. bash 3.2 (macOS default) expands "${arr[@]}" on an empty array as an
+# unbound variable under `set -u`, so a project with no recognised manifest would abort here.
+if [ ${#SIGNALS[@]} -gt 0 ]; then
+  SIGNALS=($(printf '%s\n' "${SIGNALS[@]}" | sort -u))
+  echo "📦 Detected signals:"
+  printf '   %s\n' "${SIGNALS[@]}"
+else
+  echo "📦 No stack signals detected — installing universal rules and hooks only."
+fi
 echo ""
 
 # ─── Create .claude/ structure ───────────────────────────────────────────────
 
-mkdir -p "$CLAUDE_DIR"/{rules,skills,hooks,memory/{feedback,project,commits,sessions},specs}
+# specs/ lives at the project root, not under .claude/ — session-handoff.sh and every
+# skill write to $REPO_DIR/specs. Creating .claude/specs here left an empty folder forever.
+mkdir -p "$CLAUDE_DIR"/{rules,skills,hooks,memory/{feedback,project,commits,sessions}}
+mkdir -p "$PROJECT_DIR/specs"
 
 # ─── Copy Universal Rules ────────────────────────────────────────────────────
 
 echo "📋 Copying rules..."
-cp "$HARNESS_DIR/rules/git.md"            "$CLAUDE_DIR/rules/git.md"
-cp "$HARNESS_DIR/rules/testing.md"        "$CLAUDE_DIR/rules/testing.md"
-cp "$HARNESS_DIR/rules/orchestration.md"  "$CLAUDE_DIR/rules/orchestration.md"
-cp "$HARNESS_DIR/rules/memory.md"         "$CLAUDE_DIR/rules/memory.md"
+# Copy every universal rule. A hardcoded list here had drifted to 4 of 13 — agent-principles.md,
+# security.md, code-quality.md and plan-format.md never reached a project despite being
+# referenced as mandatory. Stack rules under rules/stacks/ stay conditional, below.
+for rule in "$HARNESS_DIR"/rules/*.md; do
+  [ -f "$rule" ] && cp "$rule" "$CLAUDE_DIR/rules/"
+done
 
 # Stack-specific rules
 has_signal "typescript" && cp "$HARNESS_DIR/rules/stacks/typescript.md"  "$CLAUDE_DIR/rules/typescript.md"  2>/dev/null || true
@@ -139,10 +149,21 @@ has_signal "fastapi"    && cp "$HARNESS_DIR/rules/stacks/fastapi.md"     "$CLAUD
 
 echo "🛠  Copying skills..."
 mkdir -p "$CLAUDE_DIR/skills"
-for skill in feature fix-bug code-review checkpoint sync-memory; do
+# Build chain + design chain. The design chain (brainstorming → grill → writing-plans) is what
+# turns a rough idea into a PLAN.md before any code is written, so it ships with every project.
+for skill in feature fix-bug code-review checkpoint sync-memory \
+             brainstorming grill writing-plans domain-model tdd codebase-design blast-radius; do
   if [ -d "$HARNESS_DIR/skills/$skill" ]; then
     cp -r "$HARNESS_DIR/skills/$skill" "$CLAUDE_DIR/skills/"
   fi
+done
+
+# ─── Copy Commands ───────────────────────────────────────────────────────────
+
+echo "⌨️   Copying commands..."
+mkdir -p "$CLAUDE_DIR/commands"
+for cmd in "$HARNESS_DIR"/commands/*.md; do
+  [ -f "$cmd" ] && cp "$cmd" "$CLAUDE_DIR/commands/"
 done
 
 # ─── Copy Agents ─────────────────────────────────────────────────────────────
@@ -165,11 +186,12 @@ fi
 # ─── Copy Hooks ──────────────────────────────────────────────────────────────
 
 echo "🪝  Copying hooks..."
-cp "$HARNESS_DIR/hooks/commit-quality-gate.sh"  "$CLAUDE_DIR/hooks/"
-cp "$HARNESS_DIR/hooks/branch-guard.sh"         "$CLAUDE_DIR/hooks/"
-cp "$HARNESS_DIR/hooks/state-breadcrumb.sh"     "$CLAUDE_DIR/hooks/"
-cp "$HARNESS_DIR/hooks/scope-gate.sh"           "$CLAUDE_DIR/hooks/"
-cp "$HARNESS_DIR/hooks/save-commit-memory.sh"   "$CLAUDE_DIR/hooks/"
+# Copy every hook in hooks/ — a hardcoded list here silently drifts from the list
+# registered in settings.json, which is how agent-progress.sh and session-handoff.sh
+# ended up registered but never installed. Stack hooks under hooks/stacks/ stay conditional.
+for hook in "$HARNESS_DIR"/hooks/*.sh; do
+  [ -f "$hook" ] && cp "$hook" "$CLAUDE_DIR/hooks/"
+done
 
 # Python: add ruff hook
 has_signal "python" && cp "$HARNESS_DIR/hooks/stacks/ruff-on-edit.sh" "$CLAUDE_DIR/hooks/" 2>/dev/null || true
@@ -178,114 +200,53 @@ has_signal "typescript" && cp "$HARNESS_DIR/hooks/stacks/eslint-on-edit.sh" "$CL
 
 chmod +x "$CLAUDE_DIR/hooks/"*.sh 2>/dev/null || true
 
-# ─── Generate settings.json ──────────────────────────────────────────────────
+# ─── Generate settings.json (rendered from templates/settings.json.template) ──
 
 echo "⚙️  Writing .claude/settings.json..."
 
-EXTRA_HOOKS=""
-has_signal "python"     && EXTRA_HOOKS+=',
-      { "matcher": "Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/ruff-on-edit.sh" }] }' || true
-has_signal "typescript" && EXTRA_HOOKS+=',
-      { "matcher": "Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/eslint-on-edit.sh" }] }' || true
+SETTINGS_TEMPLATE="$HARNESS_DIR/templates/settings.json.template"
+if [ ! -f "$SETTINGS_TEMPLATE" ]; then
+  echo "❌ Missing $SETTINGS_TEMPLATE — cannot write settings.json" >&2
+  exit 1
+fi
 
-cat > "$CLAUDE_DIR/settings.json" << SETTINGS
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/agent-progress.sh pre",
-            "statusMessage": "🤖 Spawning agent..."
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"\$CLAUDE_TOOL_INPUT\" | grep -q 'git commit' && .claude/hooks/commit-quality-gate.sh || true"
-          },
-          {
-            "type": "command",
-            "command": "echo \"\$CLAUDE_TOOL_INPUT\" | grep -q 'git push' && .claude/hooks/branch-guard.sh || true"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/agent-progress.sh",
-            "statusMessage": "✅ Agent completed"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/agent-progress.sh",
-            "statusMessage": "📝 Logging edit..."
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/agent-progress.sh",
-            "statusMessage": "💻 Logging command..."
-          },
-          {
-            "type": "command",
-            "command": "echo \"\$CLAUDE_TOOL_INPUT\" | grep -q 'git commit' && .claude/hooks/save-commit-memory.sh || true"
-          }
-        ]
-      }${EXTRA_HOOKS}
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/scope-gate.sh"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/state-breadcrumb.sh"
-          }
-        ]
-      }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "Bash(git *)",
-      "Bash(npm *)",
-      "Bash(pnpm *)",
-      "Bash(npx *)",
-      "Bash(find *)",
-      "Bash(grep *)",
-      "Bash(ls *)"
-    ]
-  }
-}
-SETTINGS
+# Stack hooks are the only dynamic part; the template carries everything else so the
+# registered set and the installed set come from one file.
+STACK_HOOKS=""
+has_signal "python"     && STACK_HOOKS="$STACK_HOOKS,
+      { \"matcher\": \"Edit\", \"hooks\": [{ \"type\": \"command\", \"command\": \".claude/hooks/ruff-on-edit.sh\" }] }" || true
+has_signal "typescript" && STACK_HOOKS="$STACK_HOOKS,
+      { \"matcher\": \"Edit\", \"hooks\": [{ \"type\": \"command\", \"command\": \".claude/hooks/eslint-on-edit.sh\" }] }" || true
+
+python3 - "$SETTINGS_TEMPLATE" "$CLAUDE_DIR/settings.json" "$STACK_HOOKS" <<'RENDER'
+import json, sys
+tpl, out, stack = sys.argv[1], sys.argv[2], sys.argv[3]
+rendered = open(tpl).read().replace("__STACK_HOOKS__", stack)
+json.loads(rendered)          # fail loudly on malformed JSON rather than writing it
+open(out, "w").write(rendered)
+RENDER
+
+# ─── Drift guard: every registered hook must exist and be executable ──────────
+
+echo "🔍  Verifying hook wiring..."
+MISSING_HOOKS=0
+while read -r hook_path; do
+  [ -z "$hook_path" ] && continue
+  resolved="$PROJECT_DIR/$hook_path"
+  if [ ! -f "$resolved" ]; then
+    echo "   ❌ registered but not installed: $hook_path" >&2
+    MISSING_HOOKS=$((MISSING_HOOKS + 1))
+  elif [ ! -x "$resolved" ]; then
+    chmod +x "$resolved" 2>/dev/null || true
+  fi
+done < <(grep -o '\.claude/hooks/[a-z0-9-]*\.sh' "$CLAUDE_DIR/settings.json" | sort -u)
+
+if [ "$MISSING_HOOKS" -gt 0 ]; then
+  echo "   ⚠️  $MISSING_HOOKS hook(s) registered in settings.json are missing from .claude/hooks/" >&2
+  echo "      Those hook events will fail silently. Add the file to hooks/ or drop it from the template." >&2
+else
+  echo "   ✅ all registered hooks installed and executable"
+fi
 
 # ─── Bootstrap Memory ────────────────────────────────────────────────────────
 
@@ -306,7 +267,11 @@ sed -i '' "s/{{GIT_EMAIL}}/$GIT_EMAIL/g" "$CLAUDE_DIR/memory/user.md" 2>/dev/nul
 # ─── Generate project CLAUDE.md ──────────────────────────────────────────────
 
 echo "📝  Generating CLAUDE.md..."
-STACK_LIST=$(printf '%s, ' "${SIGNALS[@]}" | sed 's/, $//')
+if [ ${#SIGNALS[@]} -gt 0 ]; then
+  STACK_LIST=$(printf '%s, ' "${SIGNALS[@]}" | sed 's/, $//')
+else
+  STACK_LIST="none detected"
+fi
 
 # ── Extract scripts from package.json ────────────────────────────────────────
 PKG_SCRIPTS=""
