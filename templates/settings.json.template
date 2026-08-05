@@ -35,15 +35,15 @@
       {
         "matcher": "Agent",
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/agent-progress.sh pre", "statusMessage": "🤖 Spawning agent..." }
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/agent-progress.sh pre", "statusMessage": "🤖 Spawning agent..." }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/commit-quality-gate.sh" },
-          { "type": "command", "command": ".claude/hooks/risk-corroboration.sh" },
-          { "type": "command", "command": ".claude/hooks/branch-guard.sh" }
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/commit-quality-gate.sh" },
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/risk-corroboration.sh" },
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/branch-guard.sh" }
         ]
       }
     ],
@@ -51,36 +51,36 @@
       {
         "matcher": "Agent",
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/agent-progress.sh", "statusMessage": "✅ Agent completed" }
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/agent-progress.sh", "statusMessage": "✅ Agent completed" }
         ]
       },
       {
         "matcher": "Edit|Write",
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/agent-progress.sh", "statusMessage": "📝 Logging edit..." },
-          { "type": "command", "command": ".claude/hooks/blast-radius-check.sh" }
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/agent-progress.sh", "statusMessage": "📝 Logging edit..." },
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/blast-radius-check.sh" }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/agent-progress.sh", "statusMessage": "💻 Logging command..." },
-          { "type": "command", "command": ".claude/hooks/save-commit-memory.sh" }
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/agent-progress.sh", "statusMessage": "💻 Logging command..." },
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/save-commit-memory.sh" }
         ]
       }__STACK_HOOKS__
     ],
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/scope-gate.sh" }
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/scope-gate.sh" }
         ]
       }
     ],
     "SessionEnd": [
       {
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/state-breadcrumb.sh" },
-          { "type": "command", "command": ".claude/hooks/session-handoff.sh", "statusMessage": "📋 Writing specs/HANDOFF.md..." }
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/state-breadcrumb.sh" },
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-handoff.sh", "statusMessage": "📋 Writing specs/HANDOFF.md..." }
         ]
       }
     ]

@@ -214,9 +214,9 @@ fi
 # registered set and the installed set come from one file.
 STACK_HOOKS=""
 has_signal "python"     && STACK_HOOKS="$STACK_HOOKS,
-      { \"matcher\": \"Edit\", \"hooks\": [{ \"type\": \"command\", \"command\": \".claude/hooks/ruff-on-edit.sh\" }] }" || true
+      { \"matcher\": \"Edit\", \"hooks\": [{ \"type\": \"command\", \"command\": \"\$CLAUDE_PROJECT_DIR/.claude/hooks/ruff-on-edit.sh\" }] }" || true
 has_signal "typescript" && STACK_HOOKS="$STACK_HOOKS,
-      { \"matcher\": \"Edit\", \"hooks\": [{ \"type\": \"command\", \"command\": \".claude/hooks/eslint-on-edit.sh\" }] }" || true
+      { \"matcher\": \"Edit\", \"hooks\": [{ \"type\": \"command\", \"command\": \"\$CLAUDE_PROJECT_DIR/.claude/hooks/eslint-on-edit.sh\" }] }" || true
 
 python3 - "$SETTINGS_TEMPLATE" "$CLAUDE_DIR/settings.json" "$STACK_HOOKS" <<'RENDER'
 import json, sys
