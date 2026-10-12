@@ -1,0 +1,23 @@
+{
+  "skill": "brainstorming",
+  "positive": [
+    {
+      "prompt": "I want to build a notification system, let's design it first",
+      "top_k": 3
+    },
+    {
+      "prompt": "help me design a new feature before we write any code",
+      "top_k": 3
+    },
+    {
+      "prompt": "explore approaches for adding offline mode",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "turn this approved design.md into an implementation plan",
+      "owner": "writing-plans"
+    }
+  ]
+}

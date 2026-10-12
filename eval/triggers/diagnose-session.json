@@ -1,0 +1,23 @@
+{
+  "skill": "diagnose-session",
+  "positive": [
+    {
+      "prompt": "what went wrong in this session, the skill never triggered",
+      "top_k": 3
+    },
+    {
+      "prompt": "why did Claude ignore the plan in the last session",
+      "top_k": 3
+    },
+    {
+      "prompt": "this session was slow and expensive, find out why",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "fix the bug where login fails",
+      "owner": "fix-bug"
+    }
+  ]
+}

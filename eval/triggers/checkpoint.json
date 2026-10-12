@@ -1,0 +1,23 @@
+{
+  "skill": "checkpoint",
+  "positive": [
+    {
+      "prompt": "how far along are we on the plan, run the quality gates",
+      "top_k": 3
+    },
+    {
+      "prompt": "check progress against PLAN.md and run typecheck lint tests",
+      "top_k": 3
+    },
+    {
+      "prompt": "before I hand off, are all gates passing",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "cut a release v2.3 to production",
+      "owner": "release-checklist"
+    }
+  ]
+}

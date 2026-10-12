@@ -1,0 +1,23 @@
+{
+  "skill": "write-migration",
+  "positive": [
+    {
+      "prompt": "add a nullable column to the orders table",
+      "top_k": 3
+    },
+    {
+      "prompt": "rename a column without downtime",
+      "top_k": 3
+    },
+    {
+      "prompt": "write a schema migration with a backfill",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "cut a release to production",
+      "owner": "release-checklist"
+    }
+  ]
+}

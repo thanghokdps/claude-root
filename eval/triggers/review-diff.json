@@ -1,0 +1,23 @@
+{
+  "skill": "review-diff",
+  "positive": [
+    {
+      "prompt": "walk me through this diff with an architecture diagram",
+      "top_k": 3
+    },
+    {
+      "prompt": "visual review of the PR with mermaid diagrams",
+      "top_k": 3
+    },
+    {
+      "prompt": "onboard a reviewer to this large change with a walkthrough",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "is this safe to merge, what does it break",
+      "owner": "blast-radius"
+    }
+  ]
+}

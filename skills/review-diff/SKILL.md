@@ -3,6 +3,7 @@ model: opus
 effort: high
 name: review-diff
 description: Generates a comprehensive Markdown review of the current git diff or a specified PR — including an architecture diagram (Mermaid), component flowchart, and code walkthrough with inline diff blocks.
+when_to_use: a visual walkthrough of a diff or PR with diagrams, onboarding a reviewer to a large change
 ---
 
 # Review Diff

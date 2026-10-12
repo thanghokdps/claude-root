@@ -1,0 +1,23 @@
+{
+  "skill": "release-checklist",
+  "positive": [
+    {
+      "prompt": "cut a release and tag v1.4.0",
+      "top_k": 3
+    },
+    {
+      "prompt": "deploy this to production, run the release process",
+      "top_k": 3
+    },
+    {
+      "prompt": "end of sprint, ship to staging",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "write the PR description for this branch",
+      "owner": "create-pr"
+    }
+  ]
+}
