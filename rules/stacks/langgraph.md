@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.{ts,py}"
+  - "**/langgraph.json"
+---
+
 # LangGraph rules
 
 ## State invariants
