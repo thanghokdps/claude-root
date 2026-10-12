@@ -20,7 +20,7 @@ gh pr view <n> --json title,body && gh pr diff <n>      # GitHub PR
 glab mr view <n> && glab mr diff <n>                    # GitLab MR
 ```
 
-Read the ticket or PR description first — scope (step 5) is judged against it.
+Read the ticket or PR description first — scope (step 5) is judged against it. Then read the code **around** each hunk, not just the diff: the added line is usually fine alone; the bug is in how it meets the lines the diff doesn't show.
 
 ## Step 2 — Walk the checklist in order
 
@@ -28,9 +28,9 @@ Do not skip ahead: a correctness bug outranks every readability note.
 
 | # | Check | Ask |
 |---|-------|-----|
-| 1 | **Correctness** | Does it do what the ticket says? Wrong conditions, off-by-one, null paths, error paths, races. |
+| 1 | **Correctness** | Does it do what the ticket says? Wrong conditions, off-by-one, null paths, error paths, races. Shared code (`packages/*`, `libs/*`, shared hooks/components) → check its other call sites. |
 | 2 | **Tests** | Is there a test that fails without this change? Happy + error path? Run them — don't trust they pass. |
-| 3 | **Readability** | Would the next person understand it without the author? Misleading names, deep nesting, dead code, comments that restate code. |
+| 3 | **Readability** | Would the next person understand it without the author? Misleading names, deep nesting, dead code, comments that restate code. Did it re-implement something the shared layer already provides? |
 | 4 | **Security basics** | Unvalidated input at a boundary, secrets, injection, authz on mutating paths, logging PII. |
 | 5 | **Scope** | Every changed line traces to the ticket? Unrelated refactors, drive-by fixes, missing pieces of the ask. |
 
@@ -58,5 +58,6 @@ Verdict: approve | request changes
 
 - At least **3 actionable comments** — each names a file:line and a concrete fix. If the diff is genuinely clean, say so per section instead of inventing findings.
 - "Actionable" means the author can act without asking you a question. "Consider improving this" is not actionable.
+- Every correctness finding names the concrete input or state that makes it fail. If you can't, verify it (Grep/Read/run) or drop it — an unverified worry costs the author time to disprove.
 - Verify by running (tests, the repro) where possible; mark unverified findings as such.
 - No style nits unless they hide a bug — the formatter owns style.

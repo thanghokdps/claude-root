@@ -77,6 +77,8 @@ Then **minimise**: shrink to the smallest scenario still going red. Cut inputs, 
 
 Done when every remaining element is load-bearing — removing any one turns the loop green.
 
+**Cannot reproduce it?** Say so and stop. Collect what is missing (role, data state, route, device) and drive the real app before theorising — many reports turn out to be a 401 falling back to an empty state, a double request, or a hydration mismatch. Never ship a speculative fix for an unreproduced bug: nothing can prove it worked, and closing the ticket stops anyone else looking.
+
 A minimal repro shrinks the hypothesis space in Phase 3 and becomes the regression test in Phase 5.
 
 ---
@@ -136,6 +138,7 @@ A fix needing a larger structural change stops here — report it and propose it
 - [ ] All `[DEBUG-...]` instrumentation removed — grep the prefix
 - [ ] Throwaway harnesses deleted
 - [ ] `specs/<slug>/TEST_MATRIX.md` has the new regression row
+- [ ] **Siblings searched:** grep for the same pattern (bad query key, missing guard, copied helper) elsewhere — fixed, listed, or "none found". Fixing one of five identical defects and calling the class fixed stops the search.
 
 ```bash
 git add <only the files the fix needed>
@@ -150,3 +153,13 @@ State the hypothesis that turned out correct in the commit body, so the next deb
 **Then ask: what would have prevented this bug?** If the answer is architectural — no good test seam, tangled callers, hidden coupling — say so now, with the specifics. Make that recommendation *after* the fix lands; you know more than you did at Phase 1.
 
 If the root cause was genuinely non-obvious, record it via `/compound` so the class of bug does not come back.
+
+Report cause first:
+
+```markdown
+**Cause:** <the real mechanism>
+**Fix:** <path:line — what changed>
+**Siblings:** <same pattern elsewhere: fixed / listed / none found>
+**Proof:** <failing-then-passing test + re-run repro>
+**Still open:** <anything unexplained>
+```
