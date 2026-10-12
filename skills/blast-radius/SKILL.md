@@ -3,7 +3,7 @@ model: opus
 effort: high
 name: blast-radius
 description: Change-impact analysis before merge — traces every caller, consumer, contract, job, and migration a change touches, scores the risk, flags untested paths, and demands a rollback plan. Answers "what else does this break?" with file:line evidence.
-when_to_use: user says "blast radius", "impact analysis", "what does this break", "ảnh hưởng gì", "safe to merge?", before merging a PR, before a risky refactor, or when a change touches shared code
+when_to_use: a code diff or branch exists (for a proposed change request with no code yet, business-analyst:analyze-impact fits better); user says "blast radius", "impact analysis", "what does this break", "ảnh hưởng gì", "safe to merge?", before merging a PR, before a risky refactor, or when a change touches shared code
 ---
 
 # Blast Radius

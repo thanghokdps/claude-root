@@ -28,7 +28,7 @@ Flag uncommitted changes, fixup commits worth squashing, and commits that break 
 
 | Option | What happens |
 |--------|--------------|
-| **Open PR/MR** | Push the branch, draft the description (what / why / how tested), open via `gh pr create` or `glab mr create` |
+| **Open PR/MR** | If the `developers` plugin is enabled, hand off to `developers:create-mr` (it follows the project's commit/remote/base-branch conventions). Otherwise push, draft what / why / how tested, open via `gh pr create` or `glab mr create` |
 | **Merge locally** | Only if the user explicitly wants it and the base is not a protected branch |
 | **Keep** | Leave branch and worktree as they are; note the state in `specs/HANDOFF.md` |
 | **Discard** | Show exactly what will be lost, get an explicit yes, then delete |

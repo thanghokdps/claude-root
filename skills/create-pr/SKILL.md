@@ -3,7 +3,7 @@ model: opus
 effort: high
 name: create-pr
 description: Generates a structured PR description from the current branch diff. Fills a PR_TEMPLATE.md with title, summary (why not how), tasks completed, file changes table, and notes. Does NOT push or create the PR — outputs the template for review.
-when_to_use: writing or drafting a PR/MR description, "describe this branch", before opening a pull or merge request
+when_to_use: drafting only the PR/MR description text, "describe this branch"; to commit, push and open the MR use developers:create-mr when available
 ---
 
 # Create PR

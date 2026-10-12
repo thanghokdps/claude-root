@@ -30,6 +30,13 @@ Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the 
 - Branch finished → `/finish-branch`. Watch PR/CI: `/loop 15m <task>`; red build → `/ci-triage`.
 - Verify the running app, not just the code: Playwright MCP / Claude in Chrome / iOS Simulator.
 
+## Overlap with team plugins (granbull)
+Chosen per pair on content, not by plugin. When both are available:
+- Debugging → `thang-kit:fix-bug` (not `developers:fix-bug`). Review → `/review-checklist` (not `developers:review-changes`).
+- Commit + push + open MR/PR → `developers:create-mr` (project conventions); `create-pr` only drafts description text.
+- Impact of a code diff → `/blast-radius`; impact of a proposed change request → `business-analyst:analyze-impact`.
+- Team-only skills (flash, BA/QA, `developers:verify-features`, `explain-code`, `develop-components`) have no kit equivalent — use them.
+
 ## Rules and references
 - Always loaded: `~/.claude/rules/` `git` · `security` · `code-quality`. Path-scoped: `typescript`, `testing`.
 - On demand (skills read them): kit `references/` — `orchestration` · `wave-parallelism` · `plan-format` · `auto-correct-scope` · `memory`.
