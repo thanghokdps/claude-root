@@ -270,8 +270,11 @@ cp "$HARNESS_DIR/memory/templates/project.md"       "$CLAUDE_DIR/memory/project/
 cp "$HARNESS_DIR/memory/templates/user.md"          "$CLAUDE_DIR/memory/user.md"
 
 # Stamp the project context
-sed -i '' "s/{{PROJECT_NAME}}/$PROJECT_NAME/g"  "$CLAUDE_DIR/memory/MEMORY.md" 2>/dev/null || \
-  sed -i   "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" "$CLAUDE_DIR/memory/MEMORY.md"
+MEM_STACK=$( [ ${#SIGNALS[@]} -gt 0 ] && printf '%s, ' "${SIGNALS[@]}" | sed 's/, $//' || echo "none detected")
+for f in "$CLAUDE_DIR/memory/MEMORY.md" "$CLAUDE_DIR/memory/project/context.md"; do
+  sed -i '' -e "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" -e "s/{{STACK_LIST}}/$MEM_STACK/g" -e "s/{{INIT_DATE}}/$(date +%F)/g" "$f" 2>/dev/null || \
+    sed -i -e "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" -e "s/{{STACK_LIST}}/$MEM_STACK/g" -e "s/{{INIT_DATE}}/$(date +%F)/g" "$f"
+done
 
 sed -i '' "s/{{GIT_USER}}/$GIT_USER/g"   "$CLAUDE_DIR/memory/user.md" 2>/dev/null || \
   sed -i   "s/{{GIT_USER}}/$GIT_USER/g"  "$CLAUDE_DIR/memory/user.md"
@@ -330,7 +333,8 @@ detect_dirs() {
   [ -d "$PROJECT_DIR/e2e" ]        && dirs+=("e2e/")
   [ -d "$PROJECT_DIR/docs" ]       && dirs+=("docs/")
   [ -d "$PROJECT_DIR/scripts" ]    && dirs+=("scripts/")
-  printf '%s\n' "${dirs[@]}"
+  [ ${#dirs[@]} -gt 0 ] && printf '%s\n' "${dirs[@]}"
+  return 0
 }
 
 dir_label() {
@@ -361,18 +365,18 @@ while IFS= read -r dir; do
 "
 done < <(detect_dirs)
 
-# ── Detect test commands ──────────────────────────────────────────────────────
-TEST_CMD="${PM:-npm} test"
-has_signal "vitest"     && TEST_CMD="pnpm test          # vitest"
-has_signal "jest"       && TEST_CMD="pnpm test          # jest"
-has_signal "pytest"     && TEST_CMD="pytest"
-E2E_CMD=""
-has_signal "playwright" && E2E_CMD="pnpm test:e2e       # playwright"
-
 # ── Package manager ───────────────────────────────────────────────────────────
 PM="npm"
 has_signal "pnpm" && PM="pnpm"
 has_signal "yarn" && PM="yarn"
+
+# ── Detect test commands ──────────────────────────────────────────────────────
+TEST_CMD="${PM:-npm} test"
+has_signal "vitest"     && TEST_CMD="${PM} test          # vitest"
+has_signal "jest"       && TEST_CMD="${PM} test          # jest"
+has_signal "pytest"     && TEST_CMD="pytest"
+E2E_CMD=""
+has_signal "playwright" && E2E_CMD="${PM} test:e2e       # playwright"
 
 # ── Monorepo note ─────────────────────────────────────────────────────────────
 MONO_NOTE=""
@@ -408,65 +412,13 @@ has_signal "python"     && CONSTRAINTS="${CONSTRAINTS}- Always activate virtuale
 "
 
 cat > "$PROJECT_DIR/CLAUDE.md" << CLAUDEMD
-# CLAUDE.md
+# ${PROJECT_NAME}
 
-## Auto-Coordinator (applies to every prompt)
-
-**You ARE the coordinator by default.**
-
-**\`TaskCreate\` is mandatory — literal first tool call, before any Read/Bash/Glob.**
-
-### Step 1 — Classify intent from prompt text
-
-| Intent     | Prompt signals                                        | Pipeline                                         |
-| ---------- | ----------------------------------------------------- | ------------------------------------------------ |
-| \`feat\`     | implement, add, create, build, new feature            | pm → architect → developer → reviewer → qa       |
-| \`fix\`      | fix, bug, broken, error, crash, not working, failing  | pm (root-cause only) → developer → reviewer → qa |
-| \`refactor\` | refactor, clean up, simplify, reorganize, restructure | architect → developer → reviewer → qa            |
-| \`review\`   | review, audit, check, feedback on, look at            | reviewer only                                    |
-| \`chore\`    | update dependency, upgrade, bump, config, tooling     | developer → qa                                   |
-| \`test\`     | write test, add test, coverage, test for              | developer (haiku) → qa                           |
-| \`explain\`  | explain, how does, what is, why, walk me through      | conversational — no agents                       |
-
-### Step 2 — Classify lane
-
-| Lane        | When                                  | Effect on pipeline                                               |
-| ----------- | ------------------------------------- | ---------------------------------------------------------------- |
-| \`tiny\`      | 0–1 risk flags, single file, < 30 min | May collapse to single agent; skip routing summary               |
-| \`normal\`    | 2–3 risk flags                        | Run pipeline as-is; show routing line                            |
-| \`high-risk\` | 4+ flags or hard gate                 | Always full pipeline: pm → architect → developer → reviewer → qa |
-
-**Hard gates** (always \`high-risk\`): \`auth · authz · data-loss · migration · security · external provider · public contract\`
-
-### Step 3 — Dispatch
-
-1. **Create \`TaskCreate\` entries for every step** before any work
-2. Mark \`in_progress\` before each step, \`completed\` immediately after
-3. Load \`.claude/docs/\` + \`.claude/docs/solutions/INDEX.md\`
-4. For \`normal\`/\`high-risk\`: show \`Intent: <type> · Lane: <lane> · Pipeline: <agents>\`
-5. Run agents with wave-based parallel execution (\`run_in_background: true\`)
-
-**Wave model**: \`haiku\` for tests/types/constants; \`sonnet\` for complex logic
-**Pure conversational** (no tool use) → answer directly, no tasks needed
-
----
-
-## Session Resume (read this FIRST, every session)
-
-\`\`\`bash
-cat specs/HANDOFF.md 2>/dev/null && rm -f specs/HANDOFF.md
-cat .claude/docs/solutions/INDEX.md 2>/dev/null
-grep -rl "decision: pending" specs/ 2>/dev/null
-\`\`\`
-
-If \`specs/HANDOFF.md\` exists → read fully → continue from "Next steps" → delete it.
-Run \`/compact\` before ending a session. Run \`/compound\` after significant debugging.
-
----
+Coordination (lanes, hard gates, review flow) comes from the global \`~/.claude/CLAUDE.md\` and the thang-kit plugin. This file holds only what is specific to this repo.
 
 ## Agent Context
 
-**All agents MUST read \`.claude/docs/index.md\` before scanning any source file.**
+Read \`.claude/docs/index.md\` before scanning source files. If \`.claude/docs/\` is missing, run \`/project-init\`.
 
 | Doc | Contents |
 |-----|----------|
@@ -476,57 +428,25 @@ Run \`/compact\` before ending a session. Run \`/compound\` after significant de
 | \`.claude/docs/entry-points.md\`  | API routes, jobs, CLI commands |
 | \`.claude/docs/test-strategy.md\` | Test structure, markers, conventions |
 
-If \`.claude/docs/\` does not exist → run \`/project-init\` first.
-
----
-
 ## Project Overview
 
 **Stack:** ${STACK_LIST}
 
-### Key directories
-
 | Path | Purpose |
 |------|---------|
 ${DIR_ROWS}
-## Multi-Agent Ticket Workflow
-
-For any non-trivial task, use \`/ticket #<issue> <description>\` to run the full pipeline:
-
-| Phase | Agent             | Role                                       |
-| ----- | ----------------- | ------------------------------------------ |
-| 1     | \`pm-agent\`        | Research requirements & codebase context   |
-| 2     | \`architect-agent\` | Technical design & implementation plan     |
-| 3     | \`developer-agent\` | Implement the plan                         |
-| 4     | \`reviewer-agent\`  | Code review — APPROVED or CHANGES REQUIRED |
-| 5     | \`qa-agent\`        | Run checks, fix surface errors, commit     |
-
-For lightweight tasks (small fix, chore), use \`/task\` instead.
-
-## Lightweight Task Workflow
-
-### Step 1 — Break down & track
-Use \`TaskCreate\` before writing any code. Mark \`in_progress\` when starting, \`completed\` when done.
-
-### Step 2 — Implement
-Edit existing files over creating new ones. No comments unless the WHY is non-obvious.
-
-### Step 3 — Verify
+## Verify (in this order)
 
 \`\`\`bash
-${LINT_CMD}
 ${TYPECHECK_CMD}
+${LINT_CMD}
 ${TEST_CMD}
 ${E2E_CMD}
 \`\`\`
 
-### Step 4 — Commit
+## Commit
 
-\`\`\`
-<type>: <description>
-\`\`\`
-
-Types: \`feat\` \`fix\` \`refactor\` \`chore\` \`docs\` \`test\`
+\`<type>: <description>\` unless this repo's commitlint/hooks say otherwise — check before the first commit.
 
 ## Common Commands
 
@@ -537,7 +457,6 @@ ${MONO_NOTE}
 
 ## Key Rules
 
-- Keep CLAUDE.md under 200 lines
 ${CONSTRAINTS}
 CLAUDEMD
 
