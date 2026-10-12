@@ -7,7 +7,14 @@ Each skill is a Markdown prompt program invoked via `/skill-name` in Claude Code
 | [init-project](init-project/SKILL.md) | `/init-project` | Scan src → generate .claude/ harness | all |
 | [feature](feature/SKILL.md) | `/feature <desc>` | Risk intake → plan → build → review | tiny/normal/high |
 | [fix-bug](fix-bug/SKILL.md) | `/fix-bug <symptom>` | Tight red loop → minimise → hypothesise → fix → regression test | tiny/normal |
-| [code-review](code-review/SKILL.md) | `/code-review [low\|medium\|high]` | Review diff, find bugs + security issues | n/a |
+| [review-checklist](review-checklist/SKILL.md) | `/review-checklist [PR]` | correctness → tests → readability → security → scope; ≥3 actionable comments | n/a |
+| [ci-triage](ci-triage/SKILL.md) | `/ci-triage [run]` | Red build → regression / flaky / environment + one-sentence root cause | n/a |
+| [release-checklist](release-checklist/SKILL.md) | `/release-checklist <version>` | Scope → gates → migrations → notes → tag → deploy → smoke → rollback | high |
+| [write-migration](write-migration/SKILL.md) | `/write-migration <change>` | Expand/contract, reversible, batched backfill, tested down path | high |
+| [verify-done](verify-done/SKILL.md) | `/verify-done` | Fresh evidence for the "done when" check before claiming completion | all |
+| [finish-branch](finish-branch/SKILL.md) | `/finish-branch` | Verify → PR/MR, merge, keep or discard → clean up worktree | n/a |
+| [diagnose-session](diagnose-session/SKILL.md) | `/diagnose-session [id]` | Transcript evidence for misfires, ignored plans, noisy hooks → kit fix | n/a |
+| [retro](retro/SKILL.md) | `/retro [since]` | Weekly retro from commits/PRs/CI → ≤3 things to standardize | n/a |
 | [checkpoint](checkpoint/SKILL.md) | `/checkpoint` | Progress vs plan + all quality gates | n/a |
 | [sync-memory](sync-memory/SKILL.md) | `/sync-memory` | Pull latest + rebuild memory from your commits | n/a |
 | [brainstorming](brainstorming/SKILL.md) | `/brainstorming` | Rough idea → `specs/<slug>/design.md` | normal/high |
@@ -53,7 +60,7 @@ Build chain:
     ↓
 /checkpoint → quality gates → ✅ continue or ❌ fix
     ↓
-/code-review → findings → fix → /checkpoint again
+/review-checklist → findings → fix → /checkpoint again (risky: /code-review ultra)
     ↓ (team project, start of session)
 /sync-memory → pull latest → memory updated → ready to work
 ```
