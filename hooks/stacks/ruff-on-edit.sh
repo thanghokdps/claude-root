@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
-# ruff-on-edit.sh — Auto-fix Python files with ruff after Edit tool use
-# Trigger: PostToolUse(Edit) on .py files
+# ruff-on-edit.sh — Auto-fix Python files with ruff after Edit/Write tool use
+# Trigger: PostToolUse(Edit|Write). Hook input arrives as JSON on stdin.
 
-FILE="${CLAUDE_TOOL_RESULT_FILE:-}"
-if [ -z "$FILE" ]; then
-  # Try to extract from tool input
-  FILE=$(echo "${CLAUDE_TOOL_INPUT:-}" | grep -oE '"file_path"\s*:\s*"([^"]+\.py)"' | head -1 | cut -d'"' -f4)
-fi
+FILE=$(jq -r '.tool_input.file_path // empty' 2>/dev/null)
 
 [ -z "$FILE" ] && exit 0
 [[ "$FILE" != *.py ]] && exit 0
 [ ! -f "$FILE" ] && exit 0
+command -v ruff >/dev/null 2>&1 || exit 0
 
 # Run ruff fix (auto-fixable issues) + format
-ruff check --fix --silent "$FILE" 2>/dev/null || true
-ruff format --silent "$FILE" 2>/dev/null || true
+ruff check --fix --quiet "$FILE" >/dev/null 2>&1 || true
+ruff format --quiet "$FILE" >/dev/null 2>&1 || true
 
 exit 0

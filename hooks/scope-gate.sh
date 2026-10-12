@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# UserPromptSubmit hook: auto-trigger coordinator behavior for implementation prompts.
-# Non-blocking — injects additionalContext that instructs Claude to run as coordinator.
+# UserPromptSubmit hook: flag implementation-intent prompts for the Auto-Coordinator.
+# Emits only what CLAUDE.md cannot know — the keyword scan result. The routing steps
+# themselves are already in context from CLAUDE.md; repeating them here just doubles
+# the prompt.
 
 INPUT=$(cat)
 
@@ -20,20 +22,18 @@ printf '%s' "$PROMPT" | grep -qiE '^/(coordinator|ticket|task|brainstorming|writ
 
 if [ "$WORD_COUNT" -gt 4 ] && [ "$IS_IMPL" -eq 1 ] && [ "$IS_QUESTION" -eq 0 ] && [ "$HAS_SKILL" -eq 0 ]; then
 
-  # Detect lane signals for smarter injection
-  IS_HIGH_RISK=0
-  printf '%s' "$PROMPT" | grep -qiE '\b(auth|login|password|jwt|token|payment|stripe|database|migration|schema|permission|role|admin|security|prod|production)\b' && IS_HIGH_RISK=1
+  RISK_HIT=$(printf '%s' "$PROMPT" | grep -oiE '\b(auth|login|password|jwt|token|payment|stripe|database|migration|schema|permission|role|admin|security|prod|production)\b' | head -1)
 
-  if [ "$IS_HIGH_RISK" -eq 1 ]; then
-    LANE_HINT="Likely lane: high-risk — show routing summary and ask Proceed? before dispatching agents."
+  if [ -n "$RISK_HIT" ]; then
+    SIGNAL="high-risk keyword \"$RISK_HIT\" matched — confirm scope before dispatching agents."
   else
-    LANE_HINT="Likely lane: tiny or normal — classify, show 1-line routing summary, then execute immediately."
+    SIGNAL="no high-risk keyword matched."
   fi
 
-  jq -cn --arg lane "$LANE_HINT" '{
+  jq -cn --arg signal "$SIGNAL" '{
     hookSpecificOutput: {
       hookEventName: "UserPromptSubmit",
-      additionalContext: ("AUTO-COORDINATOR ACTIVE: Treat this as a coordinator request. Do NOT wait for /coordinator to be typed.\n\nSteps:\n1. Load .claude/docs/ and docs/solutions/INDEX.md\n2. Classify intent + lane (tiny/normal/high-risk)\n3. Create TaskCreate entries for each agent step\n4. Dispatch agents with wave-based parallel execution (run_in_background: true for parallel tasks)\n5. Show status board\n\n" + $lane + "\n\nFor tiny lane + high confidence: skip routing summary, just execute with TaskCreate tracking.\nFor normal/high-risk: show `Intent · Lane · Routing` line first.")
+      additionalContext: ("AUTO-COORDINATOR: implementation intent detected — apply the Auto-Coordinator section of CLAUDE.md; " + $signal)
     }
   }'
 
