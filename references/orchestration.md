@@ -15,7 +15,7 @@ Hard gates (always high-risk, cannot self-downgrade):
 
 - New feature → `/feature <description>` → risk intake first
 - Bug fix → `/fix-bug <symptom>` → root cause before touching code
-- Review changes → `/code-review [effort]`
+- Review changes → `/review-checklist` → built-in `/code-review` → `/code-review ultra` for auth/data branches
 - Check progress → `/checkpoint`
 - Team sync → `/sync-memory`
 
@@ -23,6 +23,7 @@ Hard gates (always high-risk, cannot self-downgrade):
 
 | Mode | What holds the plan | Scale | Resumable | When to use |
 |------|---------------------|-------|-----------|-------------|
+| **Parallel sessions** (git worktrees) | One session per ticket | 2–4 tickets | Yes (resume) | Independent tickets in flight at once — zero crosstalk, separate PRs |
 | **Subagents** (Agent tool) | Claude's context | A few per turn | No | Independent research, parallel review |
 | **Skills** | Instructions Claude follows | Same as subagents | No | Structured task flows |
 | **Agent teams** | Shared task list | Handful of long-running peers | Teammates keep running | Long parallel workstreams |
@@ -57,7 +58,19 @@ ultracode: audit every API endpoint under src/routes/ for missing auth checks
 ```
 
 Or naturally: "use a workflow for this", "run a workflow to migrate all X".
-Or for the whole session: `/effort ultracode`
+Or for the whole session: `/effort ultracode` — every substantive task becomes a workflow (more tokens, hits limits sooner); turn off with `/effort ultracode off`.
+The keyword only works in a prompt typed by a human — not via `claude -p`, CI jobs, scheduled tasks or relayed MR comments.
+
+### Don't confuse the "ultra" family
+
+| You want | Use | Scope |
+|----------|-----|-------|
+| Think harder on one gnarly problem | `ultrathink` in the prompt | One prompt |
+| Change reasoning depth for the session | `/effort low…max` | Session |
+| Fan out many agents from a script | `ultracode` keyword / `/effort ultracode` | One task / session |
+| Multi-agent review of a risky branch | `/code-review ultra` | One review (cloud) |
+
+Default to `ultrathink` for depth; reach for `ultracode` only when the task is fan-out shaped.
 
 ### Monitor and control
 
@@ -97,7 +110,7 @@ When context is getting large, use headroom to compress before handing off:
 
 | Context state | Action |
 |---|---|
-| Output > ~8KB | `headroom_compress` MCP tool (if installed) or `/compact` |
+| Bash output > ~20KB in a long session | Optional: `headroom_compress` (hook hints once per session) — never on text you must edit verbatim |
 | Session ending with failures | `headroom learn` — mines failures into corrections |
 | Starting a new task after long session | `/compact` first, then continue |
 

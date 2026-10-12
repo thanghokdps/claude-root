@@ -1,3 +1,12 @@
+---
+paths:
+  - "**/*.{test,spec}.{ts,tsx,js,jsx,mjs}"
+  - "**/__tests__/**"
+  - "**/tests/**"
+  - "**/test_*.py"
+  - "**/*_test.{py,go}"
+---
+
 # Testing rules
 
 ## Quality gate order (always run in this sequence)
@@ -48,15 +57,15 @@ When fixing a bug:
 
 | Scenario | Action |
 |----------|--------|
-| New component/screen/module created | Create `<file>.test.ts(x)` immediately — use `/gen-tests <path>` if available |
+| New component/screen/module created | Create `<file>.test.ts(x)` immediately — use the project's test-generation skill if it has one |
 | Existing file modified | Open its `.test.ts(x)`, update affected test cases to match the change |
 | No test file exists for a modified file | Create it before handing off or committing |
 
 **Skip only for**: config files, type-only files, navigation wiring, constant declarations.
 
-**Commit gate**: if a staged implementation file has no paired test file, the commit hook warns with the missing path and suggests `/gen-tests`.
+**Commit gate**: if a staged implementation file has no paired test file, the commit hook warns with the missing path.
 
-**QA gate**: before commit, run `/verify-feature` (or equivalent) — it runs the full test suite for all affected workspaces and blocks on failures.
+**QA gate**: before commit, run the project's gate skill — it runs the test suite for all affected workspaces and blocks on failures. In `flash-mobile-app` that is `check-mobile-gates` from the `flash-frontend-dev` plugin.
 
 ## What not to add
 
