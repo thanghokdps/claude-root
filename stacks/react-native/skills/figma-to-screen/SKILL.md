@@ -1,7 +1,7 @@
 ---
 name: figma-to-screen
 description: Figma MCP → React Native screen generator for flash-mobile-app. Fetches a Figma node, extracts design tokens and layout, then generates a complete screen component, styles, and navigation wiring. Handles both host-only screens and MFE remote+LazyLoad pairs. Use /figma-to-screen <figma-url-or-node-id> <ScreenName> [app].
-model: sonnet
+model: opus
 effort: high
 when_to_use: implementing a new screen from a Figma design, translating designs to RN components faster, design-to-code workflow, adding a new MFE remote screen
 ---

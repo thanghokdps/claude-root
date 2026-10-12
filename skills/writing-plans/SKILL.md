@@ -49,7 +49,7 @@ Follow the TDD pattern:
 
 ### Step 4 — Write PLAN.md
 
-Save to `specs/<slug>/PLAN.md` following the format in `~/.claude/rules/plan-format.md`:
+Save to `specs/<slug>/PLAN.md` following the format in `${CLAUDE_PLUGIN_ROOT}/references/plan-format.md`:
 
 - Front matter: goal, architecture, tech stack, status: draft
 - Non-goals section

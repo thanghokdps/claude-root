@@ -15,57 +15,39 @@ cat ~/.claude/docs/solutions/INDEX.md 2>/dev/null
 
 ## What this project is
 
-A **source library** — not an app. Changes here propagate to `~/.claude/` (global) and to all projects via `/project-init`.
+A **source library** and the `thang-kit` Claude Code plugin (local marketplace, loaded in place — edits are live in new sessions).
 
 ```
 Downloads/Claude/
-  skills/       ← skill source files (not the installed versions)
-  agents/       ← agent role definitions
-  rules/        ← universal rules
-  hooks/        ← bash automation scripts
-  templates/    ← SUMMARY, TEST_MATRIX, ESCALATIONS templates
-  scripts/      ← install/bootstrap scripts
+  .claude-plugin/     ← plugin.json + marketplace.json
+  skills/             ← plugin skills (invoked as /<name> or /thang-kit:<name>)
+  hooks/              ← hook scripts + hooks/hooks.json (plugin-registered); hooks/stacks/ = per-project
+  references/         ← process docs skills read on demand (${CLAUDE_PLUGIN_ROOT}/references/...)
+  global/CLAUDE.md    ← installed to ~/.claude/CLAUDE.md
+  rules/              ← installed to ~/.claude/rules/ — always loaded unless they have `paths:`
+  stacks/             ← stack-specific rules/skills copied into projects by init.sh
+  templates/          ← specs templates; templates/project/{agents,commands} for STANDALONE init
+  eval/triggers/      ← one routing case per skill
+  scripts/            ← install.sh, init.sh, check.sh, lint-kit.py, eval-triggers.py
 ```
 
-Installed location: `~/.claude/skills/`, `~/.claude/rules/`, `~/.claude/hooks/`
+Install / update: `bash scripts/install.sh` (only needed for global/CLAUDE.md and rules/ changes).
 
 ---
 
 ## How to add a new skill
 
-```bash
-mkdir -p skills/<name>
-# Create skills/<name>/SKILL.md with frontmatter:
-# ---
-# name: <name>
-# description: <trigger condition — what makes Claude invoke this>
-# model: opus
-# effort: high | medium | low
-# when_to_use: <phrases that trigger this skill>
-# ---
-```
+1. `skills/<name>/SKILL.md` with frontmatter `name` (= directory), `description` (what + "Use when …"), `when_to_use`, `model`, `effort`. Never start a YAML value with a quote or backtick.
+2. `eval/triggers/<name>.json`: 3 prompts that must rank it top-3, 1–2 owned by a neighbour skill.
+3. `bash scripts/check.sh` — lint, trigger eval, `claude plugin validate`.
 
-Then install globally:
-```bash
-cp -r skills/<name> ~/.claude/skills/
-```
+## How to add a rule
 
-## How to add a new rule
+Always-loaded context is the budget: add `paths:` frontmatter unless the rule applies to every task. Process detail belongs in `references/`, read by the skill that needs it. Then `bash scripts/install.sh`.
 
-```bash
-# Create rules/<name>.md
-# Install:
-cp rules/<name>.md ~/.claude/rules/
-```
+## How to add a hook
 
-## How to add a new hook
-
-```bash
-# Create hooks/<name>.sh
-chmod +x hooks/<name>.sh
-cp hooks/<name>.sh ~/.claude/hooks/
-# Register in ~/.claude/settings.json
-```
+`hooks/<name>.sh` (executable, reads JSON on stdin, exits 0 or 2 — never 1), register it in `hooks/hooks.json` with `"${CLAUDE_PLUGIN_ROOT}"/hooks/<name>.sh`, test with `echo '{}' | hooks/<name>.sh`. Prefer `additionalContext` JSON over exit 2 for non-blocking hints.
 
 ---
 

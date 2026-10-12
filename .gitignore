@@ -3,3 +3,6 @@ specs/
 
 # User-specific local permissions
 .claude/settings.local.json
+
+# macOS Finder metadata
+.DS_Store

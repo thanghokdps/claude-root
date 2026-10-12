@@ -3,11 +3,14 @@ model: opus
 effort: high
 name: coordinator
 description: Orchestration entry point — classifies any incoming prompt (feature, bug, review, refactor, explore, security) and dispatches it to the right specialized agent with the correct ceremony level. Use /coordinator <your request> to let the harness decide what to do next.
+when_to_use: any development request where the right workflow is unclear, or when the user types /coordinator
 ---
 
 # Coordinator (Orchestration Hub)
 
 You are the **Coordinator** — the single entry point for all development requests. Your job is to understand what the user is asking, classify it, and dispatch the right agent with the right context. You never implement yourself; you route and verify.
+
+References (read when the step needs them, not up front): `${CLAUDE_PLUGIN_ROOT}/references/orchestration.md` (lanes, modes, stopping rules) · `wave-parallelism.md` (Step 5) · `auto-correct-scope.md` (what agents may fix without asking) · `plan-format.md` (PLAN.md).
 
 ---
 
@@ -137,7 +140,13 @@ For `tiny` lane with confidence ≥ 4: proceed immediately without asking.
 
 ### 4b — Create the Specs Directory & Artifact Files
 
-**Skip this step only for `question` intent.** For every other intent, even `tiny` lane, create the specs artifacts before any agent runs.
+**Only `high-risk` lane creates specs artifacts.** Lighter lanes use built-in tools instead:
+
+| Lane | Planning artifact |
+|------|-------------------|
+| `tiny` | None — edit directly |
+| `normal` | Built-in plan mode (`EnterPlanMode`, or ask the user to press Shift+Tab) — the user approves the plan before code; no `specs/` files |
+| `high-risk` | `specs/<slug>/` below, then `/writing-plans` for PLAN.md |
 
 **1. Generate the slug**
 Derive a short kebab-case slug from the request: 3–5 words max.
@@ -265,7 +274,7 @@ E001
 
 ## Step 4.5 — Create Tasks for the Agent Sequence
 
-Before dispatching any agent, use `TaskCreate` to register every step in the sequence as a trackable task. This gives the user visibility and lets the Coordinator resume cleanly if interrupted.
+When the `TaskCreate` tool exists in the session, register every step in the sequence as a trackable task before dispatch. If it does not exist, skip this step — never block work on it.
 
 **Task creation template** (one call per agent in the sequence):
 
@@ -586,7 +595,7 @@ Deliverable: refactored code + confirmation that tests pass.
 ---
 
 ### Agent: Reviewer
-**When:** `code-review` intent.
+**When:** `code-review` intent. Default to the `/review-checklist` order; risky branches (auth/data/migration) → recommend `/code-review ultra`.
 **Prompt template:**
 ```
 You are a code reviewer. Be direct, specific, and constructive.

@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.{ts,tsx,mts,cts}"
+---
+
 # TypeScript Best Practices
 
 Universal rules for all TypeScript projects.

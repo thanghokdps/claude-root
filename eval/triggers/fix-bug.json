@@ -1,0 +1,23 @@
+{
+  "skill": "fix-bug",
+  "positive": [
+    {
+      "prompt": "the upload crashes for files over 10MB, debug it",
+      "top_k": 3
+    },
+    {
+      "prompt": "this test is failing and nobody knows why",
+      "top_k": 3
+    },
+    {
+      "prompt": "performance regression on the dashboard, find the cause",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "the CI pipeline is red, is it flaky",
+      "owner": "ci-triage"
+    }
+  ]
+}

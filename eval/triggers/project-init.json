@@ -1,0 +1,23 @@
+{
+  "skill": "project-init",
+  "positive": [
+    {
+      "prompt": "set up the .claude workspace for this new project",
+      "top_k": 3
+    },
+    {
+      "prompt": "bootstrap docs agents hooks and rules for this repo",
+      "top_k": 3
+    },
+    {
+      "prompt": "one-time project scan to build .claude/docs",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "sync memory with my latest commits",
+      "owner": "sync-memory"
+    }
+  ]
+}

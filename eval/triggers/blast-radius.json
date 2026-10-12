@@ -1,0 +1,23 @@
+{
+  "skill": "blast-radius",
+  "positive": [
+    {
+      "prompt": "what else does this change break before I merge it",
+      "top_k": 3
+    },
+    {
+      "prompt": "run an impact analysis on this refactor of the shared auth module",
+      "top_k": 3
+    },
+    {
+      "prompt": "is this PR safe to merge, what callers does it touch",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "review my diff for bugs before the PR",
+      "owner": "review-checklist"
+    }
+  ]
+}

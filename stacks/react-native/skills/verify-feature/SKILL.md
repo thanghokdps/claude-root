@@ -1,7 +1,7 @@
 ---
 name: verify-feature
 description: Automated full-stack verification for flash-mobile-app — detects affected workspaces from git diff, runs lint + typecheck + tests for each, and reports pass/fail. Use /verify-feature [app] to verify before committing or after implementing a feature.
-model: haiku
+model: opus
 effort: medium
 when_to_use: verifying a feature before commit, confirming a fix didn't break other workspaces, pre-PR quality gate, after implementing from a ticket
 ---
@@ -102,7 +102,7 @@ Run 2a → 2b → 2c sequentially per workspace. Stop at first failure and recor
 
 For multiple workspaces, run each workspace's checks in parallel (use `run_in_background: true` on agents if needed).
 
-As each workspace finishes, narrate and reprint the table immediately:
+As each workspace finishes, narrate and reprint the table:
 
 ```
 host verified ✅ · 45s
@@ -143,7 +143,7 @@ For any FAIL:
 2. Identify the file and line number
 3. Check if it's a surface error (unused import, wrong type annotation) vs logic error
 
-**Surface errors** (auto-fix allowed per `rules/auto-correct-scope.md` Rule 1–3):
+**Surface errors** (auto-fix allowed per thang-kit `references/auto-correct-scope.md` Rule 1–3):
 - Unused import → remove it
 - Missing type annotation → add it
 - Incorrect interface member → fix it

@@ -1,0 +1,23 @@
+{
+  "skill": "compound",
+  "positive": [
+    {
+      "prompt": "crystallize the learnings from this session into solutions docs",
+      "top_k": 3
+    },
+    {
+      "prompt": "record the mistakes we found today so agents don't repeat them",
+      "top_k": 3
+    },
+    {
+      "prompt": "save the patterns that worked in docs/solutions",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "compact the conversation and write a handoff",
+      "owner": "compact"
+    }
+  ]
+}

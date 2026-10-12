@@ -1,25 +1,22 @@
 #!/bin/bash
+# headroom-compress.sh — PostToolUse(Bash): soft hint to use headroom_compress on very large output.
+# Register WITHOUT asyncRewake: { "matcher": "Bash", "hooks": [{ "type": "command", "command": "~/.claude/hooks/headroom-compress.sh" }] }
+# Exit 2 / asyncRewake surfaced every big output as a blocking error and re-woke the model, so this
+# emits additionalContext instead (non-blocking), at most once per session, and only when the
+# headroom MCP is registered. Read is excluded: a file being edited must stay verbatim.
 
-# PostToolUse(Bash|Read) asyncRewake hook — auto-trigger headroom_compress.
-#
-# When tool output exceeds HEADROOM_WARN_THRESHOLD (default 8000 chars):
-#   - exit 2  → Claude Code injects a system-reminder and re-wakes the model
-#   - Claude sees the reminder and automatically calls the headroom_compress MCP tool
-#
-# When output is small: exit 0 silently (no overhead).
-
-INPUT=$(cat /dev/stdin 2>/dev/null)
+INPUT=$(cat 2>/dev/null)
 [ -z "$INPUT" ] && exit 0
+grep -q '"headroom"' "$HOME/.claude.json" 2>/dev/null || exit 0
 
-RESPONSE=$(echo "$INPUT" | jq -r '.tool_response // ""' 2>/dev/null)
-LEN=${#RESPONSE}
-THRESHOLD=${HEADROOM_WARN_THRESHOLD:-8000}
+LEN=$(printf '%s' "$INPUT" | jq -r '.tool_response | tostring' 2>/dev/null | wc -c | tr -d ' ')
+[ "${LEN:-0}" -gt "${HEADROOM_WARN_THRESHOLD:-20000}" ] || exit 0
 
-if [ "$LEN" -gt "$THRESHOLD" ]; then
-  TOOL=$(echo "$INPUT" | jq -r '.tool_name // "tool"' 2>/dev/null)
-  KB=$(( LEN / 1024 ))
-  echo "headroom: ${TOOL} output is ~${KB}KB. Call the headroom_compress MCP tool now to compress this content and reduce context before proceeding."
-  exit 2
-fi
+SID=$(printf '%s' "$INPUT" | jq -r '.session_id // "nosession"' 2>/dev/null)
+MARK="${TMPDIR:-/tmp}/headroom-hinted-$SID"
+[ -f "$MARK" ] && exit 0
+touch "$MARK"
 
+jq -cn --arg kb "$((LEN / 1024))" '{hookSpecificOutput: {hookEventName: "PostToolUse",
+  additionalContext: ("headroom: that Bash output was ~" + $kb + "KB. If the session will keep running long, consider headroom_compress on bulky logs; skip it when you need the exact text. (Shown once per session.)")}}'
 exit 0

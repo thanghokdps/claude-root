@@ -1,0 +1,23 @@
+{
+  "skill": "feature",
+  "positive": [
+    {
+      "prompt": "add a new feature: export reports as CSV",
+      "top_k": 3
+    },
+    {
+      "prompt": "build a new capability for team invites end to end",
+      "top_k": 3
+    },
+    {
+      "prompt": "implement the new bookmarks feature",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "the export button throws an error",
+      "owner": "fix-bug"
+    }
+  ]
+}

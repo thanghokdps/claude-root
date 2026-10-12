@@ -1,0 +1,23 @@
+{
+  "skill": "ci-triage",
+  "positive": [
+    {
+      "prompt": "the CI pipeline is red, is this flaky or a regression",
+      "top_k": 3
+    },
+    {
+      "prompt": "why is the build failing on the merge request",
+      "top_k": 3
+    },
+    {
+      "prompt": "GitLab job failed, here is the log, what's the root cause",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "write a migration to add a column",
+      "owner": "write-migration"
+    }
+  ]
+}

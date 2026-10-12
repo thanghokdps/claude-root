@@ -1,0 +1,23 @@
+{
+  "skill": "review-checklist",
+  "positive": [
+    {
+      "prompt": "review my diff before I open the PR",
+      "top_k": 3
+    },
+    {
+      "prompt": "review a teammate's pull request",
+      "top_k": 3
+    },
+    {
+      "prompt": "check my changes, could someone review this from the description alone",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "write the PR description",
+      "owner": "create-pr"
+    }
+  ]
+}

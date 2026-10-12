@@ -1,0 +1,23 @@
+{
+  "skill": "create-pr",
+  "positive": [
+    {
+      "prompt": "write the PR description for this branch",
+      "top_k": 3
+    },
+    {
+      "prompt": "draft a merge request description from the diff",
+      "top_k": 3
+    },
+    {
+      "prompt": "describe this branch for the pull request",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "review this PR for bugs",
+      "owner": "review-checklist"
+    }
+  ]
+}

@@ -12,6 +12,8 @@ when_to_use: starting a session on a shared repo, or after a teammate has pushed
 
 **When to use:** At the start of a work session on a team project, or after returning from time away.
 
+Memory layout and what to save: `${CLAUDE_PLUGIN_ROOT}/references/memory.md`.
+
 ---
 
 ## What it does

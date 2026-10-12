@@ -1,7 +1,7 @@
 ---
 name: gen-tests
 description: Auto-generates co-located Jest + React Native Testing Library unit tests for a component or screen in flash-mobile-app. Handles host screens, MFE remote components, and LazyLoad wrappers differently. Use /gen-tests <path-to-component-or-screen>.
-model: sonnet
+model: opus
 effort: high
 when_to_use: generating unit tests for a new component or screen, adding test coverage to existing code, TDD stub before implementation, testing LazyLoad wrappers or MFE remote components
 ---

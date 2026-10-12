@@ -1,0 +1,23 @@
+{
+  "skill": "codebase-design",
+  "positive": [
+    {
+      "prompt": "this module interface feels shallow, where should the seam go",
+      "top_k": 3
+    },
+    {
+      "prompt": "design a deep module for the payment client",
+      "top_k": 3
+    },
+    {
+      "prompt": "make this code more testable by improving the interface",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "add a column to the users table",
+      "owner": "write-migration"
+    }
+  ]
+}

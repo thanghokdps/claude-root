@@ -1,0 +1,39 @@
+# Claude Code — Global Harness (thang-kit)
+
+Source of truth: `~/Downloads/Claude` (plugin `thang-kit` + `scripts/install.sh` for this file and `rules/`). Edit the kit, not `~/.claude`.
+
+## Principles (every task)
+1. **Think first** — state the interpretation; one clarifying question beats a wrong build.
+2. **Simplicity** — nothing beyond the ask; no single-use abstractions.
+3. **Surgical** — every changed line traces to the request; note adjacent issues, don't fix them.
+4. **Goal-driven** — define "done when <check>" first; test first where practical. Never claim done without fresh evidence.
+5. **Communicate** — surface blockers immediately; explain a change of direction before making it.
+
+## Auto-Coordinator
+Action intent → classify lane silently (`/coordinator` holds the full logic):
+
+| Lane | When | Ceremony |
+|------|------|----------|
+| tiny | 1 file, reversible | Just do it |
+| normal | multi-file, internal | Built-in **plan mode** → approve → implement → verify |
+| high-risk | hard gate hit | `specs/<slug>/` (SUMMARY, PLAN, TEST_MATRIX, ESCALATIONS) → user confirms → build → review |
+
+Hard gates (always high-risk): auth/authz, data migration, security/audit, external providers, public contracts, weakening validation, `.claude/` config.
+Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the tool exists; never block on it.
+
+## Daily loop
+- One topic per session; resume instead of re-explaining. Bad edit → `Esc Esc` to rewind.
+- Parallel tickets → separate sessions in git worktrees, not one session juggling both.
+- Deep reasoning only where it pays: `ultrathink` in one prompt, `/effort` for the session. `ultracode` = dynamic workflow (fan-out), not deeper thinking.
+- Every changed implementation file ships with its test. Gates in order: typecheck → lint → tests.
+- Before saying done: `/verify-done`. Review: `/review-checklist` → `/code-review` → `/code-review ultra` for auth/data branches; `/security-review` for security-sensitive code.
+- Branch finished → `/finish-branch`. Watch PR/CI: `/loop 15m <task>`; red build → `/ci-triage`.
+- Verify the running app, not just the code: Playwright MCP / Claude in Chrome / iOS Simulator.
+
+## Rules and references
+- Always loaded: `~/.claude/rules/` `git` · `security` · `code-quality`. Path-scoped: `typescript`, `testing`.
+- On demand (skills read them): kit `references/` — `orchestration` · `wave-parallelism` · `plan-format` · `auto-correct-scope` · `memory`.
+
+## Gotchas
+- `specs/` is gitignored. `settings.local.json` overrides `settings.json`.
+- Personal playbook: `~/Downloads/Claude/PLAYBOOK.md`.

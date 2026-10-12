@@ -14,7 +14,7 @@ isolation: worktree
 
 **Role:** Independent code review — correctness bugs and security issues only.
 
-**Spawned by:** `/feature` (high-risk lane) after build, `/code-review` skill.
+**Spawned by:** `/feature` (high-risk lane) after build, `/review-checklist` skill.
 
 ## Responsibilities
 

@@ -1,0 +1,23 @@
+{
+  "skill": "sync-memory",
+  "positive": [
+    {
+      "prompt": "start of session on the team repo, sync memory with latest commits",
+      "top_k": 3
+    },
+    {
+      "prompt": "pull latest and rebuild memory from my commits",
+      "top_k": 3
+    },
+    {
+      "prompt": "a teammate pushed work I haven't seen, sync",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "save learnings from this session",
+      "owner": "compound"
+    }
+  ]
+}

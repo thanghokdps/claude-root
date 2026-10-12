@@ -1,122 +1,73 @@
 #!/usr/bin/env bash
-# install.sh — Install Claude harness to a persistent location
-# Usage: bash scripts/install.sh [install-dir]
-# Default install-dir: ~/.claude-harness
+# install.sh — install thang-kit for the current user. Idempotent; re-run after pulling the kit.
 #
-# What it does:
-#   1. Copy the harness to INSTALL_DIR (default ~/.claude-harness)
-#   2. Write HARNESS_DIR export to your shell rc file
-#   3. Install skills, rules, hooks into ~/.claude/ (global Claude Code config)
-
+#   1. Back up ~/.claude/CLAUDE.md, rules/, settings.json and the skills this kit replaces
+#   2. Install global/CLAUDE.md and rules/*.md (the only always-loaded files)
+#   3. Register this directory as a local marketplace and install the thang-kit plugin
+#      (skills, hooks, references load in place from here — edit the kit, changes are live)
+#   4. Migrate from the old copy-based install: move kit skills out of ~/.claude/skills and
+#      drop kit hook registrations from ~/.claude/settings.json (the plugin registers them now)
+#
+# Undo: restore from the printed backup dir, then `claude plugin uninstall thang-kit`.
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SOURCE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-INSTALL_DIR="${1:-$HOME/.claude-harness}"
+KIT="$(cd "$(dirname "$0")/.." && pwd)"
+G="$HOME/.claude"
+B="$G/backups/thang-kit-install-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$B/skills" "$B/rules" "$G/rules"
 
-echo "🔧 Claude Harness Installer"
-echo "   Source : $SOURCE_DIR"
-echo "   Target : $INSTALL_DIR"
-echo ""
+echo "thang-kit installer — kit: $KIT"
 
-# ─── Copy harness to install dir ──────────────────────────────────────────────
+# 1. Backup
+cp "$G/CLAUDE.md" "$B/" 2>/dev/null || true
+cp "$G/settings.json" "$B/" 2>/dev/null || true
+cp "$G"/rules/*.md "$B/rules/" 2>/dev/null || true
 
-if [ -d "$INSTALL_DIR" ]; then
-  echo "⚠️  $INSTALL_DIR already exists."
-  printf "   Overwrite? [y/N] "
-  read -r CONFIRM
-  [[ "$CONFIRM" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }
-  rm -rf "$INSTALL_DIR"
-fi
+# 2. Always-loaded instructions. Rules no longer shipped here move to the backup, not the bin.
+cp "$KIT/global/CLAUDE.md" "$G/CLAUDE.md"
+for r in "$G"/rules/*.md; do
+  [ -f "$r" ] || continue
+  [ -f "$KIT/rules/$(basename "$r")" ] || mv "$r" "$B/rules/$(basename "$r").retired"
+done
+cp "$KIT"/rules/*.md "$G/rules/"
+echo "  CLAUDE.md + rules: $(ls "$KIT"/rules/*.md | wc -l | tr -d ' ') rule files"
 
-cp -r "$SOURCE_DIR" "$INSTALL_DIR"
-chmod +x "$INSTALL_DIR/scripts/"*.sh 2>/dev/null || true
-chmod +x "$INSTALL_DIR/hooks/"*.sh   2>/dev/null || true
-chmod +x "$INSTALL_DIR/hooks/stacks/"*.sh 2>/dev/null || true
+# 3. Plugin
+command -v claude >/dev/null || { echo "claude CLI not found"; exit 1; }
+claude plugin marketplace add "$KIT" >/dev/null 2>&1 || true
+claude plugin install thang-kit@thang-kit 2>&1 | tail -1
 
-echo "✅ Harness copied to $INSTALL_DIR"
+# 4. Migrate old copies: plugin skills would otherwise show up twice.
+for d in "$KIT"/skills/*/; do
+  s="$(basename "$d")"
+  [ -d "$G/skills/$s" ] && mv "$G/skills/$s" "$B/skills/$s"
+done
+for s in code-review figma-to-screen gen-tests verify-feature; do   # renamed or moved to stacks/
+  [ -d "$G/skills/$s" ] && mv "$G/skills/$s" "$B/skills/$s"
+done
+python3 - "$G/settings.json" "$KIT/hooks" <<'PY'
+import json, os, sys
+path, hooks_dir = sys.argv[1], sys.argv[2]
+if not os.path.exists(path):
+    sys.exit(0)
+kit_hooks = {f for f in os.listdir(hooks_dir) if f.endswith(".sh")}
+s = json.load(open(path))
+removed = 0
+for event, matchers in list(s.get("hooks", {}).items()):
+    kept = []
+    for m in matchers:
+        hs = [h for h in m.get("hooks", []) if os.path.basename(h.get("command", "").split()[0]) not in kit_hooks]
+        removed += len(m.get("hooks", [])) - len(hs)
+        if hs:
+            kept.append({**m, "hooks": hs})
+    if kept:
+        s["hooks"][event] = kept
+    else:
+        del s["hooks"][event]
+json.dump(s, open(path, "w"), indent=2, ensure_ascii=False)
+open(path, "a").write("\n")
+print(f"  settings.json: removed {removed} kit hook registration(s) now owned by the plugin")
+PY
 
-# ─── Export HARNESS_DIR in shell config ───────────────────────────────────────
-
-HARNESS_EXPORT="export HARNESS_DIR=\"$INSTALL_DIR\""
-
-add_to_shell_config() {
-  local RC_FILE="$1"
-  [ -f "$RC_FILE" ] || return 0
-
-  if grep -q "HARNESS_DIR" "$RC_FILE" 2>/dev/null; then
-    # macOS sed needs -i ''
-    sed -i.bak "s|export HARNESS_DIR=.*|$HARNESS_EXPORT|" "$RC_FILE" 2>/dev/null || \
-      sed -i    "s|export HARNESS_DIR=.*|$HARNESS_EXPORT|" "$RC_FILE"
-    rm -f "${RC_FILE}.bak"
-    echo "   Updated HARNESS_DIR in $(basename "$RC_FILE")"
-  else
-    { echo ""; echo "# Claude Harness"; echo "$HARNESS_EXPORT"; } >> "$RC_FILE"
-    echo "   Added HARNESS_DIR to $(basename "$RC_FILE")"
-  fi
-}
-
-SHELL_NAME="$(basename "${SHELL:-bash}")"
-case "$SHELL_NAME" in
-  zsh)  add_to_shell_config "$HOME/.zshrc" ;;
-  bash) add_to_shell_config "$HOME/.bashrc"; add_to_shell_config "$HOME/.bash_profile" ;;
-  *)    add_to_shell_config "$HOME/.zshrc"; add_to_shell_config "$HOME/.bashrc" ;;
-esac
-
-# ─── Install into ~/.claude/ (global Claude Code config) ──────────────────────
-
-echo ""
-echo "📦 Installing to ~/.claude/ ..."
-
-CLAUDE_GLOBAL="$HOME/.claude"
-mkdir -p "$CLAUDE_GLOBAL"/{skills,rules,hooks,docs/solutions,memory/templates}
-
-if [ -d "$INSTALL_DIR/skills" ]; then
-  cp -r "$INSTALL_DIR/skills/"* "$CLAUDE_GLOBAL/skills/" 2>/dev/null || true
-  COUNT=$(ls "$CLAUDE_GLOBAL/skills/" 2>/dev/null | wc -l | tr -d ' ')
-  echo "   Skills  : $COUNT installed"
-fi
-
-if [ -d "$INSTALL_DIR/rules" ]; then
-  cp "$INSTALL_DIR/rules/"*.md "$CLAUDE_GLOBAL/rules/" 2>/dev/null || true
-  COUNT=$(ls "$CLAUDE_GLOBAL/rules/"*.md 2>/dev/null | wc -l | tr -d ' ')
-  echo "   Rules   : $COUNT installed"
-fi
-
-if [ -d "$INSTALL_DIR/hooks" ]; then
-  cp "$INSTALL_DIR/hooks/"*.sh "$CLAUDE_GLOBAL/hooks/" 2>/dev/null || true
-  chmod +x "$CLAUDE_GLOBAL/hooks/"*.sh 2>/dev/null || true
-  COUNT=$(ls "$CLAUDE_GLOBAL/hooks/"*.sh 2>/dev/null | wc -l | tr -d ' ')
-  echo "   Hooks   : $COUNT installed"
-fi
-
-if [ -d "$INSTALL_DIR/memory" ]; then
-  cp -r "$INSTALL_DIR/memory/"* "$CLAUDE_GLOBAL/memory/templates/" 2>/dev/null || true
-  echo "   Memory  : templates copied"
-fi
-
-# ─── Write HARNESS_DIR into ~/.claude settings so skills can read it ──────────
-
-SETTINGS="$CLAUDE_GLOBAL/settings.json"
-if [ -f "$SETTINGS" ]; then
-  # Inject HARNESS_DIR into env block if it exists, otherwise skip (user manages manually)
-  echo "   settings.json: found (not modified — register hooks manually if needed)"
-else
-  echo "   settings.json: not found (run /init-project in a project to generate one)"
-fi
-
-# ─── Summary ──────────────────────────────────────────────────────────────────
-
-echo ""
-echo "✅ Installation complete!"
-echo ""
-echo "   HARNESS_DIR = $INSTALL_DIR"
-echo ""
-echo "Next steps:"
-echo "  1. Reload your shell:    source ~/.zshrc   (or open a new terminal)"
-echo "  2. Bootstrap a project:  cd my-project && \$HARNESS_DIR/scripts/init.sh"
-echo "  3. Or open Claude Code and type: /init-project"
-echo ""
-echo "To update the harness later:"
-echo "  bash \$HARNESS_DIR/scripts/install.sh"
-echo ""
+echo "Backup: $B"
+echo "Open a new session to load the changes. Optional: bash $KIT/scripts/setup-mcp.sh"

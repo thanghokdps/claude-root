@@ -3,6 +3,7 @@ model: opus
 effort: high
 name: brainstorming
 description: Design-first brainstorming session before any implementation. Explores intent, proposes multiple approaches, asks clarifying questions one at a time, and produces a design doc (specs/<slug>/design.md) before handing off to /writing-plans.
+when_to_use: before building anything non-trivial, "I want to build", "let's design", a new feature idea with no design yet
 ---
 
 # Brainstorming
