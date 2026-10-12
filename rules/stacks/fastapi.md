@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.py"
+---
+
 # FastAPI rules
 
 ## Validation

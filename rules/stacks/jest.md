@@ -1,3 +1,11 @@
+---
+paths:
+  - "**/*.{test,spec}.{ts,tsx,js,jsx}"
+  - "**/__tests__/**"
+  - "**/jest.config.*"
+  - "**/jest.setup.*"
+---
+
 # Jest Testing Rules
 
 Universal rules for Jest-based test suites. Applies to both JavaScript and TypeScript projects.

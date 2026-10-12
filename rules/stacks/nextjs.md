@@ -1,3 +1,11 @@
+---
+paths:
+  - "**/app/**"
+  - "**/pages/**"
+  - "**/next.config.*"
+  - "**/middleware.{ts,js}"
+---
+
 # Next.js rules
 
 ## App Router conventions

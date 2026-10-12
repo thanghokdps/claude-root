@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.{js,jsx,mjs,cjs,ts,tsx}"
+---
+
 # JavaScript Best Practices
 
 Universal rules for modern JavaScript (ES2020+). Applies to both browser and Node.js environments.

@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.{jsx,tsx}"
+---
+
 # React v19 Rules
 
 Universal rules for React v19 projects. Applies to both Client and Server Components.
