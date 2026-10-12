@@ -1,0 +1,11 @@
+{
+  "name": "thang-kit",
+  "owner": { "name": "Thang Ho Quang" },
+  "plugins": [
+    {
+      "name": "thang-kit",
+      "source": "./",
+      "description": "Personal Claude Code harness — skills, hooks and references."
+    }
+  ]
+}

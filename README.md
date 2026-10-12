@@ -153,7 +153,7 @@ Downloads/Claude/                    ← this repo (the source library)
 │   ├── brainstorming/SKILL.md       ← /brainstorming
 │   ├── btw/SKILL.md                 ← /btw
 │   ├── checkpoint/SKILL.md          ← /checkpoint
-│   ├── code-review/SKILL.md         ← /code-review
+│   ├── review-checklist/SKILL.md    ← /review-checklist
 │   ├── compact/SKILL.md             ← /compact
 │   ├── compound/SKILL.md            ← /compound
 │   ├── coordinator/SKILL.md         ← /coordinator (main orchestration hub)
@@ -185,30 +185,20 @@ Downloads/Claude/                    ← this repo (the source library)
 ### One-time global install
 
 ```bash
-# From wherever you cloned/downloaded the harness:
 bash ~/Downloads/Claude/scripts/install.sh
 ```
 
-This copies the harness to `~/.claude-harness`, exports `HARNESS_DIR` in your shell rc, and syncs skills, rules, and hooks into `~/.claude/`.
+Installs `global/CLAUDE.md` and `rules/` into `~/.claude/`, registers this directory as the local marketplace `thang-kit`, and installs the `thang-kit` plugin (skills + hooks, loaded in place — kit edits are live in new sessions). It backs up what it replaces and migrates an old copy-based install.
 
-**Custom install location:**
+From GitHub instead of a local clone:
 
-```bash
-bash ~/Downloads/Claude/scripts/install.sh ~/my-tools/claude-harness
+```
+/plugin install thang-kit --marketplace thanghokdps/claude-root
 ```
 
-**After install — reload your shell:**
+**Update:** skills/hooks — nothing to do (loaded in place). `global/CLAUDE.md` or `rules/` changed → re-run `install.sh`.
 
-```bash
-source ~/.zshrc     # or open a new terminal
-echo $HARNESS_DIR   # should print your install path
-```
-
-**Update after harness changes:**
-
-```bash
-bash $HARNESS_DIR/scripts/install.sh
-```
+**Check before committing:** `bash scripts/check.sh` (skill lint, trigger eval, `claude plugin validate`).
 
 ### Optional: context compression (headroom)
 
@@ -298,7 +288,7 @@ your-project/
     ├── skills/
     │   ├── feature/SKILL.md
     │   ├── fix-bug/SKILL.md
-    │   ├── code-review/SKILL.md
+    │   ├── review-checklist/SKILL.md
     │   ├── checkpoint/SKILL.md
     │   └── sync-memory/SKILL.md
     ├── hooks/
@@ -407,27 +397,11 @@ Specs dir: specs/add-dark-mode/
 
 ---
 
-### `/code-review [low|medium|high]` — Review diff for bugs and cleanups
+### `/review-checklist [PR]` — Review in a fixed order
 
-**Invoke:** `/code-review` or `/code-review high`
+**Invoke:** `/review-checklist` (current branch) or `/review-checklist 123`
 
-**Effort levels:**
-
-| Level | Checks |
-|-------|--------|
-| `low` | Obvious correctness bugs, hardcoded secrets, missing boundary validation. Max 5 findings. |
-| `medium` (default) | Everything in low + logic errors, duplicate code, type errors, OWASP Top 10. Max 10 findings. |
-| `high` | Everything in medium + N+1 queries, misleading names, missing tests, architectural concerns. All findings. |
-
-**Severity labels:** `🔴 MUST FIX` (correctness/security) · `🟡 SHOULD FIX` (likely problem) · `🔵 CONSIDER` (improvement)
-
-**Output format:**
-```markdown
-### 🔴 MUST FIX — SQL injection in user search
-**File:** `src/users/repo.ts:42`
-**Issue:** User input interpolated directly into SQL string
-**Fix:** Use parameterized query: db.query('SELECT * FROM users WHERE id = $1', [id])
-```
+Walks correctness → tests → readability → security → scope, checks the PR description is self-contained, and returns ≥3 actionable `file:line` comments. Renamed from `code-review` so the built-in `/code-review` and `/code-review ultra` are no longer shadowed — escalate to those for risky branches.
 
 ---
 
@@ -1022,7 +996,7 @@ Main bootstrap script. Scans `src/` and generates the full `.claude/` harness.
 
 **Output:**
 - `.claude/rules/` — universal + stack-specific rules
-- `.claude/skills/` — feature, fix-bug, code-review, checkpoint, sync-memory
+- `.claude/skills/` — feature, fix-bug, review-checklist, checkpoint, sync-memory
 - `.claude/hooks/` — all core hooks + stack-specific hooks
 - `.claude/memory/` — MEMORY.md, user.md, project/context.md
 - `.claude/settings.json` — hooks registered, permissions set

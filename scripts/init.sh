@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # init.sh — Scan src/ and generate .claude/ harness for any project
-# Usage: ./init.sh [project-dir]
+# Usage: ./init.sh [project-dir]            — lean: shared skills/rules/hooks come from the thang-kit plugin
+#        STANDALONE=1 ./init.sh [project-dir] — also copy shared rules/skills/commands/agents/hooks into .claude/
+#                                             (for repos shared with people who do not have the plugin)
 #
 # What it does:
 #   1. Detect tech stack from manifests + src/ scan
@@ -17,6 +19,7 @@ CLAUDE_DIR="$PROJECT_DIR/.claude"
 GIT_USER="$(git -C "$PROJECT_DIR" config user.name 2>/dev/null || echo "unknown")"
 GIT_EMAIL="$(git -C "$PROJECT_DIR" config user.email 2>/dev/null || echo "")"
 PROJECT_NAME="$(basename "$PROJECT_DIR")"
+STANDALONE="${STANDALONE:-0}"
 
 echo "🔍 Scanning project: $PROJECT_NAME"
 echo "   Dir: $PROJECT_DIR"
@@ -130,9 +133,12 @@ echo "📋 Copying rules..."
 # Copy every universal rule. A hardcoded list here had drifted to 4 of 13 — agent-principles.md,
 # security.md, code-quality.md and plan-format.md never reached a project despite being
 # referenced as mandatory. Stack rules under rules/stacks/ stay conditional, below.
-for rule in "$HARNESS_DIR"/rules/*.md; do
-  [ -f "$rule" ] && cp "$rule" "$CLAUDE_DIR/rules/"
-done
+# Lean mode skips them: ~/.claude/rules already loads them, and a second copy loads twice.
+if [ "$STANDALONE" = 1 ]; then
+  for rule in "$HARNESS_DIR"/rules/*.md; do
+    [ -f "$rule" ] && cp "$rule" "$CLAUDE_DIR/rules/"
+  done
+fi
 
 # Stack-specific rules
 has_signal "typescript" && cp "$HARNESS_DIR/rules/stacks/typescript.md"  "$CLAUDE_DIR/rules/typescript.md"  2>/dev/null || true
@@ -145,13 +151,14 @@ has_signal "nextjs"     && cp "$HARNESS_DIR/rules/stacks/nextjs.md"      "$CLAUD
 has_signal "prisma"     && cp "$HARNESS_DIR/rules/stacks/prisma.md"      "$CLAUDE_DIR/rules/prisma.md"      2>/dev/null || true
 has_signal "fastapi"    && cp "$HARNESS_DIR/rules/stacks/fastapi.md"     "$CLAUDE_DIR/rules/fastapi.md"     2>/dev/null || true
 
+if [ "$STANDALONE" = 1 ]; then
 # ─── Copy Universal Skills ───────────────────────────────────────────────────
 
 echo "🛠  Copying skills..."
 mkdir -p "$CLAUDE_DIR/skills"
 # Build chain + design chain. The design chain (brainstorming → grill → writing-plans) is what
 # turns a rough idea into a PLAN.md before any code is written, so it ships with every project.
-for skill in feature fix-bug code-review checkpoint sync-memory \
+for skill in feature fix-bug review-checklist checkpoint sync-memory \
              brainstorming grill writing-plans domain-model tdd codebase-design blast-radius; do
   if [ -d "$HARNESS_DIR/skills/$skill" ]; then
     cp -r "$HARNESS_DIR/skills/$skill" "$CLAUDE_DIR/skills/"
@@ -162,7 +169,7 @@ done
 
 echo "⌨️   Copying commands..."
 mkdir -p "$CLAUDE_DIR/commands"
-for cmd in "$HARNESS_DIR"/commands/*.md; do
+for cmd in "$HARNESS_DIR"/templates/project/commands/*.md; do
   [ -f "$cmd" ] && cp "$cmd" "$CLAUDE_DIR/commands/"
 done
 
@@ -170,8 +177,9 @@ done
 
 echo "🤖  Copying agents..."
 mkdir -p "$CLAUDE_DIR/agents"
-if [ -d "$HARNESS_DIR/agents" ]; then
-  cp "$HARNESS_DIR/agents/"*.md "$CLAUDE_DIR/agents/" 2>/dev/null || true
+if [ -d "$HARNESS_DIR/templates/project/agents" ]; then
+  cp "$HARNESS_DIR/templates/project/agents/"*.md "$CLAUDE_DIR/agents/" 2>/dev/null || true
+fi
 fi
 
 # ─── Copy Templates ───────────────────────────────────────────────────────────
@@ -189,9 +197,11 @@ echo "🪝  Copying hooks..."
 # Copy every hook in hooks/ — a hardcoded list here silently drifts from the list
 # registered in settings.json, which is how agent-progress.sh and session-handoff.sh
 # ended up registered but never installed. Stack hooks under hooks/stacks/ stay conditional.
-for hook in "$HARNESS_DIR"/hooks/*.sh; do
-  [ -f "$hook" ] && cp "$hook" "$CLAUDE_DIR/hooks/"
-done
+if [ "$STANDALONE" = 1 ]; then
+  for hook in "$HARNESS_DIR"/hooks/*.sh; do
+    [ -f "$hook" ] && cp "$hook" "$CLAUDE_DIR/hooks/"
+  done
+fi
 
 # Python: add ruff hook
 has_signal "python" && cp "$HARNESS_DIR/hooks/stacks/ruff-on-edit.sh" "$CLAUDE_DIR/hooks/" 2>/dev/null || true
@@ -214,14 +224,18 @@ fi
 # registered set and the installed set come from one file.
 STACK_HOOKS=""
 has_signal "python"     && STACK_HOOKS="$STACK_HOOKS,
-      { \"matcher\": \"Edit\", \"hooks\": [{ \"type\": \"command\", \"command\": \"\$CLAUDE_PROJECT_DIR/.claude/hooks/ruff-on-edit.sh\" }] }" || true
+      { \"matcher\": \"Edit|Write\", \"hooks\": [{ \"type\": \"command\", \"command\": \"\$CLAUDE_PROJECT_DIR/.claude/hooks/ruff-on-edit.sh\" }] }" || true
 has_signal "typescript" && STACK_HOOKS="$STACK_HOOKS,
-      { \"matcher\": \"Edit\", \"hooks\": [{ \"type\": \"command\", \"command\": \"\$CLAUDE_PROJECT_DIR/.claude/hooks/eslint-on-edit.sh\" }] }" || true
+      { \"matcher\": \"Edit|Write\", \"hooks\": [{ \"type\": \"command\", \"command\": \"\$CLAUDE_PROJECT_DIR/.claude/hooks/eslint-on-edit.sh\" }] }" || true
 
-python3 - "$SETTINGS_TEMPLATE" "$CLAUDE_DIR/settings.json" "$STACK_HOOKS" <<'RENDER'
+STANDALONE="$STANDALONE" python3 - "$SETTINGS_TEMPLATE" "$CLAUDE_DIR/settings.json" "$STACK_HOOKS" <<'RENDER'
 import json, sys
 tpl, out, stack = sys.argv[1], sys.argv[2], sys.argv[3]
-rendered = open(tpl).read().replace("__STACK_HOOKS__", stack)
+import os
+if os.environ.get("STANDALONE") == "1":
+    rendered = open(tpl).read().replace("__STACK_HOOKS__", stack)
+else:  # lean: the plugin registers the shared hooks; only stack hooks are project-specific
+    rendered = json.dumps({"hooks": {"PostToolUse": json.loads("[" + stack.lstrip(",") + "]")}} if stack.strip() else {}, indent=2)
 json.loads(rendered)          # fail loudly on malformed JSON rather than writing it
 open(out, "w").write(rendered)
 RENDER
