@@ -146,19 +146,19 @@ Claude will:
 
 ```bash
 cd ~/my-project
-$HARNESS_DIR/scripts/init.sh
+bash /path/to/Claude/plugins/thang-core/scripts/init.sh
 
-# Or specify the path explicitly:
-$HARNESS_DIR/scripts/init.sh /path/to/my-project
+# Or standalone mode (copies all rules, skills, agents, commands into .claude/):
+STANDALONE=1 bash /path/to/Claude/plugins/thang-core/scripts/init.sh /path/to/my-project
 ```
 
 ### Method C — Use an existing stack bundle (React Native / Next.js / Python)
 
-If your project matches one of the bundles in `stacks/`:
+If your project matches one of the bundles in `plugins/thang-core/stacks/`:
 
 ```bash
 # Example: React Native project
-cp -r $HARNESS_DIR/stacks/react-native/.claude ~/my-rn-project/
+cp -r /path/to/Claude/plugins/thang-core/stacks/react-native/ ~/my-rn-project/
 ```
 
 Then edit the files to match your project's actual paths.
@@ -510,11 +510,7 @@ Fan-out web searches → cross-check sources → adversarial vote on each claim 
 /sync-memory
 ```
 
-Or run the script directly:
-
-```bash
-$HARNESS_DIR/scripts/sync-team.sh
-```
+This skill (part of `thang-core`) syncs team commits and rebuilds local commit memory automatically.
 
 **What it does:**
 1. Stash uncommitted changes
@@ -646,7 +642,7 @@ To update `.claude/` for a specific project:
 
 ```bash
 cd ~/my-project
-$HARNESS_DIR/scripts/init.sh
+bash /path/to/Claude/plugins/thang-core/scripts/init.sh
 # Script will warn before overwriting settings.json
 ```
 
@@ -658,7 +654,6 @@ $HARNESS_DIR/scripts/init.sh
 ┌─ INSTALL (once) ────────────────────────────────────────────┐
 │                                                              │
 │  bash ~/Downloads/Claude/scripts/install.sh                 │
-│  source ~/.zshrc                                            │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
                           ↓
@@ -666,7 +661,7 @@ $HARNESS_DIR/scripts/init.sh
 │                                                             │
 │  cd ~/my-project                                           │
 │  /project-init              ← Claude Code                  │
-│  # or: $HARNESS_DIR/scripts/init.sh                       │
+│  # or: bash plugins/thang-core/scripts/init.sh             │
 │                                                             │
 │  Fill in CLAUDE.md          ← run commands, architecture   │
 │  Fill in memory/user.md     ← role, preferences            │
