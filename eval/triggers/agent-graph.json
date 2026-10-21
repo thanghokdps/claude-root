@@ -1,0 +1,27 @@
+{
+  "skill": "agent-graph",
+  "positive": [
+    {
+      "prompt": "wrong agent answered this question, fix the routing",
+      "top_k": 3
+    },
+    {
+      "prompt": "add an agent with its own scope and boundary rules to the supervisor",
+      "top_k": 3
+    },
+    {
+      "prompt": "rewrite the system prompt shorter and handle out-of-scope requests",
+      "top_k": 3
+    },
+    {
+      "prompt": "Hỏi về hóa đơn mà agent support lại trả lời",
+      "top_k": 1
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "implement the task from PLAN.md with TDD",
+      "owner": "tdd"
+    }
+  ]
+}

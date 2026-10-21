@@ -6,3 +6,6 @@ specs/
 
 # macOS Finder metadata
 .DS_Store
+
+# plugin eval reports (claude plugin eval)
+plugins/*/evals/results/

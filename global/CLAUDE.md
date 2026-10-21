@@ -1,6 +1,6 @@
 # Claude Code — Global Harness (thang-kit)
 
-Source of truth: `~/Downloads/Claude` (plugin `thang-kit` + `scripts/install.sh` for this file and `rules/`). Edit the kit, not `~/.claude`.
+Source of truth: `~/Downloads/Claude` (marketplace `thang-kit`: role plugins `thang-<role>` under `plugins/` + `scripts/install.sh` for this file and `rules/`). Edit the kit, not `~/.claude`.
 
 ## Principles (every task)
 1. **Think first** — state the interpretation; one clarifying question beats a wrong build.
@@ -32,14 +32,15 @@ Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the 
 
 ## Overlap with team plugins (granbull)
 Chosen per pair on content, not by plugin. When both are available:
-- Debugging → `thang-kit:fix-bug` (not `developers:fix-bug`). Review → `/review-checklist` (not `developers:review-changes`).
+- Debugging → `thang-dev:fix-bug` (not `developers:fix-bug`). Review → `/review-checklist` (not `developers:review-changes`).
 - Commit + push + open MR/PR → `developers:create-mr` (project conventions); `create-pr` only drafts description text.
+- LLM-agent work (CopilotKit / LangGraph): in repos a team agent plugin covers (`space-agent:*`) that plugin wins; elsewhere → `/agent-*`.
 - Impact of a code diff → `/blast-radius`; impact of a proposed change request → `business-analyst:analyze-impact`.
 - Team-only skills (flash, BA/QA, `developers:verify-features`, `explain-code`, `develop-components`) have no kit equivalent — use them.
 
 ## Rules and references
 - Always loaded: `~/.claude/rules/` `git` · `security` · `code-quality`. Path-scoped: `typescript`, `testing`.
-- On demand (skills read them): kit `references/` — `orchestration` · `wave-parallelism` · `plan-format` · `auto-correct-scope` · `memory`.
+- On demand (skills read them): each plugin's `references/` — thang-dev `orchestration` · `wave-parallelism` · `plan-format` · `auto-correct-scope` · `spec-templates` · `agent-prompts`; thang-core `memory`.
 
 ## Gotchas
 - `specs/` is gitignored. `settings.local.json` overrides `settings.json`.

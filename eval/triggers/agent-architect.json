@@ -1,0 +1,23 @@
+{
+  "skill": "agent-architect",
+  "positive": [
+    {
+      "prompt": "chọn kiến trúc agent cho chatbot mới: createAgent hay custom StateGraph",
+      "top_k": 3
+    },
+    {
+      "prompt": "scaffold a new AI assistant with CopilotKit and LangGraph",
+      "top_k": 3
+    },
+    {
+      "prompt": "audit the agent repo for custom code that stock middleware now covers",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "design a dark mode toggle for the settings page",
+      "owner": "brainstorming"
+    }
+  ]
+}

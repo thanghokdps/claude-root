@@ -10,6 +10,7 @@ Also flags description pairs that nearly collide.
 Usage: scripts/eval-triggers.py [--collide 0.45] [skill ...]
 """
 import argparse
+import glob
 import json
 import math
 import os
@@ -22,7 +23,8 @@ import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STOP = set("""a an the and or of to in on for with without from by at is are be this that it its
 your you my me i we our as into not no do does when what how why should use used using can any
-all each every before after then than if else so just""".split())
+all each every before after then than if else so just
+và có không là của cho với thì mà lại về này đó được các những một khi nếu để từ trong ra vào cần giúp tôi bạn hay""".split())
 
 
 def stem(w):
@@ -33,15 +35,14 @@ def stem(w):
 
 
 def tokens(text):
-    return [stem(w) for w in re.findall(r"[a-z0-9]+", text.lower()) if w not in STOP and len(w) > 1]
+    # Unicode words: [a-z0-9]+ shredded Vietnamese at every diacritic ("hóa" → "h", "a").
+    return [stem(w) for w in re.findall(r"[^\W_]+", text.lower()) if w not in STOP and len(w) > 1]
 
 
 def load_skills():
     skills = {}
-    for name in sorted(os.listdir(os.path.join(ROOT, "skills"))):
-        p = os.path.join(ROOT, "skills", name, "SKILL.md")
-        if not os.path.isfile(p):
-            continue
+    for p in sorted(glob.glob(os.path.join(ROOT, "plugins", "*", "skills", "*", "SKILL.md"))):
+        name = os.path.basename(os.path.dirname(p))
         text = open(p, encoding="utf-8").read()
         fm = yaml.safe_load(text[4:text.index("\n---", 4)]) or {}
         doc = " ".join([name.replace("-", " ")] * 2 + [fm.get("description", ""), str(fm.get("when_to_use", ""))])

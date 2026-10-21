@@ -1,0 +1,17 @@
+{
+  "name": "thang-plan",
+  "version": "3.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "Design before code: brainstorming, grill, domain-model, codebase-design, writing-plans → PLAN.md.",
+  "keywords": [
+    "design",
+    "planning"
+  ],
+  "dependencies": [
+    "thang-progress"
+  ]
+}

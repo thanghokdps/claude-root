@@ -1,0 +1,23 @@
+{
+  "skill": "agent-frontend",
+  "positive": [
+    {
+      "prompt": "requests from the CopilotKit provider go out unauthenticated after token refresh",
+      "top_k": 3
+    },
+    {
+      "prompt": "the tool card renders twice in the React chat UI with useRenderTool",
+      "top_k": 3
+    },
+    {
+      "prompt": "wire useAgentContext and suggestions chips in the CopilotKit chat",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "the upload crashes for files over 10MB, debug it",
+      "owner": "fix-bug"
+    }
+  ]
+}

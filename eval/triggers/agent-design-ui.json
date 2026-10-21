@@ -1,0 +1,23 @@
+{
+  "skill": "agent-design-ui",
+  "positive": [
+    {
+      "prompt": "đây là link figma của chatbot, làm UI chat giống design giúp tôi",
+      "top_k": 1
+    },
+    {
+      "prompt": "theme the CopilotKit chat to match this Figma mockup",
+      "top_k": 3
+    },
+    {
+      "prompt": "the chat UI does not match the design, the message bubbles and tool cards look different",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "the Authorization header is missing on CopilotKit requests",
+      "owner": "agent-frontend"
+    }
+  ]
+}

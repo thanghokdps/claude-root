@@ -188,17 +188,21 @@ Downloads/Claude/                    ← this repo (the source library)
 bash ~/Downloads/Claude/scripts/install.sh
 ```
 
-Installs `global/CLAUDE.md` and `rules/` into `~/.claude/`, registers this directory as the local marketplace `thang-kit`, and installs the `thang-kit` plugin (skills + hooks, loaded in place — kit edits are live in new sessions). It backs up what it replaces and migrates an old copy-based install.
+Installs `global/CLAUDE.md` and `plugins/thang-core/rules/` into `~/.claude/`, registers this directory as the local marketplace `thang-kit`, and installs every role plugin plus the `thang-kit` bundle (loaded in place — kit edits are live in new sessions). It backs up what it replaces and migrates an old copy-based or 2.x single-plugin install.
+
+The kit is split by role — see [`plugins/README.md`](plugins/README.md). Installing a role plugin installs its dependencies: `thang-dev` brings `thang-core`, `thang-plan`, `thang-review`; `thang-agent` stands alone; hooks are the opt-in `thang-guards`.
 
 From GitHub instead of a local clone:
 
 ```
-/plugin install thang-kit --marketplace thanghokdps/claude-root
+/plugin marketplace add thanghokdps/claude-root
+/plugin install thang-agent@thang-kit     # one role (+ its dependencies)
+/plugin install thang-kit@thang-kit       # everything
 ```
 
-**Update:** skills/hooks — nothing to do (loaded in place). `global/CLAUDE.md` or `rules/` changed → re-run `install.sh`.
+**Update:** skills/hooks — nothing to do for a local install (loaded in place); GitHub install → `/plugin marketplace update thang-kit`. A new plugin, `global/CLAUDE.md` or `rules/` changed → re-run `install.sh` (`plugin update` does not install a dependency a new version adds).
 
-**Check before committing:** `bash scripts/check.sh` (skill lint, trigger eval, `claude plugin validate`).
+**Check before committing:** `bash scripts/check.sh` (skill lint incl. the plugin dependency check, trigger eval, `claude plugin validate` per plugin).
 
 ### Optional: context compression (headroom)
 
@@ -317,7 +321,7 @@ your-project/
 
 ## Skills reference
 
-Skills are slash commands Claude runs as guided workflows. Each lives in `skills/<name>/SKILL.md`.
+Skills are slash commands Claude runs as guided workflows. Each lives in `plugins/<plugin>/skills/<name>/SKILL.md`.
 
 ### `/coordinator <request>` — Main orchestration hub
 
@@ -1419,8 +1423,8 @@ or `CLAUDE_CODE_DISABLE_WORKFLOWS=1`.
 ### Add a new skill
 
 ```bash
-mkdir -p skills/<name>
-cat > skills/<name>/SKILL.md << 'EOF'
+mkdir -p plugins/<plugin>/skills/<name>
+cat > plugins/<plugin>/skills/<name>/SKILL.md << 'EOF'
 ---
 name: <name>
 description: <trigger condition — when to invoke this>
@@ -1436,8 +1440,7 @@ effort: high | medium | low
 ## Step 2 — ...
 EOF
 
-# Install globally
-cp -r skills/<name> ~/.claude/skills/
+bash scripts/check.sh   # lint + trigger eval + validate; a local install loads it at the next session
 ```
 
 The `description` field is used by Claude Code to auto-invoke the skill. Make it a specific, actionable trigger phrase.
