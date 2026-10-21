@@ -16,13 +16,15 @@ Generate a reviewer-friendly PR description from the current branch's changes.
 
 ### Step 1 — Gather context
 
-Run these commands:
+Base branch, commits and file stats, collected when this skill loads (base = the remote's default branch, not always `main`):
 
-```bash
-git log main..HEAD --oneline          # commits on this branch
-git diff main...HEAD --stat           # files changed + line counts
-git diff main...HEAD                  # full diff for analysis
+```!
+git rev-parse --abbrev-ref origin/HEAD 2>/dev/null || echo "origin/HEAD not set: base is main"
+git log --oneline origin/HEAD..HEAD 2>/dev/null | head -50
+git diff --stat origin/HEAD...HEAD 2>/dev/null | tail -40
 ```
+
+Read-only git only, no variables or `$(…)`: anything the CLI cannot permission-check (variables, `git symbolic-ref`, extra flags such as `rev-parse --verify`) silently drops the whole skill. Then read the full diff for analysis: `git diff origin/HEAD...HEAD` (or `main...HEAD` when origin/HEAD is not set).
 
 Also read `specs/<slug>/SUMMARY.md` if it exists — use "What changed" and "Rationale" sections.
 

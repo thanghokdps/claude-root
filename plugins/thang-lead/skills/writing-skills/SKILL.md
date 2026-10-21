@@ -42,8 +42,10 @@ When user-invoked skills multiply past what you can remember, the cure is a **ro
 | `effort` | `high` / `medium` / `low` |
 | `when_to_use` | phrase patterns that trigger auto-invocation |
 | `disable-model-invocation` | `true` = user-invoked only |
-| `background` | `true` = runs as a background agent |
-| `isolation` | `worktree` = isolated git worktree for parallel runs |
+| `context` / `agent` / `background` | `context: fork` runs the skill in a subagent (`agent`, default general-purpose); `background: false` waits for its report. For skills that read a lot and return a little |
+| `allowed-tools` / `arguments` / `paths` | pre-approved tools for the turn · named `$args` · globs that gate auto-loading |
+
+Claude Code silently ignores any other key (`isolation`, `color` are agent fields, not skill fields) — `scripts/lint-kit.py` fails on them. `description` + `when_to_use` are cut at 1,536 characters in the listing. In the body, `${CLAUDE_SKILL_DIR}` is the skill's own folder and `${CLAUDE_SESSION_ID}` the current session.
 
 ### Writing the description
 
@@ -124,4 +126,5 @@ Add a skill only on evidence: a task that recurs in ≥5 prompts across session 
 2. Add the row to `plugins/README.md` and place it in the right chain.
 3. A step that runs another plugin's skill → add that plugin to `dependencies` in `plugin.json`; a mere mention → "(<plugin>, if installed)". `bash scripts/check.sh` fails otherwise.
 4. Add to the `for entry in …` loop in `plugins/thang-core/scripts/init.sh` only if projects need their own copy — installed plugins already reach every project.
-5. Test the trigger: state the phrase from `when_to_use` and confirm it fires.
+5. Test the trigger: state the phrase from `when_to_use` and confirm it fires — for a plugin with an `evals/` suite, `bash scripts/eval-plugin.sh <plugin>`.
+6. A `` !`cmd` `` or ```` ```! ```` block runs before the model sees the skill; one the CLI cannot permission-check (variables, `$(…)`, a git subcommand or flag outside its read-only list) drops the whole skill with no visible error. Run it once: `claude -p "/<plugin>:<name>" --plugin-dir plugins/<plugin> --max-turns 1 --output-format stream-json --verbose` and look for `local-command-stderr`.

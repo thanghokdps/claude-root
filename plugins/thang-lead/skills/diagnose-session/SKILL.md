@@ -4,6 +4,9 @@ effort: high
 name: diagnose-session
 description: Investigates what went wrong in a Claude Code session using its transcript — skills that fired when they should not (or stayed silent), ignored plans, repeated work, noisy hooks, wasted tokens — and reports each finding with line-level evidence plus the kit change that would prevent it. Use when a session misbehaved or felt slow, expensive, or off-track.
 when_to_use: asking what went wrong in this session, "why did the skill not trigger", "why did Claude ignore the plan", "this session was slow/expensive", tuning the kit after a bad run
+# Transcripts are large: read them in a forked subagent and return only the report.
+context: fork
+background: false
 ---
 
 # diagnose-session — evidence from the transcript, then a fix in the kit
@@ -12,10 +15,10 @@ when_to_use: asking what went wrong in this session, "why did the skill not trig
 
 ## Step 1 — Find the transcript
 
-Transcripts are JSONL under `~/.claude/projects/<project-dir-slug>/<session-id>.jsonl`. Current project: list by mtime and take the newest unless an id was given.
+Transcripts are JSONL under `~/.claude/projects/<project-dir-slug>/<session-id>.jsonl`. No id given → the current session, `${CLAUDE_SESSION_ID}` — not the newest by mtime, which is another session whenever two are open.
 
 ```bash
-ls -t ~/.claude/projects/*/ | head
+ls ~/.claude/projects/*/${CLAUDE_SESSION_ID}.jsonl
 ```
 
 Read with `jq`, never by dumping the whole file into context.
