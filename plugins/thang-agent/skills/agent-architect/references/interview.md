@@ -26,6 +26,7 @@ The assistant is built from these answers: every task in P2 must end up owned by
 | 7 | **Models** — providers, fallback order, caller-supplied keys, a cheap model for router/summary/suggestions? | Fallback middleware vs cascade model; key in request scope only |
 | 8 | **Observability & privacy** — tracing provider, masking, retention, compliance controls? | Masked-by-default tracing; HMAC user ids |
 | 9 | **Evals** — which behaviours are must-pass, which judge model, where does the CI gate sit? | Eval tree separate from unit tests; baseline diff gate |
+| D | **Design** — is there a Figma file, mockup or screenshot of the chat? Ask after Q2 | Yes → link recorded in the ADR; after the scaffold, `/agent-design-ui` builds the chat from it. No → stock `CopilotChat` with theme tokens |
 | L | **Repo layout** — one app or a monorepo? Ask after Q2 (clients) | `layouts.md`: L1 single app · L2 pnpm + Turborepo. An existing repo's layout is detected, not asked |
 
 ## Shape of each question

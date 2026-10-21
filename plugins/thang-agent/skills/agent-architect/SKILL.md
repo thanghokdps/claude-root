@@ -38,14 +38,14 @@ Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/
 
 ## Step 2 — Greenfield interview
 
-Walk `${CLAUDE_SKILL_DIR}/references/interview.md` in order: the problem (P1–P4) before any technology, then Q1–Q9 with the layout question Q-L after Q2.
+Walk `${CLAUDE_SKILL_DIR}/references/interview.md` in order: the problem (P1–P4) before any technology, then Q1–Q9 with the design question Q-D and the layout question Q-L after Q2.
 
 - **One question per turn**, each with *Why this matters* and *My recommendation*. Skip what the repo or the request already answers.
 - **Layout is asked, never assumed**: single app (L1) or monorepo on pnpm + Turborepo (L2), per `${CLAUDE_SKILL_DIR}/references/layouts.md`. Recommend one from the clients and deploy answers, then wait.
 - Default recommendation is shape **A** (createAgent + middleware + CopilotRuntime v2) unless the host is edge/Workers or a contract the runtime cannot express forces **B**; use the decision rule in `shapes.md` for single agent vs supervisor.
 - Every non-L0 choice names its rung and its reason (`${CLAUDE_SKILL_DIR}/references/stock-map.md`).
 
-**Done when:** P1–P4, Q-L and Q1–Q9 are answered or explicitly deferred with a risk.
+**Done when:** P1–P4, Q-D, Q-L and Q1–Q9 are answered or explicitly deferred with a risk.
 
 ## Step 2b — Grill the card
 
@@ -88,4 +88,4 @@ Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later
 
 ## Hand-offs
 
-Tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · evals → `/agent-evals` · threat model → `/agent-security`.
+Tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · threat model → `/agent-security`.
