@@ -32,7 +32,6 @@ Downloads/Claude/
     thang-lead     retro diagnose-session writing-skills                 → core
     thang-guards   hooks/hooks.json + hook scripts (opt-in)              → dev
     thang-kit      bundle, depends on all nine
-  hooks → plugins/thang-guards/hooks   ← symlink: sessions started on 2.x resolve ${CLAUDE_PLUGIN_ROOT}/hooks to the repo root
   global/CLAUDE.md    ← installed to ~/.claude/CLAUDE.md
   eval/triggers/      ← one routing case per skill
   scripts/            ← install.sh, check.sh, lint-kit.py, eval-triggers.py (kit tooling, not shipped)
@@ -59,7 +58,7 @@ Always-loaded context is the budget: add `paths:` frontmatter unless the rule ap
 
 ## How to add a hook
 
-`plugins/thang-guards/hooks/<name>.sh` (executable, reads JSON on stdin, exits 0 or 2 — never 1), register it in `plugins/thang-guards/hooks/hooks.json` with `"${CLAUDE_PLUGIN_ROOT}"/hooks/<name>.sh`, test with `echo '{}' | hooks/<name>.sh`. Prefer `additionalContext` JSON over exit 2 for non-blocking hints.
+`plugins/thang-guards/hooks/<name>.sh` (executable, reads JSON on stdin, exits 0 or 2 — never 1), register it in `plugins/thang-guards/hooks/hooks.json` with `"${CLAUDE_PLUGIN_ROOT}"/hooks/<name>.sh`, test with `echo '{}' | plugins/thang-guards/hooks/<name>.sh`. Prefer `additionalContext` JSON over exit 2 for non-blocking hints.
 
 ---
 
@@ -97,4 +96,4 @@ Any other key is silently ignored by Claude Code (`color`, `isolation` belong to
 - Every skill must work as a standalone unit — no undeclared dependencies
 - Hooks must exit 0 (allow) or 2 (block) — never exit 1
 - Rules must be imperative ("do X", "never Y") — not descriptive
-- Test any new hook locally before installing: `echo '{}' | ./hooks/myhook.sh`
+- Test any new hook locally before installing: `echo '{}' | ./plugins/thang-guards/hooks/myhook.sh`

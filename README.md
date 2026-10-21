@@ -34,7 +34,7 @@ Two layers:
 | Layer | What it is | Lives in |
 |-------|-----------|---------|
 | **Skills** (engine) | Invocable `/skills` that do the work — feature, fix-bug, review, verify | `skills/`, `agents/` |
-| **Harness** (control) | Thin governance layer that determines risk, routes work, enforces gates | `hooks/`, `rules/`, memory system |
+| **Harness** (control) | Thin governance layer that determines risk, routes work, enforces gates | `plugins/thang-guards/hooks/`, `rules/`, memory system |
 
 The engine answers *"how do I build this?"* The harness answers *"how careful should I be, and who needs to approve?"*
 
@@ -65,117 +65,92 @@ prompt
 Downloads/Claude/                    ← this repo (the source library)
 ├── CLAUDE.md                        ← project instructions for Claude Code
 ├── HARNESS.md                       ← philosophy / architecture reference
+├── PLAYBOOK.md                      ← playbook reference
 ├── README.md                        ← this file
 │
-├── agents/                          ← sub-agent role definitions
-│   ├── architect.md                 ← design plans, evaluate trade-offs (worktree isolation)
-│   ├── auto-dev.md                  ← autonomous developer, bypassPermissions, 80 turns
-│   ├── developer-agent.md           ← wave-based implementation agent
-│   ├── implementer.md               ← executes approved plan, fills SUMMARY/TEST_MATRIX
-│   ├── pm-agent.md                  ← research phase: context gathering before architect
-│   ├── qa.md                        ← quality assurance: lint, types, tests, golden path
-│   ├── reviewer.md                  ← code review: correctness, security, conventions
-│   └── verifier.md                  ← runs Verify table, confirms no regressions
+├── .claude-plugin/
+│   └── marketplace.json             ← lists the 10 plugins below
 │
-├── commands/                        ← prompt files loaded as /commands in Claude Code
-│   ├── auto.md                      ← autonomous single-prompt dev workflow
-│   ├── compact.md                   ← compact session → HANDOFF.md
-│   ├── compound.md                  ← crystallize learnings → solutions/
-│   ├── task.md                      ← lightweight single-task workflow
-│   └── ticket.md                    ← full 5-agent pipeline: PM→Architect→Dev→Review→QA
+├── plugins/                         ← role plugins (self-contained, each with plugin.json)
+│   ├── README.md                    ← plugin index, skill table, handoff map
+│   │
+│   ├── thang-progress/              ← skill checklist + live ✅ progress (hooks only, never blocks)
+│   │   └── hooks/
+│   │       └── skill-progress.sh
+│   │
+│   ├── thang-core/                  ← session + project basics every role uses
+│   │   ├── hooks/stacks/            ← stack-specific hooks (eslint, ruff)
+│   │   ├── memory/                  ← memory templates (MEMORY.md.template, user.md, project.md)
+│   │   ├── rules/                   ← universal rules (behavior, git, security, testing, etc.)
+│   │   │   └── stacks/             ← stack-specific rules (fastapi, nextjs, python, etc.)
+│   │   ├── scripts/init.sh          ← bootstrap .claude/ for a project (stack-aware)
+│   │   ├── skills/                  ← btw, compact, compound, init-project, project-init,
+│   │   │                               sync-memory, verify-done
+│   │   ├── stacks/                  ← full stack bundles (nextjs, python, react-native)
+│   │   └── templates/               ← CLAUDE.md.template, settings.json.template, etc.
+│   │
+│   ├── thang-plan/                  ← design before code
+│   │   └── skills/                  ← brainstorming, codebase-design, domain-model, grill,
+│   │                                   writing-plans
+│   │
+│   ├── thang-review/                ← review diffs, PRs, impact
+│   │   └── skills/                  ← blast-radius, create-pr, review-checklist, review-diff
+│   │
+│   ├── thang-dev/                   ← build, fix, test-first
+│   │   └── skills/                  ← checkpoint, coordinator, feature, fix-bug, tdd
+│   │
+│   ├── thang-ship/                  ← release / CI owner
+│   │   └── skills/                  ← ci-triage, finish-branch, release-checklist, write-migration
+│   │
+│   ├── thang-agent/                 ← AI-agent engineer (CopilotKit, LangGraph)
+│   │   ├── evals/                   ← routing + behaviour eval cases
+│   │   ├── rules/                   ← agent-specific invariants (read on demand)
+│   │   └── skills/                  ← agent-architect, agent-design-ui, agent-evals,
+│   │                                   agent-feature, agent-frontend, agent-graph,
+│   │                                   agent-hitl, agent-security, agent-tool, agent-verify-turn
+│   │
+│   ├── thang-lead/                  ← process owner: retro, diagnosis, skill authoring
+│   │   └── skills/                  ← diagnose-session, retro, writing-skills
+│   │
+│   ├── thang-guards/                ← personal guard-rail hooks (opt-in)
+│   │   └── hooks/                   ← hooks.json + 14 bash scripts
+│   │       ├── hooks.json           ← hook registration (uses ${CLAUDE_PLUGIN_ROOT})
+│   │       ├── scope-gate.sh        ← inject coordinator context on every prompt
+│   │       ├── commit-quality-gate.sh ← block secrets / debug artifacts
+│   │       ├── branch-guard.sh      ← block force-push to protected branches
+│   │       ├── risk-corroboration.sh ← block commits when diff risk > declared lane
+│   │       ├── blast-radius-check.sh ← warn on edits outside plan scope
+│   │       ├── format-on-edit.sh    ← run formatter after editing files
+│   │       ├── headroom-compress.sh ← auto context compression on large outputs
+│   │       ├── save-commit-memory.sh ← persist commit info to memory
+│   │       ├── session-handoff.sh   ← write HANDOFF.md on session end
+│   │       ├── session-resume.sh    ← load HANDOFF.md on session start
+│   │       ├── state-breadcrumb.sh  ← append session breadcrumb to memory
+│   │       ├── notify-on-finish.sh  ← notification on session end
+│   │       └── agent-progress.sh    ← colorized live agent/wave progress
+│   │
+│   └── thang-kit/                   ← bundle (depends on all nine above)
 │
-├── hooks/                           ← bash automation scripts
-│   ├── agent-progress.sh            ← colorized live agent/wave progress via stderr
-│   ├── blast-radius-check.sh        ← warn when editing files outside plan scope
-│   ├── branch-guard.sh              ← block force-push to protected branches
-│   ├── commit-quality-gate.sh       ← block secrets / debug artifacts in commits
-│   ├── headroom-compress.sh         ← auto-trigger context compression on large outputs
-│   ├── risk-corroboration.sh        ← block commits when diff risk > declared lane
-│   ├── save-commit-memory.sh        ← auto-save commit info to memory after commit
-│   ├── scope-gate.sh                ← inject coordinator context on every prompt
-│   ├── session-handoff.sh           ← write HANDOFF.md on session end
-│   ├── state-breadcrumb.sh          ← append session breadcrumb to memory
-│   └── stacks/
-│       ├── eslint-on-edit.sh        ← run eslint --fix after editing TS/JS files
-│       └── ruff-on-edit.sh          ← run ruff fix after editing Python files
+├── global/
+│   └── CLAUDE.md                    ← installed to ~/.claude/CLAUDE.md
 │
-├── memory/                          ← memory templates
-│   ├── MEMORY.md.template           ← index file template
-│   └── templates/
-│       ├── feedback.md              ← feedback memory entry template
-│       ├── project.md               ← project context memory template
-│       └── user.md                  ← user profile memory template
+├── docs/
+│   └── USAGE.md                     ← usage documentation
 │
-├── rules/                           ← universal rules injected into all agents
-│   ├── agent-principles.md          ← Karpathy's 4 principles (hard rules)
-│   ├── auto-correct-scope.md        ← when to auto-fix vs ask human
-│   ├── behavior.md                  ← 5 core agent behaviors
-│   ├── code-quality.md              ← readability, DRY, guard clauses
-│   ├── git-workflow.md              ← commit format, branches, staging
-│   ├── git.md                       ← condensed git rules
-│   ├── memory.md                    ← how to read and write memory
-│   ├── orchestration.md             ← risk lanes, sub-agent rules
-│   ├── plan-format.md               ← PLAN.md XML task format
-│   ├── security.md                  ← secrets, auth/authz, input validation
-│   ├── testing.md                   ← Arrange→Act→Assert, coverage, mocking
-│   ├── typescript.md                ← TypeScript strict mode, types, async
-│   ├── wave-parallelism.md          ← wave-based parallel agent execution
-│   └── stacks/
-│       ├── fastapi.md               ← FastAPI-specific rules
-│       ├── javascript.md            ← JavaScript ES2020+ best practices
-│       ├── jest.md                  ← Jest unit testing rules
-│       ├── langgraph.md             ← LangGraph-specific rules
-│       ├── nextjs.md                ← Next.js-specific rules
-│       ├── python.md                ← Python-specific rules
-│       ├── react.md                 ← React v19 best practices
-│       └── typescript.md            ← TypeScript strict mode + advanced patterns
+├── eval/                            ← evalkit — code quality evaluation harness
+│   ├── evalkit/                     ← runner, sandbox, judges, graders
+│   └── tasks/                       ← golden tasks for benchmarking
 │
-├── scripts/                         ← install / bootstrap scripts
-│   ├── init.sh                      ← bootstrap .claude/ for a project (stack-aware)
+├── scripts/                         ← kit tooling (not shipped to projects)
 │   ├── install.sh                   ← one-command harness install + ~/.claude/ sync
+│   ├── check.sh                     ← lint + trigger eval + validate
+│   ├── eval-plugin.sh               ← run plugin evals
+│   ├── eval-triggers.py             ← trigger evaluation
+│   ├── lint-kit.py                  ← kit linter
 │   ├── setup-headroom.sh            ← install headroom context compression
-│   └── sync-team.sh                 ← team sync: pull + rebuild memory
+│   └── setup-mcp.sh                 ← MCP server setup
 │
-├── stacks/                          ← full stack bundles (rules + skills) per project type
-│   ├── nextjs/                      ← Next.js App Router bundle
-│   │   └── rules/nextjs.md
-│   ├── python/                      ← Python/FastAPI/LangGraph bundle
-│   │   └── rules/{fastapi,langgraph,python}.md
-│   └── react-native/                ← React Native bundle (flash-mobile-app reference)
-│       ├── rules/                   ← react-native, module-federation, rn-components,
-│       │                               rn-screens, services, project-conventions
-│       └── skills/                  ← ticket, task, rn-component, rn-testing,
-│                                       rn-performance, tanstack-query, figma-to-screen,
-│                                       gen-tests, debug-runbook, effect-services, verify-feature
-│
-├── skills/                          ← slash command definitions
-│   ├── README.md
-│   ├── brainstorming/SKILL.md       ← /brainstorming
-│   ├── btw/SKILL.md                 ← /btw
-│   ├── checkpoint/SKILL.md          ← /checkpoint
-│   ├── review-checklist/SKILL.md    ← /review-checklist
-│   ├── compact/SKILL.md             ← /compact
-│   ├── compound/SKILL.md            ← /compound
-│   ├── coordinator/SKILL.md         ← /coordinator (main orchestration hub)
-│   ├── create-pr/SKILL.md           ← /create-pr
-│   ├── feature/SKILL.md             ← /feature
-│   ├── figma-to-screen/SKILL.md     ← /figma-to-screen
-│   ├── fix-bug/SKILL.md             ← /fix-bug
-│   ├── gen-tests/SKILL.md           ← /gen-tests
-│   ├── init-project/SKILL.md        ← /init-project (legacy alias)
-│   ├── project-init/SKILL.md        ← /project-init
-│   ├── review-diff/SKILL.md         ← /review-diff
-│   ├── sync-memory/SKILL.md         ← /sync-memory
-│   ├── verify-feature/SKILL.md      ← /verify-feature
-│   └── writing-plans/SKILL.md       ← /writing-plans
-│
-└── templates/                       ← artifact templates copied into each project
-    ├── AGENT_WATCHER.template.md    ← structured doc for monitoring agent run lifecycle
-    ├── CLAUDE.md.template
-    ├── ESCALATIONS.template.md
-    ├── SUMMARY.template.md
-    ├── TEST_MATRIX.template.md
-    └── settings.json.template
+└── specs/                           ← active spec workspace
 ```
 
 ---
@@ -242,9 +217,11 @@ The `/project-init` skill scans the codebase, then writes every file in `.claude
 
 ```bash
 cd my-project
-~/.claude-harness/scripts/init.sh
-# OR target a specific path:
-~/.claude-harness/scripts/init.sh /path/to/my-project
+# Lean bootstrap (shared rules/skills come from installed plugins):
+bash /path/to/Claude/plugins/thang-core/scripts/init.sh
+
+# Standalone bootstrap (copies rules, skills, commands, agents, hooks into .claude/):
+STANDALONE=1 bash /path/to/Claude/plugins/thang-core/scripts/init.sh /path/to/my-project
 ```
 
 ### What `init.sh` detects
@@ -295,7 +272,8 @@ your-project/
     │   ├── review-checklist/SKILL.md
     │   ├── checkpoint/SKILL.md
     │   └── sync-memory/SKILL.md
-    ├── hooks/
+    ├── hooks/                    ← installed by thang-guards plugin
+    │   ├── hooks.json
     │   ├── commit-quality-gate.sh
     │   ├── branch-guard.sh
     │   ├── save-commit-memory.sh
@@ -440,7 +418,7 @@ Walks correctness → tests → readability → security → scope, checks the P
 | 1 — Scan | Detect language, framework, tools, test setup, CI |
 | 2 — Write `docs/` | architecture, conventions, stack, entry-points, test-strategy, index |
 | 3 — Write `agents/` | implementer, reviewer, verifier (+ project-specific agents) |
-| 4 — Write `hooks/` | commit-gate + stack-specific hooks (tsc, ruff, eslint) |
+| 4 — Write `hooks/` | commit-gate + stack-specific hooks (tsc, ruff, eslint) — via thang-guards plugin |
 | 5 — Write `rules/` | project-conventions + stack-specific rules |
 | 6 — Write `skills/` | task skill + project-specific skills |
 | 7 — Write `templates/` | SUMMARY, TEST_MATRIX, ESCALATIONS adapted to project commands |
@@ -597,7 +575,7 @@ Cross-checks the staged diff against the Lane declared in `specs/*/SUMMARY.md`.
 
 | Category | Detection |
 |----------|-----------|
-| `high-blast` | Staged `settings.json` or any file under `hooks/` |
+| `high-blast` | Staged `settings.json` or any file under `hooks/` (project or plugin) |
 | `data-loss/migration` | Files under `migrations/` or `alembic/`; `DROP TABLE`, `DELETE FROM`, `TRUNCATE`, `ALTER TABLE` in code |
 | `external-provider` | `requirements.txt`, `package.json`, etc. staged; Stripe, Twilio, SendGrid, boto3, webhooks in code |
 | `auth` | `login`, `session`, `jwt`, `password`, `oauth`, `bcrypt` in added lines |
@@ -720,7 +698,9 @@ Runs `npx eslint --fix --quiet` if `.eslintrc*` or `eslint.config*` exists in th
 
 Rules are Markdown files injected into agent prompts as governance constraints.
 
-### Universal rules (copied to every project)
+### Universal rules (`plugins/thang-core/rules/`)
+
+Installed to `~/.claude/rules/` by `scripts/install.sh` and loaded in every session:
 
 | File | What it governs |
 |------|----------------|
@@ -738,9 +718,9 @@ Rules are Markdown files injected into agent prompts as governance constraints.
 | `typescript.md` | Strict mode, type safety, naming, async, error handling |
 | `memory.md` | How to read/write the four memory types (user, feedback, project, reference) |
 
-### Stack-specific rules (`rules/stacks/`)
+### Stack-specific rules (`plugins/thang-core/templates/project/rules/stacks/`)
 
-Copied only when the corresponding signal is detected during init:
+Copied to `.claude/rules/` only when the corresponding signal is detected during project initialization (`init.sh` or `/project-init`):
 
 | File | Copied when | Key topics |
 |------|------------|-----------|
@@ -753,11 +733,22 @@ Copied only when the corresponding signal is detected during init:
 | `stacks/langgraph.md` | `langgraph` signal | Graph construction, state management, tool nodes |
 | `stacks/nextjs.md` | `nextjs` signal | App Router, Server/Client Components, data fetching |
 
+### Agent-specific rules (`plugins/thang-agent/rules/`)
+
+Read on-demand by AI assistant skills (`/agent-architect`, `/agent-feature`, `/agent-graph`, etc.):
+- `agent-stock-first.md`: Prefer stock CopilotKit/LangGraph patterns before custom code
+- `agent-identity-and-tools.md`: Tool identity, read vs mutation contracts
+- `langgraph.md`: State management, graph topology, reducer rules
+- `agent-tracing-privacy.md`: PII sanitization in agent traces
+- `agent-prompts.md`: Prompt engineering standards for agent nodes
+- `agent-deps-pinning.md`: Exact package pinning for AI packages
+- `agui-transport.md`: Agent-User Interaction transport standards
+
 ---
 
 ## Agents reference
 
-Agent definitions live in `agents/`. Each has YAML frontmatter controlling how Claude Code spawns them.
+Agent templates live in `plugins/thang-core/templates/project/agents/` and are copied to `.claude/agents/` during project bootstrap. Each has YAML frontmatter controlling how Claude Code spawns them.
 
 ### `agents/architect.md`
 
@@ -884,7 +875,7 @@ Agent definitions live in `agents/`. Each has YAML frontmatter controlling how C
 
 ## Commands reference
 
-`commands/` contains prompt files loaded as `/commands` in Claude Code. Unlike skills (which have a `SKILL.md` wrapper with frontmatter), commands are raw prompt text loaded directly — lighter weight for simple workflows.
+Command templates live in `plugins/thang-core/templates/project/commands/` and are copied to `.claude/commands/` during project bootstrap. Unlike skills (which have a `SKILL.md` wrapper with frontmatter), commands are raw prompt text loaded directly — lighter weight for simple workflows.
 
 | Command | Invoke | What it does |
 |---------|--------|-------------|
@@ -912,45 +903,22 @@ QA/Verifier    → lint + types + tests + golden path + commit
 
 ## Stack bundles reference
 
-`stacks/` contains full workspace bundles (rules + skills) for specific project stacks. Unlike `rules/stacks/` (generic single-file rules), these bundles are tailored to a **specific project's real file paths, conventions, and tools**.
+`plugins/thang-core/stacks/` contains full workspace bundles (rules + skills) for specific project stacks. Unlike generic single-file rules, these bundles are tailored to a **specific project's real file paths, conventions, and tools**.
 
-### When to use `stacks/` vs `rules/stacks/`
+### When to use stack bundles vs stack rules
 
-| | `rules/stacks/` | `stacks/` |
+| | Stack rules (`rules/stacks/`) | Stack bundles (`stacks/`) |
 |---|---|---|
 | **Content** | Single `.md` rule file | Full bundle: `rules/` + `skills/` |
 | **Scope** | Generic best practices | Project-specific conventions (real paths, team tools) |
 | **Install** | `init.sh` copies per signal | Copy manually into `.claude/` for the specific project |
-| **Example** | `react.md` — React best practices | `react-native/` — flash-mobile-app workspace |
+| **Example** | `react.md` — React best practices | `react-native/` — mobile monorepo workspace |
 
 ### `stacks/react-native/`
 
-Complete workspace for a React Native monorepo project.
-
-**Rules included:**
-- `react-native.md` — performance (worklets, FlashList), platform guards, navigation, styling (NativeWind + makeStyles), testing, permissions
-- `module-federation.md` — federated module sharing rules
-- `rn-components.md` — component patterns
-- `rn-screens.md` — screen conventions
-- `services.md` — service layer rules
-- `project-conventions.md` — project-specific naming and patterns
-
-**Skills included:**
-
-| Skill | Purpose |
-|-------|---------|
-| `/ticket` | Full 5-agent pipeline for a feature ticket |
-| `/task` | Lightweight single-task workflow |
-| `/rn-component` | Generate a new React Native component |
-| `/rn-testing` | Generate tests for RN components |
-| `/rn-performance` | Audit and fix performance issues |
-| `/tanstack-query` | TanStack Query patterns and code generation |
-| `/figma-to-screen` | Convert Figma design to RN screen |
-| `/gen-tests` | Generate test file for any module |
-| `/debug-runbook` | Debugging checklist for RN issues |
-| `/effect-services` | Effect-TS service layer patterns |
-| `/module-federation` | Module federation setup and patterns |
-| `/verify-feature` | Verify a feature works before commit |
+Complete workspace for a React Native monorepo project:
+- Rules: `react-native.md`, `module-federation.md`, `rn-components.md`, `rn-screens.md`, `services.md`, `project-conventions.md`
+- Skills: `/ticket`, `/task`, `/rn-component`, `/rn-testing`, `/rn-performance`, `/tanstack-query`, `/figma-to-screen`, `/gen-tests`, `/debug-runbook`, `/effect-services`, `/module-federation`, `/verify-feature`
 
 ### `stacks/nextjs/`
 
@@ -966,82 +934,52 @@ Python bundle: `python.md` (PEP8, type hints, async), `fastapi.md` (routes, Pyda
 
 ### `scripts/install.sh`
 
-**Usage:** `bash scripts/install.sh [install-dir]`
-
-**Default install dir:** `~/.claude-harness`
+**Usage:** `bash scripts/install.sh`
 
 One-command harness setup:
-1. Copies this repo to `install-dir`
-2. Sets `HARNESS_DIR` in `~/.zshrc` / `~/.bashrc`
-3. Syncs skills, rules, and hooks into `~/.claude/`
-4. Makes all hook scripts executable
+1. Backs up existing `~/.claude/CLAUDE.md`, `rules/`, `settings.json`, and replaced skills
+2. Copies `global/CLAUDE.md` and `plugins/thang-core/rules/` to `~/.claude/`
+3. Registers local directory as marketplace `thang-kit` and installs role plugins (`thang-kit@thang-kit`)
+4. Migrates old skills out of `~/.claude/skills/` and drops duplicate hook registrations from `settings.json`
 
-```bash
-# Default install
-bash ~/Downloads/Claude/scripts/install.sh
+### `plugins/thang-core/scripts/init.sh`
 
-# Custom location
-bash ~/Downloads/Claude/scripts/install.sh ~/my-tools/claude-harness
+**Usage:** `bash plugins/thang-core/scripts/init.sh [project-dir]` (or via `/project-init`)
 
-# After install
-source ~/.zshrc
-echo $HARNESS_DIR   # → your install path
-```
+Main project bootstrap script. Scans `src/` and generates the full `.claude/` harness.
+- Lean mode (default): Shared skills/rules/hooks come from installed `thang-*` plugins.
+- Standalone mode (`STANDALONE=1`): Also copies shared rules, skills, commands, agents, and hooks into `.claude/`.
 
----
+### `scripts/check.sh`
 
-### `scripts/init.sh`
+**Usage:** `bash scripts/check.sh`
 
-**Usage:** `./init.sh [project-dir]`
+Deterministic pre-commit checks:
+1. Unit tests for lint-kit, skill progress, and compare shots
+2. `lint-kit.py` validation (rules, dependencies, invariants)
+3. `eval-triggers.py` skill trigger classifier evaluation
+4. `claude plugin validate` on marketplace and all 10 plugins
 
-Main bootstrap script. Scans `src/` and generates the full `.claude/` harness.
+### `scripts/eval-plugin.sh`
 
-**Input:** Optional `project-dir` (defaults to `pwd`)
+**Usage:** `bash scripts/eval-plugin.sh <plugin-name>`
 
-**Output:**
-- `.claude/rules/` — universal + stack-specific rules
-- `.claude/skills/` — feature, fix-bug, review-checklist, checkpoint, sync-memory
-- `.claude/hooks/` — all core hooks + stack-specific hooks
-- `.claude/memory/` — MEMORY.md, user.md, project/context.md
-- `.claude/settings.json` — hooks registered, permissions set
-- `CLAUDE.md` — project-specific (auto-generated, fill in after)
+Evaluates agent behavior on real test cases using an LLM judge. Supports `--runs <N>` and `--ablation with-without`.
 
-**Prints:** Detected signals, file counts per directory, next steps.
+### `scripts/setup-mcp.sh`
 
----
+**Usage:** `bash scripts/setup-mcp.sh`
+
+Sets up and registers recommended Model Context Protocol (MCP) servers.
 
 ### `scripts/setup-headroom.sh`
 
 **Usage:** `bash scripts/setup-headroom.sh`
 
-**Requires:** Python 3.12, `claude` CLI
-
 Installs headroom context compression:
 1. Creates `~/.headroom-env` virtualenv
-2. `pip install headroom-ai[all,mcp]`
-3. Registers `headroom` MCP server at user scope
-
-After setup, `headroom_compress`, `headroom_retrieve`, and `headroom_stats` are available as MCP tools in Claude Code.
-
----
-
-### `scripts/sync-team.sh`
-
-**Usage:** `./sync-team.sh [project-dir]`
-
-**Input:** Optional `project-dir` (defaults to `pwd`)
-
-**What it does:**
-1. Stash uncommitted changes
-2. Read `memory/commits/last-sync.txt` to find your last recorded commit
-3. `git fetch --all --prune` + `git pull --rebase=false`
-4. Collect your commits since last sync (by `git config user.name`)
-5. For each commit: record hash, date, subject, changed files → write to `memory/commits/<date>.md`
-6. Collect team commits (not yours) → list top 20 in the same file
-7. Update `MEMORY.md` index
-8. Pop stash
-
-**Output:** `.claude/memory/commits/<YYYY-MM-DD>.md` with your commits + team context.
+2. Installs `headroom-ai[all,mcp]`
+3. Registers `headroom` MCP server at user scope for automatic tool output compression
 
 
 ---
@@ -1448,7 +1386,7 @@ The `description` field is used by Claude Code to auto-invoke the skill. Make it
 ### Add a new rule
 
 ```bash
-cat > rules/<name>.md << 'EOF'
+cat > plugins/thang-core/rules/<name>.md << 'EOF'
 # <Name> Rules
 
 ## Rule 1
@@ -1458,15 +1396,16 @@ cat > rules/<name>.md << 'EOF'
 <imperative instruction>
 EOF
 
-cp rules/<name>.md ~/.claude/rules/
+# Install to ~/.claude/rules/ for all future sessions:
+bash scripts/install.sh
 ```
 
-Rules must be imperative ("do X", "never Y") — not descriptive. Reference them in `CLAUDE.md`.
+Rules must be imperative ("do X", "never Y") — not descriptive. Add `paths:` frontmatter if the rule applies only to specific file patterns.
 
 ### Add a new hook
 
 ```bash
-cat > hooks/<name>.sh << 'EOF'
+cat > plugins/thang-guards/hooks/<name>.sh << 'EOF'
 #!/bin/bash
 # <name>.sh — <description>
 # Trigger: <PreToolUse|PostToolUse|UserPromptSubmit|Stop>(<matcher>)
@@ -1478,10 +1417,10 @@ INPUT=$(cat /dev/stdin)
 exit 0
 EOF
 
-chmod +x hooks/<name>.sh
-cp hooks/<name>.sh ~/.claude/hooks/
+chmod +x plugins/thang-guards/hooks/<name>.sh
 
-# Register in ~/.claude/settings.json under the appropriate event
+# Register in plugins/thang-guards/hooks/hooks.json under the appropriate event
+# Use "${CLAUDE_PLUGIN_ROOT}"/hooks/<name>.sh as the command path
 ```
 
 Hook exit codes: `0` = allow, `2` = block. Never exit `1` (reserved for errors).
@@ -1489,21 +1428,20 @@ Hook exit codes: `0` = allow, `2` = block. Never exit `1` (reserved for errors).
 ### Add a stack-specific rule
 
 ```bash
-cat > rules/stacks/<name>.md << 'EOF'
+cat > plugins/thang-core/templates/project/rules/stacks/<name>.md << 'EOF'
 # <Stack Name> Rules
 ...
 EOF
 
-# Add detection in scripts/init.sh:
-has_signal "<name>" && cp "$HARNESS_DIR/rules/stacks/<name>.md" "$CLAUDE_DIR/rules/<name>.md" || true
-
-# Add signal detection in detect_stack():
-grep -qi "<keyword>" "$req" "$pyp" 2>/dev/null && SIGNALS+=("<name>")
+# Add detection in plugins/thang-core/scripts/init.sh:
+has_signal "<name>" && cp "$TEMPLATES/rules/stacks/<name>.md" "$CLAUDE_DIR/rules/<name>.md" || true
 ```
 
 ### Update an existing project after harness changes
 
 ```bash
-~/.claude-harness/scripts/init.sh /path/to/project
-# The script will warn before overwriting existing settings.json
+# Re-run project initialization (warns before overwriting existing settings.json):
+bash plugins/thang-core/scripts/init.sh /path/to/project
+# or in Claude Code within the project:
+/project-init
 ```
