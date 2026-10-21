@@ -10,15 +10,16 @@ The kit is a marketplace of role plugins. Install one role and its dependencies 
 
 | Plugin | Role | Depends on |
 |--------|------|-----------|
-| `thang-core` | Session + project basics every role uses | — |
-| `thang-plan` | Architect / tech lead: design before code | — |
-| `thang-review` | Reviewer: diffs, PRs, impact | — |
+| `thang-progress` | Skill checklist + live ✅ progress (hooks only, never blocks) | — |
+| `thang-core` | Session + project basics every role uses | progress |
+| `thang-plan` | Architect / tech lead: design before code | progress |
+| `thang-review` | Reviewer: diffs, PRs, impact | progress |
 | `thang-dev` | Developer: build, fix, test-first | core, plan, review |
 | `thang-ship` | Release / CI owner | core |
-| `thang-agent` | AI-agent engineer (CopilotKit, LangGraph) | — |
+| `thang-agent` | AI-agent engineer (CopilotKit, LangGraph) | progress |
 | `thang-lead` | Process owner: retro, session diagnosis, skill authoring | core |
 | `thang-guards` | Personal guard-rail hooks (opt-in) | dev |
-| `thang-kit` | Bundle | all eight |
+| `thang-kit` | Bundle | all nine |
 
 Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>:<skill-name>`) in Claude Code.
 

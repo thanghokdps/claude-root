@@ -1,6 +1,6 @@
 # thang-agent
 
-Skills for building AI assistants on **CopilotKit · AG-UI · LangChainJS · LangGraph**. Standalone: no other plugin, no hooks, ~1.3k tokens always-on.
+Skills for building AI assistants on **CopilotKit · AG-UI · LangChainJS · LangGraph**. Installs one companion, `thang-progress` (hooks only: each skill's checklist and live ✅ progress, never blocks). ~1.3k tokens always-on.
 
 ## Install
 
@@ -10,6 +10,16 @@ Skills for building AI assistants on **CopilotKit · AG-UI · LangChainJS · Lan
 ```
 
 Then `/reload-plugins` (or open a new session). Update later with `/plugin marketplace update thang-kit`.
+
+## Start on a blank machine
+
+Open Claude Code in an empty folder and say what you want to build, e.g. *"Tôi muốn làm một chatbot hỗ trợ khách hàng tra cứu đơn hàng"*. `agent-architect` then:
+
+1. **Preflight** — checks git, Node ≥ 20, a package manager, a model key (name only, never the value) and prints the install command for each gap. It installs nothing without asking.
+2. **Problem first** — who uses it, the 3–5 tasks with a real example message each, the systems it reads or writes, what it must refuse. One question per turn, each with a recommendation.
+3. **Technology** — host, clients, then **single app or monorepo (pnpm + Turborepo)**: you choose; it recommends.
+4. **Grill** — every task gets an owner agent and tool, every write a confirm path, every vague answer a recorded risk.
+5. **ADR + scaffold** — `docs/adr/0001-agent-architecture.md`, then the smallest working slice of your layout, ending on one real streamed turn with your first task's example message.
 
 ## Skills
 
@@ -32,6 +42,17 @@ Skills fire on their own from what you type — the slash command is optional.
 2. "Agent xóa user qua chat, cần confirm trước khi lưu" → `agent-hitl`
 3. "Hỏi về hóa đơn mà agent support lại trả lời" → `agent-graph`
 4. "Sửa rồi mà vẫn bị, chạy thử một turn thật xem stream" → `agent-verify-turn`
+
+## Check the routing yourself
+
+`evals/` holds one case per demo prompt above, one that must not fire, and a blank-machine case (`greenfield-problem-first`: prerequisites checked, then the problem asked before any technology):
+
+```bash
+claude plugin eval thang-agent@thang-kit --runs 1 --ablation none --no-publish \
+  --judge-model sonnet --allow-tools "Bash(bash *preflight.sh*)"
+```
+
+About $1 for the six cases. Add `--runs 3 --ablation with-without` for a with/without-plugin comparison.
 
 ## Rules
 

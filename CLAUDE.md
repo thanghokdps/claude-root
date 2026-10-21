@@ -19,18 +19,19 @@ A **source library** and the `thang-kit` marketplace of role plugins (local dire
 
 ```
 Downloads/Claude/
-  .claude-plugin/marketplace.json  ← lists the 9 plugins below
+  .claude-plugin/marketplace.json  ← lists the 10 plugins below
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
+    thang-progress hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
     thang-core     verify-done btw compact compound sync-memory project-init — plus scripts/init.sh and
-                   everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/
-    thang-plan     brainstorming grill domain-model writing-plans codebase-design
-    thang-review   review-checklist review-diff blast-radius create-pr
+                   everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/ → progress
+    thang-plan     brainstorming grill domain-model writing-plans codebase-design        → progress
+    thang-review   review-checklist review-diff blast-radius create-pr                   → progress
     thang-dev      coordinator feature fix-bug tdd checkpoint            → core, plan, review
     thang-ship     finish-branch ci-triage release-checklist write-migration → core
-    thang-agent    agent-* + rules/ the skills read on demand            (standalone)
+    thang-agent    agent-* + rules/ the skills read on demand            → progress
     thang-lead     retro diagnose-session writing-skills                 → core
     thang-guards   hooks/hooks.json + hook scripts (opt-in)              → dev
-    thang-kit      bundle, depends on all eight
+    thang-kit      bundle, depends on all nine
   hooks → plugins/thang-guards/hooks   ← symlink: sessions started on 2.x resolve ${CLAUDE_PLUGIN_ROOT}/hooks to the repo root
   global/CLAUDE.md    ← installed to ~/.claude/CLAUDE.md
   eval/triggers/      ← one routing case per skill
@@ -38,6 +39,10 @@ Downloads/Claude/
 ```
 
 Install / update: `bash scripts/install.sh` — needed for global/CLAUDE.md and rules/ changes, and whenever a plugin is added (installs each plugin explicitly).
+
+Behaviour evals (real model, paid, not in check.sh): `bash scripts/eval-plugin.sh <plugin>` runs `plugins/<plugin>/evals/` — one routing case per demo prompt, graded by which skill fired (`tool_used: Skill`). Before a demo: add `--runs 3 --ablation with-without`.
+
+Release: bump `version` in the changed plugins' `plugin.json` (a GitHub install compares versions on `/plugin update`), merge, then `claude plugin tag plugins/<plugin> --push` → tag `<plugin>--v<version>`.
 
 ---
 
@@ -67,9 +72,10 @@ Always-loaded context is the budget: add `paths:` frontmatter unless the rule ap
 | `model` | `opus` — every skill in this harness runs on Opus 5 |
 | `effort` | `high` / `medium` / `low` |
 | `when_to_use` | Phrase patterns that trigger auto-invocation |
-| `background` | `true` = run as background agent |
-| `color` | Display color in task list (blue, green, orange, red) |
-| `isolation` | `worktree` = isolated git worktree for parallel execution |
+| `context` / `agent` / `background` | `context: fork` runs it in a subagent; `background: false` waits for the result |
+| `allowed-tools` / `arguments` / `paths` | Pre-approved tools · named `$args` · globs gating auto-load |
+
+Any other key is silently ignored by Claude Code (`color`, `isolation` belong to agents) — lint fails on it. Full list: `SKILL_FIELDS` in `scripts/lint-kit.py`.
 
 ## Agent frontmatter fields
 
