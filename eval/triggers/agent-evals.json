@@ -1,0 +1,23 @@
+{
+  "skill": "agent-evals",
+  "positive": [
+    {
+      "prompt": "write evals for the agent with an LLM judge and a CI eval gate",
+      "top_k": 3
+    },
+    {
+      "prompt": "compare models before we switch the agent to a cheaper model",
+      "top_k": 3
+    },
+    {
+      "prompt": "the eval suite passes without running anything, add a baseline regression check",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "build this test-first, red green",
+      "owner": "tdd"
+    }
+  ]
+}

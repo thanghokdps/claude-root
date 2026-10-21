@@ -1,0 +1,23 @@
+{
+  "skill": "agent-security",
+  "positive": [
+    {
+      "prompt": "threat model the agent for prompt injection through tool results",
+      "top_k": 3
+    },
+    {
+      "prompt": "does the agent meet SOC 2, and is PII masked in tracing",
+      "top_k": 3
+    },
+    {
+      "prompt": "can the model be tricked into acting for another user",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "review this PR before I open it",
+      "owner": "review-checklist"
+    }
+  ]
+}

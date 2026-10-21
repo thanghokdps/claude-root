@@ -34,6 +34,14 @@ Each skill is a Markdown prompt program invoked via `/skill-name` in Claude Code
 | [compound](compound/SKILL.md) | `/compound` | Crystallize session learnings → `docs/solutions/` | n/a |
 | [btw](btw/SKILL.md) | `/btw <question>` | Quick lookup mid-task, no tasks or side effects | n/a |
 | [figma-to-screen](figma-to-screen/SKILL.md) | `/figma-to-screen` | Figma frame → screen implementation | normal |
+| [agent-architect](agent-architect/SKILL.md) | `/agent-architect [greenfield\|audit]` | AI assistant architecture: one-question interview → ADR → scaffold, or stock-vs-custom audit | normal/high |
+| [agent-tool](agent-tool/SKILL.md) | `/agent-tool <tool>` | Agent tool: trusted identity, read vs mutation, retry/audit, short description, test | normal |
+| [agent-hitl](agent-hitl/SKILL.md) | `/agent-hitl <write>` | Mutation behind interrupt: target resolution, pending action, confirm/cancel/replay, client render | normal/high |
+| [agent-graph](agent-graph/SKILL.md) | `/agent-graph <scope>` | Agents, router, handoff, boundary rules, prompts, middleware order | normal |
+| [agent-frontend](agent-frontend/SKILL.md) | `/agent-frontend <change>` | CopilotKit v2 React: provider headers, context, tool renderers, aimock e2e | normal |
+| [agent-verify-turn](agent-verify-turn/SKILL.md) | `/agent-verify-turn [local\|prod-trace]` | Real turn + AG-UI stream as evidence; classify a production trace before fixing | all |
+| [agent-evals](agent-evals/SKILL.md) | `/agent-evals [unit\|suite\|compare-models]` | Fake-model unit tests, judged eval suite with baseline gate, model comparison | normal |
+| [agent-security](agent-security/SKILL.md) | `/agent-security [scope]` | Agent threat model: injection, confused deputy, exfiltration, trace PII, compliance mapping | high |
 
 ## Skill handoff map
 

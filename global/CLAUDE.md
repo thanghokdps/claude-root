@@ -34,6 +34,7 @@ Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the 
 Chosen per pair on content, not by plugin. When both are available:
 - Debugging → `thang-kit:fix-bug` (not `developers:fix-bug`). Review → `/review-checklist` (not `developers:review-changes`).
 - Commit + push + open MR/PR → `developers:create-mr` (project conventions); `create-pr` only drafts description text.
+- LLM-agent work (CopilotKit / LangGraph): in repos a team agent plugin covers (`space-agent:*`) that plugin wins; elsewhere → `/agent-*`.
 - Impact of a code diff → `/blast-radius`; impact of a proposed change request → `business-analyst:analyze-impact`.
 - Team-only skills (flash, BA/QA, `developers:verify-features`, `explain-code`, `develop-components`) have no kit equivalent — use them.
 

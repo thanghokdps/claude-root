@@ -33,27 +33,29 @@ detect_stack() {
   # Node.js / JavaScript / TypeScript
   if [ -f "$PROJECT_DIR/package.json" ]; then
     SIGNALS+=("nodejs")
-    local pkg="$PROJECT_DIR/package.json"
+    # Workspace manifests too: a monorepo declares its deps in apps/*, packages/*, … not the root.
+    local pkg=()
+    while IFS= read -r f; do pkg+=("$f"); done < <(find "$PROJECT_DIR" -maxdepth 3 -name package.json -not -path '*/node_modules/*')
 
-    grep -q '"typescript"'          "$pkg" 2>/dev/null && SIGNALS+=("typescript")
+    grep -q '"typescript"'          "${pkg[@]}" 2>/dev/null && SIGNALS+=("typescript")
     [ -f "$PROJECT_DIR/tsconfig.json" ]                && SIGNALS+=("typescript")
-    grep -q '"next"'                "$pkg" 2>/dev/null && SIGNALS+=("nextjs")
-    grep -q '"react"'               "$pkg" 2>/dev/null && SIGNALS+=("react")
-    grep -q '"express"'             "$pkg" 2>/dev/null && SIGNALS+=("express")
-    grep -q '"fastify"'             "$pkg" 2>/dev/null && SIGNALS+=("fastify")
-    grep -q '"@nestjs/core"'        "$pkg" 2>/dev/null && SIGNALS+=("nestjs")
-    grep -q '"prisma"'              "$pkg" 2>/dev/null && SIGNALS+=("prisma")
-    grep -q '"mongoose"'            "$pkg" 2>/dev/null && SIGNALS+=("mongodb")
-    grep -q '"@langchain/core"'     "$pkg" 2>/dev/null && SIGNALS+=("langchain")
-    grep -q '"@langchain/langgraph"' "$pkg" 2>/dev/null && SIGNALS+=("langgraph")
-    grep -q '"@copilotkit'          "$pkg" 2>/dev/null && SIGNALS+=("copilotkit")
-    grep -q '"openai"'              "$pkg" 2>/dev/null && SIGNALS+=("openai")
-    grep -q '"@anthropic-ai'        "$pkg" 2>/dev/null && SIGNALS+=("anthropic")
-    grep -q '"graphql"'             "$pkg" 2>/dev/null && SIGNALS+=("graphql")
-    grep -q '"trpc"'                "$pkg" 2>/dev/null && SIGNALS+=("trpc")
-    grep -q '"vitest"'              "$pkg" 2>/dev/null && SIGNALS+=("vitest")
-    grep -q '"jest"'                "$pkg" 2>/dev/null && SIGNALS+=("jest")
-    grep -q '"playwright"'          "$pkg" 2>/dev/null && SIGNALS+=("playwright")
+    grep -q '"next"'                "${pkg[@]}" 2>/dev/null && SIGNALS+=("nextjs")
+    grep -q '"react"'               "${pkg[@]}" 2>/dev/null && SIGNALS+=("react")
+    grep -q '"express"'             "${pkg[@]}" 2>/dev/null && SIGNALS+=("express")
+    grep -q '"fastify"'             "${pkg[@]}" 2>/dev/null && SIGNALS+=("fastify")
+    grep -q '"@nestjs/core"'        "${pkg[@]}" 2>/dev/null && SIGNALS+=("nestjs")
+    grep -q '"prisma"'              "${pkg[@]}" 2>/dev/null && SIGNALS+=("prisma")
+    grep -q '"mongoose"'            "${pkg[@]}" 2>/dev/null && SIGNALS+=("mongodb")
+    grep -q '"@langchain/core"'     "${pkg[@]}" 2>/dev/null && SIGNALS+=("langchain")
+    grep -q '"@langchain/langgraph"' "${pkg[@]}" 2>/dev/null && SIGNALS+=("langgraph")
+    grep -q '"@copilotkit'          "${pkg[@]}" 2>/dev/null && SIGNALS+=("copilotkit")
+    grep -q '"openai"'              "${pkg[@]}" 2>/dev/null && SIGNALS+=("openai")
+    grep -q '"@anthropic-ai'        "${pkg[@]}" 2>/dev/null && SIGNALS+=("anthropic")
+    grep -q '"graphql"'             "${pkg[@]}" 2>/dev/null && SIGNALS+=("graphql")
+    grep -q '"trpc"'                "${pkg[@]}" 2>/dev/null && SIGNALS+=("trpc")
+    grep -q '"vitest"'              "${pkg[@]}" 2>/dev/null && SIGNALS+=("vitest")
+    grep -q '"jest"'                "${pkg[@]}" 2>/dev/null && SIGNALS+=("jest")
+    grep -q '"playwright"'          "${pkg[@]}" 2>/dev/null && SIGNALS+=("playwright")
     [ -f "$PROJECT_DIR/pnpm-lock.yaml" ]               && SIGNALS+=("pnpm")
     [ -f "$PROJECT_DIR/yarn.lock" ]                    && SIGNALS+=("yarn")
   fi
@@ -147,6 +149,11 @@ has_signal "react"      && cp "$HARNESS_DIR/rules/stacks/react.md"       "$CLAUD
 has_signal "jest"       && cp "$HARNESS_DIR/rules/stacks/jest.md"        "$CLAUDE_DIR/rules/jest.md"        2>/dev/null || true
 has_signal "python"     && cp "$HARNESS_DIR/rules/stacks/python.md"      "$CLAUDE_DIR/rules/python.md"      2>/dev/null || true
 has_signal "langgraph"  && cp "$HARNESS_DIR/rules/stacks/langgraph.md"   "$CLAUDE_DIR/rules/langgraph.md"   2>/dev/null || true
+if has_signal "langchain" || has_signal "langgraph" || has_signal "copilotkit"; then
+  for rule in "$HARNESS_DIR"/rules/stacks/agent-*.md "$HARNESS_DIR/rules/stacks/agui-transport.md"; do
+    [ -f "$rule" ] && cp "$rule" "$CLAUDE_DIR/rules/"
+  done
+fi
 has_signal "nextjs"     && cp "$HARNESS_DIR/rules/stacks/nextjs.md"      "$CLAUDE_DIR/rules/nextjs.md"      2>/dev/null || true
 has_signal "prisma"     && cp "$HARNESS_DIR/rules/stacks/prisma.md"      "$CLAUDE_DIR/rules/prisma.md"      2>/dev/null || true
 has_signal "fastapi"    && cp "$HARNESS_DIR/rules/stacks/fastapi.md"     "$CLAUDE_DIR/rules/fastapi.md"     2>/dev/null || true

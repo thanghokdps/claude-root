@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """lint-kit.py — structural checks for the kit. Exit 1 on any error; warnings don't fail.
 
-Errors: SKILL.md frontmatter parses as YAML; name == directory, kebab-case, unique;
+Errors: SKILL.md frontmatter parses as YAML; no private names in agent skills/rules (denylist); name == directory, kebab-case, unique;
 description present, <=1024 chars, says when to use; ${CLAUDE_PLUGIN_ROOT}/ paths exist;
 hooks pass `bash -n` and are executable; plugin/marketplace/hooks JSON parse.
 Warnings: SKILL.md over 500 lines; no trigger case under eval/triggers/.
@@ -102,12 +102,39 @@ def check_json():
                                 errors.append(f"{rel}: hook script missing: {script}")
 
 
-check_skills()
-check_hooks()
-check_json()
-for w in warnings:
-    print(f"warn  {w}")
-for e in errors:
-    print(f"ERROR {e}")
-print(f"lint-kit: {len(errors)} error(s), {len(warnings)} warning(s)")
-sys.exit(1 if errors else 0)
+# The kit repo is public, and agent skills/rules are distilled from private company code.
+DENYLIST = re.compile(r"granbull|asoft-python|flash-agent|space-agent|on-behalf|space-v2|space-langchain", re.I)
+DENYLIST_SCOPE = re.compile(r"^(skills/agent-[\w-]+/|rules/stacks/(agent-[\w-]+|agui-transport|langgraph)\.md$)")
+
+
+def denylist_hits(text):
+    return sorted({m.group(0).lower() for m in DENYLIST.finditer(text)})
+
+
+def in_denylist_scope(rel):
+    return bool(DENYLIST_SCOPE.match(rel))
+
+
+def check_denylist():
+    for base in ("skills", "rules"):
+        for dirpath, _, files in os.walk(os.path.join(ROOT, base)):
+            for f in files:
+                rel = os.path.relpath(os.path.join(dirpath, f), ROOT)
+                if not in_denylist_scope(rel):
+                    continue
+                hits = denylist_hits(open(os.path.join(ROOT, rel), encoding="utf-8").read())
+                if hits:
+                    errors.append(f"{rel}: private names in a public file — {', '.join(hits)}")
+
+
+if __name__ == "__main__":
+    check_skills()
+    check_hooks()
+    check_json()
+    check_denylist()
+    for w in warnings:
+        print(f"warn  {w}")
+    for e in errors:
+        print(f"ERROR {e}")
+    print(f"lint-kit: {len(errors)} error(s), {len(warnings)} warning(s)")
+    sys.exit(1 if errors else 0)

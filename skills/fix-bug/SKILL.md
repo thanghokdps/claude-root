@@ -26,6 +26,8 @@ With a **tight** pass/fail signal that goes **red** on *this* bug, you will find
 
 Spend disproportionate effort here. Be aggressive, be creative, refuse to give up.
 
+In an LLM-agent repo (`@langchain/*` or `@copilotkit/*` deps), the red loop is a captured real turn: run `/agent-verify-turn`, and report fixed only with the failing and the passing stream.
+
 ### Ways to construct one — roughly in this order
 
 1. **Failing test** at whatever seam reaches the bug — unit, integration, e2e.

@@ -118,6 +118,8 @@ Use these to diagnose a skill that is misbehaving.
 
 ## Shipping a skill in this repo
 
+Add a skill only on evidence: a task that recurs in ≥5 prompts across session transcripts, or one incident it would have prevented — found with `/retro` or `/diagnose-session`. Otherwise extend an existing skill.
+
 1. `skills/<name>/SKILL.md` with the frontmatter above.
 2. Add the row to `skills/README.md` and place it in the right chain.
 3. `cp -r skills/<name> ~/.claude/skills/` to install globally.

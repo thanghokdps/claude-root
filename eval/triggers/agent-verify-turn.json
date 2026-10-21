@@ -1,0 +1,23 @@
+{
+  "skill": "agent-verify-turn",
+  "positive": [
+    {
+      "prompt": "vẫn bị, still broken after the fix — run a real chat turn and read the stream",
+      "top_k": 3
+    },
+    {
+      "prompt": "prove the agent fix works by verifying the turn's AG-UI events",
+      "top_k": 3
+    },
+    {
+      "prompt": "wrong answer in production, find the trace in Langfuse and classify the cause",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "this test is failing and nobody knows why",
+      "owner": "fix-bug"
+    }
+  ]
+}
