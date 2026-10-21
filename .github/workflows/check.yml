@@ -13,5 +13,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pyyaml
+      - run: python3 scripts/test_lint_kit.py
+      - run: python3 scripts/test_skill_progress.py
       - run: python3 scripts/lint-kit.py
       - run: python3 scripts/eval-triggers.py
