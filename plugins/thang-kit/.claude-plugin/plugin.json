@@ -6,7 +6,7 @@
   },
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
-  "description": "Everything: installs all eight thang-* role plugins.",
+  "description": "Everything: installs all nine thang-* role plugins.",
   "keywords": [
     "bundle"
   ],
@@ -18,6 +18,7 @@
     "thang-ship",
     "thang-agent",
     "thang-lead",
-    "thang-guards"
+    "thang-guards",
+    "thang-progress"
   ]
 }

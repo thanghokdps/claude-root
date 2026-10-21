@@ -10,6 +10,11 @@
       "description": "Session and project basics every role uses: verify-done evidence gate, project-init bootstrap, compact/compound memory, sync-memory, btw."
     },
     {
+      "name": "thang-progress",
+      "source": "./plugins/thang-progress",
+      "description": "Shows a skill's checklist when it starts and each checkpoint as it completes (✅ 3/6), then 🏁 when all are done. Never blocks."
+    },
+    {
       "name": "thang-plan",
       "source": "./plugins/thang-plan",
       "description": "Design before code: brainstorming, grill, domain-model, codebase-design, writing-plans → PLAN.md."
@@ -47,7 +52,7 @@
     {
       "name": "thang-kit",
       "source": "./plugins/thang-kit",
-      "description": "Everything: installs all eight thang-* role plugins."
+      "description": "Everything: installs all nine thang-* role plugins."
     }
   ]
 }

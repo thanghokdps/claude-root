@@ -9,5 +9,8 @@
   "description": "Review a diff or PR: review-checklist, review-diff, blast-radius impact analysis, create-pr description.",
   "keywords": [
     "review"
+  ],
+  "dependencies": [
+    "thang-progress"
   ]
 }

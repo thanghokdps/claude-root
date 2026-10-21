@@ -11,5 +11,8 @@
     "agents",
     "langgraph",
     "copilotkit"
+  ],
+  "dependencies": [
+    "thang-progress"
   ]
 }

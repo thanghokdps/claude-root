@@ -10,5 +10,8 @@
   "keywords": [
     "design",
     "planning"
+  ],
+  "dependencies": [
+    "thang-progress"
   ]
 }
