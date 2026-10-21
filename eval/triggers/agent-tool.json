@@ -12,6 +12,10 @@
     {
       "prompt": "tighten this agent tool description and its zod schema",
       "top_k": 3
+    },
+    {
+      "prompt": "Thêm tool cho agent để tra cứu đơn hàng theo mã",
+      "top_k": 1
     }
   ],
   "negative": [

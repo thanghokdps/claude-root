@@ -12,6 +12,10 @@
     {
       "prompt": "confirm resume double-executes the pending action",
       "top_k": 3
+    },
+    {
+      "prompt": "Agent xóa user qua chat, cần confirm trước khi lưu",
+      "top_k": 1
     }
   ],
   "negative": [

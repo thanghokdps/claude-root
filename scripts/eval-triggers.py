@@ -23,7 +23,8 @@ import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STOP = set("""a an the and or of to in on for with without from by at is are be this that it its
 your you my me i we our as into not no do does when what how why should use used using can any
-all each every before after then than if else so just""".split())
+all each every before after then than if else so just
+và có không là của cho với thì mà lại về này đó được các những một khi nếu để từ trong ra vào cần giúp tôi bạn hay""".split())
 
 
 def stem(w):
@@ -34,7 +35,8 @@ def stem(w):
 
 
 def tokens(text):
-    return [stem(w) for w in re.findall(r"[a-z0-9]+", text.lower()) if w not in STOP and len(w) > 1]
+    # Unicode words: [a-z0-9]+ shredded Vietnamese at every diacritic ("hóa" → "h", "a").
+    return [stem(w) for w in re.findall(r"[^\W_]+", text.lower()) if w not in STOP and len(w) > 1]
 
 
 def load_skills():

@@ -3,7 +3,7 @@ model: opus
 effort: high
 name: agent-graph
 description: Adds or changes an agent, sub-agent, router or supervisor in a LangGraph / LangChainJS assistant — which agent owns which scope, routing and handoff, boundary rules, middleware order, system prompts, and recursion limits. Use when a request lands on the wrong agent, the user asks to add an agent or split scope between agents, or a system prompt or routing rule needs rewriting.
-when_to_use: add an agent, routing, "agent nào làm việc này", supervisor or router node, out-of-scope handling, boundary rules, rewrite the system prompt shorter, wrong agent answered, handoff between agents, middleware order
+when_to_use: add an agent, routing, "agent nào làm việc này", supervisor or router node, out-of-scope handling, boundary rules, rewrite the system prompt shorter, wrong agent answered ("hỏi việc này mà agent khác trả lời"), handoff between agents, middleware order
 ---
 
 # agent-graph

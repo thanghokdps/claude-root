@@ -12,6 +12,10 @@
     {
       "prompt": "wrong answer in production, find the trace in Langfuse and classify the cause",
       "top_k": 3
+    },
+    {
+      "prompt": "Sửa rồi mà vẫn bị, chạy thử một turn thật xem stream",
+      "top_k": 1
     }
   ],
   "negative": [

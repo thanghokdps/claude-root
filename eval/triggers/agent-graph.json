@@ -12,6 +12,10 @@
     {
       "prompt": "rewrite the system prompt shorter and handle out-of-scope requests",
       "top_k": 3
+    },
+    {
+      "prompt": "Hỏi về hóa đơn mà agent support lại trả lời",
+      "top_k": 1
     }
   ],
   "negative": [
