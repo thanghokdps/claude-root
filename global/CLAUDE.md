@@ -40,7 +40,7 @@ Chosen per pair on content, not by plugin. When both are available:
 
 ## Rules and references
 - Always loaded: `~/.claude/rules/` `git` · `security` · `code-quality`. Path-scoped: `typescript`, `testing`.
-- On demand (skills read them): kit `references/` — `orchestration` · `wave-parallelism` · `plan-format` · `auto-correct-scope` · `memory`.
+- On demand (skills read them): each plugin's `references/` — thang-dev `orchestration` · `wave-parallelism` · `plan-format` · `auto-correct-scope` · `spec-templates` · `agent-prompts`; thang-core `memory`.
 
 ## Gotchas
 - `specs/` is gitignored. `settings.local.json` overrides `settings.json`.
