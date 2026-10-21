@@ -2,10 +2,10 @@
 """lint-kit.py — structural checks for the kit's plugins. Exit 1 on any error; warnings don't fail.
 
 Errors: SKILL.md frontmatter parses as YAML; no private names in thang-agent (denylist); name == directory, kebab-case,
-unique across plugins; description present, <=1024 chars, says when to use; ${CLAUDE_PLUGIN_ROOT}/ paths exist in
-the skill's own plugin; hooks pass `bash -n` and are executable; plugin/marketplace/hooks JSON parse; every plugin
+unique across plugins; description present, <=1024 chars, says when to use; only documented frontmatter keys; description + when_to_use
+<=1536; ${CLAUDE_PLUGIN_ROOT}/ paths exist in the skill's own plugin and ${CLAUDE_SKILL_DIR}/ paths in its directory; hooks pass `bash -n` and are executable; plugin/marketplace/hooks JSON parse; every plugin
 is listed in the marketplace, dependencies exist and are acyclic; a SKILL.md body that names another plugin's skill
-names a declared dependency or says "if (<plugin> is) installed"; same-named references/ files are identical across plugins.
+names a declared dependency or says "if (<plugin> is) installed"; same-named references/ files are identical across plugins; every file init.sh copies exists.
 Warnings: SKILL.md over 500 lines; no trigger case under eval/triggers/.
 """
 import filecmp
@@ -23,6 +23,20 @@ PLUGINS_DIR = os.path.join(ROOT, "plugins")
 errors, warnings = [], []
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 TRIGGER = re.compile(r"\b(use (when|whenever|for|at|before|after|to)|run (at|when|after|before|once)|when to use)\b", re.I)
+
+
+# Claude Code ignores unknown SKILL.md keys silently (docs: skills frontmatter reference, CLI 2.1.305).
+SKILL_FIELDS = set("""name description when_to_use argument-hint arguments disable-model-invocation user-invocable
+allowed-tools disallowed-tools model effort context agent background hooks paths shell metadata license compatibility""".split())
+LISTING_CAP = 1536  # description + when_to_use are cut at this length in the skill listing
+
+
+def unknown_fields(fm):
+    return sorted(k for k in fm if k not in SKILL_FIELDS)
+
+
+def listing_chars(fm):
+    return len(str(fm.get("description") or "")) + len(str(fm.get("when_to_use") or ""))
 
 
 def frontmatter(path):
@@ -72,6 +86,10 @@ def check_skills():
             errors.append(f"{rel}: description is {len(desc)} chars (max 1024)")
         elif not TRIGGER.search(desc) and not fm.get("when_to_use"):
             errors.append(f"{rel}: description never says when to use it, and no when_to_use")
+        for key in unknown_fields(fm):
+            errors.append(f"{rel}: unknown frontmatter field '{key}' — Claude Code ignores it")
+        if listing_chars(fm) > LISTING_CAP:
+            errors.append(f"{rel}: description + when_to_use is {listing_chars(fm)} chars — the listing cuts at {LISTING_CAP}")
         wtu = fm.get("when_to_use")
         if wtu is not None and not isinstance(wtu, str):
             errors.append(f"{rel}: when_to_use is {type(wtu).__name__}, expected a string")
@@ -79,6 +97,9 @@ def check_skills():
         for ref in re.findall(r"\$\{CLAUDE_PLUGIN_ROOT\}/([\w./-]+\w)", text):
             if not os.path.exists(os.path.join(PLUGINS_DIR, plugin, ref)):
                 errors.append(f"{rel}: references missing file {ref} in plugins/{plugin}")
+        for ref in re.findall(r"\$\{CLAUDE_SKILL_DIR\}/([\w./-]+\w)", text):
+            if not os.path.exists(os.path.join(os.path.dirname(path), ref)):
+                errors.append(f"{rel}: references missing file {ref} in its skill directory")
         lines = text.count("\n")
         if lines > 500:
             warnings.append(f"{rel}: {lines} lines — loads in full on every invocation")
@@ -200,6 +221,18 @@ def check_plugins():
                           f"not a dependency of {plugin} — declare it or say \"if installed\" / \"if <plugin> is installed\"")
 
 
+def missing_init_sources(script, core_dir):
+    """Literal "$HARNESS_DIR/<path>" files init.sh copies that do not exist — its `cp … || true` hides them."""
+    refs = re.findall(r'"\$HARNESS_DIR/([\w./-]+\.\w+)"', script)
+    return sorted({r for r in refs if not os.path.exists(os.path.join(ROOT, core_dir, r))})
+
+
+def check_init_sources():
+    rel = "plugins/thang-core/scripts/init.sh"
+    for ref in missing_init_sources(open(os.path.join(ROOT, rel), encoding="utf-8").read(), "plugins/thang-core"):
+        errors.append(f"{rel}: copies missing file {ref}")
+
+
 def check_shared_references():
     """A reference two plugins both need is copied (no cross-plugin paths in the cache); copies must not drift."""
     by_name = defaultdict(list)
@@ -244,6 +277,7 @@ if __name__ == "__main__":
     check_json()
     check_plugins()
     check_shared_references()
+    check_init_sources()
     check_denylist()
     for w in warnings:
         print(f"warn  {w}")

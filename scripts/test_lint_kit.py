@@ -48,6 +48,22 @@ def test_dependency_cycle_detected():
     assert lint_kit.find_cycle({"a": ["b"], "b": [], "c": ["a", "b"]}) is None
 
 
+
+def test_unknown_skill_field_is_flagged():
+    assert lint_kit.unknown_fields({"name": "x", "description": "d", "colour": "red"}) == ["colour"]
+    assert lint_kit.unknown_fields({"name": "x", "context": "fork", "agent": "Explore", "paths": "*.ts"}) == []
+
+
+def test_listing_text_over_cap_is_flagged():
+    assert lint_kit.listing_chars({"description": "a" * 1000, "when_to_use": "b" * 600}) == 1600
+    assert lint_kit.listing_chars({"description": "a" * 10}) == 10
+
+
+def test_init_sh_missing_copy_source_is_flagged():
+    script = 'cp "$HARNESS_DIR/rules/stacks/nope.md" x\ncp "$HARNESS_DIR/rules/stacks/python.md" y\nfor r in "$HARNESS_DIR"/rules/*.md; do :; done'
+    assert lint_kit.missing_init_sources(script, "plugins/thang-core") == ["rules/stacks/nope.md"]
+
+
 if __name__ == "__main__":
     tests = [v for k, v in dict(globals()).items() if k.startswith("test_")]
     for t in tests:
