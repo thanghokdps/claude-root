@@ -56,6 +56,8 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [btw](thang-core/skills/btw/SKILL.md) | `thang-core` | `/btw <question>` | Quick lookup mid-task, no tasks or side effects | n/a |
 | [figma-to-screen](thang-core/stacks/react-native/skills/figma-to-screen/SKILL.md) | `thang-core` stacks/react-native (copied by init.sh) | `/figma-to-screen` | Figma frame → screen implementation | normal |
 | [agent-architect](thang-agent/skills/agent-architect/SKILL.md) | `thang-agent` | `/agent-architect [greenfield\|audit]` | AI assistant architecture: one-question interview → ADR → scaffold, or stock-vs-custom audit | normal/high |
+| [agent-feature](thang-agent/skills/agent-feature/SKILL.md) | `thang-agent` | `/agent-feature <capability>` | Feature in an existing assistant: ADR fit check, reuse inventory, reuse/extend/new per slice, duplicate check | normal |
+| [agent-design-ui](thang-agent/skills/agent-design-ui/SKILL.md) | `thang-agent` | `/agent-design-ui <figma\|folder>` | Design → CopilotKit v2 chat: states, tokens → theme, ladder per element, screenshot diff | normal |
 | [agent-tool](thang-agent/skills/agent-tool/SKILL.md) | `thang-agent` | `/agent-tool <tool>` | Agent tool: trusted identity, read vs mutation, retry/audit, short description, test | normal |
 | [agent-hitl](thang-agent/skills/agent-hitl/SKILL.md) | `thang-agent` | `/agent-hitl <write>` | Mutation behind interrupt: target resolution, pending action, confirm/cancel/replay, client render | normal/high |
 | [agent-graph](thang-agent/skills/agent-graph/SKILL.md) | `thang-agent` | `/agent-graph <scope>` | Agents, router, handoff, boundary rules, prompts, middleware order | normal |

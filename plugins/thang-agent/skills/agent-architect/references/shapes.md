@@ -14,6 +14,7 @@ cat langgraph.json 2>/dev/null; ls wrangler.* 2>/dev/null   # graph registry · 
 ```
 
 Record the result as one line before any edit: `Shape: A | B | hybrid · host: node | workers · transport: runtime | own-emitter`.
+Then read `docs/adr/*` if present: the recorded architecture card binds every `agent-*` change. A change that needs a new agent, shape, write path, system or client is an architecture change — stop and ask (`/agent-feature` Step 2), never widen it inside the change.
 Mixed signals (both shapes in one app) → name the app/package each belongs to; never average them.
 
 ## Shape A — prebuilt agent (greenfield default)

@@ -21,11 +21,19 @@ Open Claude Code in an empty folder and say what you want to build, e.g. *"Tôi 
 4. **Grill** — every task gets an owner agent and tool, every write a confirm path, every vague answer a recorded risk.
 5. **ADR + scaffold** — `docs/adr/0001-agent-architecture.md`, then the smallest working slice of your layout, ending on one real streamed turn with your first task's example message.
 
+If the designer has a Figma file or mockups, give the link when asked — `agent-design-ui` turns it into the chat UI after the scaffold.
+
+## Grow it, one feature at a time
+
+Ask for a feature in plain words, e.g. *"Thêm tính năng cho khách đổi địa chỉ giao hàng"*. `agent-feature` reads the ADR first and stops if the feature would change the architecture (a new agent, a write path, a system the ADR does not list), lists what already exists, decides **reuse / extend / new** per piece, builds each piece through the layer skill below, then checks the diff for duplicates.
+
 ## Skills
 
 | Skill | Reach for it when |
 |-------|-------------------|
 | `/agent-architect [greenfield\|audit]` | Starting an assistant, or auditing one for custom code that stock middleware now covers |
+| `/agent-feature <capability>` | Adding a feature to an existing assistant — within its ADR, reusing what is there, then a duplicate check |
+| `/agent-design-ui <figma link \| folder>` | A design for the chat: states inventory, tokens → theme, stock vs custom per element, screenshot diff |
 | `/agent-tool <tool>` | Adding, renaming or fixing a tool — schema, trusted identity, read vs mutation, its test |
 | `/agent-hitl <write>` | A tool creates, updates or deletes data and needs a confirm card |
 | `/agent-graph <scope>` | A request lands on the wrong agent; adding an agent, router or supervisor; rewriting a system prompt |
@@ -42,17 +50,18 @@ Skills fire on their own from what you type — the slash command is optional.
 2. "Agent xóa user qua chat, cần confirm trước khi lưu" → `agent-hitl`
 3. "Hỏi về hóa đơn mà agent support lại trả lời" → `agent-graph`
 4. "Sửa rồi mà vẫn bị, chạy thử một turn thật xem stream" → `agent-verify-turn`
+5. "Thêm tính năng cho chatbot để khách hủy đơn hàng, dựa trên kiến trúc đã có" → `agent-feature`
+6. "Làm UI chat theo design Figma này" → `agent-design-ui`
 
 ## Check the routing yourself
 
-`evals/` holds one case per demo prompt above, one that must not fire, and a blank-machine case (`greenfield-problem-first`: prerequisites checked, then the problem asked before any technology):
+`evals/` holds one case per routing demo prompt, one that must not fire, and three behaviour cases: `greenfield-problem-first` (prerequisites checked, then the problem asked before any technology), `feature-conflicts-adr` (a feature the ADR rules out is stopped and raised, not built) and `design-to-chat` (a frame + tokens mapped onto v2 tokens and a ui-map). From a clone of the repo:
 
 ```bash
-claude plugin eval thang-agent@thang-kit --runs 1 --ablation none --no-publish \
-  --judge-model sonnet --allow-tools "Bash(bash *preflight.sh*)"
+bash scripts/eval-plugin.sh thang-agent
 ```
 
-About $1 for the six cases. Add `--runs 3 --ablation with-without` for a with/without-plugin comparison.
+About $3 for the nine cases. Add `--runs 3 --ablation with-without` for a with/without-plugin comparison. The script targets `plugins/` because each case also loads `thang-progress`: a plugin whose dependency is missing is dropped from the run without an error.
 
 ## Rules
 

@@ -88,4 +88,4 @@ Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later
 
 ## Hand-offs
 
-Tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · threat model → `/agent-security`.
+The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · threat model → `/agent-security`.

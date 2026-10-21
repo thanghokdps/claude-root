@@ -1,0 +1,27 @@
+{
+  "skill": "agent-feature",
+  "positive": [
+    {
+      "prompt": "thêm tính năng cho chatbot để khách hủy đơn hàng, dựa trên kiến trúc đã có",
+      "top_k": 1
+    },
+    {
+      "prompt": "add a feature to our assistant so users can reschedule a delivery, reusing what already exists",
+      "top_k": 3
+    },
+    {
+      "prompt": "implement a new capability in the existing agent without duplicating code",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Thêm tool cho agent để tra cứu đơn hàng theo mã",
+      "owner": "agent-tool"
+    },
+    {
+      "prompt": "chọn kiến trúc agent cho chatbot mới làm từ đầu",
+      "owner": "agent-architect"
+    }
+  ]
+}
