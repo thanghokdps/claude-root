@@ -2,7 +2,7 @@
 model: opus
 effort: high
 name: agent-hitl
-description: Puts an agent mutation behind a human-in-the-loop confirmation — LangGraph interrupt, a versioned interrupt contract, a pending-action record, confirm / cancel / replay resume, picking the right target record, and how web, mobile or chat clients render the confirm card. Use when an agent tool creates, updates or deletes data, or a confirm or cancel flow misbehaves.
+description: Puts an agent mutation behind a human-in-the-loop confirmation — LangGraph interrupt, a versioned interrupt contract, a pending-action record, confirm / cancel / replay resume, picking the right target record, and how web, mobile or chat clients render the confirm card. Use when an agent tool creates, updates or deletes data, or a confirm or cancel flow misbehaves. A whole new user feature that includes a write starts at agent-feature, which hands the write here.
 when_to_use: agent action that writes data, "confirm before saving", confirm card, approve or reject, interrupt and resume, pending action, "tìm để xóa", add/remove/edit user via chat, resume loops or double-executes
 ---
 
