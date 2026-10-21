@@ -1,11 +1,53 @@
 {
   "name": "thang-kit",
-  "owner": { "name": "Thang Ho Quang" },
+  "owner": {
+    "name": "Thang Ho Quang"
+  },
   "plugins": [
     {
+      "name": "thang-core",
+      "source": "./plugins/thang-core",
+      "description": "Session and project basics every role uses: verify-done evidence gate, project-init bootstrap, compact/compound memory, sync-memory, btw."
+    },
+    {
+      "name": "thang-plan",
+      "source": "./plugins/thang-plan",
+      "description": "Design before code: brainstorming, grill, domain-model, codebase-design, writing-plans → PLAN.md."
+    },
+    {
+      "name": "thang-review",
+      "source": "./plugins/thang-review",
+      "description": "Review a diff or PR: review-checklist, review-diff, blast-radius impact analysis, create-pr description."
+    },
+    {
+      "name": "thang-dev",
+      "source": "./plugins/thang-dev",
+      "description": "Build and fix: coordinator lane router, feature, fix-bug red loop, tdd, checkpoint gates."
+    },
+    {
+      "name": "thang-ship",
+      "source": "./plugins/thang-ship",
+      "description": "Land and release: finish-branch, ci-triage, release-checklist, write-migration."
+    },
+    {
+      "name": "thang-agent",
+      "source": "./plugins/thang-agent",
+      "description": "CopilotKit / AG-UI / LangChainJS / LangGraph assistants: architecture, tools, HITL, graph, frontend, evals, security, turn verification — with their rules."
+    },
+    {
+      "name": "thang-lead",
+      "source": "./plugins/thang-lead",
+      "description": "Improve the process: weekly retro, session diagnosis, authoring skills."
+    },
+    {
+      "name": "thang-guards",
+      "source": "./plugins/thang-guards",
+      "description": "Personal guard-rail hooks: branch guard, commit gate, scope gate, blast-radius and session handoff. Opt-in."
+    },
+    {
       "name": "thang-kit",
-      "source": "./",
-      "description": "Personal Claude Code harness — skills, hooks and references."
+      "source": "./plugins/thang-kit",
+      "description": "Everything: installs all eight thang-* role plugins."
     }
   ]
 }

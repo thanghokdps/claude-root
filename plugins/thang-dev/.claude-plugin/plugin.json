@@ -1,0 +1,20 @@
+{
+  "name": "thang-dev",
+  "version": "3.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "Build and fix: coordinator lane router, feature, fix-bug red loop, tdd, checkpoint gates.",
+  "keywords": [
+    "workflow",
+    "tdd",
+    "debugging"
+  ],
+  "dependencies": [
+    "thang-core",
+    "thang-plan",
+    "thang-review"
+  ]
+}

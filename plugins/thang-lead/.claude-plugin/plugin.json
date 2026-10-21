@@ -1,0 +1,17 @@
+{
+  "name": "thang-lead",
+  "version": "3.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "Improve the process: weekly retro, session diagnosis, authoring skills.",
+  "keywords": [
+    "retro",
+    "process"
+  ],
+  "dependencies": [
+    "thang-core"
+  ]
+}

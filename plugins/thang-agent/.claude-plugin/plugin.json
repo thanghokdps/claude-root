@@ -1,0 +1,15 @@
+{
+  "name": "thang-agent",
+  "version": "3.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "CopilotKit / AG-UI / LangChainJS / LangGraph assistants: architecture, tools, HITL, graph, frontend, evals, security, turn verification — with their rules.",
+  "keywords": [
+    "agents",
+    "langgraph",
+    "copilotkit"
+  ]
+}

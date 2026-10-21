@@ -1,0 +1,16 @@
+{
+  "name": "thang-guards",
+  "version": "3.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "Personal guard-rail hooks: branch guard, commit gate, scope gate, blast-radius and session handoff. Opt-in.",
+  "keywords": [
+    "hooks"
+  ],
+  "dependencies": [
+    "thang-dev"
+  ]
+}

@@ -10,6 +10,7 @@ Also flags description pairs that nearly collide.
 Usage: scripts/eval-triggers.py [--collide 0.45] [skill ...]
 """
 import argparse
+import glob
 import json
 import math
 import os
@@ -38,10 +39,8 @@ def tokens(text):
 
 def load_skills():
     skills = {}
-    for name in sorted(os.listdir(os.path.join(ROOT, "skills"))):
-        p = os.path.join(ROOT, "skills", name, "SKILL.md")
-        if not os.path.isfile(p):
-            continue
+    for p in sorted(glob.glob(os.path.join(ROOT, "plugins", "*", "skills", "*", "SKILL.md"))):
+        name = os.path.basename(os.path.dirname(p))
         text = open(p, encoding="utf-8").read()
         fm = yaml.safe_load(text[4:text.index("\n---", 4)]) or {}
         doc = " ".join([name.replace("-", " ")] * 2 + [fm.get("description", ""), str(fm.get("when_to_use", ""))])

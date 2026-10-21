@@ -1,0 +1,23 @@
+{
+  "name": "thang-kit",
+  "version": "3.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "Everything: installs all eight thang-* role plugins.",
+  "keywords": [
+    "bundle"
+  ],
+  "dependencies": [
+    "thang-core",
+    "thang-plan",
+    "thang-review",
+    "thang-dev",
+    "thang-ship",
+    "thang-agent",
+    "thang-lead",
+    "thang-guards"
+  ]
+}

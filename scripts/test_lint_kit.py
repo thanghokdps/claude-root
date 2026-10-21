@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for lint-kit.py's public-repo denylist. Run: python3 scripts/test_lint_kit.py"""
+"""Tests for lint-kit.py's denylist and plugin dependency checks. Run: python3 scripts/test_lint_kit.py"""
 import importlib.util
 import os
 
@@ -21,12 +21,31 @@ def test_allows_generic_text():
         assert not lint_kit.denylist_hits(text), text
 
 
-def test_scope_covers_agent_skills_and_rules():
-    assert lint_kit.in_denylist_scope("skills/agent-tool/SKILL.md")
-    assert lint_kit.in_denylist_scope("skills/agent-architect/references/stock-map.md")
-    assert lint_kit.in_denylist_scope("rules/stacks/agent-prompts.md")
-    assert lint_kit.in_denylist_scope("rules/stacks/agui-transport.md")
-    assert not lint_kit.in_denylist_scope("skills/fix-bug/SKILL.md")
+def test_scope_covers_agent_plugin():
+    assert lint_kit.in_denylist_scope("plugins/thang-agent/skills/agent-tool/SKILL.md")
+    assert lint_kit.in_denylist_scope("plugins/thang-agent/skills/agent-architect/references/stock-map.md")
+    assert lint_kit.in_denylist_scope("plugins/thang-agent/rules/agent-prompts.md")
+    assert lint_kit.in_denylist_scope("plugins/thang-agent/README.md")
+    assert not lint_kit.in_denylist_scope("plugins/thang-dev/skills/fix-bug/SKILL.md")
+
+
+OWNERS = {"fix-bug": "thang-dev", "verify-done": "thang-core", "ci-triage": "thang-ship"}
+
+
+def test_undeclared_cross_plugin_ref_fails():
+    hits = lint_kit.undeclared_refs(["hand regressions to `/fix-bug`."], "thang-ship", {"thang-core"}, OWNERS)
+    assert hits == [(1, "fix-bug")], hits
+
+
+def test_soft_declared_and_own_refs_pass():
+    lines = ["hand regressions to `/fix-bug` (if installed).", "Run `/verify-done`.", "see `/ci-triage`",
+             "if thang-dev is installed, suggest `/fix-bug`"]
+    assert lint_kit.undeclared_refs(lines, "thang-ship", {"thang-core"}, OWNERS) == []
+
+
+def test_dependency_cycle_detected():
+    assert lint_kit.find_cycle({"a": ["b"], "b": ["c"], "c": ["a"]}) == ["a", "b", "c", "a"]
+    assert lint_kit.find_cycle({"a": ["b"], "b": [], "c": ["a", "b"]}) is None
 
 
 if __name__ == "__main__":
