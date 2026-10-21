@@ -64,6 +64,12 @@ def test_init_sh_missing_copy_source_is_flagged():
     assert lint_kit.missing_init_sources(script, "plugins/thang-core") == ["rules/stacks/nope.md"]
 
 
+def test_eval_case_missing_dependency_is_flagged():
+    case = "/k/plugins/thang-agent/evals/tool-add"
+    assert lint_kit.missing_eval_plugins(None, case, {"thang-agent", "thang-progress"}) == ["thang-agent", "thang-progress"]
+    assert lint_kit.missing_eval_plugins(["../..", "../../../thang-progress"], case, {"thang-agent", "thang-progress"}) == []
+
+
 if __name__ == "__main__":
     tests = [v for k, v in dict(globals()).items() if k.startswith("test_")]
     for t in tests:
