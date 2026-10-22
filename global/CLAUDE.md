@@ -25,7 +25,7 @@ Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the 
 - One topic per session; resume instead of re-explaining. Bad edit → `Esc Esc` to rewind.
 - Parallel tickets → separate sessions in git worktrees, not one session juggling both.
 - Deep reasoning only where it pays: `ultrathink` in one prompt, `/effort` for the session. `ultracode` = dynamic workflow (fan-out), not deeper thinking.
-- Every changed implementation file ships with its test. Gates in order: typecheck → lint → tests.
+- Every changed implementation file ships with its test, at the repo's test location (existing convention wins; no tests yet → ask: `__tests__/` beside the code or a separate `tests/` folder). Gates in order: typecheck → lint → tests.
 - Before saying done: `/verify-done`. Review: `/review-checklist` → `/code-review` → `/code-review ultra` for auth/data branches; `/security-review` for security-sensitive code.
 - Branch finished → `/finish-branch`. Watch PR/CI: `/loop 15m <task>`; red build → `/ci-triage`.
 - Verify the running app, not just the code: Playwright MCP / Claude in Chrome / iOS Simulator.

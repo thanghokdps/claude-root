@@ -48,4 +48,4 @@ A green unit suite does not prove a turn. The stream is the evidence: no "fixed"
 
 ## In a fix
 
-This is the red loop for `/fix-bug` (dev, if installed) in an agent repo: capture the failing stream before the fix, the passing stream after. Report "fixed" only with both.
+This is the red loop for `/fix-bug` in an agent repo: capture the failing stream before the fix, the passing stream after. Report "fixed" only with both.

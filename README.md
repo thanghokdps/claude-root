@@ -235,7 +235,7 @@ bash <kit-dir>/scripts/install.sh     # <kit-dir> = wherever you cloned the kit
 
 Installs `global/CLAUDE.md` and `plugins/core/rules/` into `~/.claude/`, registers this directory as the local marketplace `harness`, and installs every role plugin plus the `harness` bundle (loaded in place — kit edits are live in new sessions). It backs up what it replaces and migrates an old copy-based or 2.x single-plugin install.
 
-The kit is split by role — see [`plugins/README.md`](plugins/README.md). Installing a role plugin installs its dependencies: `dev` brings `core`, `plan`, `review`; `agent` stands alone; hooks are the opt-in `guards`.
+The kit is split by role — see [`plugins/README.md`](plugins/README.md). Installing a role plugin installs its dependencies: `dev` brings `core`, `plan`, `review`; `agent` brings `dev` and `ship` (and through them `core`, `plan`, `review`), because its skills hand off to `/fix-bug`, `/verify-done`, `/review-checklist`, `/write-migration` and `/finish-branch`; hooks are the opt-in `guards`.
 
 From GitHub instead of a local clone:
 

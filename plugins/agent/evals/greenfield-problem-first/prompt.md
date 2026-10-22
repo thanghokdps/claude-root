@@ -1,7 +1,7 @@
 ---
-plugins: ["../..", "../../../progress"]
+plugins: ["../..", "../../../progress", "../../../core", "../../../plan", "../../../review", "../../../dev", "../../../ship"]
 max_turns: 8
-allowed_tools: [Read, Glob, Grep, Skill, Bash]
+allowed_tools: [Read, Glob, Grep, Skill, Bash, AskUserQuestion]
 tags: [greenfield]
 ---
 

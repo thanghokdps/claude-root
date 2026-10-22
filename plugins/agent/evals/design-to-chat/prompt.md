@@ -1,5 +1,5 @@
 ---
-plugins: ["../..", "../../../progress"]
+plugins: ["../..", "../../../progress", "../../../core", "../../../plan", "../../../review", "../../../dev", "../../../ship"]
 max_turns: 16
 allowed_tools: [Read, Write, Edit, Glob, Grep, Skill]
 tags: [design]

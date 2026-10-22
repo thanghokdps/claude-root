@@ -1,6 +1,14 @@
 # agent
 
-Skills for building AI assistants on **CopilotKit · AG-UI · LangChainJS · LangGraph**. Installs one companion, `progress` (hooks only: each skill's checklist and live ✅ progress, never blocks). ~1.3k tokens always-on.
+Skills for building AI assistants on **CopilotKit · AG-UI · LangChainJS · LangGraph**. Installing it also installs the plugins its skills hand off to:
+
+| Comes with `agent` | For |
+|---|---|
+| `dev` → `core`, `plan`, `review` | `/project-init` after the scaffold, `/fix-bug` and `/tdd` for red loops, `/verify-done` before saying done, `/review-checklist` and `/blast-radius` on every feature's diff |
+| `ship` | `/write-migration` for schema changes, `/finish-branch` to open the PR, `/ci-triage` for a red build |
+| `progress` | each skill's checklist and live ✅ progress (hooks only, never blocks) |
+
+Not included: `lead` (retro, skill authoring) and `guards` (commit-blocking hooks — opt in with `/plugin install guards@harness`). The always-loaded rules (`git`, `security`, `code-quality`, `testing`) come only from `bash scripts/install.sh` in a clone; the agent skills carry their own rules in `rules/`.
 
 ## Install
 
@@ -61,7 +69,7 @@ Skills fire on their own from what you type — the slash command is optional.
 bash scripts/eval-plugin.sh agent
 ```
 
-About $3 for the nine cases. Add `--runs 3 --ablation with-without` for a with/without-plugin comparison. The script targets `plugins/` because each case also loads `progress`: a plugin whose dependency is missing is dropped from the run without an error.
+About $3 for the nine cases. Add `--runs 3 --ablation with-without` for a with/without-plugin comparison. The script targets `plugins/` because each case also loads the dependencies (`progress`, `core`, `plan`, `review`, `dev`, `ship`): a plugin whose dependency is missing is dropped from the run without an error.
 
 ## Rules
 
@@ -76,6 +84,7 @@ The invariants the skills read before they act. They load only when a skill need
 | [`langgraph.md`](rules/langgraph.md) | state, short- and long-term memory, graph lifecycle, interrupts | `/agent-graph`, `/agent-hitl` |
 | [`agent-tracing-privacy.md`](rules/agent-tracing-privacy.md) | tracing switch, masking, what each turn records | `/agent-evals observability`, `/agent-verify-turn` |
 | [`agent-deps-pinning.md`](rules/agent-deps-pinning.md) | exact version pins, one LangChain copy | `/agent-architect` |
+| [`agent-code-structure.md`](rules/agent-code-structure.md) | app folders (features, shared ui, server aggregates, dev), size and duplication limits, tokens instead of raw hex/px, mobile-first, naming, Prettier | `/agent-architect`, `/agent-design-ui`, `/agent-feature` |
 
 New feature order (`/agent-feature`): check the ADR → reuse inventory → schema → tool → HITL → agent scope → frontend → evals, one slice green before the next.
 

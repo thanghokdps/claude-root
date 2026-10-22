@@ -2,6 +2,7 @@
 """Build the drill-down map model of this kit for super-board's /visual skill.
 
   python3 scripts/skill-map.py > map.json
+  python3 scripts/skill-map.py --plugin agent > map.json   # one plugin and its dependencies only
   python3 <super-board>/skills/visual/scripts/visual.py render --map map.json --out docs/skill-map.html
 
 Nodes come from plugin.json, SKILL.md frontmatter and hook headers, so the map follows the kit; the two
@@ -74,9 +75,22 @@ def hook_nodes(plugin):
     return nodes
 
 
+def closure(name):
+    """`name` and every plugin it depends on, in kit order."""
+    seen, todo = set(), [name]
+    while todo:
+        p = todo.pop()
+        if p not in seen:
+            seen.add(p)
+            todo += json.load(open(os.path.join(PLUGINS, p, ".claude-plugin", "plugin.json"))).get("dependencies", [])
+    return [p for p in ORDER if p in seen]
+
+
 def main():
+    only = sys.argv[sys.argv.index("--plugin") + 1] if "--plugin" in sys.argv else None
+    order = closure(only) if only else ORDER
     nodes, edges, views, skills, texts = [], [], [], {}, {}
-    for p in ORDER:
+    for p in order:
         meta = json.load(open(os.path.join(PLUGINS, p, ".claude-plugin", "plugin.json")))
         nodes.append({"id": f"p-{p}", "label": p, "kind": "lane", "sublabel": ROLE[p],
                       "what": meta["description"], "when": f"/plugin install {p}@harness, or via the harness bundle.",
@@ -101,6 +115,8 @@ def main():
             if dst != src and skills.get(dst) == skills[src]:
                 edges.append({"id": f"h-{src}-{dst}", "from": src, "to": dst, "label": "hands off"})
 
+    if only:
+        return emit_single(only, order, nodes, edges, views)
     nodes.append({"id": "harness", "label": "harness", "kind": "board", "sublabel": "bundle — install this",
                   "what": "The one install: depends on all nine role plugins.",
                   "when": "/plugin install harness@harness, or bash scripts/install.sh from a clone.",
@@ -136,6 +152,38 @@ def main():
                      "nodeIds": ["harness"] + [f"p-{p}" for p in ORDER]})
     json.dump({"title": "harness — skill map", "root": "overview", "nodes": nodes, "edges": edges,
                "views": views, "browserOrder": ["start", "ai-assistant"] + [f"p-{p}" for p in ORDER]},
+              sys.stdout, indent=1, ensure_ascii=False)
+
+
+def emit_single(only, order, nodes, edges, views):
+    agent = ["agent-architect", "agent-feature", "agent-tool", "agent-hitl", "agent-frontend",
+             "agent-verify-turn", "agent-evals", "agent-security"]
+    land = ["agent-feature", "verify-done", "review-checklist", "finish-branch"]
+    ids = {n["id"] for n in nodes}
+    chain = lambda xs, label: [{"id": f"w-{a}-{b}", "from": a, "to": b, "label": label} for a, b in zip(xs, xs[1:])]
+    if only == "agent" and set(agent + land) <= ids:
+        views += [
+            {"id": "ai-assistant", "parent": "overview", "title": "Build an AI assistant",
+             "caption": "One skill per layer, proven by a real turn and evals.",
+             "nodeIds": agent, "edges": [
+                 {"id": "a1", "from": "agent-architect", "to": "agent-feature", "label": "ADR + scaffold"},
+                 {"id": "a2", "from": "agent-feature", "to": "agent-tool", "label": "tool slice"},
+                 {"id": "a3", "from": "agent-feature", "to": "agent-hitl", "label": "write slice"},
+                 {"id": "a4", "from": "agent-feature", "to": "agent-frontend", "label": "UI slice"},
+                 {"id": "a5", "from": "agent-tool", "to": "agent-verify-turn", "label": "prove"},
+                 {"id": "a6", "from": "agent-hitl", "to": "agent-verify-turn", "label": "prove"},
+                 {"id": "a7", "from": "agent-frontend", "to": "agent-verify-turn", "label": "prove"},
+                 {"id": "a8", "from": "agent-verify-turn", "to": "agent-evals", "label": "lock in"},
+                 {"id": "a9", "from": "agent-evals", "to": "agent-security", "label": "before ship"}]},
+            {"id": "land", "parent": "overview", "title": "Review and land a feature",
+             "caption": "agent-feature Step 8 hands off to the dependency plugins.",
+             "nodeIds": land, "mainSteps": True, "edges": chain(land, "then")},
+        ]
+    views.insert(0, {"id": "overview", "parent": None, "title": only,
+                     "caption": f"{only} and the plugins it installs with it. Double-click a plugin to see its skills.",
+                     "nodeIds": [f"p-{p}" for p in order]})
+    json.dump({"title": f"{only} — skill map", "root": "overview", "nodes": nodes, "edges": edges, "views": views,
+               "browserOrder": [v["id"] for v in views if v["id"] in ("ai-assistant", "land")] + [f"p-{p}" for p in order]},
               sys.stdout, indent=1, ensure_ascii=False)
 
 

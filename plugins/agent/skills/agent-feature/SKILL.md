@@ -62,7 +62,9 @@ Split the feature into slices per layer and give each one decision:
 - A new piece that resembles an existing one (same upstream, same entity, same card shape) is an *extend* unless the reason says otherwise.
 - Layer owners: tool `/agent-tool` · agent scope, routing, prompt `/agent-graph` · write with confirm `/agent-hitl` · client wiring `/agent-frontend` · look from a design `/agent-design-ui` · tests and evals `/agent-evals`.
 
-Show the table and get the user's yes before building.
+Each new or extended piece names its folder per `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md` (`features/<feature>/`, `components/ui/` only for a second consumer, `server/<aggregate>/`).
+
+Show the table, then ask through `AskUserQuestion`: *build as planned (Recommended)* / *change a slice* / *split into smaller features*. When the user already said "implement all, don't ask", take the recommended option and say so in one line.
 
 **Done when:** every slice has a decision, a builder, and each **new** row has its reason.
 
@@ -81,6 +83,8 @@ Over the feature's diff, look for what Step 4 should have caught:
 - a second renderer, card or confirm mechanism for something that already has one;
 - copied helpers (formatting, error mapping, auth headers) → the existing helper.
 
+- code shape against `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: files past the size limits, a raw hex or `[Npx]` value in a component, a dev fixture imported by app code, a third copy of a block.
+
 If `jscpd` is installed, also run `npx jscpd <changed dirs> --min-tokens 50`. Fix each hit or record why it stays.
 
 **Done when:** every hit is fixed or listed in the feature doc with its reason.
@@ -91,8 +95,14 @@ Run `/agent-verify-turn` with each example message from Step 1 and one message t
 
 **Done when:** the right agent and tools fire for each example, the out-of-scope message is declined, and the eval cases exist.
 
+## Step 8 — Review and land
+
+A schema change goes through `/write-migration` (expand/contract, tested down path) before the slice that needs it. Then `/verify-done` for fresh evidence, `/review-checklist` on the feature's diff (fix what it finds), and `/finish-branch` to open the PR. With several features queued ("implement all"), finish this step for one feature before starting the next.
+
+**Done when:** `/verify-done` shows its evidence and `/review-checklist` has no open must-fix.
+
 ---
 
 ## Hand-offs
 
-Architecture change → `/agent-architect` · a layer on its own → its skill · security review of a new tool or data source → `/agent-security`.
+Architecture change → `/agent-architect` · a layer on its own → its skill · security review of a new tool or data source → `/agent-security` · impact of the diff on callers → `/blast-radius` · a failing test or turn → `/fix-bug`.

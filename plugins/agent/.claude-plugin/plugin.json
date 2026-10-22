@@ -1,6 +1,6 @@
 {
   "name": "agent",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "author": {
     "name": "Thang Ho Quang"
   },
@@ -13,6 +13,8 @@
     "copilotkit"
   ],
   "dependencies": [
-    "progress"
+    "progress",
+    "dev",
+    "ship"
   ]
 }

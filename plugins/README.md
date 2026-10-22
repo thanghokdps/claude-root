@@ -16,7 +16,7 @@ The kit is a marketplace of role plugins. Install one role and its dependencies 
 | `review` | Reviewer: diffs, PRs, impact | progress |
 | `dev` | Developer: build, fix, test-first | core, plan, review |
 | `ship` | Release / CI owner | core |
-| `agent` | AI-agent engineer (CopilotKit, LangGraph) | progress |
+| `agent` | AI-agent engineer (CopilotKit, LangGraph) | progress, dev, ship |
 | `lead` | Process owner: retro, session diagnosis, skill authoring | core |
 | `guards` | Personal guard-rail hooks (opt-in) | dev |
 | `harness` | Bundle | all nine |

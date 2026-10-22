@@ -28,7 +28,7 @@ A **source library** and the `harness` marketplace of role plugins (local direct
     review      review-checklist review-diff blast-radius create-pr                   → progress
     dev         coordinator feature fix-bug tdd checkpoint                            → core, plan, review
     ship        finish-branch ci-triage release-checklist write-migration             → core
-    agent       agent-* + rules/ the skills read on demand                            → progress
+    agent       agent-* + rules/ the skills read on demand                            → progress, dev, ship
     lead        retro diagnose-session writing-skills                                 → core
     guards      hooks/hooks.json + hook scripts (opt-in)                              → dev
     harness     bundle, depends on all nine

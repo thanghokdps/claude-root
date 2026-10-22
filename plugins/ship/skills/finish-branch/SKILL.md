@@ -26,6 +26,8 @@ Flag uncommitted changes, fixup commits worth squashing, and commits that break 
 
 ## Step 3 — Ask which way (one question)
 
+Ask through `AskUserQuestion` with these four options, the one that fits the branch first with `(Recommended)`:
+
 | Option | What happens |
 |--------|--------------|
 | **Open PR/MR** | If the `developers` plugin is enabled, hand off to `developers:create-mr` (it follows the project's commit/remote/base-branch conventions). Otherwise push, draft what / why / how tested, open via `gh pr create` or `glab mr create` |
