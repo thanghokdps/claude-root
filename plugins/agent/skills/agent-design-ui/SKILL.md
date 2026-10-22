@@ -82,4 +82,4 @@ Then the widths no frame covers: shoot every state at the smallest supported wid
 
 ## Hand-offs
 
-Provider, headers, renderers → `/agent-frontend` · confirm card → `/agent-hitl` · a real turn with the new UI → `/agent-verify-turn`.
+Provider, headers, renderers → `/agent-frontend` · confirm card → `/agent-hitl` · a real turn with the new UI → `/agent-verify-turn` · before the PR → `/verify-done` → `/review-checklist`.

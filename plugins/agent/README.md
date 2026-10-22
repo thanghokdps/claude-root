@@ -1,6 +1,14 @@
 # agent
 
-Skills for building AI assistants on **CopilotKit · AG-UI · LangChainJS · LangGraph**. Installs one companion, `progress` (hooks only: each skill's checklist and live ✅ progress, never blocks). ~1.3k tokens always-on.
+Skills for building AI assistants on **CopilotKit · AG-UI · LangChainJS · LangGraph**. Installing it also installs the plugins its skills hand off to:
+
+| Comes with `agent` | For |
+|---|---|
+| `dev` → `core`, `plan`, `review` | `/project-init` after the scaffold, `/fix-bug` and `/tdd` for red loops, `/verify-done` before saying done, `/review-checklist` and `/blast-radius` on every feature's diff |
+| `ship` | `/write-migration` for schema changes, `/finish-branch` to open the PR, `/ci-triage` for a red build |
+| `progress` | each skill's checklist and live ✅ progress (hooks only, never blocks) |
+
+Not included: `lead` (retro, skill authoring) and `guards` (commit-blocking hooks — opt in with `/plugin install guards@harness`). The always-loaded rules (`git`, `security`, `code-quality`, `testing`) come only from `bash scripts/install.sh` in a clone; the agent skills carry their own rules in `rules/`.
 
 ## Install
 
@@ -61,7 +69,7 @@ Skills fire on their own from what you type — the slash command is optional.
 bash scripts/eval-plugin.sh agent
 ```
 
-About $3 for the nine cases. Add `--runs 3 --ablation with-without` for a with/without-plugin comparison. The script targets `plugins/` because each case also loads `progress`: a plugin whose dependency is missing is dropped from the run without an error.
+About $3 for the nine cases. Add `--runs 3 --ablation with-without` for a with/without-plugin comparison. The script targets `plugins/` because each case also loads the dependencies (`progress`, `core`, `plan`, `review`, `dev`, `ship`): a plugin whose dependency is missing is dropped from the run without an error.
 
 ## Rules
 

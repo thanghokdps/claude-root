@@ -95,8 +95,14 @@ Run `/agent-verify-turn` with each example message from Step 1 and one message t
 
 **Done when:** the right agent and tools fire for each example, the out-of-scope message is declined, and the eval cases exist.
 
+## Step 8 — Review and land
+
+A schema change goes through `/write-migration` (expand/contract, tested down path) before the slice that needs it. Then `/verify-done` for fresh evidence, `/review-checklist` on the feature's diff (fix what it finds), and `/finish-branch` to open the PR. With several features queued ("implement all"), finish this step for one feature before starting the next.
+
+**Done when:** `/verify-done` shows its evidence and `/review-checklist` has no open must-fix.
+
 ---
 
 ## Hand-offs
 
-Architecture change → `/agent-architect` · a layer on its own → its skill · security review of a new tool or data source → `/agent-security`.
+Architecture change → `/agent-architect` · a layer on its own → its skill · security review of a new tool or data source → `/agent-security` · impact of the diff on callers → `/blast-radius` · a failing test or turn → `/fix-bug`.

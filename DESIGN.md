@@ -23,7 +23,7 @@ graph LR
   ship[ship] --> core
   lead[lead] --> core
   guards[guards<br/>opt-in hooks] --> dev
-  agent[agent] --> progress
+  agent[agent] --> dev & ship
   core[core] --> progress
   plan[plan] --> progress
   review[review] --> progress
@@ -34,7 +34,7 @@ Why role plugins rather than one flat plugin:
 
 | Reason | Effect |
 |---|---|
-| Every installed skill's description is loaded into every session to route prompts | A frontend dev who installs only `agent` gets 10 skill descriptions instead of about 40, so routing gets fewer misfires |
+| Every installed skill's description is loaded into every session to route prompts | A role gets only the skills its work uses: `agent` brings the build loop it hands off to (`dev`, `ship` and through them `core`, `plan`, `review`) but not `lead`'s retro and skill-authoring skills or the opt-in `guards` hooks |
 | Dependencies are declared in `plugin.json` and checked by `scripts/lint-kit.py` | A skill can name another plugin's skill only when that plugin is a dependency, so nothing breaks when a role is installed on its own |
 | Each plugin has its own version | A change to `agent` ships without bumping the dev or review skills |
 | Hooks are opt-in (`guards`) | Guard rails that block commits never arrive with a plain skill install |
