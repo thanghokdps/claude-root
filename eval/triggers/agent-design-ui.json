@@ -12,6 +12,10 @@
     {
       "prompt": "the chat UI does not match the design, the message bubbles and tool cards look different",
       "top_k": 3
+    },
+    {
+      "prompt": "figma mcp bị limit vì tài khoản free, đọc design figma của chatbot qua chrome giúp tôi",
+      "top_k": 3
     }
   ],
   "negative": [

@@ -3,7 +3,7 @@ model: opus
 effort: high
 name: agent-design-ui
 description: Turns a design — a Figma link, exported frames or a screenshot — into the chat UI of a CopilotKit v2 web assistant. Inventories every chat state, maps design tokens onto the [data-copilotkit] theme, decides stock versus custom per element (theme, CopilotChat slots, custom slot component, headless), builds each state from a fixture, and compares screenshots against the design. Use when a design for the assistant's UI is given and the chat must look like it.
-when_to_use: Figma link for the chatbot, "làm UI chat theo design", "theo figma", "giống design", mockup or screenshot of the assistant, chat UI does not match the design, theme the CopilotKit chat, message bubbles or tool cards from a design
+when_to_use: Figma link for the chatbot, "làm UI chat theo design", "theo figma", "giống design", mockup or screenshot of the assistant, chat UI does not match the design, theme the CopilotKit chat, message bubbles or tool cards from a design, Figma MCP rate-limited or failing ("figma mcp bị limit", "đọc figma qua chrome")
 allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/compare-shots.py *)
 ---
 
@@ -20,7 +20,9 @@ Everything this skill decides goes in `docs/design/ui-map.md`; frames live in `d
 ## Step 0 — Get the design
 
 - **Figma link** → `fileKey` from `figma.com/(design|file)/<fileKey>/…`, `node-id=12-34` → `12:34`. Call the Figma MCP's `get_figma_data` with both; never fetch the whole file when a node is given. Export each frame as PNG with `download_figma_images` (frame `nodeId`, `pngScale: 2`) into `design/frames/`.
-- **No Figma tools in this session** → say so and ask for one: PNG exports per frame plus the variables/styles, or an MCP server (`figma-developer-mcp` with `FIGMA_API_KEY`, or Figma's Dev Mode MCP). Never design from a link you cannot read.
+- **Figma MCP missing or failing** (no tools, `403`, `429` / plan limit — the free plan caps API calls) → say which, then:
+  1. Browser tools that drive the user's Chrome available (Claude in Chrome) → read the file there, per `${CLAUDE_SKILL_DIR}/references/figma-in-browser.md`.
+  2. Otherwise ask for one: Claude in Chrome (`/chrome`), PNG exports per frame plus the variables/styles, or a working MCP (`figma-developer-mcp` with `FIGMA_API_KEY`, or Figma's Dev Mode MCP). Never design from a link you cannot read.
 - **Images only** → read them; any value you cannot see exactly (hex, font, size) is asked or marked *estimated* in the map.
 
 **Done when:** `design/frames/` holds one PNG per frame, named by state, and the source (node ids or file names) is in `ui-map.md`.
