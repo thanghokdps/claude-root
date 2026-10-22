@@ -2,59 +2,35 @@
 model: opus
 effort: high
 name: agent-design-ui
-description: Turns a design — a Figma link, exported frames or a screenshot — into the chat UI of a CopilotKit v2 web assistant. Inventories every chat state, maps design tokens onto the [data-copilotkit] theme, decides stock versus custom per element (theme, CopilotChat slots, custom slot component, headless), builds each state from a fixture, and compares screenshots against the design. Use when a design for the assistant's UI is given and the chat must look like it.
-when_to_use: Figma link for the chatbot, "làm UI chat theo design", "theo figma", "giống design", mockup or screenshot of the assistant, chat UI does not match the design, theme the CopilotKit chat, message bubbles or tool cards from a design, Figma MCP rate-limited or failing ("figma mcp bị limit", "đọc figma qua chrome")
-allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/compare-shots.py *)
+description: Styles the CopilotKit v2 chat of an AI assistant after its design — chat states (streaming, thinking, tool cards, confirm card, errors), the [data-copilotkit] theme, and stock slot versus custom component versus headless per chat element, with chat states replayed from recorded AG-UI streams. Extends /design-ui. Use when the design is for the assistant's chat.
+when_to_use: Figma or mockup of the chatbot, "làm UI chat theo design", chatbot UI does not match the design, theme the CopilotKit chat, message bubbles, tool cards or confirm card from a design, chatbot Figma with the MCP limited ("figma chatbot qua chrome")
 ---
 
 # agent-design-ui
 
 **Invoke:** `/agent-design-ui <figma link | design folder> [state]`
 
-The design decides how the chat looks; the ladder decides how little code it takes. Wiring (provider, headers, tool renderers) is `/agent-frontend`; the confirm card's contract is `/agent-hitl`. Read `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md` before Step 3.
+The generic part — getting the design, tokens, primitives, building from fixtures, the screenshot diff — is `/design-ui`; follow its steps in order and add the chat-specific work below at the step it names. Wiring (provider, headers, tool renderers) is `/agent-frontend`; the confirm card's contract is `/agent-hitl`. Read `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md` before the ladder and `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md` before building.
 
-Everything this skill decides goes in `docs/design/ui-map.md`; frames live in `design/frames/<state>.png`.
+Everything goes in the same `docs/design/ui-map.md`.
 
 ---
 
-## Step 0 — Get the design
+## At /design-ui Step 1 — Chat states
 
-- **Figma link** → `fileKey` from `figma.com/(design|file)/<fileKey>/…`, `node-id=12-34` → `12:34`. Call the Figma MCP's `get_figma_data` with both; never fetch the whole file when a node is given. Export each frame as PNG with `download_figma_images` (frame `nodeId`, `pngScale: 2`) into `design/frames/`.
-- **Figma MCP missing or failing** (no tools, `403`, `429` / plan limit — the free plan caps API calls) → say which, then:
-  1. Browser tools that drive the user's Chrome available (Claude in Chrome) → read the file there, per `${CLAUDE_SKILL_DIR}/references/figma-in-browser.md`.
-  2. Otherwise ask for one: Claude in Chrome (`/chrome`), PNG exports per frame plus the variables/styles, or a working MCP (`figma-developer-mcp` with `FIGMA_API_KEY`, or Figma's Dev Mode MCP). Never design from a link you cannot read.
-- **Images only** → read them; any value you cannot see exactly (hex, font, size) is asked or marked *estimated* in the map.
+A chat is mostly states the happy-path frame does not show. Add every row of `${CLAUDE_SKILL_DIR}/references/chat-states.md` to the inventory, with the same ask-as-options rule. Viewports come from the ADR (`Viewports:`, asked in `/agent-architect` Q2v).
 
-**Done when:** `design/frames/` holds one PNG per frame, named by state, and the source (node ids or file names) is in `ui-map.md`.
+**Done when:** every chat-state row has a frame or a recorded decision.
 
-## Step 1 — Inventory the states
+## At /design-ui Step 2 — Tokens → CopilotKit theme
 
-A chat is mostly states the happy-path frame does not show. Fill the table in `ui-map.md` from `${CLAUDE_SKILL_DIR}/references/chat-states.md`: frame present, or the user's decision (*use default*, *skip*, *design later*). Ask for missing states with `AskUserQuestion` — up to 4 independent states in one call, each with options *use default (Recommended)* / *skip* / *design later* and a description of what the default looks like; numbered options when the tool is absent. Never invent a look the designer did not draw.
+Map the tokens onto the v2 variables in `${CLAUDE_SKILL_DIR}/references/copilotkit-v2-ui.md`, written as `oklch()` in one stylesheet scoped under a wrapper class around `[data-copilotkit]`, reading from the app's tokens rather than repeating values.
 
-Record the supported viewports from the ADR (`Viewports:`) at the top of the map; if the ADR has none, ask it now as options (phone + desktop *(Recommended)* / desktop only / phone, tablet and desktop), stating the smallest width. Every frame being desktop-sized is not an answer.
+**Done when:** every colour and radius in the chat frames reaches the chat through a `[data-copilotkit]` variable or a slot class built on tokens.
 
-**Done when:** every row of `chat-states.md` has a frame or a recorded decision.
+## After /design-ui Step 3 — Decide per chat element (the ladder)
 
-## Step 2 — Tokens → theme
-
-Map design variables (colors, type, radius, spacing, shadow) onto the v2 tokens in `${CLAUDE_SKILL_DIR}/references/copilotkit-v2-ui.md`, written as `oklch()` in one stylesheet scoped under a wrapper class around `[data-copilotkit]`. Dark tokens only if the design has a dark frame. Fonts through the framework's font loader. Record `Figma name → CSS variable` in the map.
-
-**Done when:** every color and radius used in the frames maps to a token, or is listed as a one-off with the element that uses it.
-
-## Step 2b — Component inventory → primitives
-
-Screens are built from primitives, never from raw elements, and the set of primitives comes from the design — not from a fixed list. Follow `${CLAUDE_SKILL_DIR}/references/primitives.md`:
-
-1. **Reference library** — the UI library the repo already uses (detected), or one the user picks as options (`shadcn/ui` on Radix recommended for Next.js + Tailwind). Its component list, read from the installed package or current docs, is the vocabulary for what counts as a primitive.
-2. **Inventory** — every Figma component set and variant, plus elements clustered by look across frames, overlays and icon sizes included.
-3. **Classify** — library primitive (install or wrap the library's accessible component, themed with tokens) · design primitive (no library equivalent, no domain data, used on ≥ 2 frames or features) · feature component (domain-named, composed of the first two).
-4. **Record** the table in the map, then build every primitive in `components/ui/` before any screen, all variants and states shown on the `/__design` page. CopilotKit slots (Step 3 L1/L2) render these same primitives.
-
-**Done when:** every component set and clustered element has a row and a class, each library primitive exists in the installed version, and the states page shows every primitive in all its variants.
-
-## Step 3 — Decide per element (the ladder)
-
-For each element in the frames pick the lowest rung that reaches the design, and record `Element | Rung | Implementation | Why` in the map:
+CopilotKit slots render the same `components/ui/` primitives. For each chat element pick the lowest rung that reaches the design, and record `Element | Rung | Implementation | Why` in the map:
 
 | Rung | Use | Example |
 |------|-----|---------|
@@ -65,29 +41,19 @@ For each element in the frames pick the lowest rung that reaches the design, and
 
 An element outside the chat component (a page header above an embedded `CopilotChat`, which has no header slot) is rung **app** — plain markup, with that reason. Slot names are in `copilotkit-v2-ui.md`; confirm each exists in the installed version before using it. Backend tool calls render through `useRenderTool` (`/agent-frontend`), the confirm card through the HITL contract (`/agent-hitl`).
 
-**Done when:** every element has a rung and a reason, and each L2/L3 row says what the rung below could not do.
+**Done when:** every chat element has a rung and a reason, and each L2/L3 row says what the rung below could not do.
 
-## Step 4 — Build, every state without the model
+## At /design-ui Step 4 — Chat states without the model
 
-Build the components, then make each inventory state reachable without a live model: a recorded AG-UI stream replayed with `@copilotkit/aimock`, or a dev-only states page (`/__design?state=<name>`) fed by fixtures. Hand wiring to `/agent-frontend` and the confirm flow to `/agent-hitl` rather than redoing them here.
+Besides the states page, a chat state can be a recorded AG-UI stream replayed with `@copilotkit/aimock` (streaming, tool running, tool failed). Hand wiring to `/agent-frontend` and the confirm flow to `/agent-hitl` rather than redoing them here.
 
-Code shape follows `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: screens and feature components compose the Step 2b primitives, feature-only pieces live under the feature that owns them, fixtures and the states page in `src/dev/`, colours and sizes through tokens — no raw hex or `[Npx]` values in components, no raw `<button>`, `<input>` or `<textarea>` outside `components/ui/`.
+**Done when:** each chat state renders from its fixture or recorded stream, with /design-ui Step 4's checks passing.
 
-**Done when:** each state in the table renders from its fixture at every supported width, `grep -rnE '\[#[0-9a-fA-F]{3,8}\]' src` finds no raw colour in components, `grep -rnE '<(button|input|textarea)[ >]' src --include=*.tsx | grep -v components/ui/` finds nothing, and format, typecheck, lint and tests pass.
+## At /design-ui Step 5 — Compare
 
-## Step 5 — Compare with the design
+Same diff and narrow-width shots; the narrow checks also assert the composer stays visible and the history drawer opens and closes. Fix each FAIL at the lowest rung.
 
-Per state, with Playwright (MCP or `@playwright/test`): viewport = the frame's size in px, `deviceScaleFactor: 2` to match `pngScale: 2`, animations off, fonts loaded, screenshot the chat region to `design/actual/<state>.png`. Then:
-
-```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/compare-shots.py design/frames design/actual design/diff
-```
-
-It writes a side-by-side + diff image per state and a PASS/FAIL table (default 3% of pixels; font rendering alone stays under it). Fix each FAIL at the lowest rung, re-shoot, re-run. Show the table and the worst side-by-side images in the reply.
-
-Then the widths no frame covers: shoot every state at the smallest supported width and one middle width (e.g. 390 and 768) to `design/actual/<state>@<width>.png`, and assert per shot `document.documentElement.scrollWidth <= window.innerWidth`, the composer visible, and the drawer opening and closing. There is no frame to diff these against — check them against the Narrow width row, and show the narrow shots in the reply.
-
-**Done when:** every state passes, or its remaining difference is listed in the map and accepted by the user; and every state at each supported narrow width has no horizontal overflow and a visible composer (unless the map marks narrow width *skip* by the user's decision).
+**Done when:** /design-ui Step 5 is done for every chat state.
 
 ---
 

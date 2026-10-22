@@ -28,7 +28,7 @@ evals/                      # agent evals (agent-evals), never run by `test`
 
 Unit and integration tests follow the repo's existing layout (the one most existing tests use; never add a second). A repo with no tests asks the user — Q-T in the architect interview — between `__tests__/` beside the code and a `tests/` tree outside `src/` mirroring it, and sets the runner's `include` to match. (`testing.md` from core, if installed, carries the same rule.)
 
-- A file's folder says who owns it. The design's primitives go in `components/ui/` from the start, before the screens that use them: whatever the design's component set contains, classified against the repo's UI library (`skills/agent-design-ui/references/primitives.md`) — a library primitive is installed or wrapped, never hand-rebuilt. Any other shared code waits until a second feature needs it.
+- A file's folder says who owns it. The design's primitives go in `components/ui/` from the start, before the screens that use them: whatever the design's component set contains, classified against the repo's UI library (`/design-ui` Step 3) — a library primitive is installed or wrapped, never hand-rebuilt. Any other shared code waits until a second feature needs it.
 - `app/` files hold no business logic and no SQL. Route handlers validate input with zod and call `server/<aggregate>/service.ts`.
 - One repository per aggregate (conversations, messages, settings …). A repository that serves several aggregates is a split waiting to happen.
 

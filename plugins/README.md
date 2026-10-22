@@ -41,6 +41,7 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [grill](plan/skills/grill/SKILL.md) | `plan` | `/grill [target]` | Adversarial one-question-at-a-time interview that hardens a design | normal/high |
 | [writing-plans](plan/skills/writing-plans/SKILL.md) | `plan` | `/writing-plans` | Approved design → wave-organized `PLAN.md` | normal/high |
 | [domain-model](plan/skills/domain-model/SKILL.md) | `plan` | `/domain-model` | Ubiquitous language → `.claude/docs/glossary.md` + ADRs | normal/high |
+| [design-ui](dev/skills/design-ui/SKILL.md) | `dev` | `/design-ui <figma\|folder>` | Design → UI: states, tokens, primitives from the UI library, screenshot diff incl. narrow widths | normal |
 | [tdd](dev/skills/tdd/SKILL.md) | `dev` | `/tdd` | Red → green loop, one seam and one slice per cycle | all |
 | [codebase-design](plan/skills/codebase-design/SKILL.md) | `plan` | `/codebase-design` | Deep-module vocabulary — depth, seam, leverage, locality | reference |
 | [writing-skills](lead/skills/writing-skills/SKILL.md) | `lead` | `/writing-skills` | How to author and prune skills in this harness | reference |
@@ -57,7 +58,7 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [figma-to-screen](core/stacks/react-native/skills/figma-to-screen/SKILL.md) | `core` stacks/react-native (copied by init.sh) | `/figma-to-screen` | Figma frame → screen implementation | normal |
 | [agent-architect](agent/skills/agent-architect/SKILL.md) | `agent` | `/agent-architect [greenfield\|audit]` | AI assistant architecture: one-question interview → ADR → scaffold, or stock-vs-custom audit | normal/high |
 | [agent-feature](agent/skills/agent-feature/SKILL.md) | `agent` | `/agent-feature <capability>` | Feature in an existing assistant: ADR fit check, reuse inventory, reuse/extend/new per slice, duplicate check | normal |
-| [agent-design-ui](agent/skills/agent-design-ui/SKILL.md) | `agent` | `/agent-design-ui <figma\|folder>` | Design → CopilotKit v2 chat: states, tokens → theme, ladder per element, screenshot diff | normal |
+| [agent-design-ui](agent/skills/agent-design-ui/SKILL.md) | `agent` | `/agent-design-ui <figma\|folder>` | `/design-ui` + chat states, CopilotKit theme, ladder per chat element | normal |
 | [agent-tool](agent/skills/agent-tool/SKILL.md) | `agent` | `/agent-tool <tool>` | Agent tool: trusted identity, read vs mutation, retry/audit, short description, test | normal |
 | [agent-hitl](agent/skills/agent-hitl/SKILL.md) | `agent` | `/agent-hitl <write>` | Mutation behind interrupt: target resolution, pending action, confirm/cancel/replay, client render | normal/high |
 | [agent-graph](agent/skills/agent-graph/SKILL.md) | `agent` | `/agent-graph <scope>` | Agents, router, handoff, boundary rules, prompts, middleware order | normal |

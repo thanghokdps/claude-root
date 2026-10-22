@@ -1,6 +1,6 @@
 # Chat states to inventory
 
-Every row needs a frame or a recorded decision. The ones in **bold** are the ones designs most often leave out — and the ones users see when something goes wrong.
+Added to `/design-ui`'s screen states (empty, loading, error, long content, overlays, narrow width, dark). Every row needs a frame or a recorded decision. The ones in **bold** are the ones designs most often leave out — and the ones users see when something goes wrong.
 
 | State | What it shows | Usually built with |
 |-------|---------------|--------------------|

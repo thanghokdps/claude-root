@@ -1,12 +1,12 @@
 {
   "name": "dev",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "author": {
     "name": "Thang Ho Quang"
   },
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
-  "description": "Build and fix: coordinator lane router, feature, fix-bug red loop, tdd, checkpoint gates.",
+  "description": "Build and fix: coordinator lane router, feature, fix-bug red loop, tdd, design-ui from Figma, checkpoint gates.",
   "keywords": [
     "workflow",
     "tdd",
