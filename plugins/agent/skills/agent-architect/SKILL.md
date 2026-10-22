@@ -46,7 +46,7 @@ Walk `${CLAUDE_SKILL_DIR}/references/interview.md` in order: the problem (P1–P
 - Default recommendation is shape **A** (createAgent + middleware + CopilotRuntime v2) unless the host is edge/Workers or a contract the runtime cannot express forces **B**; use the decision rule in `shapes.md` for single agent vs supervisor.
 - Every non-L0 choice names its rung and its reason (`${CLAUDE_SKILL_DIR}/references/stock-map.md`).
 
-**Done when:** P1–P4, Q-D, Q-L, Q1–Q9 and Q2v (web) are answered, defaulted to the recommendation, or explicitly deferred with a risk.
+**Done when:** P1–P4, Q-D, Q-L, Q-T (no tests yet), Q1–Q9 and Q2v (web) are answered, defaulted to the recommendation, or explicitly deferred with a risk.
 
 ## Step 2b — Grill the card
 
@@ -71,7 +71,7 @@ Offer to record the keeps and the chosen direction as an ADR.
 
 Build the smallest working slice of the chosen shape, test first where practical:
 
-0. Skeleton of the chosen layout (`layouts.md` L1 or L2) with the app tree from `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: `git init`, package manager, TypeScript strict, test runner, ESLint, Prettier + `format:check`, path alias, `styles/tokens.css`, `.env.example`. Resolve every version at scaffold time and pin it exactly.
+0. Skeleton of the chosen layout (`layouts.md` L1 or L2) with the app tree from `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: `git init`, package manager, TypeScript strict, test runner with its `include` set to the Q-T test location, ESLint, Prettier + `format:check`, path alias, `styles/tokens.css`, `.env.example`. Resolve every version at scaffold time and pin it exactly.
 1. Env schema that fails at boot on missing or inconsistent config. If the app stores data and there is no ERD (or the user asks for one from the design), write `docs/erd.md` first per `${CLAUDE_SKILL_DIR}/references/data-model.md`, then the DB schema from it.
 2. Identity: verify the token at the edge → server-injected claims → a trusted-context reader for tools; token in request scope only.
 3. One agent registered under one agent id (backend registry, `langgraph.json` if used, client `agent` prop), its prompt opening with P1.

@@ -29,6 +29,7 @@ The assistant is built from these answers: every task in P2 must end up owned by
 | 9 | **Evals** — which behaviours are must-pass, which judge model, where does the CI gate sit? | Eval tree separate from unit tests; baseline diff gate |
 | D | **Design** — is there a Figma file, mockup or screenshot of the chat? Ask after Q2 | Yes → link recorded in the ADR; after the scaffold, `/agent-design-ui` builds the chat from it. No → stock `CopilotChat` with theme tokens |
 | L | **Repo layout** — one app or a monorepo? Ask after Q2 (clients) | `layouts.md`: L1 single app · L2 pnpm + Turborepo. An existing repo's layout is detected, not asked |
+| T | **Test location** — `__tests__/` next to the code, or a separate `tests/` folder outside `src/` mirroring it? Ask after Q-L, only when the repo has no tests yet | Runner `include`/`testMatch`, where every skill writes tests. Existing tests → detect their layout and follow it, never ask |
 
 ## Shape of each question
 
@@ -56,7 +57,7 @@ Users: · Problem: (P1)
 Systems (P3): <system → read/write → owner> · Out of scope (P4): · Good answer means:
 
 ## Architecture card
-Layout: L1 single app | L2 monorepo · Shape: A | B | hybrid · Host: · Transport: · Clients: · Viewports: <smallest width; phone/tablet/desktop>
+Layout: L1 single app | L2 monorepo · Tests: `__tests__/` | `tests/` · Shape: A | B | hybrid · Host: · Transport: · Clients: · Viewports: <smallest width; phone/tablet/desktop>
 Agents: <id → purpose → tool count>
 Writes/HITL: · Identity: · Checkpoints: · Memory:
 Models: <primary → fallback; router/summary model>

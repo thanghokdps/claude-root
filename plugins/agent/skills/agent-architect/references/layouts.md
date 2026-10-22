@@ -17,7 +17,7 @@ Both carry the same rules: one agent id defined once, exact version pins resolve
       identity.ts         # verify token → trusted context
       models.ts           # model factory + fallback + cheap router model
       agents/<name>.ts    # createAgent / StateGraph
-      tools/<tool>.ts     # one file per tool + <tool>.test.ts
+      tools/<tool>.ts     # one file per tool; its test at the chosen test location (Q-T)
   evals/                  # agent evals, separate from unit tests
 ```
 

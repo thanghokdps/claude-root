@@ -16,13 +16,17 @@ src/
     components/             # UI owned by this feature only
     hooks/  api.ts          # client hooks and the feature's fetchers
   components/ui/            # shared primitives used by ≥ 2 features (button, dialog, drawer, scroll area)
-  server/<aggregate>/       # one per aggregate: repository.ts, service.ts, schema (zod), tests beside them
+  server/<aggregate>/       # one per aggregate: repository.ts, service.ts, schema (zod)
   db/                       # drizzle/prisma schema, client, migrations, seed
   agent/                    # per layouts.md
   lib/                      # framework-free helpers (format, ids); no React, no db
   styles/                   # tokens.css (design tokens) + the CopilotKit theme
   dev/                      # fixtures, the /__design states page, mocks — never imported by app code
+e2e/                        # Playwright specs + recorded AG-UI streams
+evals/                      # agent evals (agent-evals), never run by `test`
 ```
+
+Unit and integration tests go where the repo's convention puts them; a new repo asks the user (`__tests__/` beside the code, or a `tests/` tree outside `src/` mirroring it) — see the testing rule § Where tests live, asked as Q-T in the architect interview.
 
 - A file's folder says who owns it. Put code in `components/ui/` or `lib/` only when a second feature needs it — not in advance.
 - `app/` files hold no business logic and no SQL. Route handlers validate input with zod and call `server/<aggregate>/service.ts`.

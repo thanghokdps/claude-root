@@ -69,11 +69,11 @@ it('test auth middleware')
 
 ## File conventions
 
-- Test file mirrors source file: `user-service.ts` → `user-service.test.ts`
-- Co-locate tests next to source: `src/users/user-service.test.ts`
-- Integration test files: `*.integration.test.ts` or `__tests__/integration/`
-- E2E test files: `*.e2e.test.ts` or `e2e/` directory
-- Shared test utilities: `src/__tests__/helpers/` or `src/test-utils/`
+- Test file mirrors source file name: `user-service.ts` → `user-service.test.ts`
+- Location follows the repo's convention (`testing.md` § Where tests live): `src/users/__tests__/user-service.test.ts` or `tests/users/user-service.test.ts`; set `testMatch`/`roots` to match it
+- Integration test files: `*.integration.test.ts` in the same layout
+- E2E test files: `e2e/` directory
+- Shared test utilities: one place — `tests/helpers/` or `src/test-utils/`
 
 ---
 

@@ -113,6 +113,7 @@ All 6 files must use real file paths, real commands, real names — no boilerpla
 - External event handlers / webhooks
 
 ### `docs/test-strategy.md`
+- **Test location** — detected, not assumed: count where existing tests live (`git ls-files | grep -cE '/__tests__/'`, `grep -cE '^tests?/'`, and `*.test.*`/`test_*.py` outside both) and read the runner's `include`/`testMatch`. Record the dominant layout as the rule for new tests. No tests yet → ask the user to pick `__tests__/` next to the code or a separate `tests/` folder outside `src/` (options per `rules/testing.md` § Where tests live) and record the answer.
 - Test folder structure
 - Test commands (fast subset, full suite, pattern filter)
 - Test framework + markers/tags
