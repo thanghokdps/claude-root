@@ -2,13 +2,13 @@
 model: opus
 effort: high
 name: agent-evals
-description: Builds the test and eval layers of an LLM agent — scripted fake chat models for unit tests, LLM-judged eval suites with baselines and a CI gate, and a model-comparison matrix of quality, cost, latency and refusals. Use when adding tests or evals to an agent, an eval suite passes without running anything, or choosing or changing the model or provider an agent uses.
-when_to_use: write evals for the agent, eval suite, LLM judge, baseline regression, CI eval gate, scripted fake model, "test agent không cần gọi model thật", compare models, switch to a cheaper model, model refuses or behaves differently after a model change
+description: Builds the test, eval and observability layers of an LLM agent — scripted fake chat models for unit tests, an eval dataset, LLM-judged eval suites with baselines and a CI gate, tracing wired into an existing agent, and a model-comparison matrix of quality, cost, latency and refusals. Use when adding tests, an eval dataset or tracing to an agent, an eval suite passes without running anything, or choosing or changing the model or provider an agent uses.
+when_to_use: write evals for the agent, eval dataset, golden cases, evaluate the agent prompt, LLM judge, baseline regression, CI eval gate, scripted fake model, "test agent không cần gọi model thật", set up Langfuse or LangSmith tracing, observability for the agent, compare models, switch to a cheaper model, model refuses or behaves differently after a model change
 ---
 
 # agent-evals
 
-**Invoke:** `/agent-evals [unit | suite | compare-models] <behaviour or candidate models>`
+**Invoke:** `/agent-evals [unit | dataset | suite | observability | compare-models] <behaviour or candidate models>`
 
 Unit tests prove code paths with no model. Evals prove behaviour with a real model. Keep them in separate trees and separate commands; never let evals run inside `test`.
 
@@ -22,6 +22,15 @@ Unit tests prove code paths with no model. Evals prove behaviour with a real mod
 
 **Done when:** the new behaviour has a red-then-green unit test, and the suite runs in the repo's normal test command.
 
+## Mode dataset — the cases every suite runs on
+
+- One file per behaviour in `evals/datasets/<behaviour>.jsonl`; each line `{ id, input, context, expected: { agent, tool, args, outcome }, tags }`. `context` is the trusted identity and page state the turn would have.
+- Sources, in order: the ADR's example messages, bugs already fixed (one case each, tagged `regression`), masked production traces, then synthetic variants (paraphrase, other language, missing field) generated from those and reviewed by a person.
+- Cover per tool: happy path, ambiguous target, missing argument, out-of-scope request, prompt injection inside a tool result; per write: confirm and cancel.
+- No raw PII or secrets; production-derived cases pass the privacy scan before they are committed.
+
+**Done when:** every tool and every routing rule has at least one case, and every fixed bug has a `regression` case.
+
 ## Mode suite — real model, judged
 
 - Layout: an eval tree beside `test/`, its own config and script; credentials read outside the production env.
@@ -32,6 +41,17 @@ Unit tests prove code paths with no model. Evals prove behaviour with a real mod
 - CI gate: path-filtered PRs plus a schedule; fail on missing keys, zero executed, or any case going passed → failed against the last good baseline; privacy-scan the report before publishing it.
 
 **Done when:** the suite runs locally, the gate fails on a deliberately broken case, and the report is published only after the privacy scan.
+
+## Mode observability — tracing in an existing agent
+
+Follow `${CLAUDE_PLUGIN_ROOT}/rules/agent-tracing-privacy.md`. A new assistant gets this from `/agent-architect`.
+
+1. Add the switch (`TRACING_PROVIDER=none|langfuse|langsmith`) and the provider's keys to `.env.example` as names only; `none` in tests.
+2. Build the callback handler per turn with thread, run and agent ids; mask message text, tool args and results by default; HMAC the user id.
+3. Record per turn: model, answering provider, tokens, latency to first token, tool calls and status. Flush in `finally`; an exporter error never fails the turn.
+4. Tag traces with the prompt version, so a bad answer maps back to a prompt and a dataset case.
+
+**Done when:** one real turn shows up in the provider with masked content and the fields above, and the same turn with `TRACING_PROVIDER=none` still answers.
 
 ## Mode compare-models — before changing a model
 

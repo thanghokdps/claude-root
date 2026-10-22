@@ -18,6 +18,12 @@ return { messages: [aiResponse] };                    // delta — correct
 return { messages: [...state.messages, aiResponse] }; // duplicates history
 ```
 
+## Long-term memory
+
+- Conversation memory is the checkpointer (per `thread_id`); memory across threads goes in a LangGraph Store, never in graph state or the system prompt.
+- Namespace every Store key by the user id from trusted context (`["memories", userId, kind]`), never by an id the model or client supplies.
+- Writes to memory are tool calls the user can see and delete; recalled memory is untrusted input to the prompt, like a tool result.
+
 ## Graph lifecycle
 
 - Compile once at module level with its dependencies; invoke many times. Never compile or build a checkpointer per request.

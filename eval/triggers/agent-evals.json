@@ -12,6 +12,10 @@
     {
       "prompt": "the eval suite passes without running anything, add a baseline regression check",
       "top_k": 3
+    },
+    {
+      "prompt": "build an eval dataset for the agent prompt and set up Langfuse tracing",
+      "top_k": 3
     }
   ],
   "negative": [
