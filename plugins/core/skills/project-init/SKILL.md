@@ -27,6 +27,12 @@ CLAUDE.md         ← project-specific coordinator config
 
 ---
 
+## Step 0 — Empty folder guard
+
+If the folder has no package manifest (`package.json`, `pyproject.toml`, `requirements.txt`, `go.mod`, `Cargo.toml`, `pom.xml`, `build.gradle`) and no source files, stop without writing anything and reply:
+
+> Nothing to scan yet. Design and scaffold first: `/brainstorming <idea>` → `/writing-plans` (wave 1 = scaffold), or `/agent-architect greenfield` for an AI assistant (agent, if installed). Run `/project-init` after the first commit.
+
 ## Step 1 — Run init.sh (automation layer)
 
 Locate and run the harness bootstrap script. It handles everything that can be automated without reading code.

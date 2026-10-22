@@ -111,6 +111,37 @@ After install, the `headroom-compress.sh` hook triggers automatically when outpu
 
 Run **once** per project to create a dedicated `.claude/` workspace.
 
+`/project-init` reads manifests and code. In an empty folder there is nothing to read, so it stops and points you to the first path below. Start from the row that matches your folder:
+
+| Your folder | Path |
+|---|---|
+| Existing repo with code | Method A below |
+| Empty folder, regular app | Starting from an empty folder → general app |
+| Empty folder, AI assistant (CopilotKit + LangGraph) | Starting from an empty folder → AI assistant |
+
+### Starting from an empty folder
+
+```bash
+mkdir my-app && cd my-app
+git init
+claude
+```
+
+**General app.** Design first, then build the skeleton, then bootstrap:
+
+1. `/brainstorming <idea>` asks one question at a time, compares approaches including the stack, and writes `specs/<slug>/design.md`.
+2. `/writing-plans` turns the approved design into `specs/<slug>/PLAN.md`. Make wave 1 the scaffold: package manifest, language config, test runner, lint, `.gitignore`, `.env.example`.
+3. Build wave 1 (just ask, or `/tdd` for the first slice), then check typecheck, lint and tests pass and commit.
+4. `/project-init` now detects the stack and writes `.claude/` from real commands and paths.
+5. Continue with the daily loop: describe the next feature, `/review-checklist`, `/finish-branch`.
+
+**AI assistant (CopilotKit / AG-UI / LangGraph).** Use `/agent-architect greenfield` instead of steps 1–3:
+
+1. Preflight: checks Node, the package manager, a model key (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env`; see `.env.sample`) and git.
+2. Interview, one question at a time: users, clients (web/mobile/chat), tasks, systems, writes, observability. It writes an ADR to `docs/adr/`.
+3. Scaffold on request: pinned versions, env schema, identity, one agent, one read tool, a tracing switch and the first eval cases. It is done when one real turn streams end to end.
+4. `/project-init`, then add capabilities with `/agent-feature`. The chat UI comes from `/agent-frontend` or `/agent-design-ui <figma>`.
+
 ### Method A — Via Claude Code (recommended)
 
 ```bash

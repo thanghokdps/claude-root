@@ -13,10 +13,19 @@ A portable governance framework for [Claude Code](https://claude.ai/code). It in
 git clone git@github.com:thanghokdps/claude-root.git <any-dir>/harness
 bash <any-dir>/harness/scripts/install.sh        # no env vars needed; see .env.sample for optional ones
 
-# 2. Bootstrap each project once
+# 2a. Existing repo — bootstrap once
 cd my-project && claude
 /project-init                                       # scans the repo, writes .claude/ docs, rules, memory
+
+# 2b. Empty folder — design and scaffold first, then bootstrap
+mkdir my-app && cd my-app && git init && claude
+/brainstorming <idea>                               # → specs/<slug>/design.md, incl. the stack
+/writing-plans                                      # → PLAN.md; wave 1 = scaffold (manifest, tests, lint)
+# build wave 1 (just ask, or /tdd), commit, then:
+/project-init                                       # now there is a stack and code to scan
 ```
+
+Building an AI assistant from scratch? Replace `/brainstorming` + `/writing-plans` with `/agent-architect greenfield`. It checks the machine (Node, package manager, model key, git), runs an architecture interview, records an ADR and scaffolds the first working turn. Then run `/project-init` and add features with `/agent-feature`. Details are in [`docs/USAGE.md` §4](docs/USAGE.md#4-step-2--bootstrap-a-new-project).
 
 Or without cloning, inside Claude Code: `/plugin marketplace add thanghokdps/claude-root` then `/plugin install harness@harness`.
 

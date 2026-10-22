@@ -56,7 +56,10 @@ Always-loaded context is the budget. Anything that is not needed on every task g
 ```mermaid
 flowchart TD
   A[git clone the kit anywhere] --> B[bash scripts/install.sh]
-  B --> C[cd your-project; claude; /project-init]
+  B --> X{project?}
+  X -->|existing repo| C[cd your-project; claude; /project-init]
+  X -->|empty folder| Y[git init; /brainstorming → /writing-plans → scaffold<br/>or /agent-architect greenfield]
+  Y --> C
   C --> D{prompt}
   D -->|tiny| E[just do it]
   D -->|normal| F[plan mode → build → /verify-done]
