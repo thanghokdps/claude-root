@@ -11,3 +11,4 @@ specs/
 plugins/*/evals/results/
 
 .playwright-mcp
+__pycache__/

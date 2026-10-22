@@ -8,7 +8,12 @@ How the kit is packaged, what each layer does, and how the AI-assistant skills (
 
 ## 1. Packaging: one marketplace, role plugins, one bundle
 
-From the user's side the kit is **one install**: `harness`. Inside, the skills are grouped into role plugins. That keeps every role's skills in one place, and a teammate who only needs one role can install just that plugin.
+From the user's side it is **one install per need**:
+
+- Building an AI assistant: `/plugin install agent@harness`. Claude Code installs the plugins it depends on (`progress`) automatically, and every AI-assistant layer below (architecture, tools, HITL, graph, CopilotKit frontend, evals, tracing, security) is inside `agent`. Its skills never require another role plugin; where one helps, they name it "(dev, if installed)".
+- Everything: `/plugin install harness@harness`, a bundle that depends on all nine role plugins.
+
+What `agent` alone does not bring: the general dev loop (`/fix-bug`, `/review-checklist`, `/verify-done`, `/finish-branch`), `/project-init`, and the global rules and `global/CLAUDE.md` that `scripts/install.sh` copies to `~/.claude/`.
 
 ```mermaid
 graph LR
