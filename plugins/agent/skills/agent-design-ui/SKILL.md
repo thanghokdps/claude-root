@@ -43,16 +43,14 @@ Map design variables (colors, type, radius, spacing, shadow) onto the v2 tokens 
 
 ## Step 2b — Component inventory → primitives
 
-Screens are built from primitives, never from raw elements. Before any screen, list the design's reusable components and their variants:
+Screens are built from primitives, never from raw elements, and the set of primitives comes from the design — not from a fixed list. Follow `${CLAUDE_SKILL_DIR}/references/primitives.md`:
 
-- Source: the Figma component sets and variants (`get_figma_data` components / componentSets; in Chrome, the Assets panel), else cluster the frames by look — same height, radius and fill is the same component.
-- Record in the map: `Primitive | Variants | Sizes | States | Frames that use it`. The usual set: `Button` (primary / secondary / ghost / link × sm / md / lg), `IconButton`, `Icon` (one size scale, e.g. 16 / 20 / 24), `Input`, `TextArea`, `Card`, `Chip`, `Avatar`, `Dialog`, `Menu` — keep only what the frames use, add what they show that is not on the list.
-- Near-miss values in the frames (a 52px and a 54px button) snap to one variant; record the snap, do not build both.
-- Ask through `AskUserQuestion` only where a fork is real (e.g. two visibly different primary buttons: one variant or two).
+1. **Reference library** — the UI library the repo already uses (detected), or one the user picks as options (`shadcn/ui` on Radix recommended for Next.js + Tailwind). Its component list, read from the installed package or current docs, is the vocabulary for what counts as a primitive.
+2. **Inventory** — every Figma component set and variant, plus elements clustered by look across frames, overlays and icon sizes included.
+3. **Classify** — library primitive (install or wrap the library's accessible component, themed with tokens) · design primitive (no library equivalent, no domain data, used on ≥ 2 frames or features) · feature component (domain-named, composed of the first two).
+4. **Record** the table in the map, then build every primitive in `components/ui/` before any screen, all variants and states shown on the `/__design` page. CopilotKit slots (Step 3 L1/L2) render these same primitives.
 
-Build them in `components/ui/` first, one file each, variants as props over tokens, every variant and state shown on the `/__design` page. CopilotKit slots (Step 3 L1/L2) render these primitives too, so chat and app screens share one set.
-
-**Done when:** the primitives table is in the map, every primitive renders all its variants on the states page, and icon sizes come only from the scale.
+**Done when:** every component set and clustered element has a row and a class, each library primitive exists in the installed version, and the states page shows every primitive in all its variants.
 
 ## Step 3 — Decide per element (the ladder)
 
