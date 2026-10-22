@@ -1,6 +1,6 @@
 # Claude Code — Global Harness (thang-kit)
 
-Source of truth: `~/Downloads/Claude` (marketplace `thang-kit`: role plugins `thang-<role>` under `plugins/` + `scripts/install.sh` for this file and `rules/`). Edit the kit, not `~/.claude`.
+Source of truth: the kit checkout (`claude plugin marketplace list` shows its path; marketplace `thang-kit`: role plugins `thang-<role>` under `plugins/` + `scripts/install.sh` for this file and `rules/`). Edit the kit, not `~/.claude`.
 
 ## Principles (every task)
 1. **Think first** — state the interpretation; one clarifying question beats a wrong build.
@@ -44,4 +44,4 @@ Chosen per pair on content, not by plugin. When both are available:
 
 ## Gotchas
 - `specs/` is gitignored. `settings.local.json` overrides `settings.json`.
-- Personal playbook: `~/Downloads/Claude/PLAYBOOK.md`.
+- Personal playbook: `PLAYBOOK.md` in the kit checkout.

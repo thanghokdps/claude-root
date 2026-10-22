@@ -4,6 +4,38 @@ A portable governance framework for [Claude Code](https://claude.ai/code). It in
 
 **Source library, not an app.** Changes here propagate to `~/.claude/` (global) and to individual projects via `/project-init`.
 
+**Design:** [`DESIGN.md`](DESIGN.md) — why role plugins, the layers, and where each AI-assistant concern lives (CopilotKit, tools, memory, evals, observability).
+
+## Quickstart
+
+```bash
+# 1. Install once — clone anywhere; install.sh resolves its own location
+git clone git@github.com:thanghokdps/claude-root.git <any-dir>/claude-kit
+bash <any-dir>/claude-kit/scripts/install.sh        # no env vars needed; see .env.sample for optional ones
+
+# 2. Bootstrap each project once
+cd my-project && claude
+/project-init                                       # scans the repo, writes .claude/ docs, rules, memory
+```
+
+Or without cloning, inside Claude Code: `/plugin marketplace add thanghokdps/claude-root` then `/plugin install thang-kit@thang-kit`.
+
+**3. What to run next — by task**
+
+| I want to… | Run |
+|---|---|
+| Build a feature / fix a bug | just describe it (auto-coordinator) · `/fix-bug <symptom>` |
+| Design before coding | `/brainstorming` → `/writing-plans` |
+| Review before a PR | `/review-checklist` → `/code-review` |
+| Finish the branch | `/verify-done` → `/finish-branch` |
+| Start an AI assistant (CopilotKit + LangGraph) | `/agent-architect greenfield` |
+| Add a feature / tool / confirm step to an assistant | `/agent-feature` · `/agent-tool` · `/agent-hitl` |
+| Wire or theme the chat UI | `/agent-frontend` · `/agent-design-ui <figma>` |
+| Eval dataset, prompt evals, tracing | `/agent-evals dataset` · `suite` · `observability` |
+| End the session | `/compact` (handoff) · `/compound` (learnings) |
+
+Full skill list: [`plugins/README.md`](plugins/README.md). Step-by-step guide: [`docs/USAGE.md`](docs/USAGE.md).
+
 ---
 
 ## Table of Contents
@@ -62,8 +94,9 @@ prompt
 ## Repository structure
 
 ```
-Downloads/Claude/                    ← this repo (the source library)
+<kit-dir>/                           ← this repo (the source library)
 ├── CLAUDE.md                        ← project instructions for Claude Code
+├── DESIGN.md                        ← packaging, layers, AI-assistant design
 ├── HARNESS.md                       ← philosophy / architecture reference
 ├── PLAYBOOK.md                      ← playbook reference
 ├── README.md                        ← this file
@@ -160,7 +193,7 @@ Downloads/Claude/                    ← this repo (the source library)
 ### One-time global install
 
 ```bash
-bash ~/Downloads/Claude/scripts/install.sh
+bash <kit-dir>/scripts/install.sh     # <kit-dir> = wherever you cloned the kit
 ```
 
 Installs `global/CLAUDE.md` and `plugins/thang-core/rules/` into `~/.claude/`, registers this directory as the local marketplace `thang-kit`, and installs every role plugin plus the `thang-kit` bundle (loaded in place — kit edits are live in new sessions). It backs up what it replaces and migrates an old copy-based or 2.x single-plugin install.
@@ -186,7 +219,7 @@ Headroom automatically compresses large tool outputs to reduce token usage.
 **Requires:** Python 3.12 (`brew install python@3.12`) and the `claude` CLI.
 
 ```bash
-bash ~/.claude-harness/scripts/setup-headroom.sh
+bash <kit-dir>/scripts/setup-headroom.sh
 ```
 
 What it does:
@@ -206,7 +239,6 @@ Run once per project to generate a tailored `.claude/` workspace.
 
 ```bash
 cd my-project
-cp ~/.claude-harness/CLAUDE_LEGACY.md ./CLAUDE.md
 # Open Claude Code, then type:
 /project-init
 ```
@@ -218,10 +250,10 @@ The `/project-init` skill scans the codebase, then writes every file in `.claude
 ```bash
 cd my-project
 # Lean bootstrap (shared rules/skills come from installed plugins):
-bash /path/to/Claude/plugins/thang-core/scripts/init.sh
+bash <kit-dir>/plugins/thang-core/scripts/init.sh
 
 # Standalone bootstrap (copies rules, skills, commands, agents, hooks into .claude/):
-STANDALONE=1 bash /path/to/Claude/plugins/thang-core/scripts/init.sh /path/to/my-project
+STANDALONE=1 bash <kit-dir>/plugins/thang-core/scripts/init.sh /path/to/my-project
 ```
 
 ### What `init.sh` detects

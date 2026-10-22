@@ -81,17 +81,14 @@ team project: next session
 ## Installing and updating
 
 ```bash
-# Install (copies harness, sets HARNESS_DIR in .zshrc, syncs ~/.claude/)
-bash ~/Downloads/Claude/scripts/install.sh
+# Install: clone the kit anywhere; install.sh resolves its own location (no arguments, no env vars)
+bash <kit-dir>/scripts/install.sh
 
-# Custom install location
-bash ~/Downloads/Claude/scripts/install.sh ~/my-tools/claude-harness
-
-# After install: bootstrap any project with /project-init or shell script
-cd my-project && bash plugins/thang-core/scripts/init.sh
+# After install: bootstrap any project with /project-init or the shell script
+cd my-project && bash <kit-dir>/plugins/thang-core/scripts/init.sh
 
 # Update an existing project after harness changes
-bash plugins/thang-core/scripts/init.sh /path/to/project
+bash <kit-dir>/plugins/thang-core/scripts/init.sh /path/to/project
 # (will warn before overwriting existing .claude/settings.json)
 
 # Add a new stack rule

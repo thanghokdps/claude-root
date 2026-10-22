@@ -67,55 +67,38 @@ user prompt
 
 ## 3. Step 1 — Install the harness (once)
 
-### Download and run install
+### Clone and run install
 
 ```bash
-# Clone or download the repo to ~/Downloads/Claude
-# (you can rename or place it elsewhere)
-
-bash ~/Downloads/Claude/scripts/install.sh
+# Clone anywhere — install.sh finds the kit from its own location, so no fixed path is assumed
+git clone git@github.com:thanghokdps/claude-root.git <kit-dir>
+bash <kit-dir>/scripts/install.sh
 ```
 
-**The script will ask if it already exists.** Type `y` to overwrite, `n` to keep existing.
+No `.env` is needed: the installer uses your logged-in `claude` CLI. `.env.sample` lists the optional variables (eval judge, model keys and tracing for agent projects, Figma).
 
-Default install location is `~/.claude-harness`. To install elsewhere:
+The installer is idempotent and takes no arguments. It:
 
-```bash
-bash ~/Downloads/Claude/scripts/install.sh ~/my-tools/claude-harness
+1. Backs up `~/.claude/CLAUDE.md`, `rules/` and `settings.json` to `~/.claude/backups/thang-kit-install-<timestamp>/`
+2. Copies `global/CLAUDE.md` and `plugins/thang-core/rules/*.md` into `~/.claude/`
+3. Registers `<kit-dir>` as the local marketplace `thang-kit` and installs every plugin (loaded in place — kit edits are live in new sessions)
+4. Migrates an old copy-based install (moves duplicate skills to the backup, drops old hook registrations)
+
+Without cloning — inside Claude Code:
+
+```
+/plugin marketplace add thanghokdps/claude-root
+/plugin install thang-kit@thang-kit
 ```
 
-### Result after install
-
-```
-🔧 Claude Harness Installer
-   Source : ~/Downloads/Claude
-   Target : ~/.claude-harness
-
-✅ Harness copied to ~/.claude-harness
-   Added HARNESS_DIR to .zshrc
-
-📦 Installing to ~/.claude/ ...
-   Skills  : 18 installed
-   Rules   : 13 installed
-   Hooks   : 9 installed
-   Memory  : templates copied
-
-✅ Installation complete!
-```
-
-### Reload shell
-
-```bash
-source ~/.zshrc     # or open a new terminal
-echo $HARNESS_DIR   # should print ~/.claude-harness
-```
+Open a new Claude Code session to load the changes.
 
 ### (Optional) Install headroom — context compression
 
 Reduces token usage by 60–95% when the context window grows large:
 
 ```bash
-bash $HARNESS_DIR/scripts/setup-headroom.sh
+bash <kit-dir>/scripts/setup-headroom.sh
 ```
 
 **Requires:** Python 3.12 (`brew install python@3.12`).
@@ -146,10 +129,10 @@ Claude will:
 
 ```bash
 cd ~/my-project
-bash /path/to/Claude/plugins/thang-core/scripts/init.sh
+bash <kit-dir>/plugins/thang-core/scripts/init.sh
 
 # Or standalone mode (copies all rules, skills, agents, commands into .claude/):
-STANDALONE=1 bash /path/to/Claude/plugins/thang-core/scripts/init.sh /path/to/my-project
+STANDALONE=1 bash <kit-dir>/plugins/thang-core/scripts/init.sh /path/to/my-project
 ```
 
 ### Method C — Use an existing stack bundle (React Native / Next.js / Python)
@@ -158,7 +141,7 @@ If your project matches one of the bundles in `plugins/thang-core/stacks/`:
 
 ```bash
 # Example: React Native project
-cp -r /path/to/Claude/plugins/thang-core/stacks/react-native/ ~/my-rn-project/
+cp -r <kit-dir>/plugins/thang-core/stacks/react-native/ ~/my-rn-project/
 ```
 
 Then edit the files to match your project's actual paths.
@@ -634,15 +617,15 @@ wc -l .claude/memory/MEMORY.md
 ### Update the harness after source changes
 
 ```bash
-# Re-run install.sh — auto-detects and updates
-bash $HARNESS_DIR/scripts/install.sh
+git -C <kit-dir> pull
+bash <kit-dir>/scripts/install.sh     # needed only when global/CLAUDE.md, rules/ or the plugin list changed
 ```
 
 To update `.claude/` for a specific project:
 
 ```bash
 cd ~/my-project
-bash /path/to/Claude/plugins/thang-core/scripts/init.sh
+bash <kit-dir>/plugins/thang-core/scripts/init.sh
 # Script will warn before overwriting settings.json
 ```
 
@@ -653,7 +636,7 @@ bash /path/to/Claude/plugins/thang-core/scripts/init.sh
 ```
 ┌─ INSTALL (once) ────────────────────────────────────────────┐
 │                                                              │
-│  bash ~/Downloads/Claude/scripts/install.sh                 │
+│  bash <kit-dir>/scripts/install.sh                          │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
                           ↓
@@ -679,8 +662,9 @@ bash /path/to/Claude/plugins/thang-core/scripts/init.sh
 │  Work:                                                      │
 │    "add feature X"          ← auto-coordinator handles it  │
 │    /fix-bug <symptom>       ← debug flow                   │
-│    /code-review             ← review before PR             │
-│    /ticket #123 <desc>      ← full 5-agent pipeline        │
+│    /review-checklist        ← review before PR             │
+│    /ticket #123 <desc>      ← full pipeline (project cmd)  │
+│    /agent-feature <desc>    ← AI-assistant feature         │
 │                                                             │
 │  End:                                                       │
 │    /compact                 ← save session state           │
@@ -705,8 +689,13 @@ bash /path/to/Claude/plugins/thang-core/scripts/init.sh
 | `/fix-bug <symptom>` | Debug and fix a bug |
 | `/code-review` | Review before pushing a PR |
 | `/code-review high` | Thorough review for important PRs |
-| `/ticket #N <description>` | Run the full pipeline from a ticket |
-| `/task <description>` | Small fix, no ceremony needed |
+| `/ticket #N <description>` | Full pipeline from a ticket (project command copied by `init.sh`) |
+| `/task <description>` | Small fix, no ceremony (project command copied by `init.sh`) |
+| `/review-checklist` | Self-review before `/code-review` |
+| `/finish-branch` | Verify, open the PR/MR, clean up |
+| `/agent-architect` | Start an AI assistant (CopilotKit + LangGraph) |
+| `/agent-feature <capability>` | Add a feature to an existing assistant |
+| `/agent-evals dataset\|suite\|observability` | Eval dataset, prompt evals, tracing |
 | `/brainstorming <idea>` | Design before building a complex feature |
 | `/writing-plans` | After brainstorming, generate PLAN.md |
 | `/create-pr` | Generate a PR description |
