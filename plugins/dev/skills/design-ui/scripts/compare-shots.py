@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""compare-shots.py — screenshots of each chat state against the design frames.
+"""compare-shots.py — screenshots of each screen state against the design frames.
 
   python3 compare-shots.py <frames-dir> <actual-dir> <out-dir> [--threshold 0.03] [--tolerance 24]
 

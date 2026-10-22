@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Tests for agent-design-ui's compare-shots.py. Run: python3 scripts/test_compare_shots.py (skips without Pillow)."""
+"""Tests for design-ui's compare-shots.py. Run: python3 scripts/test_compare_shots.py (skips without Pillow)."""
 import os
 import subprocess
 import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCRIPT = os.path.join(ROOT, "plugins", "agent", "skills", "agent-design-ui", "scripts", "compare-shots.py")
+SCRIPT = os.path.join(ROOT, "plugins", "dev", "skills", "design-ui", "scripts", "compare-shots.py")
 
 try:
     from PIL import Image, ImageDraw

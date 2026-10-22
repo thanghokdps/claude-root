@@ -28,6 +28,7 @@ Then, in an empty folder:
 | Fix routing, add an agent, rewrite a prompt | `/agent-graph` |
 | Wire CopilotKit, suggestions, shared context | `/agent-frontend` |
 | Turn a Figma design into the chat UI | `/agent-design-ui <figma>` |
+| Turn a Figma design into any other page | `/design-ui <figma>` |
 | Prove a change works | `/agent-verify-turn local` |
 | Eval dataset, prompt evals, tracing | `/agent-evals dataset` · `suite` · `observability` |
 | Security review | `/agent-security` |
