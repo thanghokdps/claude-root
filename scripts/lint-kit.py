@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """lint-kit.py — structural checks for the kit's plugins. Exit 1 on any error; warnings don't fail.
 
-Errors: SKILL.md frontmatter parses as YAML; no private names in thang-agent (denylist); name == directory, kebab-case,
+Errors: SKILL.md frontmatter parses as YAML; no private names in agent (denylist); name == directory, kebab-case,
 unique across plugins; description present, <=1024 chars, says when to use; only documented frontmatter keys; description + when_to_use
 <=1536; ${CLAUDE_PLUGIN_ROOT}/ paths exist in the skill's own plugin and ${CLAUDE_SKILL_DIR}/ paths in its directory; hooks pass `bash -n` and are executable; plugin/marketplace/hooks JSON parse; every plugin
 is listed in the marketplace, dependencies exist and are acyclic; a SKILL.md body that names another plugin's skill
@@ -252,8 +252,8 @@ def missing_init_sources(script, core_dir):
 
 
 def check_init_sources():
-    rel = "plugins/thang-core/scripts/init.sh"
-    for ref in missing_init_sources(open(os.path.join(ROOT, rel), encoding="utf-8").read(), "plugins/thang-core"):
+    rel = "plugins/core/scripts/init.sh"
+    for ref in missing_init_sources(open(os.path.join(ROOT, rel), encoding="utf-8").read(), "plugins/core"):
         errors.append(f"{rel}: copies missing file {ref}")
 
 
@@ -273,7 +273,7 @@ def check_shared_references():
 
 # The kit repo is public, and agent skills/rules are distilled from private company code.
 DENYLIST = re.compile(r"granbull|asoft-python|flash-agent|space-agent|on-behalf|space-v2|space-langchain", re.I)
-DENYLIST_SCOPE = re.compile(r"^plugins/thang-agent/")
+DENYLIST_SCOPE = re.compile(r"^plugins/agent/")
 
 
 def denylist_hits(text):

@@ -4,6 +4,47 @@ A portable governance framework for [Claude Code](https://claude.ai/code). It in
 
 **Source library, not an app.** Changes here propagate to `~/.claude/` (global) and to individual projects via `/project-init`.
 
+**Design:** [`DESIGN.md`](DESIGN.md) — why role plugins, the layers, and where each AI-assistant concern lives (CopilotKit, tools, memory, evals, observability).
+
+## Quickstart
+
+```bash
+# 1. Install once — clone anywhere; install.sh resolves its own location
+git clone git@github.com:thanghokdps/claude-root.git <any-dir>/harness
+bash <any-dir>/harness/scripts/install.sh        # no env vars needed; see .env.sample for optional ones
+
+# 2a. Existing repo — bootstrap once
+cd my-project && claude
+/project-init                                       # scans the repo, writes .claude/ docs, rules, memory
+
+# 2b. Empty folder — design and scaffold first, then bootstrap
+mkdir my-app && cd my-app && git init && claude
+/brainstorming <idea>                               # → specs/<slug>/design.md, incl. the stack
+/writing-plans                                      # → PLAN.md; wave 1 = scaffold (manifest, tests, lint)
+# build wave 1 (just ask, or /tdd), commit, then:
+/project-init                                       # now there is a stack and code to scan
+```
+
+Building an AI assistant from scratch? Replace `/brainstorming` + `/writing-plans` with `/agent-architect greenfield`. It checks the machine (Node, package manager, model key, git), runs an architecture interview, records an ADR and scaffolds the first working turn. Then run `/project-init` and add features with `/agent-feature`. Details are in [`docs/USAGE.md` §4](docs/USAGE.md#4-step-2--bootstrap-a-new-project).
+
+Or without cloning, inside Claude Code: `/plugin marketplace add thanghokdps/claude-root` then `/plugin install harness@harness`.
+
+**3. What to run next — by task**
+
+| I want to… | Run |
+|---|---|
+| Build a feature / fix a bug | just describe it (auto-coordinator) · `/fix-bug <symptom>` |
+| Design before coding | `/brainstorming` → `/writing-plans` |
+| Review before a PR | `/review-checklist` → `/code-review` |
+| Finish the branch | `/verify-done` → `/finish-branch` |
+| Start an AI assistant (CopilotKit + LangGraph) | `/agent-architect greenfield` |
+| Add a feature / tool / confirm step to an assistant | `/agent-feature` · `/agent-tool` · `/agent-hitl` |
+| Wire or theme the chat UI | `/agent-frontend` · `/agent-design-ui <figma>` |
+| Eval dataset, prompt evals, tracing | `/agent-evals dataset` · `suite` · `observability` |
+| End the session | `/compact` (handoff) · `/compound` (learnings) |
+
+Full skill list: [`plugins/README.md`](plugins/README.md). Interactive map of every plugin, skill and hook: open [`docs/skill-map.html`](docs/skill-map.html) in a browser. Step-by-step guide: [`docs/USAGE.md`](docs/USAGE.md).
+
 ---
 
 ## Table of Contents
@@ -34,7 +75,7 @@ Two layers:
 | Layer | What it is | Lives in |
 |-------|-----------|---------|
 | **Skills** (engine) | Invocable `/skills` that do the work — feature, fix-bug, review, verify | `skills/`, `agents/` |
-| **Harness** (control) | Thin governance layer that determines risk, routes work, enforces gates | `plugins/thang-guards/hooks/`, `rules/`, memory system |
+| **Harness** (control) | Thin governance layer that determines risk, routes work, enforces gates | `plugins/guards/hooks/`, `rules/`, memory system |
 
 The engine answers *"how do I build this?"* The harness answers *"how careful should I be, and who needs to approve?"*
 
@@ -62,8 +103,9 @@ prompt
 ## Repository structure
 
 ```
-Downloads/Claude/                    ← this repo (the source library)
+<kit-dir>/                           ← this repo (the source library)
 ├── CLAUDE.md                        ← project instructions for Claude Code
+├── DESIGN.md                        ← packaging, layers, AI-assistant design
 ├── HARNESS.md                       ← philosophy / architecture reference
 ├── PLAYBOOK.md                      ← playbook reference
 ├── README.md                        ← this file
@@ -74,45 +116,45 @@ Downloads/Claude/                    ← this repo (the source library)
 ├── plugins/                         ← role plugins (self-contained, each with plugin.json)
 │   ├── README.md                    ← plugin index, skill table, handoff map
 │   │
-│   ├── thang-progress/              ← skill checklist + live ✅ progress (hooks only, never blocks)
+│   ├── progress/              ← skill checklist + live ✅ progress (hooks only, never blocks)
 │   │   └── hooks/
 │   │       └── skill-progress.sh
 │   │
-│   ├── thang-core/                  ← session + project basics every role uses
+│   ├── core/                  ← session + project basics every role uses
 │   │   ├── hooks/stacks/            ← stack-specific hooks (eslint, ruff)
 │   │   ├── memory/                  ← memory templates (MEMORY.md.template, user.md, project.md)
 │   │   ├── rules/                   ← universal rules (behavior, git, security, testing, etc.)
 │   │   │   └── stacks/             ← stack-specific rules (fastapi, nextjs, python, etc.)
 │   │   ├── scripts/init.sh          ← bootstrap .claude/ for a project (stack-aware)
-│   │   ├── skills/                  ← btw, compact, compound, init-project, project-init,
+│   │   ├── skills/                  ← btw, compact, compound, project-init,
 │   │   │                               sync-memory, verify-done
 │   │   ├── stacks/                  ← full stack bundles (nextjs, python, react-native)
 │   │   └── templates/               ← CLAUDE.md.template, settings.json.template, etc.
 │   │
-│   ├── thang-plan/                  ← design before code
+│   ├── plan/                  ← design before code
 │   │   └── skills/                  ← brainstorming, codebase-design, domain-model, grill,
 │   │                                   writing-plans
 │   │
-│   ├── thang-review/                ← review diffs, PRs, impact
+│   ├── review/                ← review diffs, PRs, impact
 │   │   └── skills/                  ← blast-radius, create-pr, review-checklist, review-diff
 │   │
-│   ├── thang-dev/                   ← build, fix, test-first
+│   ├── dev/                   ← build, fix, test-first
 │   │   └── skills/                  ← checkpoint, coordinator, feature, fix-bug, tdd
 │   │
-│   ├── thang-ship/                  ← release / CI owner
+│   ├── ship/                  ← release / CI owner
 │   │   └── skills/                  ← ci-triage, finish-branch, release-checklist, write-migration
 │   │
-│   ├── thang-agent/                 ← AI-agent engineer (CopilotKit, LangGraph)
+│   ├── agent/                 ← AI-agent engineer (CopilotKit, LangGraph)
 │   │   ├── evals/                   ← routing + behaviour eval cases
 │   │   ├── rules/                   ← agent-specific invariants (read on demand)
 │   │   └── skills/                  ← agent-architect, agent-design-ui, agent-evals,
 │   │                                   agent-feature, agent-frontend, agent-graph,
 │   │                                   agent-hitl, agent-security, agent-tool, agent-verify-turn
 │   │
-│   ├── thang-lead/                  ← process owner: retro, diagnosis, skill authoring
+│   ├── lead/                  ← process owner: retro, diagnosis, skill authoring
 │   │   └── skills/                  ← diagnose-session, retro, writing-skills
 │   │
-│   ├── thang-guards/                ← personal guard-rail hooks (opt-in)
+│   ├── guards/                ← personal guard-rail hooks (opt-in)
 │   │   └── hooks/                   ← hooks.json + 14 bash scripts
 │   │       ├── hooks.json           ← hook registration (uses ${CLAUDE_PLUGIN_ROOT})
 │   │       ├── scope-gate.sh        ← inject coordinator context on every prompt
@@ -129,7 +171,7 @@ Downloads/Claude/                    ← this repo (the source library)
 │   │       ├── notify-on-finish.sh  ← notification on session end
 │   │       └── agent-progress.sh    ← colorized live agent/wave progress
 │   │
-│   └── thang-kit/                   ← bundle (depends on all nine above)
+│   └── harness/                   ← bundle (depends on all nine above)
 │
 ├── global/
 │   └── CLAUDE.md                    ← installed to ~/.claude/CLAUDE.md
@@ -160,22 +202,22 @@ Downloads/Claude/                    ← this repo (the source library)
 ### One-time global install
 
 ```bash
-bash ~/Downloads/Claude/scripts/install.sh
+bash <kit-dir>/scripts/install.sh     # <kit-dir> = wherever you cloned the kit
 ```
 
-Installs `global/CLAUDE.md` and `plugins/thang-core/rules/` into `~/.claude/`, registers this directory as the local marketplace `thang-kit`, and installs every role plugin plus the `thang-kit` bundle (loaded in place — kit edits are live in new sessions). It backs up what it replaces and migrates an old copy-based or 2.x single-plugin install.
+Installs `global/CLAUDE.md` and `plugins/core/rules/` into `~/.claude/`, registers this directory as the local marketplace `harness`, and installs every role plugin plus the `harness` bundle (loaded in place — kit edits are live in new sessions). It backs up what it replaces and migrates an old copy-based or 2.x single-plugin install.
 
-The kit is split by role — see [`plugins/README.md`](plugins/README.md). Installing a role plugin installs its dependencies: `thang-dev` brings `thang-core`, `thang-plan`, `thang-review`; `thang-agent` stands alone; hooks are the opt-in `thang-guards`.
+The kit is split by role — see [`plugins/README.md`](plugins/README.md). Installing a role plugin installs its dependencies: `dev` brings `core`, `plan`, `review`; `agent` stands alone; hooks are the opt-in `guards`.
 
 From GitHub instead of a local clone:
 
 ```
 /plugin marketplace add thanghokdps/claude-root
-/plugin install thang-agent@thang-kit     # one role (+ its dependencies)
-/plugin install thang-kit@thang-kit       # everything
+/plugin install agent@harness     # one role (+ its dependencies)
+/plugin install harness@harness       # everything
 ```
 
-**Update:** skills/hooks — nothing to do for a local install (loaded in place); GitHub install → `/plugin marketplace update thang-kit`. A new plugin, `global/CLAUDE.md` or `rules/` changed → re-run `install.sh` (`plugin update` does not install a dependency a new version adds).
+**Update:** skills/hooks — nothing to do for a local install (loaded in place); GitHub install → `/plugin marketplace update harness`. A new plugin, `global/CLAUDE.md` or `rules/` changed → re-run `install.sh` (`plugin update` does not install a dependency a new version adds).
 
 **Check before committing:** `bash scripts/check.sh` (skill lint incl. the plugin dependency check, trigger eval, `claude plugin validate` per plugin).
 
@@ -186,7 +228,7 @@ Headroom automatically compresses large tool outputs to reduce token usage.
 **Requires:** Python 3.12 (`brew install python@3.12`) and the `claude` CLI.
 
 ```bash
-bash ~/.claude-harness/scripts/setup-headroom.sh
+bash <kit-dir>/scripts/setup-headroom.sh
 ```
 
 What it does:
@@ -206,7 +248,6 @@ Run once per project to generate a tailored `.claude/` workspace.
 
 ```bash
 cd my-project
-cp ~/.claude-harness/CLAUDE_LEGACY.md ./CLAUDE.md
 # Open Claude Code, then type:
 /project-init
 ```
@@ -218,10 +259,10 @@ The `/project-init` skill scans the codebase, then writes every file in `.claude
 ```bash
 cd my-project
 # Lean bootstrap (shared rules/skills come from installed plugins):
-bash /path/to/Claude/plugins/thang-core/scripts/init.sh
+bash <kit-dir>/plugins/core/scripts/init.sh
 
 # Standalone bootstrap (copies rules, skills, commands, agents, hooks into .claude/):
-STANDALONE=1 bash /path/to/Claude/plugins/thang-core/scripts/init.sh /path/to/my-project
+STANDALONE=1 bash <kit-dir>/plugins/core/scripts/init.sh /path/to/my-project
 ```
 
 ### What `init.sh` detects
@@ -272,7 +313,7 @@ your-project/
     │   ├── review-checklist/SKILL.md
     │   ├── checkpoint/SKILL.md
     │   └── sync-memory/SKILL.md
-    ├── hooks/                    ← installed by thang-guards plugin
+    ├── hooks/                    ← installed by guards plugin
     │   ├── hooks.json
     │   ├── commit-quality-gate.sh
     │   ├── branch-guard.sh
@@ -418,7 +459,7 @@ Walks correctness → tests → readability → security → scope, checks the P
 | 1 — Scan | Detect language, framework, tools, test setup, CI |
 | 2 — Write `docs/` | architecture, conventions, stack, entry-points, test-strategy, index |
 | 3 — Write `agents/` | implementer, reviewer, verifier (+ project-specific agents) |
-| 4 — Write `hooks/` | commit-gate + stack-specific hooks (tsc, ruff, eslint) — via thang-guards plugin |
+| 4 — Write `hooks/` | commit-gate + stack-specific hooks (tsc, ruff, eslint) — via guards plugin |
 | 5 — Write `rules/` | project-conventions + stack-specific rules |
 | 6 — Write `skills/` | task skill + project-specific skills |
 | 7 — Write `templates/` | SUMMARY, TEST_MATRIX, ESCALATIONS adapted to project commands |
@@ -698,7 +739,7 @@ Runs `npx eslint --fix --quiet` if `.eslintrc*` or `eslint.config*` exists in th
 
 Rules are Markdown files injected into agent prompts as governance constraints.
 
-### Universal rules (`plugins/thang-core/rules/`)
+### Universal rules (`plugins/core/rules/`)
 
 Installed to `~/.claude/rules/` by `scripts/install.sh` and loaded in every session:
 
@@ -718,7 +759,7 @@ Installed to `~/.claude/rules/` by `scripts/install.sh` and loaded in every sess
 | `typescript.md` | Strict mode, type safety, naming, async, error handling |
 | `memory.md` | How to read/write the four memory types (user, feedback, project, reference) |
 
-### Stack-specific rules (`plugins/thang-core/templates/project/rules/stacks/`)
+### Stack-specific rules (`plugins/core/templates/project/rules/stacks/`)
 
 Copied to `.claude/rules/` only when the corresponding signal is detected during project initialization (`init.sh` or `/project-init`):
 
@@ -733,7 +774,7 @@ Copied to `.claude/rules/` only when the corresponding signal is detected during
 | `stacks/langgraph.md` | `langgraph` signal | Graph construction, state management, tool nodes |
 | `stacks/nextjs.md` | `nextjs` signal | App Router, Server/Client Components, data fetching |
 
-### Agent-specific rules (`plugins/thang-agent/rules/`)
+### Agent-specific rules (`plugins/agent/rules/`)
 
 Read on-demand by AI assistant skills (`/agent-architect`, `/agent-feature`, `/agent-graph`, etc.):
 - `agent-stock-first.md`: Prefer stock CopilotKit/LangGraph patterns before custom code
@@ -748,7 +789,7 @@ Read on-demand by AI assistant skills (`/agent-architect`, `/agent-feature`, `/a
 
 ## Agents reference
 
-Agent templates live in `plugins/thang-core/templates/project/agents/` and are copied to `.claude/agents/` during project bootstrap. Each has YAML frontmatter controlling how Claude Code spawns them.
+Agent templates live in `plugins/core/templates/project/agents/` and are copied to `.claude/agents/` during project bootstrap. Each has YAML frontmatter controlling how Claude Code spawns them.
 
 ### `agents/architect.md`
 
@@ -875,7 +916,7 @@ Agent templates live in `plugins/thang-core/templates/project/agents/` and are c
 
 ## Commands reference
 
-Command templates live in `plugins/thang-core/templates/project/commands/` and are copied to `.claude/commands/` during project bootstrap. Unlike skills (which have a `SKILL.md` wrapper with frontmatter), commands are raw prompt text loaded directly — lighter weight for simple workflows.
+Command templates live in `plugins/core/templates/project/commands/` and are copied to `.claude/commands/` during project bootstrap. Unlike skills (which have a `SKILL.md` wrapper with frontmatter), commands are raw prompt text loaded directly — lighter weight for simple workflows.
 
 | Command | Invoke | What it does |
 |---------|--------|-------------|
@@ -903,7 +944,7 @@ QA/Verifier    → lint + types + tests + golden path + commit
 
 ## Stack bundles reference
 
-`plugins/thang-core/stacks/` contains full workspace bundles (rules + skills) for specific project stacks. Unlike generic single-file rules, these bundles are tailored to a **specific project's real file paths, conventions, and tools**.
+`plugins/core/stacks/` contains full workspace bundles (rules + skills) for specific project stacks. Unlike generic single-file rules, these bundles are tailored to a **specific project's real file paths, conventions, and tools**.
 
 ### When to use stack bundles vs stack rules
 
@@ -938,16 +979,16 @@ Python bundle: `python.md` (PEP8, type hints, async), `fastapi.md` (routes, Pyda
 
 One-command harness setup:
 1. Backs up existing `~/.claude/CLAUDE.md`, `rules/`, `settings.json`, and replaced skills
-2. Copies `global/CLAUDE.md` and `plugins/thang-core/rules/` to `~/.claude/`
-3. Registers local directory as marketplace `thang-kit` and installs role plugins (`thang-kit@thang-kit`)
+2. Copies `global/CLAUDE.md` and `plugins/core/rules/` to `~/.claude/`
+3. Registers local directory as marketplace `harness` and installs role plugins (`harness@harness`)
 4. Migrates old skills out of `~/.claude/skills/` and drops duplicate hook registrations from `settings.json`
 
-### `plugins/thang-core/scripts/init.sh`
+### `plugins/core/scripts/init.sh`
 
-**Usage:** `bash plugins/thang-core/scripts/init.sh [project-dir]` (or via `/project-init`)
+**Usage:** `bash plugins/core/scripts/init.sh [project-dir]` (or via `/project-init`)
 
 Main project bootstrap script. Scans `src/` and generates the full `.claude/` harness.
-- Lean mode (default): Shared skills/rules/hooks come from installed `thang-*` plugins.
+- Lean mode (default): Shared skills/rules/hooks come from installed role plugins.
 - Standalone mode (`STANDALONE=1`): Also copies shared rules, skills, commands, agents, and hooks into `.claude/`.
 
 ### `scripts/check.sh`
@@ -1386,7 +1427,7 @@ The `description` field is used by Claude Code to auto-invoke the skill. Make it
 ### Add a new rule
 
 ```bash
-cat > plugins/thang-core/rules/<name>.md << 'EOF'
+cat > plugins/core/rules/<name>.md << 'EOF'
 # <Name> Rules
 
 ## Rule 1
@@ -1405,7 +1446,7 @@ Rules must be imperative ("do X", "never Y") — not descriptive. Add `paths:` f
 ### Add a new hook
 
 ```bash
-cat > plugins/thang-guards/hooks/<name>.sh << 'EOF'
+cat > plugins/guards/hooks/<name>.sh << 'EOF'
 #!/bin/bash
 # <name>.sh — <description>
 # Trigger: <PreToolUse|PostToolUse|UserPromptSubmit|Stop>(<matcher>)
@@ -1417,9 +1458,9 @@ INPUT=$(cat /dev/stdin)
 exit 0
 EOF
 
-chmod +x plugins/thang-guards/hooks/<name>.sh
+chmod +x plugins/guards/hooks/<name>.sh
 
-# Register in plugins/thang-guards/hooks/hooks.json under the appropriate event
+# Register in plugins/guards/hooks/hooks.json under the appropriate event
 # Use "${CLAUDE_PLUGIN_ROOT}"/hooks/<name>.sh as the command path
 ```
 
@@ -1428,12 +1469,12 @@ Hook exit codes: `0` = allow, `2` = block. Never exit `1` (reserved for errors).
 ### Add a stack-specific rule
 
 ```bash
-cat > plugins/thang-core/templates/project/rules/stacks/<name>.md << 'EOF'
+cat > plugins/core/templates/project/rules/stacks/<name>.md << 'EOF'
 # <Stack Name> Rules
 ...
 EOF
 
-# Add detection in plugins/thang-core/scripts/init.sh:
+# Add detection in plugins/core/scripts/init.sh:
 has_signal "<name>" && cp "$TEMPLATES/rules/stacks/<name>.md" "$CLAUDE_DIR/rules/<name>.md" || true
 ```
 
@@ -1441,7 +1482,7 @@ has_signal "<name>" && cp "$TEMPLATES/rules/stacks/<name>.md" "$CLAUDE_DIR/rules
 
 ```bash
 # Re-run project initialization (warns before overwriting existing settings.json):
-bash plugins/thang-core/scripts/init.sh /path/to/project
+bash plugins/core/scripts/init.sh /path/to/project
 # or in Claude Code within the project:
 /project-init
 ```

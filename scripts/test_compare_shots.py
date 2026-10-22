@@ -6,7 +6,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCRIPT = os.path.join(ROOT, "plugins", "thang-agent", "skills", "agent-design-ui", "scripts", "compare-shots.py")
+SCRIPT = os.path.join(ROOT, "plugins", "agent", "skills", "agent-design-ui", "scripts", "compare-shots.py")
 
 try:
     from PIL import Image, ImageDraw

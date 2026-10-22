@@ -1,0 +1,24 @@
+{
+  "name": "harness",
+  "version": "4.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "Everything: installs all nine role plugins.",
+  "keywords": [
+    "bundle"
+  ],
+  "dependencies": [
+    "core",
+    "plan",
+    "review",
+    "dev",
+    "ship",
+    "agent",
+    "lead",
+    "guards",
+    "progress"
+  ]
+}

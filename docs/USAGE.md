@@ -67,55 +67,38 @@ user prompt
 
 ## 3. Step 1 — Install the harness (once)
 
-### Download and run install
+### Clone and run install
 
 ```bash
-# Clone or download the repo to ~/Downloads/Claude
-# (you can rename or place it elsewhere)
-
-bash ~/Downloads/Claude/scripts/install.sh
+# Clone anywhere — install.sh finds the kit from its own location, so no fixed path is assumed
+git clone git@github.com:thanghokdps/claude-root.git <kit-dir>
+bash <kit-dir>/scripts/install.sh
 ```
 
-**The script will ask if it already exists.** Type `y` to overwrite, `n` to keep existing.
+No `.env` is needed: the installer uses your logged-in `claude` CLI. `.env.sample` lists the optional variables (eval judge, model keys and tracing for agent projects, Figma).
 
-Default install location is `~/.claude-harness`. To install elsewhere:
+The installer is idempotent and takes no arguments. It:
 
-```bash
-bash ~/Downloads/Claude/scripts/install.sh ~/my-tools/claude-harness
+1. Backs up `~/.claude/CLAUDE.md`, `rules/` and `settings.json` to `~/.claude/backups/harness-install-<timestamp>/`
+2. Copies `global/CLAUDE.md` and `plugins/core/rules/*.md` into `~/.claude/`
+3. Registers `<kit-dir>` as the local marketplace `harness` and installs every plugin (loaded in place — kit edits are live in new sessions)
+4. Migrates an old copy-based install (moves duplicate skills to the backup, drops old hook registrations)
+
+Without cloning — inside Claude Code:
+
+```
+/plugin marketplace add thanghokdps/claude-root
+/plugin install harness@harness
 ```
 
-### Result after install
-
-```
-🔧 Claude Harness Installer
-   Source : ~/Downloads/Claude
-   Target : ~/.claude-harness
-
-✅ Harness copied to ~/.claude-harness
-   Added HARNESS_DIR to .zshrc
-
-📦 Installing to ~/.claude/ ...
-   Skills  : 18 installed
-   Rules   : 13 installed
-   Hooks   : 9 installed
-   Memory  : templates copied
-
-✅ Installation complete!
-```
-
-### Reload shell
-
-```bash
-source ~/.zshrc     # or open a new terminal
-echo $HARNESS_DIR   # should print ~/.claude-harness
-```
+Open a new Claude Code session to load the changes.
 
 ### (Optional) Install headroom — context compression
 
 Reduces token usage by 60–95% when the context window grows large:
 
 ```bash
-bash $HARNESS_DIR/scripts/setup-headroom.sh
+bash <kit-dir>/scripts/setup-headroom.sh
 ```
 
 **Requires:** Python 3.12 (`brew install python@3.12`).
@@ -127,6 +110,37 @@ After install, the `headroom-compress.sh` hook triggers automatically when outpu
 ## 4. Step 2 — Bootstrap a new project
 
 Run **once** per project to create a dedicated `.claude/` workspace.
+
+`/project-init` reads manifests and code. In an empty folder there is nothing to read, so it stops and points you to the first path below. Start from the row that matches your folder:
+
+| Your folder | Path |
+|---|---|
+| Existing repo with code | Method A below |
+| Empty folder, regular app | Starting from an empty folder → general app |
+| Empty folder, AI assistant (CopilotKit + LangGraph) | Starting from an empty folder → AI assistant |
+
+### Starting from an empty folder
+
+```bash
+mkdir my-app && cd my-app
+git init
+claude
+```
+
+**General app.** Design first, then build the skeleton, then bootstrap:
+
+1. `/brainstorming <idea>` asks one question at a time, compares approaches including the stack, and writes `specs/<slug>/design.md`.
+2. `/writing-plans` turns the approved design into `specs/<slug>/PLAN.md`. Make wave 1 the scaffold: package manifest, language config, test runner, lint, `.gitignore`, `.env.example`.
+3. Build wave 1 (just ask, or `/tdd` for the first slice), then check typecheck, lint and tests pass and commit.
+4. `/project-init` now detects the stack and writes `.claude/` from real commands and paths.
+5. Continue with the daily loop: describe the next feature, `/review-checklist`, `/finish-branch`.
+
+**AI assistant (CopilotKit / AG-UI / LangGraph).** Use `/agent-architect greenfield` instead of steps 1–3:
+
+1. Preflight: checks Node, the package manager, a model key (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env`; see `.env.sample`) and git.
+2. Interview, one question at a time: users, clients (web/mobile/chat), tasks, systems, writes, observability. It writes an ADR to `docs/adr/`.
+3. Scaffold on request: pinned versions, env schema, identity, one agent, one read tool, a tracing switch and the first eval cases. It is done when one real turn streams end to end.
+4. `/project-init`, then add capabilities with `/agent-feature`. The chat UI comes from `/agent-frontend` or `/agent-design-ui <figma>`.
 
 ### Method A — Via Claude Code (recommended)
 
@@ -146,19 +160,19 @@ Claude will:
 
 ```bash
 cd ~/my-project
-bash /path/to/Claude/plugins/thang-core/scripts/init.sh
+bash <kit-dir>/plugins/core/scripts/init.sh
 
 # Or standalone mode (copies all rules, skills, agents, commands into .claude/):
-STANDALONE=1 bash /path/to/Claude/plugins/thang-core/scripts/init.sh /path/to/my-project
+STANDALONE=1 bash <kit-dir>/plugins/core/scripts/init.sh /path/to/my-project
 ```
 
 ### Method C — Use an existing stack bundle (React Native / Next.js / Python)
 
-If your project matches one of the bundles in `plugins/thang-core/stacks/`:
+If your project matches one of the bundles in `plugins/core/stacks/`:
 
 ```bash
 # Example: React Native project
-cp -r /path/to/Claude/plugins/thang-core/stacks/react-native/ ~/my-rn-project/
+cp -r <kit-dir>/plugins/core/stacks/react-native/ ~/my-rn-project/
 ```
 
 Then edit the files to match your project's actual paths.
@@ -510,7 +524,7 @@ Fan-out web searches → cross-check sources → adversarial vote on each claim 
 /sync-memory
 ```
 
-This skill (part of `thang-core`) syncs team commits and rebuilds local commit memory automatically.
+This skill (part of `core`) syncs team commits and rebuilds local commit memory automatically.
 
 **What it does:**
 1. Stash uncommitted changes
@@ -634,15 +648,15 @@ wc -l .claude/memory/MEMORY.md
 ### Update the harness after source changes
 
 ```bash
-# Re-run install.sh — auto-detects and updates
-bash $HARNESS_DIR/scripts/install.sh
+git -C <kit-dir> pull
+bash <kit-dir>/scripts/install.sh     # needed only when global/CLAUDE.md, rules/ or the plugin list changed
 ```
 
 To update `.claude/` for a specific project:
 
 ```bash
 cd ~/my-project
-bash /path/to/Claude/plugins/thang-core/scripts/init.sh
+bash <kit-dir>/plugins/core/scripts/init.sh
 # Script will warn before overwriting settings.json
 ```
 
@@ -653,7 +667,7 @@ bash /path/to/Claude/plugins/thang-core/scripts/init.sh
 ```
 ┌─ INSTALL (once) ────────────────────────────────────────────┐
 │                                                              │
-│  bash ~/Downloads/Claude/scripts/install.sh                 │
+│  bash <kit-dir>/scripts/install.sh                          │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
                           ↓
@@ -661,7 +675,7 @@ bash /path/to/Claude/plugins/thang-core/scripts/init.sh
 │                                                             │
 │  cd ~/my-project                                           │
 │  /project-init              ← Claude Code                  │
-│  # or: bash plugins/thang-core/scripts/init.sh             │
+│  # or: bash plugins/core/scripts/init.sh             │
 │                                                             │
 │  Fill in CLAUDE.md          ← run commands, architecture   │
 │  Fill in memory/user.md     ← role, preferences            │
@@ -679,8 +693,9 @@ bash /path/to/Claude/plugins/thang-core/scripts/init.sh
 │  Work:                                                      │
 │    "add feature X"          ← auto-coordinator handles it  │
 │    /fix-bug <symptom>       ← debug flow                   │
-│    /code-review             ← review before PR             │
-│    /ticket #123 <desc>      ← full 5-agent pipeline        │
+│    /review-checklist        ← review before PR             │
+│    /ticket #123 <desc>      ← full pipeline (project cmd)  │
+│    /agent-feature <desc>    ← AI-assistant feature         │
 │                                                             │
 │  End:                                                       │
 │    /compact                 ← save session state           │
@@ -705,8 +720,13 @@ bash /path/to/Claude/plugins/thang-core/scripts/init.sh
 | `/fix-bug <symptom>` | Debug and fix a bug |
 | `/code-review` | Review before pushing a PR |
 | `/code-review high` | Thorough review for important PRs |
-| `/ticket #N <description>` | Run the full pipeline from a ticket |
-| `/task <description>` | Small fix, no ceremony needed |
+| `/ticket #N <description>` | Full pipeline from a ticket (project command copied by `init.sh`) |
+| `/task <description>` | Small fix, no ceremony (project command copied by `init.sh`) |
+| `/review-checklist` | Self-review before `/code-review` |
+| `/finish-branch` | Verify, open the PR/MR, clean up |
+| `/agent-architect` | Start an AI assistant (CopilotKit + LangGraph) |
+| `/agent-feature <capability>` | Add a feature to an existing assistant |
+| `/agent-evals dataset\|suite\|observability` | Eval dataset, prompt evals, tracing |
 | `/brainstorming <idea>` | Design before building a complex feature |
 | `/writing-plans` | After brainstorming, generate PLAN.md |
 | `/create-pr` | Generate a PR description |
