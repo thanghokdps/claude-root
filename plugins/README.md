@@ -47,6 +47,7 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [coordinator](dev/skills/coordinator/SKILL.md) | `dev` | `/coordinator <req>` | Classify intent → lane → dispatch. The router | all |
 | [project-init](core/skills/project-init/SKILL.md) | `core` | `/project-init` | Full `.claude/` bootstrap — docs, agents, hooks, rules | all |
 | [review-diff](review/skills/review-diff/SKILL.md) | `review` | `/review-diff` | Diff walkthrough with Mermaid architecture diagrams | n/a |
+| [blast-radius](review/skills/blast-radius/SKILL.md) | `review` | `/blast-radius` | Change impact before merge: callers, consumers, contracts, untested paths, rollback plan | n/a |
 | [create-pr](review/skills/create-pr/SKILL.md) | `review` | `/create-pr` | Branch diff → PR description | n/a |
 | [verify-feature](core/stacks/react-native/skills/verify-feature/SKILL.md) | `core` stacks/react-native (copied by init.sh) | `/verify-feature` | Lint + typecheck + tests across affected workspaces | n/a |
 | [gen-tests](core/stacks/react-native/skills/gen-tests/SKILL.md) | `core` stacks/react-native (copied by init.sh) | `/gen-tests <path>` | Scaffold tests for code that already exists | n/a |
