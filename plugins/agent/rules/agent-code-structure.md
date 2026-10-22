@@ -26,7 +26,7 @@ e2e/                        # Playwright specs + recorded AG-UI streams
 evals/                      # agent evals (agent-evals), never run by `test`
 ```
 
-Unit and integration tests go where the repo's convention puts them; a new repo asks the user (`__tests__/` beside the code, or a `tests/` tree outside `src/` mirroring it) — see the testing rule § Where tests live, asked as Q-T in the architect interview.
+Unit and integration tests follow the repo's existing layout (the one most existing tests use; never add a second). A repo with no tests asks the user — Q-T in the architect interview — between `__tests__/` beside the code and a `tests/` tree outside `src/` mirroring it, and sets the runner's `include` to match. (`testing.md` from core, if installed, carries the same rule.)
 
 - A file's folder says who owns it. Put code in `components/ui/` or `lib/` only when a second feature needs it — not in advance.
 - `app/` files hold no business logic and no SQL. Route handlers validate input with zod and call `server/<aggregate>/service.ts`.
