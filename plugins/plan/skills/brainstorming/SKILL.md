@@ -23,13 +23,13 @@ Read relevant files to understand:
 
 ### Step 2 — Clarify intent (one question at a time)
 
-Ask clarifying questions **one at a time**. Prefer multiple-choice. Do not ask the next question until the user answers the current one.
+Ask clarifying questions **one at a time**, as choices: `AskUserQuestion` with 2–4 options, your recommended answer first with `(Recommended)` and a description of what each changes (numbered options with one marked *recommended* when the tool is absent). Do not ask the next question until the user answers the current one.
 
 Stop asking when you have enough to propose concrete approaches.
 
 ### Step 3 — Propose multiple approaches
 
-Present 2–3 distinct approaches with trade-offs:
+Present 2–3 distinct approaches with trade-offs, then let the user pick one through `AskUserQuestion` (recommended first):
 
 ```
 Approach A — <name>

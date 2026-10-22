@@ -67,17 +67,14 @@ Order the open branches by **uncertainty × blast radius**: the branch that most
 
 Ask **exactly one question**. Then stop and wait.
 
-Every question follows this shape:
+Ask through `AskUserQuestion` when the tool is available, so the user picks instead of typing:
 
-```
-**Q<n> — <the one-line question>**
+- `question`: `Q<n> — <the one-line question>`, then one sentence on what breaks or forks depending on the answer.
+- 2–4 `options`: your recommended answer **first**, with `(Recommended)` in its label; then the real alternatives (including "keep as is, record the risk" when that is honest). Each `description` says what that choice changes downstream. The tool adds "Other" for a free-text answer — do not add it.
 
-Why this matters: <what breaks or forks depending on the answer>
+Without the tool, write the same as numbered options — `1) <answer> (recommended) — <consequence>` — so the user can reply with one character.
 
-My recommendation: <your actual answer, with reasoning>
-```
-
-Always give your recommended answer. A question without a recommendation makes the user do all the work. The recommendation is what lets them just say "yes" and move on — or react against it, which is often faster than answering cold.
+Always give your recommended answer. A question without a recommendation makes the user do all the work; options let them pick in one click — or react against it, which is often faster than answering cold. Never bundle a question with a report or a setup notice: the answer gets read against the wrong thing.
 
 One question per turn. Three at once buys one real answer and two shrugs.
 
