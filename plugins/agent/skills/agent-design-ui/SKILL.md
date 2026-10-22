@@ -29,7 +29,9 @@ Everything this skill decides goes in `docs/design/ui-map.md`; frames live in `d
 
 ## Step 1 — Inventory the states
 
-A chat is mostly states the happy-path frame does not show. Fill the table in `ui-map.md` from `${CLAUDE_SKILL_DIR}/references/chat-states.md`: frame present, or the user's decision (*use default*, *skip*, *design later*). Ask for missing states one question at a time — never invent a look the designer did not draw.
+A chat is mostly states the happy-path frame does not show. Fill the table in `ui-map.md` from `${CLAUDE_SKILL_DIR}/references/chat-states.md`: frame present, or the user's decision (*use default*, *skip*, *design later*). Ask for missing states with `AskUserQuestion` — up to 4 independent states in one call, each with options *use default (Recommended)* / *skip* / *design later* and a description of what the default looks like; numbered options when the tool is absent. Never invent a look the designer did not draw.
+
+Record the supported viewports from the ADR (`Viewports:`) at the top of the map; if the ADR has none, ask it now as options (phone + desktop *(Recommended)* / desktop only / phone, tablet and desktop), stating the smallest width. Every frame being desktop-sized is not an answer.
 
 **Done when:** every row of `chat-states.md` has a frame or a recorded decision.
 
@@ -58,7 +60,9 @@ An element outside the chat component (a page header above an embedded `CopilotC
 
 Build the components, then make each inventory state reachable without a live model: a recorded AG-UI stream replayed with `@copilotkit/aimock`, or a dev-only states page (`/__design?state=<name>`) fed by fixtures. Hand wiring to `/agent-frontend` and the confirm flow to `/agent-hitl` rather than redoing them here.
 
-**Done when:** each state in the table renders from its fixture, and typecheck, lint and tests pass.
+Code shape follows `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: components under the feature that owns them, shared pieces in `components/ui/`, fixtures and the states page in `src/dev/`, colours and sizes through tokens — no raw hex or `[Npx]` values in components.
+
+**Done when:** each state in the table renders from its fixture at every supported width, `grep -rnE '\[#[0-9a-fA-F]{3,8}\]' src` finds no raw colour in components, and format, typecheck, lint and tests pass.
 
 ## Step 5 — Compare with the design
 
@@ -70,7 +74,9 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/compare-shots.py design/frames design/actual
 
 It writes a side-by-side + diff image per state and a PASS/FAIL table (default 3% of pixels; font rendering alone stays under it). Fix each FAIL at the lowest rung, re-shoot, re-run. Show the table and the worst side-by-side images in the reply.
 
-**Done when:** every state passes, or its remaining difference is listed in the map and accepted by the user.
+Then the widths no frame covers: shoot every state at the smallest supported width and one middle width (e.g. 390 and 768) to `design/actual/<state>@<width>.png`, and assert per shot `document.documentElement.scrollWidth <= window.innerWidth`, the composer visible, and the drawer opening and closing. There is no frame to diff these against — check them against the Narrow width row, and show the narrow shots in the reply.
+
+**Done when:** every state passes, or its remaining difference is listed in the map and accepted by the user; and every state at each supported narrow width has no horizontal overflow and a visible composer (unless the map marks narrow width *skip* by the user's decision).
 
 ---
 

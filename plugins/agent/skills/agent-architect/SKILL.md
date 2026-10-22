@@ -40,16 +40,17 @@ Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/
 
 Walk `${CLAUDE_SKILL_DIR}/references/interview.md` in order: the problem (P1–P4) before any technology, then Q1–Q9 with the design question Q-D and the layout question Q-L after Q2.
 
-- **One question per turn**, each with *Why this matters* and *My recommendation*. Skip what the repo or the request already answers.
+- **One question per turn, as choices**: `AskUserQuestion` with 2–4 options, the recommended one first with `(Recommended)`, per `interview.md` § Shape of each question; numbered options when the tool is absent. Never a prose question the user must answer in free text. Skip what the repo or the request already answers.
+- **Viewports are asked** (Q2v) for any web client, even when every frame is desktop-sized.
 - **Layout is asked, never assumed**: single app (L1) or monorepo on pnpm + Turborepo (L2), per `${CLAUDE_SKILL_DIR}/references/layouts.md`. Recommend one from the clients and deploy answers, then wait.
 - Default recommendation is shape **A** (createAgent + middleware + CopilotRuntime v2) unless the host is edge/Workers or a contract the runtime cannot express forces **B**; use the decision rule in `shapes.md` for single agent vs supervisor.
 - Every non-L0 choice names its rung and its reason (`${CLAUDE_SKILL_DIR}/references/stock-map.md`).
 
-**Done when:** P1–P4, Q-D, Q-L and Q1–Q9 are answered or explicitly deferred with a risk.
+**Done when:** P1–P4, Q-D, Q-L, Q1–Q9 and Q2v (web) are answered, defaulted to the recommendation, or explicitly deferred with a risk.
 
 ## Step 2b — Grill the card
 
-Before writing the ADR, attack the draft card one question per turn until it holds:
+Before writing the ADR, attack the draft card one question per turn until it holds — each as `AskUserQuestion` options (the fix you recommend first, then the alternatives, e.g. "record as a risk"):
 
 - **Coverage** — name each P2 task and ask which agent and tool answers it; a task with no owner is a gap, not a detail.
 - **Writes** — for each P3 write: what happens on a wrong target, a double submit, a cancel? Points to Q4's HITL answer.
@@ -70,8 +71,8 @@ Offer to record the keeps and the chosen direction as an ADR.
 
 Build the smallest working slice of the chosen shape, test first where practical:
 
-0. Skeleton of the chosen layout (`layouts.md` L1 or L2): `git init`, package manager, TypeScript strict, test runner, lint, `.env.example`. Resolve every version at scaffold time and pin it exactly.
-1. Env schema that fails at boot on missing or inconsistent config.
+0. Skeleton of the chosen layout (`layouts.md` L1 or L2) with the app tree from `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: `git init`, package manager, TypeScript strict, test runner, ESLint, Prettier + `format:check`, path alias, `styles/tokens.css`, `.env.example`. Resolve every version at scaffold time and pin it exactly.
+1. Env schema that fails at boot on missing or inconsistent config. If the app stores data and there is no ERD (or the user asks for one from the design), write `docs/erd.md` first per `${CLAUDE_SKILL_DIR}/references/data-model.md`, then the DB schema from it.
 2. Identity: verify the token at the edge → server-injected claims → a trusted-context reader for tools; token in request scope only.
 3. One agent registered under one agent id (backend registry, `langgraph.json` if used, client `agent` prop), its prompt opening with P1.
 4. Model factory with fallback; a cheap model for routing/summary.
@@ -82,7 +83,9 @@ Build the smallest working slice of the chosen shape, test first where practical
 
 Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later work: nostream helper nodes, stable prompt prefix, kill switch per tool.
 
-**Done when:** typecheck, lint and tests pass, and one real turn streams end to end with its evidence shown.
+"Implement all" or "don't ask me again" means: take the recommended option at every remaining question and record it as *defaulted* — it never means skipping a skill. After this first slice, every further feature goes through `/agent-feature` (one at a time, each with its reuse inventory and duplicate check), the chat UI through `/agent-design-ui`, and each feature's Done-when is met before the next starts.
+
+**Done when:** format, typecheck, lint and tests pass, and one real turn streams end to end with its evidence shown.
 
 ---
 

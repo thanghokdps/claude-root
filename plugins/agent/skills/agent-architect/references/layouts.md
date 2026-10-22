@@ -21,6 +21,8 @@ Both carry the same rules: one agent id defined once, exact version pins resolve
   evals/                  # agent evals, separate from unit tests
 ```
 
+The rest of the app (features, shared UI, server aggregates, tokens, dev fixtures) is placed by `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`.
+
 Pick it when: one deployable, no second client planned, Node host.
 
 ## L2 — monorepo, pnpm workspaces + Turborepo (default when ≥ 2 clients or agent and web deploy separately)
@@ -43,12 +45,9 @@ Pick it when: web plus mobile or a chat channel, separate deploys, or several ag
 
 ## Asking
 
-```
-**Q-L — Repo layout: one app (L1) or a monorepo (L2)?**
+Through `AskUserQuestion` (shape in `interview.md` § Shape of each question):
 
-Why this matters: it fixes where the agent id, schemas and interrupt contract live, how clients share them, and the CI pipeline.
-
-My recommendation: <L1 or L2> — <reason from Q2 clients and the deploy answer>.
-```
+- question: `Q-L — Repo layout: one app or a monorepo?` — it fixes where the agent id, schemas and interrupt contract live, how clients share them, and the CI pipeline.
+- options: `L1 single app` and `L2 pnpm + Turborepo monorepo`, the one that fits Q2 clients and the deploy answer first with `(Recommended)`; each description says what it changes (one deploy vs shared `packages/`, CI shape).
 
 An existing repo's layout is a fact, not a question: detect it (`pnpm-workspace.yaml`, `turbo.json`, `nx.json`, workspaces in package.json) and follow it.

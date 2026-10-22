@@ -113,6 +113,8 @@ flowchart LR
 | Writes that need user confirmation | `/agent-hitl`: interrupt contract, pending-action record, resume | `plugins/agent/rules/langgraph.md` § Interrupts |
 | Evaluating prompts, including the dataset | `/agent-evals dataset` (JSONL, example `plugins/agent/skills/agent-evals/references/dataset-example.jsonl`) → `suite` → `compare-models` | `plugins/agent/rules/agent-prompts.md` |
 | Observability | Wired by `/agent-architect` at scaffold time; added to an existing repo with `/agent-evals observability`; read with `/agent-verify-turn prod-trace` | `plugins/agent/rules/agent-tracing-privacy.md` |
+| Code structure, conventions, responsive | `/agent-architect` scaffold, `/agent-design-ui` build and narrow-width shots, `/agent-feature` duplicate + shape check | `plugins/agent/rules/agent-code-structure.md` |
+| ERD from a design | `/agent-architect` writes `docs/erd.md` before the schema | `plugins/agent/skills/agent-architect/references/data-model.md` |
 | Proving a change works | `/agent-verify-turn local`: drive a real turn and read the event stream | — |
 | Security and compliance | `/agent-security` | `plugins/agent/rules/agent-tracing-privacy.md` |
 
