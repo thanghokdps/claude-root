@@ -1,40 +1,40 @@
-# DESIGN — thang-kit
+# DESIGN — harness
 
-How the kit is packaged, what each layer does, and how the AI-assistant skills (`thang-agent`) fit together. To install it, see the README Quickstart. For everyday use, see `docs/USAGE.md`.
+How the kit is packaged, what each layer does, and how the AI-assistant skills (`agent`) fit together. To install it, see the README Quickstart. For everyday use, see `docs/USAGE.md`.
 
 ---
 
 ## 1. Packaging: one marketplace, role plugins, one bundle
 
-From the user's side the kit is **one install**: `thang-kit`. Inside, the skills are grouped into role plugins. That keeps every role's skills in one place, and a teammate who only needs one role can install just that plugin.
+From the user's side the kit is **one install**: `harness`. Inside, the skills are grouped into role plugins. That keeps every role's skills in one place, and a teammate who only needs one role can install just that plugin.
 
 ```mermaid
 graph LR
-  kit[thang-kit<br/>bundle]
+  kit[harness<br/>bundle]
   kit --> dev & ship & agent & lead & guards
-  dev[thang-dev] --> core & plan & review
-  ship[thang-ship] --> core
-  lead[thang-lead] --> core
-  guards[thang-guards<br/>opt-in hooks] --> dev
-  agent[thang-agent] --> progress
-  core[thang-core] --> progress
-  plan[thang-plan] --> progress
-  review[thang-review] --> progress
-  progress[thang-progress<br/>hooks only]
+  dev[dev] --> core & plan & review
+  ship[ship] --> core
+  lead[lead] --> core
+  guards[guards<br/>opt-in hooks] --> dev
+  agent[agent] --> progress
+  core[core] --> progress
+  plan[plan] --> progress
+  review[review] --> progress
+  progress[progress<br/>hooks only]
 ```
 
 Why role plugins rather than one flat plugin:
 
 | Reason | Effect |
 |---|---|
-| Every installed skill's description is loaded into every session to route prompts | A frontend dev who installs only `thang-agent` gets 10 skill descriptions instead of about 40, so routing gets fewer misfires |
+| Every installed skill's description is loaded into every session to route prompts | A frontend dev who installs only `agent` gets 10 skill descriptions instead of about 40, so routing gets fewer misfires |
 | Dependencies are declared in `plugin.json` and checked by `scripts/lint-kit.py` | A skill can name another plugin's skill only when that plugin is a dependency, so nothing breaks when a role is installed on its own |
-| Each plugin has its own version | A change to `thang-agent` ships without bumping the dev or review skills |
-| Hooks are opt-in (`thang-guards`) | Guard rails that block commits never arrive with a plain skill install |
+| Each plugin has its own version | A change to `agent` ships without bumping the dev or review skills |
+| Hooks are opt-in (`guards`) | Guard rails that block commits never arrive with a plain skill install |
 
 **Naming conventions**
 
-- Plugin: `thang-<role>`, one role per plugin.
+- Plugin: `<role>`, one role per plugin.
 - Skill: a verb-noun or noun name that matches its directory, e.g. `fix-bug` or `review-checklist`. AI-assistant skills are named `agent-<layer>`.
 - Invocation: `/<skill>`, or `/<plugin>:<skill>` when two plugins define the same name.
 
@@ -43,10 +43,10 @@ Why role plugins rather than one flat plugin:
 | Layer | Loaded | Lives in | Holds |
 |---|---|---|---|
 | Global instructions | every session | `global/CLAUDE.md` → `~/.claude/CLAUDE.md` | principles, lanes, the daily loop |
-| Rules | every session (or by `paths:`) | `plugins/thang-core/rules/` → `~/.claude/rules/` | git, security, code quality, typescript, testing |
+| Rules | every session (or by `paths:`) | `plugins/core/rules/` → `~/.claude/rules/` | git, security, code quality, typescript, testing |
 | Skills | on demand, routed by `description` / `when_to_use` | `plugins/<plugin>/skills/<name>/SKILL.md` | a step-by-step workflow with a "Done when" check |
 | References | read by a skill when needed | `plugins/<plugin>/references/`, `skills/<name>/references/` | detail that would bloat the skill |
-| Hooks | on events, opt-in | `plugins/thang-guards/hooks/` | risk gate, commit gate, handoff, breadcrumbs |
+| Hooks | on events, opt-in | `plugins/guards/hooks/` | risk gate, commit gate, handoff, breadcrumbs |
 | Project workspace | per project | `.claude/` written by `/project-init` | project docs, memory, project rules |
 
 Always-loaded context is the budget. Anything that is not needed on every task goes into a skill or a reference.
@@ -65,11 +65,11 @@ flowchart TD
   H --> I[/compact or /compound at session end/]
 ```
 
-The Auto-Coordinator in `global/CLAUDE.md` picks the lane. The full routing logic is in `thang-dev:coordinator`.
+The Auto-Coordinator in `global/CLAUDE.md` picks the lane. The full routing logic is in `dev:coordinator`.
 
-## 4. AI assistant design (`thang-agent`)
+## 4. AI assistant design (`agent`)
 
-Target stack: TypeScript, **CopilotKit v2** in the web client, **AG-UI** as the transport, and **LangChainJS / LangGraph** on the agent server. Every skill reads its invariants from `plugins/thang-agent/rules/`. These rules load only when a skill reads them, so they cost nothing in other repos.
+Target stack: TypeScript, **CopilotKit v2** in the web client, **AG-UI** as the transport, and **LangChainJS / LangGraph** on the agent server. Every skill reads its invariants from `plugins/agent/rules/`. These rules load only when a skill reads them, so they cost nothing in other repos.
 
 ### Skill per layer
 

@@ -15,23 +15,23 @@ cat ~/.claude/docs/solutions/INDEX.md 2>/dev/null
 
 ## What this project is
 
-A **source library** and the `thang-kit` marketplace of role plugins (local directory marketplace, loaded in place — edits are live in new sessions; a GitHub install is copied to the plugin cache).
+A **source library** and the `harness` marketplace of role plugins (local directory marketplace, loaded in place — edits are live in new sessions; a GitHub install is copied to the plugin cache).
 
 ```
 Downloads/Claude/
   .claude-plugin/marketplace.json  ← lists the 10 plugins below
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
-    thang-progress hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
-    thang-core     verify-done btw compact compound sync-memory project-init — plus scripts/init.sh and
-                   everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/ → progress
-    thang-plan     brainstorming grill domain-model writing-plans codebase-design        → progress
-    thang-review   review-checklist review-diff blast-radius create-pr                   → progress
-    thang-dev      coordinator feature fix-bug tdd checkpoint            → core, plan, review
-    thang-ship     finish-branch ci-triage release-checklist write-migration → core
-    thang-agent    agent-* + rules/ the skills read on demand            → progress
-    thang-lead     retro diagnose-session writing-skills                 → core
-    thang-guards   hooks/hooks.json + hook scripts (opt-in)              → dev
-    thang-kit      bundle, depends on all nine
+    progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
+    core        verify-done btw compact compound sync-memory project-init — plus scripts/init.sh and
+                everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/ → progress
+    plan        brainstorming grill domain-model writing-plans codebase-design        → progress
+    review      review-checklist review-diff blast-radius create-pr                   → progress
+    dev         coordinator feature fix-bug tdd checkpoint                            → core, plan, review
+    ship        finish-branch ci-triage release-checklist write-migration             → core
+    agent       agent-* + rules/ the skills read on demand                            → progress
+    lead        retro diagnose-session writing-skills                                 → core
+    guards      hooks/hooks.json + hook scripts (opt-in)                              → dev
+    harness     bundle, depends on all nine
   global/CLAUDE.md    ← installed to ~/.claude/CLAUDE.md
   eval/triggers/      ← one routing case per skill
   scripts/            ← install.sh, check.sh, lint-kit.py, eval-triggers.py (kit tooling, not shipped)
@@ -54,11 +54,11 @@ Release: bump `version` in the changed plugins' `plugin.json` (a GitHub install 
 
 ## How to add a rule
 
-Always-loaded context is the budget: add `paths:` frontmatter unless the rule applies to every task. Process detail belongs in `references/`, read by the skill that needs it. Global rules live in `plugins/thang-core/rules/` (then `bash scripts/install.sh`); agent rules in `plugins/thang-agent/rules/`, read on demand by the agent skills.
+Always-loaded context is the budget: add `paths:` frontmatter unless the rule applies to every task. Process detail belongs in `references/`, read by the skill that needs it. Global rules live in `plugins/core/rules/` (then `bash scripts/install.sh`); agent rules in `plugins/agent/rules/`, read on demand by the agent skills.
 
 ## How to add a hook
 
-`plugins/thang-guards/hooks/<name>.sh` (executable, reads JSON on stdin, exits 0 or 2 — never 1), register it in `plugins/thang-guards/hooks/hooks.json` with `"${CLAUDE_PLUGIN_ROOT}"/hooks/<name>.sh`, test with `echo '{}' | plugins/thang-guards/hooks/<name>.sh`. Prefer `additionalContext` JSON over exit 2 for non-blocking hints.
+`plugins/guards/hooks/<name>.sh` (executable, reads JSON on stdin, exits 0 or 2 — never 1), register it in `plugins/guards/hooks/hooks.json` with `"${CLAUDE_PLUGIN_ROOT}"/hooks/<name>.sh`, test with `echo '{}' | plugins/guards/hooks/<name>.sh`. Prefer `additionalContext` JSON over exit 2 for non-blocking hints.
 
 ---
 
@@ -96,4 +96,4 @@ Any other key is silently ignored by Claude Code (`color`, `isolation` belong to
 - Every skill must work as a standalone unit — no undeclared dependencies
 - Hooks must exit 0 (allow) or 2 (block) — never exit 1
 - Rules must be imperative ("do X", "never Y") — not descriptive
-- Test any new hook locally before installing: `echo '{}' | ./plugins/thang-guards/hooks/myhook.sh`
+- Test any new hook locally before installing: `echo '{}' | ./plugins/guards/hooks/myhook.sh`

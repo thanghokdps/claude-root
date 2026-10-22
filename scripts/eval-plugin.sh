@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # eval-plugin.sh — run a plugin's evals/ suite with real model calls (paid; not part of check.sh).
-#   bash scripts/eval-plugin.sh thang-agent                 # one cheap pass: 1 run per case, no baseline arm
-#   bash scripts/eval-plugin.sh thang-agent --runs 3 --ablation with-without   # full comparison before a demo
+#   bash scripts/eval-plugin.sh agent                 # one cheap pass: 1 run per case, no baseline arm
+#   bash scripts/eval-plugin.sh agent --runs 3 --ablation with-without   # full comparison before a demo
 # The report stays local (--no-publish); later flags override the defaults. Judge is sonnet: the default small judge
 # split votes on correct Vietnamese replies (greenfield-problem-first, 2026-10-21).
 # Target is plugins/, not plugins/<plugin>: a case may only load plugins under the target, and a plugin whose

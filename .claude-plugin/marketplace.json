@@ -1,58 +1,59 @@
 {
-  "name": "thang-kit",
+  "name": "harness",
+  "description": "Role plugins for Claude Code — plan, dev, review, ship, AI-agent (CopilotKit/LangGraph), lead, guards — and the harness bundle that installs them all.",
   "owner": {
     "name": "Thang Ho Quang"
   },
   "plugins": [
     {
-      "name": "thang-core",
-      "source": "./plugins/thang-core",
+      "name": "core",
+      "source": "./plugins/core",
       "description": "Session and project basics every role uses: verify-done evidence gate, project-init bootstrap, compact/compound memory, sync-memory, btw."
     },
     {
-      "name": "thang-progress",
-      "source": "./plugins/thang-progress",
+      "name": "progress",
+      "source": "./plugins/progress",
       "description": "Shows a skill's checklist when it starts and each checkpoint as it completes (✅ 3/6), then 🏁 when all are done. Never blocks."
     },
     {
-      "name": "thang-plan",
-      "source": "./plugins/thang-plan",
+      "name": "plan",
+      "source": "./plugins/plan",
       "description": "Design before code: brainstorming, grill, domain-model, codebase-design, writing-plans → PLAN.md."
     },
     {
-      "name": "thang-review",
-      "source": "./plugins/thang-review",
+      "name": "review",
+      "source": "./plugins/review",
       "description": "Review a diff or PR: review-checklist, review-diff, blast-radius impact analysis, create-pr description."
     },
     {
-      "name": "thang-dev",
-      "source": "./plugins/thang-dev",
+      "name": "dev",
+      "source": "./plugins/dev",
       "description": "Build and fix: coordinator lane router, feature, fix-bug red loop, tdd, checkpoint gates."
     },
     {
-      "name": "thang-ship",
-      "source": "./plugins/thang-ship",
+      "name": "ship",
+      "source": "./plugins/ship",
       "description": "Land and release: finish-branch, ci-triage, release-checklist, write-migration."
     },
     {
-      "name": "thang-agent",
-      "source": "./plugins/thang-agent",
+      "name": "agent",
+      "source": "./plugins/agent",
       "description": "CopilotKit / AG-UI / LangChainJS / LangGraph assistants: architecture, tools, HITL, graph, frontend, evals, security, turn verification — with their rules."
     },
     {
-      "name": "thang-lead",
-      "source": "./plugins/thang-lead",
+      "name": "lead",
+      "source": "./plugins/lead",
       "description": "Improve the process: weekly retro, session diagnosis, authoring skills."
     },
     {
-      "name": "thang-guards",
-      "source": "./plugins/thang-guards",
+      "name": "guards",
+      "source": "./plugins/guards",
       "description": "Personal guard-rail hooks: branch guard, commit gate, scope gate, blast-radius and session handoff. Opt-in."
     },
     {
-      "name": "thang-kit",
-      "source": "./plugins/thang-kit",
-      "description": "Everything: installs all nine thang-* role plugins."
+      "name": "harness",
+      "source": "./plugins/harness",
+      "description": "Everything: installs all nine role plugins."
     }
   ]
 }

@@ -5,7 +5,7 @@
 | Layer | What it is | Lives in |
 |-------|-----------|---------|
 | **Skills** (engine) | Invocable `/skills` that do the work — feature, fix-bug, review, checkpoint | `skills/`, `agents/` |
-| **Harness** (control) | Thin layer that decides how much process a change needs and when to involve a human | `plugins/thang-guards/hooks/`, `rules/`, memory system |
+| **Harness** (control) | Thin layer that decides how much process a change needs and when to involve a human | `plugins/guards/hooks/`, `rules/`, memory system |
 
 The engine answers *"how do I build this?"* The harness answers *"how careful should I be, and who needs to approve?"*
 
@@ -85,14 +85,14 @@ team project: next session
 bash <kit-dir>/scripts/install.sh
 
 # After install: bootstrap any project with /project-init or the shell script
-cd my-project && bash <kit-dir>/plugins/thang-core/scripts/init.sh
+cd my-project && bash <kit-dir>/plugins/core/scripts/init.sh
 
 # Update an existing project after harness changes
-bash <kit-dir>/plugins/thang-core/scripts/init.sh /path/to/project
+bash <kit-dir>/plugins/core/scripts/init.sh /path/to/project
 # (will warn before overwriting existing .claude/settings.json)
 
 # Add a new stack rule
-# 1. Create plugins/thang-core/templates/project/rules/stacks/<name>.md
-# 2. Add detection in plugins/thang-core/scripts/init.sh (has_signal block)
+# 1. Create plugins/core/templates/project/rules/stacks/<name>.md
+# 2. Add detection in plugins/core/scripts/init.sh (has_signal block)
 # 3. Re-run init.sh on any project that needs it
 ```

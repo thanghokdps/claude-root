@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# install.sh — install thang-kit for the current user. Idempotent; re-run after pulling the kit.
+# install.sh — install harness for the current user. Idempotent; re-run after pulling the kit.
 #
 #   1. Back up ~/.claude/CLAUDE.md, rules/, settings.json and the skills this kit replaces
 #   2. Install global/CLAUDE.md and rules/*.md (the only always-loaded files)
-#   3. Register this directory as a local marketplace and install the thang-kit bundle, which
-#      pulls in every thang-* role plugin as a dependency (copied to the plugin cache — re-run after edits)
+#   3. Register this directory as a local marketplace and install the harness bundle, which
+#      pulls in every role plugin as a dependency (copied to the plugin cache — re-run after edits)
 #   4. Migrate from the old copy-based install: move kit skills out of ~/.claude/skills and
 #      drop kit hook registrations from ~/.claude/settings.json (the plugin registers them now)
 #
-# Undo: restore from the printed backup dir, then `claude plugin uninstall thang-kit && claude plugin prune`.
+# Undo: restore from the printed backup dir, then `claude plugin uninstall harness && claude plugin prune`.
 set -euo pipefail
 
 KIT="$(cd "$(dirname "$0")/.." && pwd)"
 G="$HOME/.claude"
-B="$G/backups/thang-kit-install-$(date +%Y%m%d-%H%M%S)"
-RULES="$KIT/plugins/thang-core/rules"
+B="$G/backups/harness-install-$(date +%Y%m%d-%H%M%S)"
+RULES="$KIT/plugins/core/rules"
 mkdir -p "$B/skills" "$B/rules" "$G/rules"
 
-echo "thang-kit installer — kit: $KIT"
+echo "harness installer — kit: $KIT"
 
 # 1. Backup
 cp "$G/CLAUDE.md" "$B/" 2>/dev/null || true
@@ -35,13 +35,21 @@ echo "  CLAUDE.md + rules: $(ls "$RULES"/*.md | wc -l | tr -d ' ') rule files"
 
 # 3. Plugin
 command -v claude >/dev/null || { echo "claude CLI not found"; exit 1; }
+# Before 4.0 the marketplace was `thang-kit` with `thang-<role>` plugins; the same directory cannot be registered twice.
+if claude plugin marketplace list 2>/dev/null | grep -q "thang-kit"; then
+  for p in thang-kit thang-guards thang-lead thang-agent thang-ship thang-dev thang-review thang-plan thang-core thang-progress; do
+    claude plugin uninstall "$p@thang-kit" >/dev/null 2>&1 || true
+  done
+  claude plugin marketplace remove thang-kit >/dev/null 2>&1 || true
+  echo "  migrated: removed thang-kit marketplace and thang-* plugins"
+fi
 claude plugin marketplace add "$KIT" >/dev/null 2>&1 || true
-claude plugin marketplace update thang-kit >/dev/null 2>&1 || true
+claude plugin marketplace update harness >/dev/null 2>&1 || true
 # Each plugin explicitly: `plugin update` does not install dependencies a new version adds, and
 # re-running `install` on an installed bundle adds only one missing dependency per run (CLI 2.1.305).
-claude plugin update thang-kit@thang-kit >/dev/null 2>&1 || true
+claude plugin update harness@harness >/dev/null 2>&1 || true
 for p in $(python3 -c "import json,sys; print(' '.join(p['name'] for p in json.load(open(sys.argv[1]))['plugins']))" "$KIT/.claude-plugin/marketplace.json"); do
-  claude plugin install "$p@thang-kit" 2>&1 | tail -1
+  claude plugin install "$p@harness" 2>&1 | tail -1
 done
 
 # 4. Migrate old copies: plugin skills would otherwise show up twice.
@@ -52,7 +60,7 @@ done
 for s in code-review figma-to-screen gen-tests verify-feature; do   # renamed or moved to stacks/
   [ -d "$G/skills/$s" ] && mv "$G/skills/$s" "$B/skills/$s"
 done
-python3 - "$G/settings.json" "$KIT/plugins/thang-guards/hooks" <<'PY'
+python3 - "$G/settings.json" "$KIT/plugins/guards/hooks" <<'PY'
 import json, os, sys
 path, hooks_dir = sys.argv[1], sys.argv[2]
 if not os.path.exists(path):

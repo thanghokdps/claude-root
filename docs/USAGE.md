@@ -79,16 +79,16 @@ No `.env` is needed: the installer uses your logged-in `claude` CLI. `.env.sampl
 
 The installer is idempotent and takes no arguments. It:
 
-1. Backs up `~/.claude/CLAUDE.md`, `rules/` and `settings.json` to `~/.claude/backups/thang-kit-install-<timestamp>/`
-2. Copies `global/CLAUDE.md` and `plugins/thang-core/rules/*.md` into `~/.claude/`
-3. Registers `<kit-dir>` as the local marketplace `thang-kit` and installs every plugin (loaded in place — kit edits are live in new sessions)
+1. Backs up `~/.claude/CLAUDE.md`, `rules/` and `settings.json` to `~/.claude/backups/harness-install-<timestamp>/`
+2. Copies `global/CLAUDE.md` and `plugins/core/rules/*.md` into `~/.claude/`
+3. Registers `<kit-dir>` as the local marketplace `harness` and installs every plugin (loaded in place — kit edits are live in new sessions)
 4. Migrates an old copy-based install (moves duplicate skills to the backup, drops old hook registrations)
 
 Without cloning — inside Claude Code:
 
 ```
 /plugin marketplace add thanghokdps/claude-root
-/plugin install thang-kit@thang-kit
+/plugin install harness@harness
 ```
 
 Open a new Claude Code session to load the changes.
@@ -129,19 +129,19 @@ Claude will:
 
 ```bash
 cd ~/my-project
-bash <kit-dir>/plugins/thang-core/scripts/init.sh
+bash <kit-dir>/plugins/core/scripts/init.sh
 
 # Or standalone mode (copies all rules, skills, agents, commands into .claude/):
-STANDALONE=1 bash <kit-dir>/plugins/thang-core/scripts/init.sh /path/to/my-project
+STANDALONE=1 bash <kit-dir>/plugins/core/scripts/init.sh /path/to/my-project
 ```
 
 ### Method C — Use an existing stack bundle (React Native / Next.js / Python)
 
-If your project matches one of the bundles in `plugins/thang-core/stacks/`:
+If your project matches one of the bundles in `plugins/core/stacks/`:
 
 ```bash
 # Example: React Native project
-cp -r <kit-dir>/plugins/thang-core/stacks/react-native/ ~/my-rn-project/
+cp -r <kit-dir>/plugins/core/stacks/react-native/ ~/my-rn-project/
 ```
 
 Then edit the files to match your project's actual paths.
@@ -493,7 +493,7 @@ Fan-out web searches → cross-check sources → adversarial vote on each claim 
 /sync-memory
 ```
 
-This skill (part of `thang-core`) syncs team commits and rebuilds local commit memory automatically.
+This skill (part of `core`) syncs team commits and rebuilds local commit memory automatically.
 
 **What it does:**
 1. Stash uncommitted changes
@@ -625,7 +625,7 @@ To update `.claude/` for a specific project:
 
 ```bash
 cd ~/my-project
-bash <kit-dir>/plugins/thang-core/scripts/init.sh
+bash <kit-dir>/plugins/core/scripts/init.sh
 # Script will warn before overwriting settings.json
 ```
 
@@ -644,7 +644,7 @@ bash <kit-dir>/plugins/thang-core/scripts/init.sh
 │                                                             │
 │  cd ~/my-project                                           │
 │  /project-init              ← Claude Code                  │
-│  # or: bash plugins/thang-core/scripts/init.sh             │
+│  # or: bash plugins/core/scripts/init.sh             │
 │                                                             │
 │  Fill in CLAUDE.md          ← run commands, architecture   │
 │  Fill in memory/user.md     ← role, preferences            │
