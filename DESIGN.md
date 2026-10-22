@@ -93,20 +93,21 @@ flowchart LR
 
 | Question | Skill | Rule / reference |
 |---|---|---|
-| Starting a new assistant: which architecture? | `/agent-architect greenfield` writes an ADR to `docs/adr/` and scaffolds the repo, including `.env.example`, a tracing switch and the first eval cases | `skills/agent-architect/references/shapes.md`, `layouts.md` |
-| Adding a feature to an existing assistant | `/agent-feature`: checks the ADR, takes a reuse inventory, and decides reuse / extend / new for each slice | `skills/agent-feature/references/reuse-inventory.md` |
-| Defining a backend agent tool | `/agent-tool`: Zod schema, identity from trusted context, read vs mutation, retry and audit | `rules/agent-identity-and-tools.md` |
-| Defining a frontend tool, which runs in the browser | `/agent-frontend`: `useFrontendTool`, registered only for the agent allowed to call it | `rules/agent-stock-first.md` |
-| Integrating CopilotKit | `/agent-frontend`: provider, auth headers, `useAgent`, `useRenderTool`, and e2e tests against recorded AG-UI streams. `/agent-design-ui` handles the theme and slots | `rules/agui-transport.md` |
+| Starting a new assistant: which architecture? | `/agent-architect greenfield` writes an ADR to `docs/adr/` and scaffolds the repo, including `.env.example`, a tracing switch and the first eval cases | `plugins/agent/skills/agent-architect/references/shapes.md`, `layouts.md` |
+| Adding a feature to an existing assistant | `/agent-feature`: checks the ADR, takes a reuse inventory, and decides reuse / extend / new for each slice | `plugins/agent/skills/agent-feature/references/reuse-inventory.md` |
+| Defining a backend agent tool | `/agent-tool`: Zod schema, identity from trusted context, read vs mutation, retry and audit | `plugins/agent/rules/agent-identity-and-tools.md` |
+| Defining a frontend tool, which runs in the browser | `/agent-frontend`: `useFrontendTool`, registered only for the agent allowed to call it | `plugins/agent/rules/agent-identity-and-tools.md` § Where a tool lives |
+| Agent tool or frontend tool? | Data, identity, secrets, audit or writes → agent tool. Browser-only effects (navigate, open a panel, fill a form) → frontend tool. Fetch-then-show → both | `plugins/agent/rules/agent-identity-and-tools.md` § Where a tool lives |
+| Integrating CopilotKit | `/agent-frontend`: provider, auth headers, `useAgent`, `useRenderTool`, and e2e tests against recorded AG-UI streams. `/agent-design-ui` handles the theme and slots | `plugins/agent/rules/agui-transport.md` |
 | Suggestions | `/agent-frontend`: `useConfigureSuggestions`, served by the backend and limited to tools that exist | — |
 | Shared context (page state → agent) | `/agent-frontend`: `useAgentContext`, memoised. It is display-only and never used for authorisation | `/agent-security` covers injection through context |
-| Short-term memory (the conversation) | LangGraph checkpointer keyed by `thread_id` | `rules/langgraph.md` § State |
-| Long-term memory (across threads) | LangGraph Store, namespaced by the trusted user id | `rules/langgraph.md` § Long-term memory |
-| Writes that need user confirmation | `/agent-hitl`: interrupt contract, pending-action record, resume | `rules/langgraph.md` § Interrupts |
-| Evaluating prompts, including the dataset | `/agent-evals dataset` → `suite` → `compare-models` | `rules/agent-prompts.md` |
-| Observability | Wired by `/agent-architect` at scaffold time; added to an existing repo with `/agent-evals observability`; read with `/agent-verify-turn prod-trace` | `rules/agent-tracing-privacy.md` |
+| Short-term memory (the conversation) | LangGraph checkpointer keyed by `thread_id` | `plugins/agent/rules/langgraph.md` § State |
+| Long-term memory (across threads) | LangGraph Store, namespaced by the trusted user id | `plugins/agent/rules/langgraph.md` § Long-term memory |
+| Writes that need user confirmation | `/agent-hitl`: interrupt contract, pending-action record, resume | `plugins/agent/rules/langgraph.md` § Interrupts |
+| Evaluating prompts, including the dataset | `/agent-evals dataset` (JSONL, example `plugins/agent/skills/agent-evals/references/dataset-example.jsonl`) → `suite` → `compare-models` | `plugins/agent/rules/agent-prompts.md` |
+| Observability | Wired by `/agent-architect` at scaffold time; added to an existing repo with `/agent-evals observability`; read with `/agent-verify-turn prod-trace` | `plugins/agent/rules/agent-tracing-privacy.md` |
 | Proving a change works | `/agent-verify-turn local`: drive a real turn and read the event stream | — |
-| Security and compliance | `/agent-security` | `rules/agent-tracing-privacy.md` |
+| Security and compliance | `/agent-security` | `plugins/agent/rules/agent-tracing-privacy.md` |
 
 ## 5. Quality gates for the kit itself
 

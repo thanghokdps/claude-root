@@ -12,6 +12,10 @@
     {
       "prompt": "wire useAgentContext and suggestions chips in the CopilotKit chat",
       "top_k": 3
+    },
+    {
+      "prompt": "add a frontend tool with useFrontendTool so the agent can open the order panel in the browser",
+      "top_k": 3
     }
   ],
   "negative": [

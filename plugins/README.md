@@ -63,7 +63,7 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [agent-graph](agent/skills/agent-graph/SKILL.md) | `agent` | `/agent-graph <scope>` | Agents, router, handoff, boundary rules, prompts, middleware order | normal |
 | [agent-frontend](agent/skills/agent-frontend/SKILL.md) | `agent` | `/agent-frontend <change>` | CopilotKit v2 React: provider headers, context, tool renderers, aimock e2e | normal |
 | [agent-verify-turn](agent/skills/agent-verify-turn/SKILL.md) | `agent` | `/agent-verify-turn [local\|prod-trace]` | Real turn + AG-UI stream as evidence; classify a production trace before fixing | all |
-| [agent-evals](agent/skills/agent-evals/SKILL.md) | `agent` | `/agent-evals [unit\|suite\|compare-models]` | Fake-model unit tests, judged eval suite with baseline gate, model comparison | normal |
+| [agent-evals](agent/skills/agent-evals/SKILL.md) | `agent` | `/agent-evals [unit\|dataset\|suite\|observability\|compare-models]` | Fake-model unit tests, JSONL eval dataset, judged suite with baseline gate, tracing setup, model comparison | normal |
 | [agent-security](agent/skills/agent-security/SKILL.md) | `agent` | `/agent-security [scope]` | Agent threat model: injection, confused deputy, exfiltration, trace PII, compliance mapping | high |
 
 ## Skill handoff map

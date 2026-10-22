@@ -34,12 +34,12 @@ Ask for a feature in plain words, e.g. *"Thêm tính năng cho khách đổi đ�
 | `/agent-architect [greenfield\|audit]` | Starting an assistant, or auditing one for custom code that stock middleware now covers |
 | `/agent-feature <capability>` | Adding a feature to an existing assistant — within its ADR, reusing what is there, then a duplicate check |
 | `/agent-design-ui <figma link \| folder>` | A design for the chat: states inventory, tokens → theme, stock vs custom per element, screenshot diff |
-| `/agent-tool <tool>` | Adding, renaming or fixing a tool — schema, trusted identity, read vs mutation, its test |
+| `/agent-tool <tool>` | Adding, renaming or fixing an agent (backend) tool — schema, trusted identity, read vs mutation, its test. Browser-only tools go to `/agent-frontend` |
 | `/agent-hitl <write>` | A tool creates, updates or deletes data and needs a confirm card |
 | `/agent-graph <scope>` | A request lands on the wrong agent; adding an agent, router or supervisor; rewriting a system prompt |
-| `/agent-frontend <change>` | Chat UI in React: provider headers, shared context, tool renderers, e2e with recorded streams |
+| `/agent-frontend <change>` | CopilotKit v2 in React: provider + auth headers, `useAgentContext`, frontend tools (`useFrontendTool`), tool cards (`useRenderTool`), suggestions, e2e with recorded streams |
 | `/agent-verify-turn [local\|prod-trace]` | Before saying an agent change works, or when a production answer was wrong |
-| `/agent-evals [unit\|suite\|compare-models]` | Fake-model unit tests, judged eval suites with a CI gate, comparing models |
+| `/agent-evals [unit\|dataset\|suite\|observability\|compare-models]` | Fake-model unit tests; an eval dataset (JSONL, example in `skills/agent-evals/references/dataset-example.jsonl`); judged eval suites with a CI gate; Langfuse/LangSmith tracing with masking; comparing models |
 | `/agent-security [scope]` | A new tool, data source or client; before shipping; compliance questions |
 
 Skills fire on their own from what you type — the slash command is optional.
@@ -65,7 +65,19 @@ About $3 for the nine cases. Add `--runs 3 --ablation with-without` for a with/w
 
 ## Rules
 
-`rules/` holds the invariants the skills read before they act — identity and tools, prompts, stock-first, AG-UI transport, LangGraph, tracing privacy, dependency pinning. They load only when a skill needs them, not every session.
+The invariants the skills read before they act. They load only when a skill needs them, not every session. Building a feature or a tool means following these:
+
+| Rule | Covers | Read by |
+|---|---|---|
+| [`agent-identity-and-tools.md`](rules/agent-identity-and-tools.md) | identity from trusted context only; **where a tool lives (agent vs frontend)**; read vs mutation, retry, audit, errors, tests | `/agent-tool`, `/agent-feature`, `/agent-frontend`, `/agent-hitl` |
+| [`agent-prompts.md`](rules/agent-prompts.md) | system prompts, tool descriptions, scope rules | `/agent-graph`, `/agent-tool` |
+| [`agent-stock-first.md`](rules/agent-stock-first.md) | use stock CopilotKit / LangChain / LangGraph pieces before custom code | all |
+| [`agui-transport.md`](rules/agui-transport.md) | AG-UI events, shared state, client contract | `/agent-frontend`, `/agent-hitl` |
+| [`langgraph.md`](rules/langgraph.md) | state, short- and long-term memory, graph lifecycle, interrupts | `/agent-graph`, `/agent-hitl` |
+| [`agent-tracing-privacy.md`](rules/agent-tracing-privacy.md) | tracing switch, masking, what each turn records | `/agent-evals observability`, `/agent-verify-turn` |
+| [`agent-deps-pinning.md`](rules/agent-deps-pinning.md) | exact version pins, one LangChain copy | `/agent-architect` |
+
+New feature order (`/agent-feature`): check the ADR → reuse inventory → schema → tool → HITL → agent scope → frontend → evals, one slice green before the next.
 
 ## Works alongside
 

@@ -34,7 +34,7 @@ Read the provider, the agent id constant, and the existing tool renderers. Confi
 - `useAgentContext({ description, value })`: value under a named key, memoised on its inputs — a fresh object each render re-registers forever. Context is display-only, never authorisation.
 - Backend tool observed in the UI → `useRenderTool` with the shared tool-name constant; on completion invalidate the affected queries, not patch from the payload; parse the result with a tolerant Zod schema and render a fallback when it does not parse.
 - Side effects keyed by `toolCallId` in a ref that lives above the re-created component, so remounts do not re-trigger them.
-- Browser-side tools → `useFrontendTool`, registered only for the agent that may call them.
+- Browser-side tools → `useFrontendTool`, registered only for the agent that may call them. Agent or frontend: the table "Where a tool lives" in `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md` decides; data, identity and writes stay in agent tools.
 - Clarifying questions may use `useHumanInTheLoop`; mutation confirmations come from the backend gate (`/agent-hitl`).
 - Suggestions from the backend endpoint (`useConfigureSuggestions`), never inventing chips for tools that do not exist.
 

@@ -16,6 +16,10 @@
     {
       "prompt": "build an eval dataset for the agent prompt and set up Langfuse tracing",
       "top_k": 3
+    },
+    {
+      "prompt": "tạo dataset jsonl để đánh giá prompt của agent",
+      "top_k": 3
     }
   ],
   "negative": [

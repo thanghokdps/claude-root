@@ -24,7 +24,8 @@ Unit tests prove code paths with no model. Evals prove behaviour with a real mod
 
 ## Mode dataset — the cases every suite runs on
 
-- One file per behaviour in `evals/datasets/<behaviour>.jsonl`; each line `{ id, input, context, expected: { agent, tool, args, outcome }, tags }`. `context` is the trusted identity and page state the turn would have.
+- One file per behaviour in `evals/datasets/<behaviour>.jsonl`; each line `{ id, input, context, expected: { agent, tool, args, outcome }, tags, fixture? }`. `context` is the trusted identity and page state the turn would have; `tool: null` means no tool may be called; `fixture` stubs a tool's upstream result (used for injection cases). Copy the shape from `${CLAUDE_SKILL_DIR}/references/dataset-example.jsonl` (happy path, missing argument, authorisation, write + confirm, injection, routing regression).
+- The suite reads these files; `expected.tool` / `args` / `agent` are deterministic checks, `outcome` is the judge's rubric.
 - Sources, in order: the ADR's example messages, bugs already fixed (one case each, tagged `regression`), masked production traces, then synthetic variants (paraphrase, other language, missing field) generated from those and reviewed by a person.
 - Cover per tool: happy path, ambiguous target, missing argument, out-of-scope request, prompt injection inside a tool result; per write: confirm and cancel.
 - No raw PII or secrets; production-derived cases pass the privacy scan before they are committed.

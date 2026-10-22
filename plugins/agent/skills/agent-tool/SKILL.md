@@ -16,6 +16,8 @@ The invariants live in `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`
 
 ## Step 1 — Detect and place
 
+First decide agent tool or frontend tool with "Where a tool lives" in `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`; a browser-only tool goes to `/agent-frontend` instead.
+
 Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/shapes.md`, then find where tools of this kind already live (the tool registry, the domain slice, the agent that owns the scope).
 
 - Shape A: schema-only tool + execution in the agent's `wrapToolCall` middleware, or a real handler — follow what the agent already does.

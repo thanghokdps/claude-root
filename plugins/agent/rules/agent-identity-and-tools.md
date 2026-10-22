@@ -14,6 +14,20 @@ paths:
 - Shared context from the frontend (`useAgentContext`) is untrusted display context: fine for greetings and phrasing, never for authorisation.
 - Missing or partial claims → refuse (fail closed), except an explicit dev-only fallback that cannot ship.
 
+## Where a tool lives — agent or frontend
+
+| The tool… | Define it | Skill |
+|---|---|---|
+| reads or writes server data, needs the caller's identity, a secret or an audit entry | agent tool (backend) | `/agent-tool`; writes add `/agent-hitl` |
+| only changes the browser: navigate, open a panel, fill a form, read the selection, highlight | frontend tool, `useFrontendTool` | `/agent-frontend` |
+| is a backend tool whose call or result the user should see | backend tool + `useRenderTool` card | `/agent-tool` then `/agent-frontend` |
+| asks the user a question mid-turn (choose, clarify) | `useHumanInTheLoop` | `/agent-frontend` |
+| needs both (fetch data, then show it in a panel) | two tools: backend read + frontend display; never one browser tool calling the API with the user's token | both |
+
+- A frontend tool never writes server data and never decides authorisation: anything it can do, the user could do by clicking.
+- Register a frontend tool only for the agent that may call it, and name it in that agent's prompt like any other tool.
+- Tool name constants are shared (`shared/` package or module) so the backend registry, prompts and frontend renderers cannot drift.
+
 ## Tools
 
 - Name and description live in constants; the description says when to use the tool and what it cannot do, in short bullets.
