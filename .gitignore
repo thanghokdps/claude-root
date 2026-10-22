@@ -9,3 +9,5 @@ specs/
 
 # plugin eval reports (claude plugin eval)
 plugins/*/evals/results/
+
+.playwright-mcp
