@@ -43,7 +43,7 @@ Or without cloning, inside Claude Code: `/plugin marketplace add thanghokdps/cla
 | Eval dataset, prompt evals, tracing | `/agent-evals dataset` · `suite` · `observability` |
 | End the session | `/compact` (handoff) · `/compound` (learnings) |
 
-Full skill list: [`plugins/README.md`](plugins/README.md). Step-by-step guide: [`docs/USAGE.md`](docs/USAGE.md).
+Full skill list: [`plugins/README.md`](plugins/README.md). Interactive map of every plugin, skill and hook: open [`docs/skill-map.html`](docs/skill-map.html) in a browser. Step-by-step guide: [`docs/USAGE.md`](docs/USAGE.md).
 
 ---
 

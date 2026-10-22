@@ -1,5 +1,7 @@
 # DESIGN — harness
 
+Interactive version: [`docs/skill-map.html`](docs/skill-map.html) (zoom, click a node for what/when/how, double-click a plugin to see its skills; regenerate with `scripts/skill-map.py`).
+
 How the kit is packaged, what each layer does, and how the AI-assistant skills (`agent`) fit together. To install it, see the README Quickstart. For everyday use, see `docs/USAGE.md`.
 
 ---
