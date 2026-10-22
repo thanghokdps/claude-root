@@ -16,7 +16,20 @@ when_to_use: a new capability is requested, or /coordinator classifies the inten
 
 ## Stage 0 — Risk intake
 
-Evaluate the request against the 10-flag checklist (from CLAUDE_LEGACY.md).
+Evaluate the request against the 10-flag checklist:
+
+| Flag | Examples |
+|------|----------|
+| Auth / authorization | login, JWT, roles, permissions |
+| Data model change | schema migration, new table/collection |
+| External provider | new SDK, 3rd-party API, payment, AI model |
+| Public contract change | REST endpoint rename, breaking type change |
+| Audit / security | sanitization, validation removal, PII |
+| Cross-platform impact | shared lib, monorepo, mobile + web |
+| Existing behavior change | modifies path already covered by tests |
+| Weak test coverage | area with < 50% coverage |
+| High-blast file | config, shared middleware, CI pipeline |
+| Multi-domain effect | touches 4+ modules or services |
 
 Assign lane:
 - **tiny** (0–1 flags): skip to Stage 3, direct edit

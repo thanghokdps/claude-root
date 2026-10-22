@@ -1,23 +1,61 @@
-# Claude Harness — Skill & Agent Library
+# Claude Harness — build AI assistants with Claude Code
 
-A portable governance framework for [Claude Code](https://claude.ai/code). It installs into `~/.claude/` and bootstraps any project with a full AI-agent workspace: skills (slash commands), rules, hooks, agent role definitions, memory, and spec templates — all tuned to the detected tech stack.
+A Claude Code kit centred on **building one AI assistant end to end** on CopilotKit v2 · AG-UI · LangChainJS / LangGraph: architecture interview → scaffold → features and tools → chat UI → evals and tracing → security. That is the `agent` plugin. The other plugins are supporting tooling for the everyday dev loop (plan, build, review, ship) and are optional.
 
-**Source library, not an app.** Changes here propagate to `~/.claude/` (global) and to individual projects via `/project-init`.
+**Design:** [`DESIGN.md`](DESIGN.md) — why role plugins, the layers, and where each AI-assistant concern lives (CopilotKit, tools, memory, evals, observability). **Map:** [`docs/skill-map.html`](docs/skill-map.html) — every plugin, skill and hook, interactive.
 
-**Design:** [`DESIGN.md`](DESIGN.md) — why role plugins, the layers, and where each AI-assistant concern lives (CopilotKit, tools, memory, evals, observability).
-
-## Quickstart
+## Quickstart — AI assistant
 
 ```bash
-# 1. Install once — clone anywhere; install.sh resolves its own location
+# Inside Claude Code — no clone, no fixed path
+/plugin marketplace add thanghokdps/claude-root
+/plugin install agent@harness          # pulls in its own dependencies (progress) automatically
+```
+
+Then, in an empty folder:
+
+```text
+/agent-architect greenfield            # checks Node, package manager, model key, git → interview → ADR → scaffold → first real streamed turn
+/agent-feature <capability>            # every feature after that: ADR check → reuse inventory → tool → HITL → frontend → evals
+```
+
+| I want to… | Run |
+|---|---|
+| Start an assistant, or audit one | `/agent-architect greenfield` · `/agent-architect audit` |
+| Add a feature | `/agent-feature` (it calls the layer skills below in order) |
+| Add a backend tool · a frontend tool | `/agent-tool` · `/agent-frontend` (`useFrontendTool`) |
+| Confirm before a write | `/agent-hitl` |
+| Fix routing, add an agent, rewrite a prompt | `/agent-graph` |
+| Wire CopilotKit, suggestions, shared context | `/agent-frontend` |
+| Turn a Figma design into the chat UI | `/agent-design-ui <figma>` |
+| Prove a change works | `/agent-verify-turn local` |
+| Eval dataset, prompt evals, tracing | `/agent-evals dataset` · `suite` · `observability` |
+| Security review | `/agent-security` |
+
+Skills fire on their own from what you type; the slash command is optional. Details and the rules each skill follows: [`plugins/agent/README.md`](plugins/agent/README.md).
+
+## Quickstart — the whole kit (optional)
+
+Install everything (`agent` plus the dev-loop plugins and global rules) when you also want the general workflow:
+
+```bash
+# Inside Claude Code
+/plugin install harness@harness
+
+# Or from a clone, which also installs global/CLAUDE.md and the global rules.
+# Clone anywhere — install.sh resolves its own location.
 git clone git@github.com:thanghokdps/claude-root.git <any-dir>/harness
 bash <any-dir>/harness/scripts/install.sh        # no env vars needed; see .env.sample for optional ones
+```
 
-# 2a. Existing repo — bootstrap once
+Bootstrap a project:
+
+```bash
+# Existing repo
 cd my-project && claude
 /project-init                                       # scans the repo, writes .claude/ docs, rules, memory
 
-# 2b. Empty folder — design and scaffold first, then bootstrap
+# Empty folder (not an AI assistant — for one, use /agent-architect greenfield above)
 mkdir my-app && cd my-app && git init && claude
 /brainstorming <idea>                               # → specs/<slug>/design.md, incl. the stack
 /writing-plans                                      # → PLAN.md; wave 1 = scaffold (manifest, tests, lint)
@@ -25,25 +63,15 @@ mkdir my-app && cd my-app && git init && claude
 /project-init                                       # now there is a stack and code to scan
 ```
 
-Building an AI assistant from scratch? Replace `/brainstorming` + `/writing-plans` with `/agent-architect greenfield`. It checks the machine (Node, package manager, model key, git), runs an architecture interview, records an ADR and scaffolds the first working turn. Then run `/project-init` and add features with `/agent-feature`. Details are in [`docs/USAGE.md` §4](docs/USAGE.md#4-step-2--bootstrap-a-new-project).
-
-Or without cloning, inside Claude Code: `/plugin marketplace add thanghokdps/claude-root` then `/plugin install harness@harness`.
-
-**3. What to run next — by task**
-
 | I want to… | Run |
 |---|---|
 | Build a feature / fix a bug | just describe it (auto-coordinator) · `/fix-bug <symptom>` |
 | Design before coding | `/brainstorming` → `/writing-plans` |
 | Review before a PR | `/review-checklist` → `/code-review` |
 | Finish the branch | `/verify-done` → `/finish-branch` |
-| Start an AI assistant (CopilotKit + LangGraph) | `/agent-architect greenfield` |
-| Add a feature / tool / confirm step to an assistant | `/agent-feature` · `/agent-tool` · `/agent-hitl` |
-| Wire or theme the chat UI | `/agent-frontend` · `/agent-design-ui <figma>` |
-| Eval dataset, prompt evals, tracing | `/agent-evals dataset` · `suite` · `observability` |
 | End the session | `/compact` (handoff) · `/compound` (learnings) |
 
-Full skill list: [`plugins/README.md`](plugins/README.md). Interactive map of every plugin, skill and hook: open [`docs/skill-map.html`](docs/skill-map.html) in a browser. Step-by-step guide: [`docs/USAGE.md`](docs/USAGE.md).
+Full skill list: [`plugins/README.md`](plugins/README.md). Step-by-step guide: [`docs/USAGE.md`](docs/USAGE.md). Everything below this point is reference for the whole kit.
 
 ---
 

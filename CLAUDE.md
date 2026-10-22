@@ -18,7 +18,7 @@ cat ~/.claude/docs/solutions/INDEX.md 2>/dev/null
 A **source library** and the `harness` marketplace of role plugins (local directory marketplace, loaded in place — edits are live in new sessions; a GitHub install is copied to the plugin cache).
 
 ```
-Downloads/Claude/
+<repo>/
   .claude-plugin/marketplace.json  ← lists the 10 plugins below
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
