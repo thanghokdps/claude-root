@@ -83,7 +83,7 @@ Over the feature's diff, look for what Step 4 should have caught:
 - a second renderer, card or confirm mechanism for something that already has one;
 - copied helpers (formatting, error mapping, auth headers) → the existing helper.
 
-- code shape against `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: files past the size limits, a raw hex or `[Npx]` value in a component, a dev fixture imported by app code, a third copy of a block.
+- code shape against `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: files past the size limits, a raw hex or `[Npx]` value in a component, a raw `<button>` / `<input>` / `<textarea>` outside `components/ui/`, an icon size off the scale, a near-copy of a primitive that should be a variant, a dev fixture imported by app code, a third copy of a block.
 
 If `jscpd` is installed, also run `npx jscpd <changed dirs> --min-tokens 50`. Fix each hit or record why it stays.
 

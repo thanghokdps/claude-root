@@ -41,6 +41,19 @@ Map design variables (colors, type, radius, spacing, shadow) onto the v2 tokens 
 
 **Done when:** every color and radius used in the frames maps to a token, or is listed as a one-off with the element that uses it.
 
+## Step 2b — Component inventory → primitives
+
+Screens are built from primitives, never from raw elements. Before any screen, list the design's reusable components and their variants:
+
+- Source: the Figma component sets and variants (`get_figma_data` components / componentSets; in Chrome, the Assets panel), else cluster the frames by look — same height, radius and fill is the same component.
+- Record in the map: `Primitive | Variants | Sizes | States | Frames that use it`. The usual set: `Button` (primary / secondary / ghost / link × sm / md / lg), `IconButton`, `Icon` (one size scale, e.g. 16 / 20 / 24), `Input`, `TextArea`, `Card`, `Chip`, `Avatar`, `Dialog`, `Menu` — keep only what the frames use, add what they show that is not on the list.
+- Near-miss values in the frames (a 52px and a 54px button) snap to one variant; record the snap, do not build both.
+- Ask through `AskUserQuestion` only where a fork is real (e.g. two visibly different primary buttons: one variant or two).
+
+Build them in `components/ui/` first, one file each, variants as props over tokens, every variant and state shown on the `/__design` page. CopilotKit slots (Step 3 L1/L2) render these primitives too, so chat and app screens share one set.
+
+**Done when:** the primitives table is in the map, every primitive renders all its variants on the states page, and icon sizes come only from the scale.
+
 ## Step 3 — Decide per element (the ladder)
 
 For each element in the frames pick the lowest rung that reaches the design, and record `Element | Rung | Implementation | Why` in the map:
@@ -60,9 +73,9 @@ An element outside the chat component (a page header above an embedded `CopilotC
 
 Build the components, then make each inventory state reachable without a live model: a recorded AG-UI stream replayed with `@copilotkit/aimock`, or a dev-only states page (`/__design?state=<name>`) fed by fixtures. Hand wiring to `/agent-frontend` and the confirm flow to `/agent-hitl` rather than redoing them here.
 
-Code shape follows `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: components under the feature that owns them, shared pieces in `components/ui/`, fixtures and the states page in `src/dev/`, colours and sizes through tokens — no raw hex or `[Npx]` values in components.
+Code shape follows `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: screens and feature components compose the Step 2b primitives, feature-only pieces live under the feature that owns them, fixtures and the states page in `src/dev/`, colours and sizes through tokens — no raw hex or `[Npx]` values in components, no raw `<button>`, `<input>` or `<textarea>` outside `components/ui/`.
 
-**Done when:** each state in the table renders from its fixture at every supported width, `grep -rnE '\[#[0-9a-fA-F]{3,8}\]' src` finds no raw colour in components, and format, typecheck, lint and tests pass.
+**Done when:** each state in the table renders from its fixture at every supported width, `grep -rnE '\[#[0-9a-fA-F]{3,8}\]' src` finds no raw colour in components, `grep -rnE '<(button|input|textarea)[ >]' src --include=*.tsx | grep -v components/ui/` finds nothing, and format, typecheck, lint and tests pass.
 
 ## Step 5 — Compare with the design
 

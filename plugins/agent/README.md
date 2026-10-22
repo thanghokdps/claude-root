@@ -41,7 +41,7 @@ Ask for a feature in plain words, e.g. *"Thêm tính năng cho khách đổi đ�
 |-------|-------------------|
 | `/agent-architect [greenfield\|audit]` | Starting an assistant, or auditing one for custom code that stock middleware now covers |
 | `/agent-feature <capability>` | Adding a feature to an existing assistant — within its ADR, reusing what is there, then a duplicate check |
-| `/agent-design-ui <figma link \| folder>` | A design for the chat: states inventory, tokens → theme, stock vs custom per element, screenshot diff |
+| `/agent-design-ui <figma link \| folder>` | A design for the chat: states inventory, tokens → theme, the design's components built once as `components/ui/` primitives (Button, IconButton, Input, Card …), stock vs custom per element, screenshot diff at the frame size and at narrow widths |
 | `/agent-tool <tool>` | Adding, renaming or fixing an agent (backend) tool — schema, trusted identity, read vs mutation, its test. Browser-only tools go to `/agent-frontend` |
 | `/agent-hitl <write>` | A tool creates, updates or deletes data and needs a confirm card |
 | `/agent-graph <scope>` | A request lands on the wrong agent; adding an agent, router or supervisor; rewriting a system prompt |
