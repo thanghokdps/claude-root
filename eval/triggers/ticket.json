@@ -1,0 +1,27 @@
+{
+  "skill": "ticket",
+  "positive": [
+    {
+      "prompt": "/ticket 412 — implement it and write the intent, spec and plan into docs/tickets",
+      "top_k": 3
+    },
+    {
+      "prompt": "làm song song ticket 412 413 414, mỗi ticket một PR",
+      "top_k": 3
+    },
+    {
+      "prompt": "pick up GitHub issue #87 and implement it",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "add a new feature: export reports as CSV",
+      "owner": "feature"
+    },
+    {
+      "prompt": "the export button throws an error",
+      "owner": "fix-bug"
+    }
+  ]
+}

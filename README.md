@@ -191,7 +191,7 @@ prompt
 │   │       ├── hooks.json           ← hook registration (uses ${CLAUDE_PLUGIN_ROOT})
 │   │       ├── scope-gate.sh        ← inject coordinator context on every prompt
 │   │       ├── commit-quality-gate.sh ← block secrets / debug artifacts
-│   │       ├── branch-guard.sh      ← block force-push to protected branches
+│   │       ├── branch-guard.sh      ← block pushes to dev/stag/prod, force-push to protected
 │   │       ├── risk-corroboration.sh ← block commits when diff risk > declared lane
 │   │       ├── blast-radius-check.sh ← warn on edits outside plan scope
 │   │       ├── format-on-edit.sh    ← run formatter after editing files
@@ -614,7 +614,8 @@ Skips test files (`*.test.*`, `*.spec.*`) and docs for credential scanning.
 
 | Check | Action |
 |-------|--------|
-| Force push (`-f`, `--force`, `--force-with-lease`) to `main/master/develop/dev` | BLOCK |
+| Any direct push to an environment branch: `dev`, `develop`, `stag`, `stage`, `staging`, `prod`, `production` (override with `HARNESS_ENV_BRANCHES="dev qa prod"`; empty turns it off) | BLOCK — merge through a PR |
+| Force, delete or mirror push to `main/master` or an environment branch | BLOCK |
 | Direct push to `main` or `master` | WARN + 3-second delay |
 | Uncommitted local changes | WARN (changes will not be pushed) |
 

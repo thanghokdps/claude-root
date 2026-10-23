@@ -1,0 +1,67 @@
+---
+model: opus
+effort: high
+name: ticket
+description: Works a tracker ticket by its id — reads the issue (GitHub, GitLab or Jira), writes the ticket's contract into the repo as docs/tickets/<id>/intent.md, spec.md and plan.md, builds it through /feature, and ships the contract in the same PR as the code. Several ids run in parallel, one git worktree and one PR per ticket. Use when the user names a ticket or issue number to implement, or hands over several tickets at once.
+when_to_use: /ticket 412, "làm ticket 412", "implement issue 412", "pick up JIRA-1234", "làm song song ticket 412 413 414", work these tickets in parallel, start a ticket, ticket contract, docs/tickets
+---
+
+# ticket — From a ticket id to a PR, with its contract in the repo
+
+**Invoke:** `/ticket <id> [<id> …]`
+
+`specs/` is gitignored and dies with the session; a ticket's intent, contract and plan are what a reviewer needs next to the diff, and what the next person reads when the code changes again. So they live in the repo, one folder per ticket, and ship in the same PR as the code.
+
+The three files and their templates are in `${CLAUDE_SKILL_DIR}/references/contract.md`. Read it before Step 2.
+
+---
+
+## Step 1 — Read the ticket
+
+Detect the tracker from the id and the remote; read, never guess:
+
+- GitHub `#412` / `412` → `gh issue view 412 --json number,title,body,labels,comments,url`
+- GitLab → `glab issue view 412 --comments`
+- Jira `ABC-123` → the Jira connector, if one is installed; otherwise ask the user to paste the ticket.
+
+Nothing readable → ask for the text; never write a contract from the title alone. Several ids → read all of them first, then go to Step 5.
+
+**Done when:** the ticket's title, body, acceptance criteria (or their absence) and link are in hand.
+
+## Step 2 — Write the contract
+
+Create `docs/tickets/<id>/` on a branch `<type>/<id>-<slug>` (never on `main`/`dev`/`stag`/`prod`):
+
+1. `intent.md` — the ticket quoted verbatim, the link, the user and the outcome in one sentence each. No new words for what the ticket said.
+2. `spec.md` — acceptance criteria as Given/When/Then, the contract that changes (endpoint, schema, event, UI state), out of scope, and the test matrix row per criterion. A criterion the ticket does not state is an open question, not an invention.
+3. `plan.md` — the slices (`/feature` Stage 3 order), each with its files and its green check; waves where tasks are independent (`${CLAUDE_PLUGIN_ROOT}/references/wave-parallelism.md`).
+
+Open questions → ask them now, one per turn as options, before any code. An existing `docs/tickets/<id>/` is updated, not overwritten: keep earlier decisions and add a dated entry under § Changes.
+
+**Done when:** the three files exist, every criterion has a test row, and no open question is unanswered or unrecorded.
+
+## Step 3 — Build
+
+Run `/feature` with `plan.md` as its plan: it skips its own research and plan stages and builds the slices in order, one green before the next. Every deviation from the plan is written back into `plan.md` § Deviations as it happens.
+
+**Done when:** every `spec.md` row is green with its evidence (test path or command).
+
+## Step 4 — Ship
+
+1. Tick the matrix in `spec.md` (status and evidence per row).
+2. `/verify-done` (core), then `/review-checklist` (review).
+3. Commit `docs/tickets/<id>/` with the code, `<type>: <what> (#<id>)`.
+4. `/finish-branch` (ship, if installed) opens the PR; its description links the ticket and `docs/tickets/<id>/`.
+
+**Done when:** the PR is open with the contract in its diff, and its checks are green or their failures named.
+
+## Step 5 — Several tickets in parallel
+
+1. Read every ticket (Step 1) and draft each `plan.md` file list.
+2. **Overlap check** — tickets whose plans touch the same files, the same migration sequence, or the same shared contract run one after another, in dependency order. Say which and why.
+3. The independent ones run at once, **one git worktree and one branch per ticket**. Dispatch them in ONE message: one Agent call per ticket with `isolation: "worktree"` and `run_in_background: true`, each told to run Steps 2–4 of this skill for its id only. Questions an agent needs answered come back to you; it waits rather than guesses.
+4. Report a table as each finishes: ticket · branch · PR · status. A failed ticket never blocks the others; it is reported with its failure.
+
+Without the Agent tool, give the user one command pair per ticket instead — `git worktree add ../<repo>-<id> -b <type>/<id>-<slug>` then `claude` in that folder with `/ticket <id>` — so each runs as its own session.
+
+**Done when:** every ticket has its own PR or a named reason it is waiting.
