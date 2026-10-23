@@ -84,6 +84,7 @@ Map the request to exactly one **Intent Category** and one **Lane**:
 | `new-project` | "new project", "start from scratch", "bắt đầu dự án", "here is our PRD / ERD / ADR", an empty repo | `/kickoff` — collect the docs, grill the gaps, then hand off |
 | `ticket` | a ticket or issue id to implement: "/ticket 412", "làm ticket 412", "issue #87", several ids at once | `/ticket` — contract in `docs/tickets/<id>/`, one worktree and PR per ticket |
 | `new-feature` | "add", "build", "create", "implement", "new endpoint", "new page" | Planner → Implementer → Verifier |
+| `incident` | "prod down", "prod sập", outage, 5xx spike, data loss or leak, "postmortem" | `/incident` (ship, if installed) — mitigate first, then root cause, then the postmortem in `docs/incidents/` |
 | `bug-fix` | "fix", "broken", "error", "crash", "not working", "regression" | Debugger → Implementer → Verifier |
 | `refactor` | "refactor", "clean up", "reorganize", "rename", "simplify", "extract" | Refactorer → Verifier |
 | `code-review` | "review", "check", "audit", "look at", "what do you think of" | Reviewer |
