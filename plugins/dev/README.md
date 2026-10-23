@@ -22,6 +22,7 @@ Also installs: `core`, `plan`, `review`.
 | `/db-change` | Changes the database (Drizzle, Prisma, Alembic) — ERD and schema first, reviewed migration, owner-scoped repository functions, real-engine tests |
 | `/design-ui` | Turns a Figma link or mockup into UI: frames, every screen state, tokens, the design's components classified against the repo's UI library and built once as primitives, screenshot diff at the frame size and narrow widths |
 | `/feature` | Implements a new feature end to end — risk intake, lane assignment, plan, build, review |
+| `/ticket` | Works a ticket by id — writes `docs/tickets/<id>/intent.md`, `spec.md`, `plan.md` into the repo, builds through `/feature`, ships the contract in the same PR; several ids run in parallel, one worktree and PR each |
 | `/fix-bug` | Diagnosis loop for bugs and performance regressions — build a tight red loop first, then minimise, hypothesise, instrument, fix, and lock it down with a regression test |
 | `/ui-feature` | Builds a React feature — feature folder, typed fetchers, primitives, every state (loading, empty, error, optimistic rollback), a11y, tokens, Testing Library tests and a browser check at each viewport |
 | `/tdd` | Drives implementation as a red → green loop — one seam, one failing test, one minimal implementation per cycle |
