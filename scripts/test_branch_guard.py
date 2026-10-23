@@ -9,16 +9,21 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOK = os.path.join(ROOT, "plugins", "guards", "hooks", "branch-guard.sh")
 
 
-def repo_on(branch):
+def repo_on(branch, upstream=None, config=()):
     path = tempfile.mkdtemp(prefix="branch-guard-")
     git = lambda *a: subprocess.run(["git", "-C", path, *a], check=True, capture_output=True)
     git("init", "-q", "-b", branch)
     git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "init")
+    if upstream:
+        git("config", f"branch.{branch}.remote", "origin")
+        git("config", f"branch.{branch}.merge", f"refs/heads/{upstream}")
+    for key, value in config:
+        git("config", "--add", key, value)
     return path
 
 
-def exit_code(command, branch="feat/x"):
-    env = {**os.environ, "CLAUDE_PROJECT_DIR": repo_on(branch)}
+def exit_code(command, branch="feat/x", upstream=None, config=()):
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": repo_on(branch, upstream, config)}
     payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
     return subprocess.run([HOOK], input=payload, capture_output=True, text=True, env=env).returncode
 
@@ -42,6 +47,64 @@ def test_flags_and_branch_names_after_the_push_belong_to_other_commands():
 def test_branch_merely_containing_a_protected_name_is_not_protected():
     assert exit_code("git push --force origin feat/dev-tools", branch="feat/dev-tools") == 0
     assert exit_code("git push --force origin fix/main-menu") == 0
+
+
+def test_every_push_in_a_chained_command_is_checked():
+    assert exit_code("git push -u origin feat/x; git push -f origin main") == 2
+    assert exit_code("git push -f origin main && git push origin feat/x") == 2
+    assert exit_code("git -C . push --force origin main") == 2
+
+
+def test_quoted_or_unresolvable_targets_fail_closed():
+    assert exit_code('git push -f origin "main"') == 2
+    assert exit_code("git push -f origin 'master'") == 2
+    assert exit_code("git push -f origin $BRANCH") == 2
+    assert exit_code("git push --force origin `git branch --show-current`") == 2
+
+
+def test_all_refs_mirror_and_deletes_reach_protected_branches():
+    assert exit_code("git push --mirror origin") == 2
+    assert exit_code("git push --mir origin") == 2
+    assert exit_code("git push -f --all origin") == 2
+    assert exit_code("git push --force --branches origin") == 2
+    assert exit_code("git push origin --delete main") == 2
+    assert exit_code("git push origin :main") == 2
+    assert exit_code("git push origin --delete feat/old") == 0
+
+
+def test_force_without_refspec_follows_the_upstream():
+    assert exit_code("git push -f", branch="feat/x", upstream="main") == 2
+    assert exit_code("git push -f origin", branch="feat/x", upstream="main") == 2
+    assert exit_code("git push -f", branch="feat/x", upstream="feat/x") == 0
+
+
+def test_option_values_are_not_counted_as_remote_or_refspec():
+    assert exit_code("git push -f -o ci.skip origin", upstream="main") == 2
+    assert exit_code("git push --force --push-option x origin main") == 2
+    assert exit_code("git push -o ci.skip origin feat/x") == 0
+
+
+def test_shell_expansions_in_a_forced_target_fail_closed():
+    for target in ["{main,x}", "ma*", "mai?", "[m]ain", "~/x"]:
+        assert exit_code(f"git push -f origin {target}") == 2, target
+
+
+def test_configured_push_refspecs_are_checked():
+    assert exit_code("git push origin", config=[("remote.origin.push", "+refs/heads/*:refs/heads/main")]) == 2
+    assert exit_code("git push -f origin", config=[("remote.origin.push", "refs/heads/x:refs/heads/main")]) == 2
+    assert exit_code("git -c remote.origin.push=+HEAD:main push origin") == 2
+    assert exit_code("git push -f", config=[("push.default", "matching")]) == 2
+    assert exit_code("git push origin", config=[("remote.origin.push", "refs/heads/feat/x:refs/heads/feat/x")]) == 0
+
+
+def test_pushes_hidden_in_subshells_eval_or_aliases_fail_closed():
+    assert exit_code("(git push -f origin main)") == 2
+    assert exit_code("{ git push -f origin main; }") == 2
+    assert exit_code("eval 'git push -f origin main'") == 2
+    assert exit_code("sh -c 'git push --force origin main'") == 2
+    assert exit_code("git fp origin main", config=[("alias.fp", "push -f")]) == 2
+    assert exit_code("git shipit", config=[("alias.shipit", "!git push -f origin main")]) == 2
+    assert exit_code("git st", config=[("alias.st", "status")]) == 0
 
 
 if __name__ == "__main__":

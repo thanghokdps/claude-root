@@ -16,35 +16,140 @@ PUSH_COMMAND=$(printf '%s' "$HOOK_INPUT" | jq -r '.tool_input.command // empty' 
 [ -z "$PUSH_COMMAND" ] && PUSH_COMMAND=$(printf '%s' "$HOOK_INPUT" \
   | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 
-# ─── Detect force push to protected branches ─────────────────────────────────
+# ─── Block force, delete or mirror pushes that reach a protected branch ─────
+# A safety net against accidental history rewrites, not a security boundary: server-side
+# branch protection is the real control. Every `git … push` segment is read word by word, so
+# flags elsewhere on the line (`gh pr create --base main --body-file …`, a `-f` inside
+# `feat/dev-fullstack`) never count. Whatever the guard cannot parse fails closed.
 
-# Only the push's own arguments count: a later `&& gh pr create --base main --body-file …`
-# and a `-f` inside a branch name (feat/dev-fullstack) once read as a forced push to main.
-PUSH_ARGS=$(printf '%s' "$PUSH_COMMAND" | sed -nE 's/.*git[[:space:]]+push([^;&|]*).*/\1/p' | head -1)
-FORCE_RE='(^|[[:space:]])(-[a-zA-Z]*f[a-zA-Z]*|--force(-with-lease(=[^[:space:]]*)?|-if-includes)?|\+[^[:space:]]+)([[:space:]]|$)'
 PROTECTED_RE='^(main|master|develop|dev)$'
+FORCE_RE='^(-[a-zA-Z]*f[a-zA-Z]*|--for.*)$'                     # -f, -uf, --force[-with-lease[=…]|-if-includes]
+DELETE_RE='^(-[a-zA-Z]*d[a-zA-Z]*|--de(l(e(t(e)?)?)?)?)$'
+ALL_REFS_RE='^--(al|all|br|bra|bran|branc|branch|branche|branches)$'
+MIRROR_RE='^--mi(r(r(o(r)?)?)?)?$'                             # git accepts unique long-option prefixes
+VALUE_OPT_RE='^(-o|--push-option|--receive-pack|--exec|--repo)$'   # the next word is their value
+GIT_VALUE_OPT_RE='^(-C|-c|--git-dir|--work-tree|--namespace|--exec-path|--config-env)$'
+EXPANSION_RE='[][$`{}*?~]'
+RISKY_RE='(^|[[:space:]"'"'"'])(-[a-zA-Z]*[fd][a-zA-Z]*|--for|--de|--mi|--al|--br|\+)'
+SHELL_STRING_RE='(^|[^[:alnum:]_])(eval|xargs|(ba|z|da|k)?sh[[:space:]]+-[a-z]*c)([^[:alnum:]_]|$)'
 
-targets_protected() {
-  [[ "$CURRENT_BRANCH" =~ $PROTECTED_RE ]] && return 0
-  local tok ref
-  read -ra tokens <<<"$PUSH_ARGS"
-  for tok in "${tokens[@]}"; do
-    [[ "$tok" == -* ]] && continue
-    ref=${tok#+}; ref=${ref##*:}; ref=${ref#refs/heads/}
-    [[ "$ref" =~ $PROTECTED_RE ]] && return 0
-  done
-  return 1
+block() {
+  echo "" >&2
+  echo "🚫 BLOCKED — $1 (branch: $CURRENT_BRANCH)" >&2
+  echo "   Force, delete and mirror pushes to protected branches must be done manually." >&2
+  echo "" >&2
+  exit 2
 }
 
-if [[ "$PUSH_ARGS" =~ $FORCE_RE ]]; then
-  if targets_protected; then
-    echo "" >&2
-    echo "🚫 BLOCKED — force push to protected branch: $CURRENT_BRANCH" >&2
-    echo "   Explicitly requested force pushes must be done manually." >&2
-    echo "" >&2
-    exit 2
+is_protected_ref() {
+  local ref=${1#+}
+  ref=${ref##*:}; ref=${ref#refs/heads/}
+  [[ "$ref" =~ $PROTECTED_RE ]]
+}
+
+# Strips subshell parens and quotes. `$`, backticks and braces stay (a `{ … }` group is its own
+# word), so a substituted or brace-expanded target still reads as unresolved.
+clean_word() {
+  local w=$1
+  while [[ "$w" == [\(\"\']* ]]; do w=${w:1}; done
+  while [[ "$w" == *[\)\"\'] ]]; do w=${w%?}; done
+  printf '%s' "${w//\\/}"
+}
+
+# Prints the reason to block one push (its arguments after `push`), or nothing.
+check_push() {
+  local -a args=("$@")
+  local i tok force=0 delete=0 all_refs=0 unresolved=0 protected=0 remote="" refspecs=0 upstream spec configured
+  for ((i = 0; i < ${#args[@]}; i++)); do
+    tok=${args[$i]}
+    [[ "$tok" =~ $MIRROR_RE ]] && { echo "mirror push overwrites every branch"; return; }
+    [[ "$tok" =~ $VALUE_OPT_RE ]] && { i=$((i + 1)); continue; }
+    [[ "$tok" =~ $FORCE_RE ]] && { force=1; continue; }
+    [[ "$tok" =~ $DELETE_RE ]] && { delete=1; continue; }
+    [[ "$tok" =~ $ALL_REFS_RE ]] && { all_refs=1; continue; }
+    [[ "$tok" == -* ]] && continue
+    [[ "$tok" =~ $EXPANSION_RE ]] && { unresolved=1; continue; }
+    if [ -z "$remote" ]; then remote=$tok; continue; fi
+    refspecs=$((refspecs + 1))
+    [[ "$tok" == +* ]] && force=1
+    [[ "$tok" == :* ]] && delete=1
+    is_protected_ref "$tok" && protected=1
+  done
+
+  if [ "$refspecs" -eq 0 ]; then                                # no refspec: config decides what is pushed
+    [ -z "$remote" ] && remote=$(git -C "$PROJECT_DIR" config --get "branch.$CURRENT_BRANCH.remote" 2>/dev/null || echo origin)
+    configured=$(git -C "$PROJECT_DIR" config --get-all "remote.$remote.push" 2>/dev/null || true)
+    if [ -n "$configured" ]; then
+      while IFS= read -r spec; do
+        [[ "$spec" == +* ]] && force=1
+        is_protected_ref "$spec" && protected=1
+      done <<<"$configured"
+    else
+      is_protected_ref "$CURRENT_BRANCH" && protected=1
+      upstream=$(git -C "$PROJECT_DIR" config --get "branch.$CURRENT_BRANCH.merge" 2>/dev/null || true)
+      [ -n "$upstream" ] && is_protected_ref "$upstream" && protected=1
+      [ "$(git -C "$PROJECT_DIR" config --get push.default 2>/dev/null)" = "matching" ] && all_refs=1
+    fi
   fi
+
+  if [ "$force" -eq 1 ] || [ "$delete" -eq 1 ]; then
+    [ "$all_refs" -eq 1 ] && { echo "forced or deleting push of all branches"; return; }
+    [ "$unresolved" -eq 1 ] && { echo "forced or deleting push to a target the guard cannot resolve"; return; }
+    [ "$protected" -eq 1 ] && { echo "forced or deleting push to a protected branch"; return; }
+  fi
+}
+
+# Prints the reason to block one shell segment, or nothing.
+check_segment() {
+  local -a raw words=() alias_words
+  local w i j=-1 cmd="" alias_value
+  read -ra raw <<<"$1"
+  [ "${#raw[@]}" -eq 0 ] && return
+  for w in "${raw[@]}"; do words+=("$(clean_word "$w")"); done
+
+  for i in "${!words[@]}"; do
+    w=${words[$i]//[\`\$\(]/}
+    [[ "${w##*/}" == "git" ]] && { j=$i; break; }
+  done
+  [ "$j" -lt 0 ] && return
+
+  for ((i = j + 1; i < ${#words[@]}; i++)); do               # git's own options, then the subcommand
+    w=${words[$i]}
+    if [[ "$w" =~ $GIT_VALUE_OPT_RE ]]; then
+      i=$((i + 1))
+      [[ "$w" == "-c" && "${words[$i]:-}" =~ ^(remote\..*\.push|push\.default)= ]] \
+        && { echo "push config set on the command line"; return; }
+      continue
+    fi
+    [[ "$w" == -* ]] && continue
+    cmd=$w; break
+  done
+  [ -z "$cmd" ] && return
+
+  if [ "$cmd" = "push" ]; then
+    check_push "${words[@]:$((i + 1))}"
+    return
+  fi
+  alias_value=$(git -C "$PROJECT_DIR" config --get "alias.$cmd" 2>/dev/null || true)
+  [ -z "$alias_value" ] && return
+  if [[ "$alias_value" == '!'* ]]; then
+    [[ "$alias_value" == *push* && "$alias_value" =~ $RISKY_RE ]] && echo "shell alias '$cmd' runs a push the guard cannot check"
+    return
+  fi
+  read -ra alias_words <<<"$alias_value"
+  [ "${alias_words[0]:-}" = "push" ] && check_push "${alias_words[@]:1}" "${words[@]:$((i + 1))}"
+}
+
+PUSH_COMMAND=${PUSH_COMMAND//$'\\\n'/ }                         # join backslash-newline continuations
+
+if [[ "$PUSH_COMMAND" == *push* && "$PUSH_COMMAND" =~ $SHELL_STRING_RE && "$PUSH_COMMAND" =~ $RISKY_RE ]]; then
+  block "push inside eval, xargs or a shell string the guard cannot parse"
 fi
+
+while IFS= read -r segment; do
+  reason=$(check_segment "$segment")
+  [ -n "$reason" ] && block "$reason"
+done < <(printf '%s\n' "$PUSH_COMMAND" | tr ';&|' '\n\n\n')
 
 # ─── Warn on direct push to main/master ──────────────────────────────────────
 
