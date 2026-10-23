@@ -213,7 +213,7 @@ echo "🪝  Copying hooks..."
 if [ "$STANDALONE" = 1 ]; then
   GUARDS_DIR="$(plugin_dir guards)"
   [ -n "$GUARDS_DIR" ] || echo "   ⚠️  guards not found next to core — shared hooks not copied" >&2
-  for hook in "$GUARDS_DIR"/hooks/*.sh; do
+  for hook in "$HARNESS_DIR"/hooks/*.sh "$GUARDS_DIR"/hooks/*.sh; do
     [ -f "$hook" ] && cp "$hook" "$CLAUDE_DIR/hooks/"
   done
 fi

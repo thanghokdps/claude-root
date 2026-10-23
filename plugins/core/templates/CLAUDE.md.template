@@ -43,7 +43,7 @@
 | Hook | Trigger | Does |
 |------|---------|------|
 | `commit-quality-gate.sh` | Before `git commit` | Block secrets, debug artifacts |
-| `branch-guard.sh` | Before `git push` | Warn on push to main/master |
+| `branch-guard.sh` | Before `git push` | Block direct pushes to dev/stag/prod and force/delete pushes to protected branches (core, always on) |
 | `save-commit-memory.sh` | After `git commit` | Save commit to `.claude/memory/` |
 | `state-breadcrumb.sh` | Session end | Append session summary to memory |
 | `scope-gate.sh` | Each prompt | Flag high-risk patterns, stale memory |

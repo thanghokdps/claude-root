@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Tests for plugins/guards/hooks/branch-guard.sh. Run: python3 scripts/test_branch_guard.py"""
+"""Tests for plugins/core/hooks/branch-guard.sh. Run: python3 scripts/test_branch_guard.py"""
 import json
 import os
 import subprocess
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HOOK = os.path.join(ROOT, "plugins", "guards", "hooks", "branch-guard.sh")
+HOOK = os.path.join(ROOT, "plugins", "core", "hooks", "branch-guard.sh")
 
 
 def repo_on(branch, upstream=None, config=()):
