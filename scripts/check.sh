@@ -5,6 +5,7 @@ cd "$(dirname "$0")/.."
 
 python3 scripts/test_lint_kit.py
 python3 scripts/test_skill_progress.py
+python3 scripts/test_branch_guard.py
 python3 scripts/test_compare_shots.py
 python3 scripts/lint-kit.py
 python3 scripts/eval-triggers.py
