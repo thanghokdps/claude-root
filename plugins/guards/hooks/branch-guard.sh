@@ -60,6 +60,21 @@ target_ref() {
   ref=${ref##*:}; ref=${ref#refs/}; printf '%s' "${ref#heads/}"
 }
 
+# The repository a push runs in: the project, moved by a `cd` earlier in the same command or by
+# `git -C`. CTX_KNOWN=0 when it cannot be told (`cd -`, `~`, a variable, --git-dir, GIT_DIR=…);
+# a push whose target depends on that repository's branch or config then fails closed.
+CTX_KNOWN=1
+
+move_to() {
+  local dir=$1
+  if [ -z "$dir" ] || [ "$dir" = "-" ] || [[ "$dir" =~ $EXPANSION_RE ]]; then CTX_KNOWN=0; return; fi
+  [[ "$dir" == /* ]] && PROJECT_DIR=$dir || PROJECT_DIR="$PROJECT_DIR/$dir"
+}
+
+load_repo() {
+  CURRENT_BRANCH=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null) || { CURRENT_BRANCH="unknown"; CTX_KNOWN=0; }
+}
+
 has_local_env_branch() {
   git -C "$PROJECT_DIR" for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep -qE "$ENV_RE"
 }
@@ -77,10 +92,26 @@ clean_word() {
   printf '%s' "${w//\\/}"
 }
 
+# Reads remote.<remote>.push into the caller's force/protected/env/all_refs. A wildcard spec
+# (refs/heads/*:refs/heads/*) pushes every matching branch, so it counts as a push of all.
+scan_configured() {
+  local spec configured
+  configured=$(git -C "$PROJECT_DIR" config --get-all "remote.$1.push" 2>/dev/null || true)
+  [ -z "$configured" ] && return 1
+  while IFS= read -r spec; do
+    [[ "$spec" == +* ]] && force=1
+    [[ "$spec" == *\** ]] && all_refs=1
+    is_protected_ref "$spec" && protected=1
+    is_env_ref "$spec" && env=$(target_ref "$spec")
+  done <<<"$configured"
+  return 0
+}
+
 # Prints the reason to block one push (its arguments after `push`), or nothing.
 check_push() {
   local -a args=("$@")
-  local i tok force=0 delete=0 all_refs=0 unresolved=0 protected=0 env="" remote="" refspecs=0 upstream spec configured
+  local i tok force=0 delete=0 all_refs=0 unresolved=0 protected=0 env="" remote="" refspecs=0 upstream
+  local src_only=0 head_src=0
   for ((i = 0; i < ${#args[@]}; i++)); do
     tok=${args[$i]}
     [[ "$tok" =~ $MIRROR_RE ]] && { echo "mirror push overwrites every branch"; return; }
@@ -94,20 +125,24 @@ check_push() {
     refspecs=$((refspecs + 1))
     [[ "$tok" == +* ]] && force=1
     [[ "$tok" == :* ]] && delete=1
+    [[ "$tok" != *:* ]] && src_only=1
+    [[ "${tok#+}" == HEAD || "${tok#+}" == @ ]] && head_src=1
     is_protected_ref "$tok" && protected=1
     is_env_ref "$tok" && env=$(target_ref "$tok")
   done
 
+  if [ "$CTX_KNOWN" -eq 0 ] && { [ "$refspecs" -eq 0 ] || [ "$head_src" -eq 1 ] || [ "$src_only" -eq 1 ]; }; then
+    echo "push from a repository the guard cannot resolve (cd -, ~, a variable, --git-dir or GIT_DIR)"; return
+  fi
+  [ -z "$remote" ] && remote=$(git -C "$PROJECT_DIR" config --get "branch.$CURRENT_BRANCH.remote" 2>/dev/null || echo origin)
+  [ "$(git -C "$PROJECT_DIR" config --get "remote.$remote.mirror" 2>/dev/null)" = "true" ] \
+    && { echo "remote '$remote' is configured as a mirror, so every push overwrites every branch"; return; }
+
+  # A refspec with no `:dst` is sent where remote.<remote>.push maps it, not to its own name.
+  [ "$src_only" -eq 1 ] && scan_configured "$remote"
+
   if [ "$refspecs" -eq 0 ]; then                                # no refspec: config decides what is pushed
-    [ -z "$remote" ] && remote=$(git -C "$PROJECT_DIR" config --get "branch.$CURRENT_BRANCH.remote" 2>/dev/null || echo origin)
-    configured=$(git -C "$PROJECT_DIR" config --get-all "remote.$remote.push" 2>/dev/null || true)
-    if [ -n "$configured" ]; then
-      while IFS= read -r spec; do
-        [[ "$spec" == +* ]] && force=1
-        is_protected_ref "$spec" && protected=1
-        is_env_ref "$spec" && env=$(target_ref "$spec")
-      done <<<"$configured"
-    else
+    if ! scan_configured "$remote"; then
       is_protected_ref "$CURRENT_BRANCH" && protected=1
       is_env_ref "$CURRENT_BRANCH" && env=$CURRENT_BRANCH
       upstream=$(git -C "$PROJECT_DIR" config --get "branch.$CURRENT_BRANCH.merge" 2>/dev/null || true)
@@ -140,14 +175,17 @@ check_segment() {
   for i in "${!words[@]}"; do
     w=${words[$i]//[\`\$\(]/}
     [[ "${w##*/}" == "git" ]] && { j=$i; break; }
+    [[ "$w" =~ ^GIT_(DIR|WORK_TREE)= ]] && CTX_KNOWN=0
   done
   [ "$j" -lt 0 ] && return
 
   for ((i = j + 1; i < ${#words[@]}; i++)); do               # git's own options, then the subcommand
     w=${words[$i]}
+    [[ "$w" == --git-dir* || "$w" == --work-tree* ]] && CTX_KNOWN=0
     if [[ "$w" =~ $GIT_VALUE_OPT_RE ]]; then
       i=$((i + 1))
-      [[ "$w" == "-c" && "${words[$i]:-}" =~ ^(remote\..*\.push|push\.default)= ]] \
+      [[ "$w" == "-C" ]] && move_to "${words[$i]:-}"
+      [[ "$w" == "-c" && "${words[$i]:-}" =~ ^(remote\..*\.(push|mirror)|push\.default)= ]] \
         && { echo "push config set on the command line"; return; }
       continue
     fi
@@ -155,6 +193,7 @@ check_segment() {
     cmd=$w; break
   done
   [ -z "$cmd" ] && return
+  [ "$CTX_KNOWN" -eq 1 ] && load_repo
 
   if [ "$cmd" = "push" ]; then
     check_push "${words[@]:$((i + 1))}"
@@ -176,10 +215,17 @@ if [[ "$PUSH_COMMAND" == *push* && "$PUSH_COMMAND" =~ $SHELL_STRING_RE && "$PUSH
   block "push inside eval, xargs or a shell string the guard cannot parse"
 fi
 
+START_DIR=$PROJECT_DIR START_BRANCH=$CURRENT_BRANCH
 while IFS= read -r segment; do
+  read -ra first <<<"$segment"
+  case "$(clean_word "${first[0]:-}")" in                      # a cd moves every later segment
+    cd|pushd) move_to "$(clean_word "${first[1]:-}")"; continue ;;
+    popd) CTX_KNOWN=0; continue ;;
+  esac
   reason=$(check_segment "$segment")
   [ -n "$reason" ] && block "$reason"
 done < <(printf '%s\n' "$PUSH_COMMAND" | tr ';&|' '\n\n\n')
+PROJECT_DIR=$START_DIR CURRENT_BRANCH=$START_BRANCH
 
 # ─── Warn on direct push to main/master ──────────────────────────────────────
 

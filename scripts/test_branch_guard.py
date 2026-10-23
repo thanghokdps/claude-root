@@ -138,6 +138,44 @@ def test_push_of_all_branches_is_blocked_when_one_is_an_environment_branch():
     assert subprocess.run([HOOK], input=payload, capture_output=True, text=True, env=env).returncode == 2
 
 
+def run_in(path, command):
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": path}
+    env.pop("HARNESS_ENV_BRANCHES", None)
+    payload = json.dumps({"tool_input": {"command": command}})
+    return subprocess.run([HOOK], input=payload, capture_output=True, text=True, env=env).returncode
+
+
+def test_wildcard_push_config_and_mirror_remotes_count_as_pushing_everything():
+    path = repo_on("feat/x", config=[("remote.origin.push", "refs/heads/*:refs/heads/*")])
+    subprocess.run(["git", "-C", path, "branch", "prod"], check=True)
+    assert run_in(path, "git push origin") == 2
+    assert exit_code("git push origin", config=[("remote.origin.push", "refs/heads/*:refs/heads/*")]) == 0
+    assert exit_code("git push origin feat/x", config=[("remote.origin.mirror", "true")]) == 2
+    assert exit_code("git -c remote.origin.mirror=true push origin feat/x") == 2
+
+
+def test_push_runs_in_the_repository_a_cd_or_dash_c_points_to():
+    other = repo_on("dev")
+    assert exit_code(f"cd {other} && git push origin HEAD") == 2
+    assert exit_code(f"git -C {other} push") == 2
+    assert exit_code(f"cd {other}; git push -u origin feat/x:feat/x") == 0
+    assert run_in(other, f"cd {repo_on('feat/x')} && git push origin HEAD") == 0
+
+
+def test_a_repository_the_guard_cannot_resolve_fails_closed():
+    assert exit_code("cd - && git push") == 2
+    assert exit_code("cd ~/other && git push origin HEAD") == 2
+    assert exit_code("git --git-dir=/tmp/x/.git push origin feat/x") == 2
+    assert exit_code("GIT_DIR=/tmp/x/.git git push") == 2
+    assert exit_code("git -C $REPO push origin feat/x:feat/x") == 0
+
+
+def test_a_source_only_refspec_follows_the_configured_push_mapping():
+    cfg = [("remote.origin.push", "refs/heads/feat/x:refs/heads/prod")]
+    assert exit_code("git push origin feat/x", config=cfg) == 2
+    assert exit_code("git push origin feat/x:feat/x", config=cfg) == 0
+
+
 def test_feature_branches_and_main_are_not_environment_branches():
     assert exit_code("git push -u origin feat/x") == 0
     assert exit_code("git push origin feat/prod-banner") == 0
