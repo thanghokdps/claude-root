@@ -81,6 +81,7 @@ Map the request to exactly one **Intent Category** and one **Lane**:
 
 | Category | Trigger keywords / patterns | Default Agent |
 |---|---|---|
+| `new-project` | "new project", "start from scratch", "bắt đầu dự án", "here is our PRD / ERD / ADR", an empty repo | `/kickoff` — collect the docs, grill the gaps, then hand off |
 | `new-feature` | "add", "build", "create", "implement", "new endpoint", "new page" | Planner → Implementer → Verifier |
 | `bug-fix` | "fix", "broken", "error", "crash", "not working", "regression" | Debugger → Implementer → Verifier |
 | `refactor` | "refactor", "clean up", "reorganize", "rename", "simplify", "extract" | Refactorer → Verifier |

@@ -59,7 +59,8 @@ cd my-project && claude
 
 # Empty folder (not an AI assistant — for one, use /agent-architect greenfield above)
 mkdir my-app && cd my-app && git init && claude
-/brainstorming <idea>                               # → specs/<slug>/design.md, incl. the stack
+/kickoff <your PRD, ERD, ADR, stack docs>           # reads what you have, grills only the gaps → docs/kickoff.md
+/brainstorming <idea>                               # only if an approach is still open → specs/<slug>/design.md
 /writing-plans                                      # → PLAN.md; wave 1 = scaffold (manifest, tests, lint)
 # build wave 1 (just ask, or /tdd), commit, then:
 /project-init                                       # now there is a stack and code to scan
@@ -68,6 +69,7 @@ mkdir my-app && cd my-app && git init && claude
 | I want to… | Run |
 |---|---|
 | Build a feature / fix a bug | just describe it (auto-coordinator) · `/fix-bug <symptom>` |
+| Start a project from our docs | `/kickoff` → `/writing-plans` (or `/agent-architect` for an assistant) |
 | Design before coding | `/brainstorming` → `/writing-plans` |
 | Review before a PR | `/review-checklist` → `/code-review` |
 | Finish the branch | `/verify-done` → `/finish-branch` |
@@ -162,8 +164,8 @@ prompt
 │   │   └── templates/               ← CLAUDE.md.template, settings.json.template, etc.
 │   │
 │   ├── plan/                  ← design before code
-│   │   └── skills/                  ← brainstorming, codebase-design, domain-model, grill,
-│   │                                   writing-plans
+│   │   └── skills/                  ← kickoff, brainstorming, codebase-design, domain-model,
+│   │                                   grill, writing-plans
 │   │
 │   ├── review/                ← review diffs, PRs, impact
 │   │   └── skills/                  ← blast-radius, create-pr, review-checklist, review-diff
@@ -455,6 +457,14 @@ Specs dir: specs/add-dark-mode/
 **Invoke:** `/review-checklist` (current branch) or `/review-checklist 123`
 
 Walks correctness → tests → readability → security → scope, checks the PR description is self-contained, and returns ≥3 actionable `file:line` comments. Renamed from `code-review` so the built-in `/code-review` and `/code-review ultra` are no longer shadowed — escalate to those for risky branches.
+
+---
+
+### `/kickoff` — Start a project from the documents you have
+
+**Invoke:** `/kickoff docs/PRD.md docs/erd.png <figma link>`
+
+Collects what exists first, in order: requirements → prerequisites → tech stack → ERD → architecture (ADR) → design → external APIs → non-functional → delivery. Reads them into one doc set (`docs/requirements.md`, `docs/stack.md`, `docs/erd.md`, `docs/adr/*` …), shows a coverage matrix in `docs/kickoff.md`, then grills only the missing, partial or conflicting rows, one question at a time. Hands off to `/agent-architect`, `/brainstorming`, `/writing-plans` or `/project-init`, which all read the doc set instead of asking again.
 
 ---
 

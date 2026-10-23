@@ -1,6 +1,6 @@
 # plan
 
-Design before code: brainstorming, grill, domain-model, codebase-design, writing-plans → PLAN.md.
+Design before code: kickoff (docs-first project intake), brainstorming, grill, domain-model, codebase-design, writing-plans → PLAN.md.
 
 ## Install
 
@@ -15,6 +15,7 @@ Also installs: `progress`.
 
 | Skill | Does |
 |-------|------|
+| `/kickoff` | Starts a new project from the documents the team already has — collects requirements, prerequisites, stack, ERD, ADR and the rest, shows a coverage matrix, then grills only the gaps |
 | `/brainstorming` | Design-first brainstorming session before any implementation |
 | `/codebase-design` | Shared vocabulary for designing deep modules — a lot of behaviour behind a small interface, placed at a clean seam |
 | `/domain-model` | Builds and sharpens the project's ubiquitous language — challenges fuzzy terms, cross-checks vocabulary against the code, and records resolved terms in .claude/docs/glossary.md and hard-to-reverse decisions as ADRs |

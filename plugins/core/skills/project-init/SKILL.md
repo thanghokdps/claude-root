@@ -31,7 +31,7 @@ CLAUDE.md         ← project-specific coordinator config
 
 If the folder has no package manifest (`package.json`, `pyproject.toml`, `requirements.txt`, `go.mod`, `Cargo.toml`, `pom.xml`, `build.gradle`) and no source files, stop without writing anything and reply:
 
-> Nothing to scan yet. Design and scaffold first: `/brainstorming <idea>` → `/writing-plans` (wave 1 = scaffold), or `/agent-architect greenfield` for an AI assistant (agent, if installed). Run `/project-init` after the first commit.
+> Nothing to scan yet. Start from your documents: `/kickoff` (plan, if installed) collects the requirements, prerequisites, stack, ERD and ADR you already have and grills only the gaps. It then hands off to `/brainstorming` → `/writing-plans` (wave 1 = scaffold), or to `/agent-architect greenfield` for an AI assistant (agent, if installed). Run `/project-init` after the first commit.
 
 ## Step 1 — Run init.sh (automation layer)
 
@@ -84,6 +84,8 @@ Identify and note:
 ## Step 3 — Write `.claude/docs/` (6 files)
 
 All 6 files must use real file paths, real commands, real names — no boilerplate.
+
+If the project has a kickoff doc set, written by `/kickoff` (plan, if installed) (`docs/kickoff.md` and the files it lists: `docs/requirements.md`, `docs/stack.md`, `docs/erd.md`, `docs/adr/*`), it is the source of truth for intent and decisions. `architecture.md` and `stack.md` link to it and add only what the code shows; `index.md` lists it first and carries its Open risks. Where the code and the doc set disagree, write both down in `index.md` rather than picking one.
 
 ### `docs/architecture.md`
 - What this system does, for whom

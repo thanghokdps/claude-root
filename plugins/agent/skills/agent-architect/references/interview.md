@@ -32,6 +32,19 @@ The assistant is built from these answers: every task in P2 must end up owned by
 | L | **Repo layout** — one app or a monorepo? Ask after Q2 (clients) | `layouts.md`: L1 single app · L2 pnpm + Turborepo. An existing repo's layout is detected, not asked |
 | T | **Test location** — `__tests__/` next to the code, or a separate `tests/` folder outside `src/` mirroring it? Ask after Q-L, only when the repo has no tests yet | Runner `include`/`testMatch`, where every skill writes tests. Existing tests → detect their layout and follow it, never ask |
 
+## From the kickoff doc set
+
+When `/kickoff` ran, its files answer these questions. A ✅ row is pre-filled and never asked; a *defaulted* or deferred row is shown on the card and confirmed in one question.
+
+| Doc set | Answers |
+|---------|---------|
+| `docs/requirements.md` users, problem · top tasks · out of scope, "good" | P1 · P2 · P4 (and Q9 must-pass cases from P2's examples) |
+| `docs/requirements.md` § Design · § NFR | Q-D, Q2v · Q8 (privacy, retention, compliance) |
+| `docs/stack.md` languages, frameworks, hosting · § Delivery | Q-F, Q1 · Q-L hints (separate deploys) |
+| `docs/erd.md` · `docs/api/*` and the ADR's integrations | P3 data the assistant reads or writes · P3 systems, Q4 writes |
+| `docs/adr/*` auth and identity · layout | Q5 · Q-L |
+| `docs/prerequisites.md` keys and accounts | Step 0 preflight (model key, provider accounts) · Q7 providers |
+
 ## Shape of each question
 
 Ask through `AskUserQuestion` when the tool is available, so the user picks instead of typing:
@@ -46,7 +59,7 @@ One question per call (a design-state batch in `/agent-design-ui` may group up t
 
 ## Output
 
-`docs/adr/0001-agent-architecture.md`:
+`docs/adr/<NNNN>-agent-architecture.md` (next free number; it links the kickoff ADR it builds on, if any):
 
 ```markdown
 # ADR 0001 — Agent architecture

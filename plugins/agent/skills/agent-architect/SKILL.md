@@ -28,7 +28,9 @@ Run `bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh .` and show its table. It che
 
 ## Step 1 — Detect (silent)
 
-Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/*agent-architecture*` if it exists.
+Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/*agent-architecture*` if it exists, and the kickoff doc set if it exists (`docs/kickoff.md`, `docs/requirements.md`, `docs/prerequisites.md`, `docs/stack.md`, `docs/erd.md`, `docs/adr/*`, `docs/api/*`).
+
+- No doc set, no code, and the user mentions documents they have (PRD, ERD, tech stack) → offer `/kickoff` first, so the interview starts from them.
 
 - No agent code yet → **greenfield** (Step 2).
 - Agent code exists → **audit** (Step 3).
@@ -38,7 +40,7 @@ Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/
 
 ## Step 2 — Greenfield interview
 
-Walk `${CLAUDE_SKILL_DIR}/references/interview.md` in order: the problem (P1–P4) before any technology, then Q-F (framework; skipped when the stack is named), then Q1–Q9 with the design question Q-D and the layout question Q-L after Q2.
+Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kickoff doc set) and show the pre-filled card; ask only what is still open. Then walk `${CLAUDE_SKILL_DIR}/references/interview.md` in order: the problem (P1–P4) before any technology, then Q-F (framework; skipped when the stack is named), then Q1–Q9 with the design question Q-D and the layout question Q-L after Q2.
 
 - **One question per turn, as choices**: `AskUserQuestion` with 2–4 options, the recommended one first with `(Recommended)`, per `interview.md` § Shape of each question; numbered options when the tool is absent. Never a prose question the user must answer in free text. Skip what the repo or the request already answers.
 - **Viewports are asked** (Q2v) for any web client, even when every frame is desktop-sized.
@@ -57,7 +59,7 @@ Before writing the ADR, attack the draft card one question per turn until it hol
 - **Failure** — per decision: "what breaks first if this is wrong, and how would you notice?" Vague → one hard push, then record it as a risk in the ADR.
 - **Scope** — a P4 out-of-scope request: show the boundary rule that refuses it.
 
-Stop when the user confirms the card or every open point is a recorded risk. Then write `docs/adr/0001-agent-architecture.md` from the template in `interview.md`, the Problem section included.
+Stop when the user confirms the card or every open point is a recorded risk. Then write `docs/adr/<NNNN>-agent-architecture.md` (the next free number; `0001` in a repo with no ADRs) from the template in `interview.md`, the Problem section included.
 
 ## Step 3 — Audit (brownfield)
 
