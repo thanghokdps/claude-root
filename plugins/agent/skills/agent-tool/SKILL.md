@@ -2,8 +2,8 @@
 model: opus
 effort: high
 name: agent-tool
-description: Adds or changes an LLM agent tool in a LangChainJS / LangGraph assistant — Zod schema, trusted-context identity, read versus mutation, retry and audit wrappers, short tool description, and its test. Use when the user asks to add, remove, rename or fix an agent tool, change what a tool returns, or tighten a tool description.
-when_to_use: add a tool, "thêm tool cho agent", "chỉ giữ 2 tool này", tool description or scope wording, tool returns wrong data, tool schema, DynamicStructuredTool or tool() from @langchain/core
+description: Adds or changes an LLM agent tool in a Mastra, LangChainJS or LangGraph assistant — Zod schema, trusted-context identity, read versus mutation, retry and audit wrappers, short tool description, and its test. Use when the user asks to add, remove, rename or fix an agent tool, change what a tool returns, or tighten a tool description.
+when_to_use: add a tool, "thêm tool cho agent", "chỉ giữ 2 tool này", tool description or scope wording, tool returns wrong data, tool schema, DynamicStructuredTool or tool() from @langchain/core, createTool from @mastra/core
 ---
 
 # agent-tool
@@ -22,6 +22,7 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 
 - Shape A: schema-only tool + execution in the agent's `wrapToolCall` middleware, or a real handler — follow what the agent already does.
 - Shape B: a real handler reading `config.configurable`, registered in the domain registry as `read` or `mutation`.
+- Shape M: `createTool({ id, description, inputSchema, outputSchema, execute })` in `src/mastra/tools/`, attached to the owning `Agent`'s `tools`. `execute(input, context)` reads identity from `context.requestContext` (server-set, `MASTRA_RESOURCE_ID_KEY` for the user), never from `input`. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md`.
 - The tool belongs to the agent whose scope it serves. If two agents could own it, ask which — that is a decision, not a fact.
 
 **Done when:** the owning agent, the registry entry, and read-vs-mutation are stated with file paths.
@@ -37,7 +38,7 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 ## Step 3 — Implement
 
 - Identity and authority from trusted context only; the upstream call uses the caller's credentials or a server credential scoped by those claims.
-- Read tool: wrap with retry (stock `toolRetryMiddleware` scoped to read tools when available — `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/stock-map.md`), audit outside retry.
+- Read tool: wrap with retry (stock `toolRetryMiddleware` scoped to read tools when available; shape M retries inside `execute`, read tools only — `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/stock-map.md`), audit outside retry.
 - Mutation tool: stop here and run `/agent-hitl` — a mutation is never a plain tool.
 - Missing required input → ask the user for it (end the turn), never guess.
 - Removing a tool: remove it from the registry, prompts, suggestions, client renderers and docs in the same change.

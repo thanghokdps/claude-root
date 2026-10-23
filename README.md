@@ -1,6 +1,6 @@
 # Claude Harness — build AI assistants with Claude Code
 
-A Claude Code kit centred on **building one AI assistant end to end** on CopilotKit v2 · AG-UI · LangChainJS / LangGraph: architecture interview → scaffold → features and tools → chat UI → evals and tracing → security. That is the `agent` plugin. The other plugins are supporting tooling for the everyday dev loop (plan, build, review, ship) and are optional.
+A Claude Code kit centred on **building one AI assistant end to end** on CopilotKit v2 · AG-UI with Mastra, LangChainJS or LangGraph: architecture interview → scaffold → features and tools → chat UI → evals and tracing → security. That is the `agent` plugin. The other plugins are supporting tooling for the everyday dev loop (plan, build, review, ship) and are optional.
 
 **Design:** [`DESIGN.md`](DESIGN.md) — why role plugins, the layers, and where each AI-assistant concern lives (CopilotKit, tools, memory, evals, observability). **Map:** [`docs/skill-map.html`](docs/skill-map.html) — every plugin, skill and hook, interactive.
 
@@ -809,6 +809,7 @@ Read on-demand by AI assistant skills (`/agent-architect`, `/agent-feature`, `/a
 - `agent-stock-first.md`: Prefer stock CopilotKit/LangGraph patterns before custom code
 - `agent-identity-and-tools.md`: Tool identity, read vs mutation contracts
 - `langgraph.md`: State management, graph topology, reducer rules
+- `mastra.md`: Mastra registry, tools with request context, approval/suspend, workflows
 - `agent-tracing-privacy.md`: PII sanitization in agent traces
 - `agent-prompts.md`: Prompt engineering standards for agent nodes
 - `agent-deps-pinning.md`: Exact package pinning for AI packages

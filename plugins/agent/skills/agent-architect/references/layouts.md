@@ -23,6 +23,25 @@ Both carry the same rules: one agent id defined once, exact version pins resolve
 
 The rest of the app (features, shared UI, server aggregates, tokens, dev fixtures) is placed by `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`.
 
+### The agent tree per framework
+
+The tree above is shapes A/B. Each other framework keeps its vendor's folder (`reference-repos.md`) and puts the four kit files (`ids.ts`, `env.ts`, `identity.ts`, `models.ts`) next to it:
+
+```
+src/mastra/               # shape M (R1/R2)
+  index.ts                # the one `new Mastra({ agents, tools, workflows, storage, … })`
+  agents/<name>.ts  tools/<tool>.ts  workflows/<name>.ts
+  ids.ts  env.ts  identity.ts  models.ts
+src/agent.ts              # R2 in-process: MastraAgent.getLocalAgents({ mastra }) for the CopilotKit route
+
+agent/                    # R4: LangChain/LangGraph as its own package beside the Next app
+  package.json  langgraph.json
+  src/<graph>/graph.ts  state.ts  tools.ts  prompts.ts  configuration.ts   # R5 per graph
+  src/{ids,env,identity,models}.ts
+```
+
+A Mastra server run apart from the web app (R1, `registerCopilotKit`) is a second deployable: pick L2, or L1 with `src/mastra/` as the only app and no Next.js.
+
 Pick it when: one deployable, no second client planned, Node host.
 
 ## L2 — monorepo, pnpm workspaces + Turborepo (default when ≥ 2 clients or agent and web deploy separately)
@@ -34,14 +53,14 @@ Pick it when: one deployable, no second client planned, Node host.
   package.json            # root scripts only, no runtime deps
   .env.example
   apps/
-    agent/                # agent server: createAgent/StateGraph, CopilotRuntime or AG-UI endpoint, tools, evals/
+    agent/                # agent server: createAgent/StateGraph or src/mastra/, CopilotRuntime, AG-UI endpoint or Mastra server, tools, evals/
     web/                  # Next.js + CopilotKit client (add apps/mobile for headless clients)
   packages/
     shared/               # AGENT_ID, interrupt contract types, zod tool schemas shared by server and clients
     config/               # tsconfig + eslint presets
 ```
 
-Pick it when: web plus mobile or a chat channel, separate deploys, or several agents owned by different people. One LangChain copy across the workspace (`pnpm why @langchain/core` shows one version).
+Pick it when: web plus mobile or a chat channel, separate deploys, or several agents owned by different people. One copy of the framework core across the workspace (`pnpm why @langchain/core` or `pnpm why @mastra/core` shows one version). Several LangGraph agents → one `apps/<agent>/` each with its own `langgraph.json` (R6).
 
 ## Asking
 

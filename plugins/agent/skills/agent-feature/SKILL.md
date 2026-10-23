@@ -2,7 +2,7 @@
 model: opus
 effort: high
 name: agent-feature
-description: Implements a new feature in an existing AI assistant (CopilotKit, AG-UI, LangChainJS, LangGraph) within the architecture its ADR records — checks the feature against the ADR, inventories the tools, agents, schemas, HITL contract and renderers already there, slices the feature across layers with a reuse / extend / new decision per piece, builds each slice through the layer skill, and checks the diff for duplicates. Use when adding a feature or user capability to an assistant that already exists — including one that writes data behind a confirm step, whose write slice this skill hands to agent-hitl.
+description: Implements a new feature in an existing AI assistant (CopilotKit, AG-UI, Mastra, LangChainJS, LangGraph) within the architecture its ADR records — checks the feature against the ADR, inventories the tools, agents, schemas, HITL contract and renderers already there, slices the feature across layers with a reuse / extend / new decision per piece, builds each slice through the layer skill, and checks the diff for duplicates. Use when adding a feature or user capability to an assistant that already exists — including one that writes data behind a confirm step, whose write slice this skill hands to agent-hitl.
 when_to_use: add a feature to the chatbot, "thêm tính năng cho chatbot", "làm thêm feature cho agent", new capability across tool + UI + confirm, "dựa trên kiến trúc đã có", "đừng viết trùng code", extend the assistant so users can do X
 ---
 

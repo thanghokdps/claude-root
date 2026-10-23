@@ -2,8 +2,8 @@
 model: opus
 effort: high
 name: agent-architect
-description: Chooses and records the architecture of an AI assistant built on CopilotKit, AG-UI, LangChainJS or LangGraph — a one-question-at-a-time architecture interview for a new assistant, or a stock-versus-custom audit of an existing one — and scaffolds the chosen shape. Use when starting an AI assistant or chatbot project, adding a new assistant product, or asking which agent architecture, createAgent or StateGraph, or whether custom agent code can be replaced by stock middleware.
-when_to_use: new AI assistant or chatbot, "chọn kiến trúc agent", "createAgent hay StateGraph", "custom graph hay agent dựng sẵn", scaffold a CopilotKit + LangGraph app, audit an agent repo for custom code that stock now covers, /project-init suggested it
+description: Chooses and records the architecture of an AI assistant built on Mastra, LangChainJS or LangGraph with CopilotKit / AG-UI. It runs a one-question-at-a-time architecture interview for a new assistant, or a stock-versus-custom audit of an existing one, then scaffolds the chosen shape from the vendor's official reference repo. Use when starting an AI assistant or chatbot project, adding a new assistant product, choosing a framework (Mastra, createAgent or StateGraph), or asking whether custom agent code can be replaced by stock.
+when_to_use: new AI assistant or chatbot, "chọn kiến trúc agent", "Mastra hay LangChain", "createAgent hay StateGraph", "custom graph hay agent dựng sẵn", scaffold a CopilotKit + LangGraph or Mastra app, skeleton theo repo mẫu chính chủ (ui-dojo, CopilotKit examples), audit an agent repo for custom code that stock now covers, /project-init suggested it
 allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh *)
 ---
 
@@ -38,15 +38,15 @@ Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/
 
 ## Step 2 — Greenfield interview
 
-Walk `${CLAUDE_SKILL_DIR}/references/interview.md` in order: the problem (P1–P4) before any technology, then Q1–Q9 with the design question Q-D and the layout question Q-L after Q2.
+Walk `${CLAUDE_SKILL_DIR}/references/interview.md` in order: the problem (P1–P4) before any technology, then Q-F (framework; skipped when the stack is named), then Q1–Q9 with the design question Q-D and the layout question Q-L after Q2.
 
 - **One question per turn, as choices**: `AskUserQuestion` with 2–4 options, the recommended one first with `(Recommended)`, per `interview.md` § Shape of each question; numbered options when the tool is absent. Never a prose question the user must answer in free text. Skip what the repo or the request already answers.
 - **Viewports are asked** (Q2v) for any web client, even when every frame is desktop-sized.
 - **Layout is asked, never assumed**: single app (L1) or monorepo on pnpm + Turborepo (L2), per `${CLAUDE_SKILL_DIR}/references/layouts.md`. Recommend one from the clients and deploy answers, then wait.
-- Default recommendation is shape **A** (createAgent + middleware + CopilotRuntime v2) unless the host is edge/Workers or a contract the runtime cannot express forces **B**; use the decision rule in `shapes.md` for single agent vs supervisor.
+- The shape follows Q-F (`shapes.md` § Framework). A named stack is used as given: Mastra → **M**, LangChain → **A**, custom graph → **B**/hybrid. With no stack named, recommend **A** (createAgent + middleware + CopilotRuntime v2), unless the host is edge/Workers or a contract the runtime cannot express forces **B**. Use the decision rule in `shapes.md` for single agent vs supervisor in every framework.
 - Every non-L0 choice names its rung and its reason (`${CLAUDE_SKILL_DIR}/references/stock-map.md`).
 
-**Done when:** P1–P4, Q-D, Q-L, Q-T (no tests yet), Q1–Q9 and Q2v (web) are answered, defaulted to the recommendation, or explicitly deferred with a risk.
+**Done when:** P1–P4, Q-F, Q-D, Q-L, Q-T (no tests yet), Q1–Q9 and Q2v (web) are answered, defaulted to the recommendation, or explicitly deferred with a risk.
 
 ## Step 2b — Grill the card
 
@@ -71,13 +71,13 @@ Offer to record the keeps and the chosen direction as an ADR.
 
 Build the smallest working slice of the chosen shape, test first where practical:
 
-0. Skeleton of the chosen layout (`layouts.md` L1 or L2) with the app tree from `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: `git init`, package manager, TypeScript strict, test runner with its `include` set to the Q-T test location, ESLint, Prettier + `format:check`, path alias, `styles/tokens.css`, `.env.example`. Resolve every version at scaffold time and pin it exactly.
+0. Skeleton mirrored from the official reference row for the card (`${CLAUDE_SKILL_DIR}/references/reference-repos.md`): resolve its SHA now, mirror the **core** only, and add a satellite only when the ADR answer it names asks for it. Place it in the chosen layout (`layouts.md` L1 or L2) with the app tree from `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: `git init`, package manager, TypeScript strict, test runner with its `include` set to the Q-T test location, ESLint, Prettier + `format:check`, path alias, `styles/tokens.css`, `.env.example`. Resolve every version at scaffold time and pin it exactly.
 1. Env schema that fails at boot on missing or inconsistent config. If the app stores data and there is no ERD (or the user asks for one from the design), write `docs/erd.md` first per `${CLAUDE_SKILL_DIR}/references/data-model.md`, then the DB schema from it.
-2. Identity: verify the token at the edge → server-injected claims → a trusted-context reader for tools; token in request scope only.
-3. One agent registered under one agent id (backend registry, `langgraph.json` if used, client `agent` prop), its prompt opening with P1.
+2. Identity: verify the token at the edge → server-injected claims → a trusted-context reader for tools (`config.configurable`, or Mastra `requestContext` with `MASTRA_RESOURCE_ID_KEY`); token in request scope only.
+3. One agent registered under one agent id (backend registry or the Mastra `agents` map, `langgraph.json` if used, client `agent` prop), its prompt opening with P1.
 4. Model factory with fallback; a cheap model for routing/summary.
 5. Tracing switch with masking on (`${CLAUDE_PLUGIN_ROOT}/rules/agent-tracing-privacy.md`).
-6. Exact pins and a single LangChain copy (`${CLAUDE_PLUGIN_ROOT}/rules/agent-deps-pinning.md`).
+6. Exact pins and a single copy of the framework core (`@langchain/core` or `@mastra/core`) (`${CLAUDE_PLUGIN_ROOT}/rules/agent-deps-pinning.md`).
 7. One read tool for the first P2 task, against its P3 system, through `/agent-tool`; then one real streamed turn with that task's example message through `/agent-verify-turn`.
 8. The P2 example messages as the first eval cases (`/agent-evals`).
 

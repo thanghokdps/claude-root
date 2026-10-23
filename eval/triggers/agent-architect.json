@@ -12,6 +12,10 @@
     {
       "prompt": "audit the agent repo for custom code that stock middleware now covers",
       "top_k": 3
+    },
+    {
+      "prompt": "dựng skeleton chatbot bằng Mastra + CopilotKit theo repo mẫu chính chủ",
+      "top_k": 3
     }
   ],
   "negative": [

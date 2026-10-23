@@ -21,6 +21,22 @@ Verified against vendor docs on 2026-10-16. Docs for these packages disagree acr
 | Runtime + adapter | `CopilotRuntime` (`@copilotkit/runtime/v2`) + `LangGraphAgent` (`@ag-ui/langgraph`) | Node only |
 | Checkpoints | `MemorySaver` (dev), official/community savers | Own saver = L3 |
 
+## Backend — Mastra (shape M, checked against mastra.ai docs on 2026-10-23)
+
+| Need | Stock (L0/L1) | Notes |
+|------|---------------|-------|
+| Agent loop | `new Agent({ id, instructions, model, tools })` (`@mastra/core/agent`) | |
+| Routing | supervisor `Agent` with `agents: { … }` | `.network()` is deprecated |
+| Fixed steps | `createWorkflow` + `createStep` | `.then` / `.branch` / `.parallel` |
+| Approval of tool calls | `requireApproval: true`, or `suspend()` + `resumeSchema` | Needs `storage` |
+| Input/output guards, PII | `inputProcessors` / `outputProcessors` | Order is a contract |
+| Cross-tool audit | `hooks.beforeToolCall` / `afterToolCall` | |
+| Trusted identity | `RequestContext` + `MASTRA_RESOURCE_ID_KEY`, `requestContextSchema` | Server-set; overrides client values |
+| Threads, memory | `Memory` + a storage adapter (`@mastra/libsql`, `@mastra/pg`) | |
+| Trace masking | `Observability` + `SensitiveDataFilter` | |
+| Runtime + adapter | `@ag-ui/mastra`: `MastraAgent.getLocalAgents({ mastra })` or `registerCopilotKit` | |
+| Model fallback | none built in | `models.ts` factory or a gateway = L2 |
+
 ## Frontend (`@copilotkit/react-core/v2`)
 
 `CopilotKit` · `CopilotChat` · `useAgent` · `useAgentContext` · `useFrontendTool` · `useRenderTool` · `useHumanInTheLoop` · `useConfigureSuggestions` · `useCopilotKit` (`setHeaders`).
