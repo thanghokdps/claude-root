@@ -44,7 +44,7 @@ Ask for a feature in plain words, e.g. *"Thêm tính năng cho khách đổi đ�
 | `/agent-design-ui <figma link \| folder>` | A design for the chat: runs `/design-ui` (dev) for frames, tokens, primitives and the screenshot diff, and adds the chat states, the `[data-copilotkit]` theme and stock vs custom per chat element |
 | `/agent-tool <tool>` | Adding, renaming or fixing an agent (backend) tool — schema, trusted identity, read vs mutation, its test. Given your API (OpenAPI, Postman, curl, docs or MCP), it first maps endpoints to tools and builds the typed client and mocks. Browser-only tools go to `/agent-frontend` |
 | `/agent-rag <corpus or memory>` | Answering from documents or remembering users by meaning — ingest (chunk, embed, index with model metadata), vector store choice, a retrieval tool with a server-side tenant filter and citations, semantic memory, retrieval evals |
-| `/agent-hitl <write>` | A tool creates, updates or deletes data and needs a confirm card |
+| `/agent-hitl <write>` | A tool creates, updates or deletes data and needs a confirm card — standard AG-UI interrupt, `useInterrupt`, `resume[]` |
 | `/agent-graph <scope>` | A request lands on the wrong agent; adding an agent, router or supervisor; rewriting a system prompt |
 | `/agent-frontend <change>` | CopilotKit v2 in React: provider + auth headers, `useAgentContext`, frontend tools (`useFrontendTool`), tool cards (`useRenderTool`), suggestions, file and image attachments, e2e with recorded streams |
 | `/agent-verify-turn [local\|prod-trace]` | Before saying an agent change works, or when a production answer was wrong |
@@ -64,7 +64,7 @@ Skills fire on their own from what you type — the slash command is optional.
 
 ## Check the routing yourself
 
-`evals/` holds one case per routing demo prompt, one that must not fire, and three behaviour cases: `greenfield-problem-first` (prerequisites checked, then the problem asked before any technology), `feature-conflicts-adr` (a feature the ADR rules out is stopped and raised, not built) and `design-to-chat` (a frame + tokens mapped onto v2 tokens and a ui-map). From a clone of the repo:
+`evals/` holds one case per routing demo prompt, one that must not fire, and behaviour cases: `greenfield-problem-first` (prerequisites checked, then the problem asked before any technology), `feature-conflicts-adr` (a feature the ADR rules out is stopped and raised, not built) `design-to-chat` (a frame + tokens mapped onto v2 tokens and a ui-map), `hitl-standard-interrupt` (the stock AG-UI 1.0 confirm path planned, no custom endpoint) and `verify-agui-1` (a captured stream checked against the 1.0 rules). From a clone of the repo:
 
 ```bash
 bash scripts/eval-plugin.sh agent
@@ -81,8 +81,8 @@ The invariants the skills read before they act. They load only when a skill need
 | [`agent-identity-and-tools.md`](rules/agent-identity-and-tools.md) | identity from trusted context only; **where a tool lives (agent vs frontend)**; read vs mutation, retry, audit, errors, tests | `/agent-tool`, `/agent-feature`, `/agent-frontend`, `/agent-hitl` |
 | [`agent-prompts.md`](rules/agent-prompts.md) | system prompts, tool descriptions, scope rules | `/agent-graph`, `/agent-tool` |
 | [`agent-stock-first.md`](rules/agent-stock-first.md) | use stock CopilotKit / Mastra / LangChain / LangGraph pieces before custom code | all |
-| [`agui-transport.md`](rules/agui-transport.md) | AG-UI events, shared state, client contract | `/agent-frontend`, `/agent-hitl` |
-| [`langgraph.md`](rules/langgraph.md) | state, short- and long-term memory, graph lifecycle, interrupts | `/agent-graph`, `/agent-hitl` |
+| [`agui-transport.md`](rules/agui-transport.md) | AG-UI 1.0 events, interrupts and resume, untrusted client history, content parts, client contract (0.x lines marked) | `/agent-frontend`, `/agent-hitl` |
+| [`langgraph.md`](rules/langgraph.md) | state, run context (`contextSchema`), short- and long-term memory, graph lifecycle, interrupts | `/agent-graph`, `/agent-hitl` |
 | [`mastra.md`](rules/mastra.md) | registry, agents and supervisor, `createTool` + request context, approval/suspend, workflows, storage, transport | `/agent-tool`, `/agent-graph`, `/agent-hitl` |
 | [`agent-tracing-privacy.md`](rules/agent-tracing-privacy.md) | tracing switch, masking, what each turn records | `/agent-evals observability`, `/agent-verify-turn` |
 | [`agent-deps-pinning.md`](rules/agent-deps-pinning.md) | exact version pins, one copy of the framework core | `/agent-architect` |

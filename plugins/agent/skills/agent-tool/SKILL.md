@@ -29,7 +29,7 @@ First decide agent tool or frontend tool with "Where a tool lives" in `${CLAUDE_
 Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/shapes.md`, then find where tools of this kind already live (the tool registry, the domain slice, the agent that owns the scope).
 
 - Shape A: schema-only tool + execution in the agent's `wrapToolCall` middleware, or a real handler — follow what the agent already does.
-- Shape B: a real handler reading `config.configurable`, registered in the domain registry as `read` or `mutation`.
+- Shape B: a real handler reading `runtime.context` (older: `config.configurable`), registered in the domain registry as `read` or `mutation`.
 - Shape M: `createTool({ id, description, inputSchema, outputSchema, execute })` in `src/mastra/tools/`, attached to the owning `Agent`'s `tools`. `execute(input, context)` reads identity from `context.requestContext` (server-set, `MASTRA_RESOURCE_ID_KEY` for the user), never from `input`. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md`.
 - The tool belongs to the agent whose scope it serves. If two agents could own it, ask which — that is a decision, not a fact.
 
@@ -48,6 +48,7 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 - Identity and authority from trusted context only; the upstream call uses the caller's credentials or a server credential scoped by those claims.
 - Read tool: wrap with retry (stock `toolRetryMiddleware` scoped to read tools when available; shape M retries inside `execute`, read tools only — `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/stock-map.md`), audit outside retry.
 - Mutation tool: stop here and run `/agent-hitl` — a mutation is never a plain tool.
+- Upstream errors → the short message from Step 2; in shape A stock `toolErrorMiddleware` does the mapping for the tools you name.
 - Missing required input → ask the user for it (end the turn), never guess.
 - A tool that reads a user's attachment takes the attachment id, loads it with the owner check, and returns its extracted text as delimited data, never as instructions (`${CLAUDE_PLUGIN_ROOT}/skills/agent-frontend/references/attachments.md` §3, §5).
 - Removing a tool: remove it from the registry, prompts, suggestions, client renderers and docs in the same change.

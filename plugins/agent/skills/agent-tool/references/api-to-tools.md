@@ -38,7 +38,7 @@ Run `/api-client` Step 3 for each system, with the spec from § 1 as its source 
 
 What a tool needs on top of that client:
 
-- **Credential per call from the run's trusted context** (`config.configurable`, Mastra `requestContext`, or `AsyncLocalStorage` set from them), through `client.use({ onRequest })`, never a module-level variable. Pass the run's abort signal, so a cancelled turn cancels the call.
+- **Credential per call from the run's trusted context** (`runtime.context` from `contextSchema` — older `config.configurable` — Mastra `requestContext`, or `AsyncLocalStorage` set from them), through `client.use({ onRequest })`, never a module-level variable. Pass the run's abort signal, so a cancelled turn cancels the call.
 - **Auth mode per system**, recorded in the ADR's P3 line: *caller token* (the user's own token passed through: the upstream enforces permission) or *server credential* (a service key from env: the tool must check the caller's permission on the specific resource itself, before the call).
 - **Errors the model can say**: `errors.ts` codes map to a short, deterministic user-facing message (401/403 → not allowed, 404 → not found, 409, 422, 429, 5xx), never a raw upstream body.
 - **Mappers trim for the model**: only the fields the task needs, lists capped (first N + total + "ask to narrow"), no raw HTML or blobs. Follow the API's own pagination; never loop over all pages inside one tool call.

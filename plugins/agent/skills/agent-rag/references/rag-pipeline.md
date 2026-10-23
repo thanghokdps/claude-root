@@ -37,7 +37,7 @@ await store.query({ indexName, queryVector, topK, filter, minScore })
 
 - Splitters: `RecursiveCharacterTextSplitter` (and markdown-aware splitters) from `@langchain/textsplitters`.
 - Embeddings and vector stores: the provider package (e.g. `OpenAIEmbeddings` from `@langchain/openai`) and a store from the vector store integrations index. Check the import path on the installed version. The tutorial's `MemoryVectorStore` and `createRetrieverTool` come from `@langchain/classic`: fine for a demo, but for production write the retrieval tool with `tool()` and a server-side filter.
-- Retrieval tool: `tool(async ({ query }, config) => store.similaritySearchWithScore(query, k, { ...filter, tenantId }), { name, description, schema })`, with `tenantId` read from trusted context (`config.configurable` / request scope). Filter syntax is store-specific; read the store's docs.
+- Retrieval tool: `tool(async ({ query }, runtime) => store.similaritySearchWithScore(query, k, { ...filter, tenantId: runtime.context.tenantId }), { name, description, schema })`, with `tenantId` in the agent's `contextSchema`, set by the server (older: `config.configurable`). Filter syntax is store-specific; read the store's docs.
 - Semantic memory: a LangGraph Store with `index: { embeddings, dims, fields }`, then `store.put(namespace, key, value)` and `store.search(namespace, { query, limit })`. On LangSmith deployments, configure `store.index` in `langgraph.json` instead of in code.
 
 ## Metadata every chunk carries
