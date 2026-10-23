@@ -16,6 +16,10 @@
     {
       "prompt": "add a frontend tool with useFrontendTool so the agent can open the order panel in the browser",
       "top_k": 3
+    },
+    {
+      "prompt": "the user uploads a PDF or an image in the chat and the agent should read it",
+      "top_k": 3
     }
   ],
   "negative": [
