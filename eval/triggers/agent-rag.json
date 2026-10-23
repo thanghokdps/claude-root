@@ -1,0 +1,23 @@
+{
+  "skill": "agent-rag",
+  "positive": [
+    {
+      "prompt": "thêm RAG cho chatbot để trả lời từ tài liệu nội bộ của công ty",
+      "top_k": 3
+    },
+    {
+      "prompt": "add a pgvector store and embeddings so the agent answers from our knowledge base",
+      "top_k": 3
+    },
+    {
+      "prompt": "the agent should remember each user across conversations with semantic recall",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "add a tool to the agent that reads the employee profile",
+      "owner": "agent-tool"
+    }
+  ]
+}

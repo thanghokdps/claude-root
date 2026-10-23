@@ -10,7 +10,7 @@ The assistant is built from these answers: every task in P2 must end up owned by
 |---|----------|---------|
 | P1 | **Who and why** — who uses it, and what problem does it solve, in one sentence? | Agent purpose, system prompt opening line |
 | P2 | **Top tasks** — the 3–5 things users will ask, each with one real example message | Agents (P2 → `shapes.md` rule), tools, eval cases (the examples verbatim) |
-| P3 | **Systems** — what it reads and writes (APIs, DBs, files), and who owns each | Tool list; any write → Q4 HITL |
+| P3 | **Systems** — what it reads and writes (APIs, DBs, files), and who owns each. Does it answer from documents or a knowledge base, and who may read which ones? | Tool list; any write → Q4 HITL; documents → `/agent-rag` (corpus, tenant/ACL key) |
 | P4 | **Out of scope and "good"** — what it must refuse, and how you will know an answer is good | Boundary rules, must-pass evals (Q9) |
 
 ## Technology (Q-F, Q-L, Q1–Q9)
@@ -24,7 +24,7 @@ The assistant is built from these answers: every task in P2 must end up owned by
 | 3 | **Agent shape** — one agent, a supervisor over several, or a fixed workflow? | `shapes.md` decision rule; count tools per agent |
 | 4 | **Writes** — does any tool change data? | Yes → deterministic HITL gate + pending-action ledger + confirm/cancel; one active action per thread |
 | 5 | **Identity** — where does verified identity enter, and how do tools read it? | Token verify at the edge → server-injected claims → tools read trusted context; token in request scope only |
-| 6 | **Persistence** — checkpoint per thread or per run? Where is the history's source of truth? Long-term memory? | Thread-scoped (durable state) vs run-scoped (history table is truth, checkpoints deleted at run end) |
+| 6 | **Persistence** — checkpoint per thread or per run? Where is the history's source of truth? Long-term memory (and recalled by meaning → semantic memory)? Vector store for documents (P3)? | Thread-scoped (durable state) vs run-scoped (history table is truth, checkpoints deleted at run end) |
 | 7 | **Models** — providers, fallback order, caller-supplied keys, a cheap model for router/summary/suggestions? | Fallback middleware vs cascade model; key in request scope only |
 | 8 | **Observability & privacy** — tracing provider, masking, retention, compliance controls? | Masked-by-default tracing; HMAC user ids |
 | 9 | **Evals** — which behaviours are must-pass, which judge model, where does the CI gate sit? | Eval tree separate from unit tests; baseline diff gate |
@@ -61,7 +61,7 @@ Systems (P3): <system → read/write → owner> · Out of scope (P4): · Good an
 Framework: Mastra | LangChain | LangGraph · Reference: <repo>@<sha> · <path>
 Layout: L1 single app | L2 monorepo · Tests: `__tests__/` | `tests/` · Shape: A | B | hybrid | M · Host: · Transport: · Clients: · Viewports: <smallest width; phone/tablet/desktop>
 Agents: <id → purpose → tool count>
-Writes/HITL: · Identity: · Checkpoints: · Memory:
+Writes/HITL: · Identity: · Checkpoints: · Memory: · Retrieval: <store, index, embedding model + dims, ACL key | none>
 Models: <primary → fallback; router/summary model>
 Tracing: <provider, masking> · Evals: <must-pass list, gate>
 

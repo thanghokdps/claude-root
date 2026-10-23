@@ -20,6 +20,8 @@ Verified against vendor docs on 2026-10-16. Docs for these packages disagree acr
 | CopilotKit state/actions in an agent | `copilotkitMiddleware` / `CopilotKitStateAnnotation` (`@copilotkit/sdk-js/langgraph`) | |
 | Runtime + adapter | `CopilotRuntime` (`@copilotkit/runtime/v2`) + `LangGraphAgent` (`@ag-ui/langgraph`) | Node only |
 | Checkpoints | `MemorySaver` (dev), official/community savers | Own saver = L3 |
+| RAG | `@langchain/textsplitters`, provider embeddings, vector store integrations | Retrieval tool via `tool()` with a server-side filter (`/agent-rag`) |
+| Semantic memory | LangGraph Store with `index: { embeddings, dims, fields }` | Namespace by trusted user id |
 
 ## Backend — Mastra (shape M, checked against mastra.ai docs on 2026-10-23)
 
@@ -36,6 +38,8 @@ Verified against vendor docs on 2026-10-16. Docs for these packages disagree acr
 | Trace masking | `Observability` + `SensitiveDataFilter` | |
 | Runtime + adapter | `@ag-ui/mastra`: `MastraAgent.getLocalAgents({ mastra })` or `registerCopilotKit` | |
 | Model fallback | none built in | `models.ts` factory or a gateway = L2 |
+| RAG | `MDocument` + `.chunk()`, `rerank()` (`@mastra/rag`), vector stores (`@mastra/pg` `PgVector`, `@mastra/libsql`), `createVectorQueryTool` | Tenant filter enforced in an own `createTool` (`/agent-rag`) |
+| Semantic memory | `Memory({ vector, embedder, options: { semanticRecall } })` | Off by default |
 
 ## Frontend (`@copilotkit/react-core/v2`)
 

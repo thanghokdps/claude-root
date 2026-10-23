@@ -93,4 +93,4 @@ Then `/project-init` writes the project's `.claude/` docs and test strategy from
 
 ## Hand-offs
 
-Scaffold done → `/verify-done` → `/review-checklist` → `/finish-branch`. The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · threat model → `/agent-security`.
+Scaffold done → `/verify-done` → `/review-checklist` → `/finish-branch`. The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · documents, embeddings or semantic memory → `/agent-rag` · threat model → `/agent-security`.
