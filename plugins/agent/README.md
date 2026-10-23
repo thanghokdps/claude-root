@@ -1,6 +1,6 @@
 # agent
 
-Skills for building AI assistants on **CopilotKit · AG-UI · LangChainJS · LangGraph**. Installing it also installs the plugins its skills hand off to:
+Skills for building AI assistants on **CopilotKit · AG-UI** with **Mastra, LangChainJS or LangGraph**, each scaffolded from the vendor's official reference repo. Installing it also installs the plugins its skills hand off to:
 
 | Comes with `agent` | For |
 |---|---|
@@ -79,11 +79,12 @@ The invariants the skills read before they act. They load only when a skill need
 |---|---|---|
 | [`agent-identity-and-tools.md`](rules/agent-identity-and-tools.md) | identity from trusted context only; **where a tool lives (agent vs frontend)**; read vs mutation, retry, audit, errors, tests | `/agent-tool`, `/agent-feature`, `/agent-frontend`, `/agent-hitl` |
 | [`agent-prompts.md`](rules/agent-prompts.md) | system prompts, tool descriptions, scope rules | `/agent-graph`, `/agent-tool` |
-| [`agent-stock-first.md`](rules/agent-stock-first.md) | use stock CopilotKit / LangChain / LangGraph pieces before custom code | all |
+| [`agent-stock-first.md`](rules/agent-stock-first.md) | use stock CopilotKit / Mastra / LangChain / LangGraph pieces before custom code | all |
 | [`agui-transport.md`](rules/agui-transport.md) | AG-UI events, shared state, client contract | `/agent-frontend`, `/agent-hitl` |
 | [`langgraph.md`](rules/langgraph.md) | state, short- and long-term memory, graph lifecycle, interrupts | `/agent-graph`, `/agent-hitl` |
+| [`mastra.md`](rules/mastra.md) | registry, agents and supervisor, `createTool` + request context, approval/suspend, workflows, storage, transport | `/agent-tool`, `/agent-graph`, `/agent-hitl` |
 | [`agent-tracing-privacy.md`](rules/agent-tracing-privacy.md) | tracing switch, masking, what each turn records | `/agent-evals observability`, `/agent-verify-turn` |
-| [`agent-deps-pinning.md`](rules/agent-deps-pinning.md) | exact version pins, one LangChain copy | `/agent-architect` |
+| [`agent-deps-pinning.md`](rules/agent-deps-pinning.md) | exact version pins, one copy of the framework core | `/agent-architect` |
 | [`agent-code-structure.md`](rules/agent-code-structure.md) | app folders (features, shared ui, server aggregates, dev), size and duplication limits, tokens instead of raw hex/px, mobile-first, naming, Prettier | `/agent-architect`, `/agent-design-ui`, `/agent-feature` |
 
 New feature order (`/agent-feature`): check the ADR → reuse inventory → schema → tool → HITL → agent scope → frontend → evals, one slice green before the next.

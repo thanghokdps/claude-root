@@ -13,10 +13,11 @@ The assistant is built from these answers: every task in P2 must end up owned by
 | P3 | **Systems** — what it reads and writes (APIs, DBs, files), and who owns each | Tool list; any write → Q4 HITL |
 | P4 | **Out of scope and "good"** — what it must refuse, and how you will know an answer is good | Boundary rules, must-pass evals (Q9) |
 
-## Technology (Q-L, Q1–Q9)
+## Technology (Q-F, Q-L, Q1–Q9)
 
 | # | Question | Forks |
 |---|----------|-------|
+| F | **Framework** — Mastra, LangChain `createAgent`, or a custom LangGraph graph? Ask first. Skip it when the request or the repo names the stack | `shapes.md` § Framework: A · M · B/hybrid. Picks the reference row in `reference-repos.md`, and with it the agent tree and which branch every later skill takes |
 | 1 | **Host** — Node server/container, or Workers/edge? | Node → shape A possible (CopilotRuntime). Edge → shape B (own AG-UI emitter), edge-safe imports only |
 | 2 | **Clients** — web React, mobile (headless), chat channel (Slack/Teams), API only? | Web → CopilotKit v2 hooks. Headless → state/custom-event contract. Channel → interrupt as a custom event + card |
 | 2v | **Viewports** (web) — smallest supported width, and which of phone (360–430) / tablet (768–1024) / desktop (≥1280)? A design's frame size describes the drawing, not a viewport decision — ask | Breakpoints, the narrow-width state in `/agent-design-ui`, the screenshot widths it checks |
@@ -57,7 +58,8 @@ Users: · Problem: (P1)
 Systems (P3): <system → read/write → owner> · Out of scope (P4): · Good answer means:
 
 ## Architecture card
-Layout: L1 single app | L2 monorepo · Tests: `__tests__/` | `tests/` · Shape: A | B | hybrid · Host: · Transport: · Clients: · Viewports: <smallest width; phone/tablet/desktop>
+Framework: Mastra | LangChain | LangGraph · Reference: <repo>@<sha> · <path>
+Layout: L1 single app | L2 monorepo · Tests: `__tests__/` | `tests/` · Shape: A | B | hybrid | M · Host: · Transport: · Clients: · Viewports: <smallest width; phone/tablet/desktop>
 Agents: <id → purpose → tool count>
 Writes/HITL: · Identity: · Checkpoints: · Memory:
 Models: <primary → fallback; router/summary model>

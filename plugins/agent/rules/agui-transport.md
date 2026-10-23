@@ -12,4 +12,4 @@ paths:
 - State the client reads is a contract: additive changes only, versioned when a field changes meaning. Drop `STATE_SNAPSHOT`/`RAW` payloads the client does not read — they can grow to megabytes per turn.
 - Custom events (`CUSTOM`) carry a stable name and a versioned payload; a headless client (mobile, chat channel) renders from them and from shared state, not from text.
 - Tool-call ids stay stable end to end (backend → stream → client dedupe → resume).
-- Every agent id is a three-way contract: backend registry, `langgraph.json` (if used) and the client's `agent` prop. Change all three together.
+- Every agent id is a three-way contract: backend registry (the Mastra `agents` key in shape M), `langgraph.json` or `registerCopilotKit({ resourceId })` (if used), and the client's `agent` prop. Change all three together.

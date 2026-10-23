@@ -2,15 +2,15 @@
 model: opus
 effort: high
 name: agent-graph
-description: Adds or changes an agent, sub-agent, router or supervisor in a LangGraph / LangChainJS assistant — which agent owns which scope, routing and handoff, boundary rules, middleware order, system prompts, and recursion limits. Use when a request lands on the wrong agent, the user asks to add an agent or split scope between agents, or a system prompt or routing rule needs rewriting.
-when_to_use: add an agent, routing, "agent nào làm việc này", supervisor or router node, out-of-scope handling, boundary rules, rewrite the system prompt shorter, wrong agent answered ("hỏi việc này mà agent khác trả lời"), handoff between agents, middleware order
+description: Adds or changes an agent, sub-agent, router or supervisor in a Mastra, LangGraph or LangChainJS assistant — which agent owns which scope, routing and handoff, boundary rules, middleware order, system prompts, and recursion limits. Use when a request lands on the wrong agent, the user asks to add an agent or split scope between agents, or a system prompt or routing rule needs rewriting.
+when_to_use: add an agent, routing, "agent nào làm việc này", supervisor or router node, out-of-scope handling, boundary rules, rewrite the system prompt shorter, wrong agent answered ("hỏi việc này mà agent khác trả lời"), handoff between agents, middleware order, Mastra supervisor agent or workflow
 ---
 
 # agent-graph
 
 **Invoke:** `/agent-graph <the scope or routing change>`
 
-Prompt rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-prompts.md`. Graph rules: `${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md`.
+Prompt rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-prompts.md`. Graph rules: `${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` (shapes A/B) or `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md` (shape M).
 
 ---
 
@@ -28,6 +28,7 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 - The feature belongs to the agent whose **scope** it serves, judged from the user's point of view ("viewing my resume" belongs where resume viewing lives, even if a tool elsewhere could answer). State the owner and the reason before editing; if the map leaves two plausible owners, ask.
 - Fix behaviour in the agent (routing, prompt, tool) before reaching for a client-side workaround.
 - New agent vs bigger agent: use the decision rule in `shapes.md`. Growing past ~10–15 tools or mixing unrelated scopes → split and route.
+- Shape M: routing is a supervisor `Agent` with `agents: { … }`, and each subagent's `description` is its scope line. A fixed order is a workflow (`createWorkflow`), not routing. Never start on `.network()`, which is deprecated.
 
 **Done when:** the owning agent and the layer (router, prompt, tool, middleware) are named.
 
@@ -37,9 +38,9 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 - **Handoff**: bounded (one handoff, then decline) to avoid ping-pong.
 - **Decline**: one short line saying what the assistant can do instead.
 - **Prompts**: bullets; keep the user's sentences verbatim; derive tool/scope lists from constants; describe only tools that exist.
-- **Middleware**: insert at the position the order contract requires (`shapes.md`); reordering changes behaviour even when tests stay green.
+- **Middleware**: insert at the position the order contract requires (`shapes.md`); reordering changes behaviour even when tests stay green. Shape M's equivalent is the `inputProcessors` / `outputProcessors` order on the agent.
 - **Agent id**: a new id changes three places together (`${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md`).
-- **Limits**: recursion limit and timeout land as a readable turn.
+- **Limits**: recursion limit (shape M: `maxSteps`) and timeout land as a readable turn.
 
 **Done when:** unit tests cover the new routing rule (one prompt per rule plus one out-of-scope), and typecheck and lint pass.
 

@@ -1,16 +1,17 @@
 {
   "name": "agent",
-  "version": "5.1.0",
+  "version": "5.2.0",
   "author": {
     "name": "Thang Ho Quang"
   },
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
-  "description": "CopilotKit / AG-UI / LangChainJS / LangGraph assistants: architecture, tools, HITL, graph, frontend, evals, security, turn verification — with their rules.",
+  "description": "CopilotKit / AG-UI assistants on Mastra, LangChainJS or LangGraph: architecture scaffolded from official reference repos, tools, HITL, graph, frontend, evals, security, turn verification — with their rules.",
   "keywords": [
     "agents",
     "langgraph",
-    "copilotkit"
+    "copilotkit",
+    "mastra"
   ],
   "dependencies": [
     "progress",
