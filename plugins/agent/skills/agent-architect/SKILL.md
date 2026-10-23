@@ -78,7 +78,7 @@ Build the smallest working slice of the chosen shape, test first where practical
 4. Model factory with fallback; a cheap model for routing/summary.
 5. Tracing switch with masking on (`${CLAUDE_PLUGIN_ROOT}/rules/agent-tracing-privacy.md`).
 6. Exact pins and a single copy of the framework core (`@langchain/core` or `@mastra/core`) (`${CLAUDE_PLUGIN_ROOT}/rules/agent-deps-pinning.md`).
-7. One read tool for the first P2 task, against its P3 system, through `/agent-tool`; then one real streamed turn with that task's example message through `/agent-verify-turn`.
+7. One read tool for the first P2 task, against its P3 system, through `/agent-tool` (from the user's API spec when one was given, its Step 0); then one real streamed turn with that task's example message through `/agent-verify-turn`.
 8. The P2 example messages as the first eval cases (`/agent-evals`).
 
 Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later work: nostream helper nodes, stable prompt prefix, kill switch per tool.

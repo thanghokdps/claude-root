@@ -17,6 +17,7 @@ src/
     hooks/  api.ts          # client hooks and the feature's fetchers
   components/ui/            # shared primitives used by ≥ 2 features (button, dialog, drawer, scroll area)
   server/<aggregate>/       # one per aggregate: repository.ts, service.ts, schema (zod)
+  server/<system>/          # one per external API: generated schema.d.ts, client.ts, errors.ts, mappers.ts (agent-tool Step 0)
   db/                       # drizzle/prisma schema, client, migrations, seed
   agent/                    # per layouts.md
   lib/                      # framework-free helpers (format, ids); no React, no db

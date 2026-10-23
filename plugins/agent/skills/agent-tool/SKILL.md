@@ -2,8 +2,8 @@
 model: opus
 effort: high
 name: agent-tool
-description: Adds or changes an LLM agent tool in a Mastra, LangChainJS or LangGraph assistant — Zod schema, trusted-context identity, read versus mutation, retry and audit wrappers, short tool description, and its test. Use when the user asks to add, remove, rename or fix an agent tool, change what a tool returns, or tighten a tool description.
-when_to_use: add a tool, "thêm tool cho agent", "chỉ giữ 2 tool này", tool description or scope wording, tool returns wrong data, tool schema, DynamicStructuredTool or tool() from @langchain/core, createTool from @mastra/core
+description: Adds or changes an LLM agent tool (Mastra createTool, LangChain tool()) in a Mastra, LangChainJS or LangGraph assistant — Zod schema, trusted-context identity, read versus mutation, retry and audit wrappers, short tool description, and its test. Also turns an API the user provides (OpenAPI/Swagger spec, Postman collection, curl commands, API docs, or an MCP server) into a confirmed endpoint-to-tool map, a typed client and spec-based mocks. Use when the user asks to add, remove, rename or fix an agent tool, change what a tool returns, tighten a tool description, or build tools from their API.
+when_to_use: add a tool, "thêm tool cho agent", "chỉ giữ 2 tool này", tool description or scope wording, tool returns wrong data, tool schema, DynamicStructuredTool or tool() from @langchain/core, createTool from @mastra/core, "đây là API của tôi", "tạo tools từ swagger/OpenAPI/Postman", implement tools with my API, connect an MCP server's tools to the agent
 ---
 
 # agent-tool
@@ -13,6 +13,14 @@ when_to_use: add a tool, "thêm tool cho agent", "chỉ giữ 2 tool này", tool
 The invariants live in `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`; this skill is the order of work.
 
 ---
+
+## Step 0 — From an API the user provides (when there is one)
+
+The user handed over an API (spec, collection, curl, docs page or MCP server) rather than one tool → follow `${CLAUDE_SKILL_DIR}/references/api-to-tools.md` first: one spec in `docs/api/`, the endpoint → tool table confirmed by the user, then one client per system in `server/<system>/` with generated types, error mapping, trimming and spec-based mocks. An MCP server is connected, never rewrapped.
+
+Then run Steps 1–4 below **once per tool**, read tools first. Write tools also go through `/agent-hitl`.
+
+**Done when:** every endpoint has a decision in `docs/api/<system>.tools.md`, the user has confirmed it, and the client typechecks against the generated types.
 
 ## Step 1 — Detect and place
 
