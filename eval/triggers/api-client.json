@@ -1,0 +1,23 @@
+{
+  "skill": "api-client",
+  "positive": [
+    {
+      "prompt": "gọi API bên thứ ba từ backend để gửi email, có timeout và retry",
+      "top_k": 3
+    },
+    {
+      "prompt": "integrate the Stripe-like billing REST API from this OpenAPI spec into our backend",
+      "top_k": 3
+    },
+    {
+      "prompt": "wire the frontend fetchers to the new settings endpoint with typed errors",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "đây là file swagger API của tôi, implement tools cho agent từ nó",
+      "owner": "agent-tool"
+    }
+  ]
+}

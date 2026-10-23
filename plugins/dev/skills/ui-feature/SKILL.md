@@ -1,0 +1,59 @@
+---
+model: opus
+effort: high
+name: ui-feature
+description: Builds or changes a React frontend feature (Next.js, Vite, React Router) the way the repo already builds them. It covers the feature folder, typed fetchers, hooks, and components built from the repo's primitives, with every state (loading, empty, error, optimistic update and rollback), accessibility, design tokens instead of raw values, and responsive layout. It proves the feature with Testing Library tests and a browser check at the project's viewports. Use when the user asks for a page, screen, form, dialog or other UI with no design to match, or to fix UI behaviour. A Figma or mockup to match goes to design-ui first.
+when_to_use: build a page, "làm màn hình", "làm giao diện bằng React", form, dialog, settings page, list with search, frontend feature, React component, loading or empty or error state, UI not updating after save, optimistic update, accessibility, responsive layout
+---
+
+# ui-feature
+
+**Invoke:** `/ui-feature <what the user should see and do>`
+
+Rules: `app-structure.md` and `testing.md` from core, plus the stack rules `react.md` / `nextjs.md` if installed. A design to match (Figma, frames, screenshot) → `/design-ui` builds the primitives and screens from it. This skill builds behaviour on top.
+
+---
+
+## Step 1 — Detect
+
+| Piece | Look for |
+|-------|----------|
+| Feature folders | `src/features/<f>/{components,hooks,api.ts,index.ts}` or the repo's equivalent |
+| Primitives | `src/components/ui/`, the UI library (shadcn/Radix, MUI…), `cn()` / cva variants, the icon set |
+| Tokens | `styles/tokens.css`, Tailwind theme |
+| Data fetching | `fetchJson`-style helper, TanStack Query/SWR, Server Components, the `api.ts` pattern |
+| Tests | Testing Library + jsdom config, existing component tests, a `/design-states` or Storybook page |
+| Viewports | the ADR, the design doc, or the existing breakpoints |
+
+**Done when:** each row names a path. The screen's states are listed: default, loading, empty, error, and for writes saving, saved and failed, plus any role-specific views.
+
+## Step 2 — Tests first, from what the user sees
+
+Write Testing Library tests for the states and interactions in Step 1, with the fetchers mocked at the `api.ts` boundary:
+
+- Query by role and label (`getByRole("button", { name: "Save" })`), never by class or test id when a role exists.
+- Write flows assert the request sent **and** the UI after success and after failure (rollback plus an error message).
+- Keyboard: tab order, Enter and Escape on dialogs, focus moving to the dialog and back.
+
+**Done when:** the tests fail for the right reason.
+
+## Step 3 — Build
+
+- Place it per `app-structure.md`: the page in `app/` renders the feature, the logic lives in `features/<f>/`, and other features import it only through `index.ts`.
+- Use the primitives from `components/ui/`. No raw `<button>`/`<input>` outside them, no raw hex or one-off px (tokens only), and icons from the one set at its sizes. A missing primitive or variant is added there once (with its own test), not inlined.
+- Data: typed fetchers in `api.ts`, with types imported from the backend schema, never re-declared (`/api-client`). In a server-rendering framework, fetch on the server when the data does not depend on client state.
+- Every state is real UI: a skeleton or spinner, an empty state with the next action, an error with retry, and disabled controls while saving. Optimistic updates keep the previous value and roll back on failure.
+- Accessible names on controls, labels tied to inputs, errors announced (`aria-live` or `role="alert"`), contrast through tokens.
+- Mobile first: base classes are the narrowest viewport, and `md:`/`lg:` add the wider layout.
+
+**Done when:** the Step 2 tests pass, plus typecheck and lint, and the raw-hex grep (`grep -rnE '\[#[0-9a-fA-F]{3,8}\]' src`) finds nothing outside `styles/` and `dev/`.
+
+## Step 4 — Prove it in the browser
+
+Run the app (or the design-states page) and drive the feature with Playwright MCP or Claude in Chrome. Use each project viewport (e.g. 375 / 1024 / 1440): click through the happy path and one failure, check the console has no errors, and take a screenshot per viewport.
+
+**Done when:** the screenshots and a clean console are shown, at every viewport.
+
+---
+
+Hand-offs: a design to match → `/design-ui` · the endpoint behind it → `/api-endpoint` · fetchers and error mapping → `/api-client` · done → `/verify-done` → `/review-checklist`.

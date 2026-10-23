@@ -1,0 +1,23 @@
+{
+  "skill": "api-endpoint",
+  "positive": [
+    {
+      "prompt": "thêm API endpoint PATCH /api/conversations/:id để đổi tên cuộc hội thoại",
+      "top_k": 3
+    },
+    {
+      "prompt": "add a REST endpoint that returns the current user's settings",
+      "top_k": 3
+    },
+    {
+      "prompt": "this route returns 500 on a bad body and shows other users' data, fix the endpoint",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "thêm tool cho agent để lấy danh sách nhân viên",
+      "owner": "agent-tool"
+    }
+  ]
+}

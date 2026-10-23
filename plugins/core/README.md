@@ -22,4 +22,14 @@ Also installs: `progress`.
 | `/sync-memory` | Pulls the latest commits and rebuilds memory from your own, updating .claude/memory/commits/ and last-sync.txt |
 | `/verify-done` | Evidence gate before claiming work is finished — re-runs the checks that prove the task's "done when" condition, in this session, and reports output instead of assurances |
 
+## Base rules (installed to `~/.claude/rules/`, each loads only for matching files)
+
+| Rule | Covers |
+|------|--------|
+| `app-structure.md` | Fullstack folder ownership, size and naming |
+| `api-contract.md` | Endpoint order, error codes, 404 for another user's resource, additive contracts, route test matrix |
+| `data-access.md` | Owner-scoped repositories, parameterised queries, no N+1, transactions, migrations, real-engine tests |
+
+Also: `git.md`, `security.md`, `code-quality.md`, `testing.md`, `typescript.md`.
+
 All plugins: [`../README.md`](../README.md).
