@@ -1,0 +1,27 @@
+{
+  "skill": "incident",
+  "positive": [
+    {
+      "prompt": "prod sập rồi, user không login được, xử lý giúp tôi",
+      "top_k": 3
+    },
+    {
+      "prompt": "we have an outage: 5xx spike on the orders API since the last deploy",
+      "top_k": 3
+    },
+    {
+      "prompt": "write the postmortem for yesterday's payment incident",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "the export button throws an error",
+      "owner": "fix-bug"
+    },
+    {
+      "prompt": "why is the build red",
+      "owner": "ci-triage"
+    }
+  ]
+}
