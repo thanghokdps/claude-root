@@ -29,6 +29,7 @@ Then, in an empty folder:
 | Wire CopilotKit, suggestions, shared context | `/agent-frontend` |
 | Turn a Figma design into the chat UI | `/agent-design-ui <figma>` |
 | Turn a Figma design into any other page | `/design-ui <figma>` |
+| Backend endpoint · DB change · React screen · call an API | `/api-endpoint` · `/db-change` · `/ui-feature` · `/api-client` (dev) |
 | Prove a change works | `/agent-verify-turn local` |
 | Eval dataset, prompt evals, tracing | `/agent-evals dataset` · `suite` · `observability` |
 | Security review | `/agent-security` |
@@ -785,6 +786,9 @@ Installed to `~/.claude/rules/` by `scripts/install.sh` and loaded in every sess
 | `testing.md` | Arrange→Act→Assert, what to test, mocking rules, coverage guidance |
 | `security.md` | Secrets, auth/authz, input validation, code patterns to auto-escalate |
 | `code-quality.md` | Guard clauses, DRY, naming, dead code, performance basics |
+| `app-structure.md` | Fullstack folder ownership (features, components/ui, server/<aggregate>, db, lib, dev), size and naming; path-scoped to `src/**` |
+| `api-contract.md` | Endpoint order (auth → validate → resource permission → service → DTO), error codes, 404 for another user's resource, additive contracts, test matrix |
+| `data-access.md` | Owner-scoped repositories, parameterised queries, no N+1, transactions, migrations, real-engine tests |
 | `typescript.md` | Strict mode, type safety, naming, async, error handling |
 | `memory.md` | How to read/write the four memory types (user, feedback, project, reference) |
 

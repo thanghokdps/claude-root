@@ -1,0 +1,23 @@
+{
+  "skill": "ui-feature",
+  "positive": [
+    {
+      "prompt": "làm màn hình settings bằng React có form lưu và trạng thái loading, lỗi",
+      "top_k": 3
+    },
+    {
+      "prompt": "build a React page that lists invoices with search, empty state and pagination",
+      "top_k": 3
+    },
+    {
+      "prompt": "the dialog doesn't roll back when save fails, fix the optimistic update",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "turn this Figma link into UI that matches the design",
+      "owner": "design-ui"
+    }
+  ]
+}

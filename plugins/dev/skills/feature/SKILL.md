@@ -69,6 +69,18 @@ For high-risk: save plan to `specs/<slug>/PLAN.md` and show user before building
 
 Follow the plan step by step.
 
+A feature that crosses layers is built as slices, in this order and one slice green before the next. Each slice goes through its skill:
+
+| Slice | Skill | Green when |
+|-------|-------|------------|
+| contract: request/response schema shared by BE and FE | (part of `/api-endpoint` Step 2) | schema exported, types imported by the client |
+| tables, columns, queries | `/db-change` | migration applies, repository tests pass on the real engine |
+| endpoint | `/api-endpoint` | route matrix passes (200 · 400 · 401 · 404 other user's) |
+| external API, or the frontend fetchers | `/api-client` | tests pass with no network |
+| screen and states | `/ui-feature` (`/design-ui` first when there is a design) | Testing Library tests pass, browser check at every viewport |
+
+Skip a slice the feature does not need, and say so in the plan.
+
 If the plan has 3 or more tasks/waves, print a status table before starting and update it after each task completes:
 
 ```
