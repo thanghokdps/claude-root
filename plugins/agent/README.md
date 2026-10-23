@@ -86,7 +86,7 @@ The invariants the skills read before they act. They load only when a skill need
 | [`mastra.md`](rules/mastra.md) | registry, agents and supervisor, `createTool` + request context, approval/suspend, workflows, storage, transport | `/agent-tool`, `/agent-graph`, `/agent-hitl` |
 | [`agent-tracing-privacy.md`](rules/agent-tracing-privacy.md) | tracing switch, masking, what each turn records | `/agent-evals observability`, `/agent-verify-turn` |
 | [`agent-deps-pinning.md`](rules/agent-deps-pinning.md) | exact version pins, one copy of the framework core | `/agent-architect` |
-| [`agent-code-structure.md`](rules/agent-code-structure.md) | app folders (features, shared ui, server aggregates, dev), size and duplication limits, tokens instead of raw hex/px, mobile-first, naming, Prettier | `/agent-architect`, `/agent-design-ui`, `/agent-feature` |
+| [`agent-code-structure.md`](rules/agent-code-structure.md) what an assistant adds to core's `app-structure.md` (agent folder, CopilotKit theme, recorded streams, evals), tokens instead of raw hex/px, primitives-only gates, mobile-first, Prettier | `/agent-architect`, `/agent-design-ui`, `/agent-feature` |
 
 New feature order (`/agent-feature`): check the ADR → reuse inventory → schema → tool → HITL → agent scope → frontend → evals, one slice green before the next.
 

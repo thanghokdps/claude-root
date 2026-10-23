@@ -44,7 +44,7 @@ Any conflict → stop and ask: change the feature, or revisit the architecture w
 
 ## Step 3 — Inventory what exists
 
-Fill the inventory from `${CLAUDE_SKILL_DIR}/references/reuse-inventory.md`: tools and their registry, agents and their scope lines, shared Zod schemas and domain types, the HITL contract and pending-action store, frontend tool renderers and cards, suggestions, eval fixtures. File paths only — no opinions yet.
+Fill the inventory from `${CLAUDE_SKILL_DIR}/references/reuse-inventory.md`: tools and their registry, agents and their scope lines, shared Zod schemas and domain types, the HITL contract and pending-action store, frontend tool renderers and cards, suggestions, retrieval indexes, DB schema and repositories, routes, feature screens and primitives, eval fixtures. File paths only — no opinions yet.
 
 **Done when:** each inventory row has paths, or "none" with the grep that found nothing.
 
@@ -57,10 +57,13 @@ Split the feature into slices per layer and give each one decision:
 | look up order | tool | **reuse** | `tools/orders/get-order.ts` | — | — |
 | cancel order | tool + confirm | **new** | — | no write tool exists for orders | `/agent-tool` → `/agent-hitl` |
 | cancel card | frontend | **extend** | `OrderCard` | — | `/agent-frontend` |
+| `cancelled_at` column | db | **new** | — | orders have no cancel state | `/db-change` |
+| order history page | screen | **new** | — | no page lists past orders | `/ui-feature` |
 
 - **reuse** when an existing piece already does it; **extend** when a parameter, a field or a variant covers it; **new** only with a reason the two above cannot meet.
 - A new piece that resembles an existing one (same upstream, same entity, same card shape) is an *extend* unless the reason says otherwise.
-- Layer owners: tool `/agent-tool` · agent scope, routing, prompt `/agent-graph` · write with confirm `/agent-hitl` · client wiring `/agent-frontend` · look from a design `/agent-design-ui` · tests and evals `/agent-evals`.
+- Layer owners, agent side: tool `/agent-tool` · agent scope, routing, prompt `/agent-graph` · write with confirm `/agent-hitl` · documents, embeddings, semantic memory `/agent-rag` · chat client wiring `/agent-frontend` · chat look from a design `/agent-design-ui` · tests and evals `/agent-evals`.
+- Layer owners, app side (dev): tables, columns, indexes, repository queries `/db-change` · an HTTP route the UI or another client calls `/api-endpoint` · a typed client for the app's own backend or a third-party API `/api-client` · a screen or component outside the chat `/ui-feature` (`/design-ui` when it comes from a design). A slice the chat never touches still goes to its skill; it is never built directly.
 
 Each new or extended piece names its folder per `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md` (`features/<feature>/`, `components/ui/` only for a second consumer, `server/<aggregate>/`).
 
@@ -70,7 +73,7 @@ Show the table, then ask through `AskUserQuestion`: *build as planned (Recommend
 
 ## Step 5 — Build slice by slice
 
-Run each slice through its layer skill in dependency order (schema → tool → HITL → agent scope → frontend → evals), one slice green before the next. Pass the slice row as the brief so the layer skill does not re-decide placement.
+Run each slice through its layer skill in dependency order (contract schema → db → API client → endpoint → retrieval → tool → HITL → agent scope → chat frontend → screens → evals), one slice green before the next. Pass the slice row as the brief so the layer skill does not re-decide placement.
 
 **Done when:** each slice's own Done-when is met, and typecheck, lint and tests pass.
 
@@ -97,12 +100,12 @@ Run `/agent-verify-turn` with each example message from Step 1 and one message t
 
 ## Step 8 — Review and land
 
-A schema change goes through `/write-migration` (expand/contract, tested down path) before the slice that needs it. Then `/verify-done` for fresh evidence, `/review-checklist` on the feature's diff (fix what it finds), and `/finish-branch` to open the PR. With several features queued ("implement all"), finish this step for one feature before starting the next.
+A schema change was its own `/db-change` slice in Step 5, and a destructive or long-running one went from there to `/write-migration` (expand/contract, tested down path). Re-check the rows of `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/production.md` the diff touches (kill switch for a new tool, env for the agent server, rollback for a prompt or model change, time limits for a slower tool). Then `/verify-done` for fresh evidence, `/review-checklist` on the feature's diff (fix what it finds), and `/finish-branch` to open the PR. With several features queued ("implement all"), finish this step for one feature before starting the next.
 
-**Done when:** `/verify-done` shows its evidence and `/review-checklist` has no open must-fix.
+**Done when:** `/verify-done` shows its evidence, each touched `production.md` row is ✅ or n/a with its reason, and `/review-checklist` has no open must-fix.
 
 ---
 
 ## Hand-offs
 
-Architecture change → `/agent-architect` · a layer on its own → its skill · security review of a new tool or data source → `/agent-security` · impact of the diff on callers → `/blast-radius` · a failing test or turn → `/fix-bug`.
+Architecture change → `/agent-architect` · a layer on its own → its skill · security review of a new tool or data source → `/agent-security` · impact of the diff on callers → `/blast-radius` · a failing test or turn → `/fix-bug` · release → `/release-checklist` with `production.md`.
