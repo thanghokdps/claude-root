@@ -21,7 +21,7 @@ List from the code:
 | Asset | Entry | Who controls the text | Reaches the model as | Can trigger |
 |---|---|---|---|---|
 
-Rows: user messages, tool results (each upstream), shared client context, long-term memory, retrieved documents (per index, with who wrote them and the tenant filter that scopes them), file/image inputs, system prompt, chat-channel messages from others.
+Rows: user messages, tool results (each upstream), shared client context, long-term memory, retrieved documents (per index, with who wrote them and the tenant filter that scopes them), file/image inputs (upload route, storage, extracted text — controls in `${CLAUDE_PLUGIN_ROOT}/skills/agent-frontend/references/attachments.md`), system prompt, chat-channel messages from others.
 
 **Done when:** every tool and every context source is a row.
 

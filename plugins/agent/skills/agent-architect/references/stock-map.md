@@ -43,7 +43,7 @@ Verified against vendor docs on 2026-10-16. Docs for these packages disagree acr
 
 ## Frontend (`@copilotkit/react-core/v2`)
 
-`CopilotKit` · `CopilotChat` · `useAgent` · `useAgentContext` · `useFrontendTool` · `useRenderTool` · `useHumanInTheLoop` · `useConfigureSuggestions` · `useCopilotKit` (`setHeaders`).
+`CopilotKit` · `CopilotChat` · `useAgent` · `useAgentContext` · `useFrontendTool` · `useRenderTool` · `useHumanInTheLoop` · `useConfigureSuggestions` · `useCopilotKit` (`setHeaders`) · `useAttachments` (also `CopilotChat`'s `attachments` prop; v1 `imageUploadsEnabled` is gone).
 
 Testing: `@copilotkit/aimock` (`AGUIMock`) records and replays AG-UI streams for e2e.
 

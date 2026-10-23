@@ -46,7 +46,7 @@ Ask for a feature in plain words, e.g. *"Thêm tính năng cho khách đổi đ�
 | `/agent-rag <corpus or memory>` | Answering from documents or remembering users by meaning — ingest (chunk, embed, index with model metadata), vector store choice, a retrieval tool with a server-side tenant filter and citations, semantic memory, retrieval evals |
 | `/agent-hitl <write>` | A tool creates, updates or deletes data and needs a confirm card |
 | `/agent-graph <scope>` | A request lands on the wrong agent; adding an agent, router or supervisor; rewriting a system prompt |
-| `/agent-frontend <change>` | CopilotKit v2 in React: provider + auth headers, `useAgentContext`, frontend tools (`useFrontendTool`), tool cards (`useRenderTool`), suggestions, e2e with recorded streams |
+| `/agent-frontend <change>` | CopilotKit v2 in React: provider + auth headers, `useAgentContext`, frontend tools (`useFrontendTool`), tool cards (`useRenderTool`), suggestions, file and image attachments, e2e with recorded streams |
 | `/agent-verify-turn [local\|prod-trace]` | Before saying an agent change works, or when a production answer was wrong |
 | `/agent-evals [unit\|dataset\|suite\|observability\|compare-models]` | Fake-model unit tests; an eval dataset (JSONL, example in `skills/agent-evals/references/dataset-example.jsonl`); judged eval suites with a CI gate; Langfuse/LangSmith tracing with masking; comparing models |
 | `/agent-security [scope]` | A new tool, data source or client; before shipping; compliance questions |
