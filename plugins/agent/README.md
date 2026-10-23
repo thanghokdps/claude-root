@@ -27,7 +27,7 @@ Open Claude Code in an empty folder and say what you want to build, e.g. *"Tôi 
 2. **Problem first** — who uses it, the 3–5 tasks with a real example message each, the systems it reads or writes, what it must refuse. One question per turn, each with a recommendation.
 3. **Technology** — host, clients, then **single app or monorepo (pnpm + Turborepo)**: you choose; it recommends.
 4. **Grill** — every task gets an owner agent and tool, every write a confirm path, every vague answer a recorded risk.
-5. **ADR + scaffold** — `docs/adr/0001-agent-architecture.md`, then the smallest working slice of your layout, ending on one real streamed turn with your first task's example message.
+5. **ADR + scaffold** — `docs/adr/<NNNN>-agent-architecture.md`, then the smallest working slice of your layout, ending on one real streamed turn with your first task's example message.
 
 If the designer has a Figma file or mockups, give the link when asked — `agent-design-ui` turns it into the chat UI after the scaffold.
 

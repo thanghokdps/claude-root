@@ -24,7 +24,7 @@ A **source library** and the `harness` marketplace of role plugins (local direct
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
     core        verify-done btw compact compound sync-memory project-init — plus scripts/init.sh and
                 everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/ → progress
-    plan        brainstorming grill domain-model writing-plans codebase-design        → progress
+    plan        kickoff brainstorming grill domain-model writing-plans codebase-design → progress
     review      review-checklist review-diff blast-radius create-pr                   → progress
     dev         coordinator feature fix-bug tdd checkpoint design-ui                  → core, plan, review
                 api-endpoint db-change ui-feature api-client (BE · DB · FE · API integration)
