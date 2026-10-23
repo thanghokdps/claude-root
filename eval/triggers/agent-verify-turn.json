@@ -16,6 +16,10 @@
     {
       "prompt": "Sửa rồi mà vẫn bị, chạy thử một turn thật xem stream",
       "top_k": 1
+    },
+    {
+      "prompt": "đọc stream AG-UI đã capture giúp tôi, client báo run fail ở RUN_FINISHED",
+      "top_k": 3
     }
   ],
   "negative": [

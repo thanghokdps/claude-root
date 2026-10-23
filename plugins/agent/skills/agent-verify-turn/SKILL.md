@@ -2,8 +2,8 @@
 model: opus
 effort: high
 name: agent-verify-turn
-description: Proves what an AI agent actually did by driving a real chat turn and reading its AG-UI event stream, or by locating a production turn in tracing and classifying the cause — prompt, tool, model, state or infrastructure — before any fix. Use before saying an agent change works, when an agent fix still fails after retesting, or when a production answer was wrong and the cause is unknown.
-when_to_use: still broken after a fix ("vẫn bị"), verify the agent turn, read the stream, run a real chat turn, prove the fix, wrong answer in production, find the trace in Langfuse or LangSmith, why did the agent say this, fix-bug red loop in an agent repo
+description: Proves what an AI agent actually did by driving a real chat turn and reading its AG-UI event stream, or by locating a production turn in tracing and classifying the cause — prompt, tool, model, state or infrastructure — before any fix. Use before saying an agent change works, when an agent fix still fails after retesting, when a captured AG-UI stream or a run that fails on the client needs reading, or when a production answer was wrong and the cause is unknown.
+when_to_use: still broken after a fix ("vẫn bị"), verify the agent turn, read the stream, run a real chat turn, prove the fix, wrong answer in production, find the trace in Langfuse or LangSmith, read this AG-UI stream ("đọc stream giúp tôi"), client says the run failed at RUN_FINISHED, events out of order, why did the agent say this, fix-bug red loop in an agent repo
 ---
 
 # agent-verify-turn
@@ -23,9 +23,10 @@ A green unit suite does not prove a turn. The stream is the evidence: no "fixed"
    - routing: which agent answered
    - tools: which were called, with what args, and each result
    - ordering: `TOOL_CALL_END` before `TEXT_MESSAGE_END`; exactly one `RUN_FINISHED`/`RUN_ERROR`
-   - HITL: interrupt outcome present when a write is pending; nothing written before confirm
+   - HITL: `RUN_FINISHED.outcome.type === "interrupt"` with an `id`, `reason` and `toolCallId` when a write is pending; nothing written before the resume run
+   - protocol (AG-UI ≥ 1.0): `RUN_STARTED.protocolVersion` present on an own emitter; every `REASONING_*` span and message closed before `RUN_FINISHED`; no client warnings about stripped fields (extra data belongs in `metadata`)
    - text: the answer matches the tool result (no claimed change that did not happen)
-5. Repeat with the variations that matter: two tool calls in flight, a resumed thread, an out-of-scope prompt.
+5. Repeat with the variations that matter: two tool calls in flight, a resume run with `resume[]` (approve, decline, the same resume sent twice), new input while an interrupt is open (expect `RUN_ERROR`), an out-of-scope prompt.
 
 **Done when:** each expectation is marked pass/fail with the event lines that prove it, pasted in the reply.
 

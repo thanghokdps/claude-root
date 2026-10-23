@@ -3,7 +3,7 @@ model: opus
 effort: high
 name: agent-frontend
 description: Wires a React web client to an AI agent with CopilotKit v2 — the CopilotKit provider and auth headers, shared agent context, frontend tools, rendering backend tool calls, suggestions, file and image attachments (upload, limits, owner-scoped storage, multimodal parts to the model, retention), and component and e2e tests with recorded AG-UI streams. Use when building or fixing the chat UI of a CopilotKit app, or when tool cards, loading states or headers misbehave in the browser.
-when_to_use: CopilotKit provider, useAgent, useAgentContext, useFrontendTool, useRenderTool, useHumanInTheLoop, chat UI bug in React, requests go out unauthenticated, tool card renders twice, loading indicator wrong, suggestions chips, aimock e2e, user attaches a PDF or image in the chat, "gửi ảnh/file cho chatbot", useAttachments, CopilotChat attachments prop
+when_to_use: CopilotKit provider, useAgent, useAgentContext, useFrontendTool, useRenderTool, useHumanInTheLoop, useInterrupt, chat UI bug in React, requests go out unauthenticated, tool card renders twice, loading indicator wrong, suggestions chips, aimock e2e, user attaches a PDF or image in the chat, "gửi ảnh/file cho chatbot", useAttachments, CopilotChat attachments prop
 ---
 
 # agent-frontend
@@ -35,7 +35,7 @@ Read the provider, the agent id constant, and the existing tool renderers. Confi
 - Backend tool observed in the UI → `useRenderTool` with the shared tool-name constant; on completion invalidate the affected queries, not patch from the payload; parse the result with a tolerant Zod schema and render a fallback when it does not parse.
 - Side effects keyed by `toolCallId` in a ref that lives above the re-created component, so remounts do not re-trigger them.
 - Browser-side tools → `useFrontendTool`, registered only for the agent that may call them. Agent or frontend: the table "Where a tool lives" in `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md` decides; data, identity and writes stay in agent tools.
-- Clarifying questions may use `useHumanInTheLoop`; mutation confirmations come from the backend gate (`/agent-hitl`).
+- Clarifying questions may use `useHumanInTheLoop`; mutation confirmations come from the backend gate (`/agent-hitl`) and render with `useInterrupt` (scoped by `agentId`), which resumes the run through `resume[]`.
 - Suggestions from the backend endpoint (`useConfigureSuggestions`), never inventing chips for tools that do not exist.
 - File or image attachments: follow `${CLAUDE_SKILL_DIR}/references/attachments.md` end to end — `onUpload` to your own route (never base64 inline), server-side type and size checks, owner-scoped storage, one server function building the multimodal parts, extracted text as untrusted data, delete with the thread.
 

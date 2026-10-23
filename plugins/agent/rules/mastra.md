@@ -28,7 +28,8 @@ Checked against mastra.ai docs on 2026-10-23. Confirm each option on the **insta
 
 ## Writes (HITL)
 
-- A mutation tool uses `requireApproval: true`, or `suspend()` with `suspendSchema` / `resumeSchema` when the card needs the kit's pending-action contract. Always `return await context.agent.suspend(…)`, because code after it still runs.
+- A mutation tool uses `requireApproval: true`, or `suspend()` with `suspendSchema` / `resumeSchema` when the card needs the kit's pending-action fields. Always `return await context.agent.suspend(…)`, because code after it still runs.
+- Over AG-UI (`@ag-ui/mastra` ≥ 2): an approval is the standard interrupt with reason `mastra:tool_approval`, approved only by `true` / `{ approved: true }`, declined by `{ approved: false }` or a cancelled resume; any other answer fails the run. At most one interrupt per run.
 - Both need `storage`. Without it a resume fails with "snapshot not found".
 - Code before `suspend()` runs again on resume, so make it idempotent. The real write happens only after the decision.
 

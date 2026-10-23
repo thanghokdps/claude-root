@@ -23,14 +23,15 @@ Mixed signals (both shapes in one app) → name the app/package each belongs to;
 
 - `createAgent({ model, tools, middleware })`; behaviour lives in middleware hooks (`beforeAgent`, `wrapModelCall`, `wrapToolCall`, `afterAgent`).
 - Transport: `CopilotRuntime` (Node) with a `LangGraphAgent` adapter; client uses CopilotKit v2 hooks.
-- Tools may be schema-only, executed inside a `wrapToolCall` middleware that injects trusted context.
+- Tools may be schema-only, executed inside a `wrapToolCall` middleware that injects trusted context. Trusted values travel in `contextSchema` → `runtime.context`.
 - Middleware order is a contract: context/memory → domain tools → shared context → summarisation → CopilotKit → fallback last.
 
 ## Shape B — custom graph + own emitter (Workers-native branch)
 
 - `new StateGraph(State)` with explicit nodes (e.g. agent → tools → finalize) and edges.
 - Transport: an `AbstractAgent` subclass translating `streamEvents` v2 into AG-UI SSE; no CopilotKit runtime (it needs Node).
-- Tools are real handlers reading per-request context from `config.configurable`.
+- Tools are real handlers reading per-request context from `runtime.context` (`contextSchema` on the graph; older: `config.configurable`).
+- On AG-UI ≥ 1.0 the emitter owns what an adapter would: `protocolVersion` on `RUN_STARTED`, `REASONING_*` spans closed, extra data only in `metadata`, the standard interrupt outcome and `resume[]` handling (`${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md`). Build its events with the `@ag-ui/core` types and validate them with `@ag-ui/core/schemas` in tests.
 - Choose B on purpose: edge/Workers host, or a transport/state contract the runtime cannot express.
 
 ## Hybrid — supervisor graph over prebuilt agents

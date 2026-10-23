@@ -10,13 +10,19 @@ paths:
 
 - Reducer channels (`messages`) **append**: a node returns only the delta, never the concatenated history.
 - A node returns `Partial<State>` with only the fields it changes; clear a field explicitly (`field: null`), never by omission.
-- Keep state small and serialisable — it is checkpointed every turn. Large or rotating values (tokens, clients, adapters) go in `configurable` or request scope, never in state.
+- Keep state small and serialisable — it is checkpointed every turn. Large or rotating values (tokens, clients, adapters) go in the run context or request scope, never in state.
 - Values written once at graph entry (identity, model choice) are never mutated by later nodes.
 
 ```typescript
 return { messages: [aiResponse] };                    // delta — correct
 return { messages: [...state.messages, aiResponse] }; // duplicates history
 ```
+
+## Run context (identity, per-run dependencies)
+
+- Declare `contextSchema` (zod) on `createAgent` / `StateGraph` and pass `{ context }` at invoke. Tools read `runtime.context` (`ToolRuntime`), nodes and middleware read `runtime.context`. `config.configurable` is the older path.
+- Once a graph declares `contextSchema`, `@ag-ui/langgraph` moves only the schema's keys from `configurable` into `context` and **drops the rest** with a console warning. Put every trusted key in the schema; a test asserts a tool sees the caller's id through the adapter.
+- The adapter copies the client's `x-*` request headers into `configurable.copilotkit_forwarded_headers`. They are client-controlled: never read identity from them unless the server replaced them after verifying the token.
 
 ## Long-term memory
 
@@ -43,6 +49,7 @@ return { messages: [...state.messages, aiResponse] }; // duplicates history
 ## Interrupts
 
 - `interrupt()` needs a checkpointer and a stable `thread_id`; resume with `new Command({ resume })` on the same thread.
+- Put `reason` (`tool_call`), `toolCallId`, `message` and `expiresAt` in the interrupt value: `@ag-ui/langgraph` maps them onto the standard AG-UI interrupt (its `id` is LangGraph's interrupt id) and the rest of the value lands in `metadata.langgraph.raw` (`agui-transport.md` § Interrupts).
 - Code above `interrupt()` re-runs on resume: make it idempotent. The only write allowed above it is the pending-action record (see `agent-identity-and-tools.md`).
 - Code below `interrupt()` runs once, after the decision — that is where the real write happens.
 - Never retry a node or tool that can raise `GraphInterrupt`; rethrow it from every wrapper.

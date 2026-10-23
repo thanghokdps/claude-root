@@ -47,7 +47,7 @@ From the CopilotKit v2 composer to the model and back to delete. The browser pic
 
 ## 4. To the model — multimodal message parts
 
-AG-UI user content is `string | InputContent[]`: `{ type: "text", text }` and `{ type: "image" | "audio" | "video" | "document", source, metadata? }`, where `source` is `{ type: "data", value, mimeType }`, `{ type: "url", value, mimeType? }` or `{ type: "file", value, provider?, mimeType? }` (a provider file id). `BinaryInputContent` (`type: "binary"`) is the deprecated older shape.
+AG-UI ≥ 1.0 user and tool content is `string | ContentPart[]`: `{ type: "text", text }` and `{ type: "image" | "audio" | "video" | "document", source, metadata? }`, where `source` is `{ type: "data", value, mimeType }`, `{ type: "url", value, mimeType? }` or `{ type: "file", value, provider?, mimeType? }` — a file id the model provider issued, never fetched as a URL; skip it with a warning when the model's provider cannot take it. 0.x names the same shapes `InputContent`; the `binary` part is retired.
 
 One server function (`server/attachments/to-model-parts.ts`) turns each `attachment://<id>` part into the framework's part after the owner check. Capture the run input once with `/agent-verify-turn` to see what the AG-UI adapter (`@ag-ui/langgraph`, `@ag-ui/mastra`) actually hands the agent — convert there, not in prompts.
 
