@@ -40,7 +40,7 @@ A green unit suite does not prove a turn. The stream is the evidence: no "fixed"
 | tool | right tool, wrong args or wrong/failed upstream result |
 | model | refusal, provider error, option rejected by the model, fallback engaged |
 | state | stale or duplicated messages, a pending action left open, a resumed checkpoint |
-| infra | auth, timeout, deploy config, env not forwarded, tracing itself |
+| infra | auth, timeout, deploy config, env not forwarded, tracing itself — match it to a row of `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/production.md` |
 
 3. Reproduce locally with mode local using the same inputs; that reproduction is the red loop for the fix.
 

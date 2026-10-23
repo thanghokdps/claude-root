@@ -100,12 +100,12 @@ Run `/agent-verify-turn` with each example message from Step 1 and one message t
 
 ## Step 8 — Review and land
 
-A schema change was its own `/db-change` slice in Step 5, and a destructive or long-running one went from there to `/write-migration` (expand/contract, tested down path). Then `/verify-done` for fresh evidence, `/review-checklist` on the feature's diff (fix what it finds), and `/finish-branch` to open the PR. With several features queued ("implement all"), finish this step for one feature before starting the next.
+A schema change was its own `/db-change` slice in Step 5, and a destructive or long-running one went from there to `/write-migration` (expand/contract, tested down path). Re-check the rows of `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/production.md` the diff touches (kill switch for a new tool, env for the agent server, rollback for a prompt or model change, time limits for a slower tool). Then `/verify-done` for fresh evidence, `/review-checklist` on the feature's diff (fix what it finds), and `/finish-branch` to open the PR. With several features queued ("implement all"), finish this step for one feature before starting the next.
 
-**Done when:** `/verify-done` shows its evidence and `/review-checklist` has no open must-fix.
+**Done when:** `/verify-done` shows its evidence, each touched `production.md` row is ✅ or n/a with its reason, and `/review-checklist` has no open must-fix.
 
 ---
 
 ## Hand-offs
 
-Architecture change → `/agent-architect` · a layer on its own → its skill · security review of a new tool or data source → `/agent-security` · impact of the diff on callers → `/blast-radius` · a failing test or turn → `/fix-bug`.
+Architecture change → `/agent-architect` · a layer on its own → its skill · security review of a new tool or data source → `/agent-security` · impact of the diff on callers → `/blast-radius` · a failing test or turn → `/fix-bug` · release → `/release-checklist` with `production.md`.

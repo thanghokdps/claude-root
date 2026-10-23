@@ -27,3 +27,17 @@ Measure first: per-turn tracing (tokens, latency to first token, provider that a
 - Prompt and scope changes ship behind the eval gate; risky ones run in shadow (log the new routing, serve the old) before switching.
 - Model or provider changes go through `agent-evals` compare-models before they reach the default.
 - Pinned agent-stack bumps travel alone, with a real streamed turn as evidence.
+- Before release: `production.md` (durable state, streaming, time limits, health, env, fallback, tracing, rollback).
+
+## Shape M (Mastra) equivalents
+
+The lists above name LangChain / LangGraph pieces. In Mastra (names checked against mastra.ai docs on 2026-10-23; confirm on the installed `@mastra/core`):
+
+| LangChain / LangGraph | Mastra |
+|-----------------------|--------|
+| `nostream` helper nodes | helper calls (router, titles, summary) use `agent.generate()`; only the answering agent is streamed |
+| `summarizationMiddleware` keep window | `new Memory({ options: { lastMessages: N } })` — an explicit window, set on purpose rather than left at the default; `observationalMemory` when old turns must be compressed rather than dropped |
+| token budget on the prompt | `new TokenLimiterProcessor({ limit, trimMode: 'contiguous' })` from `@mastra/core/processors` in `inputProcessors`; in `outputProcessors` it caps the answer |
+| `contextEditingMiddleware` for old tool output | `ToolCallFilter` in `inputProcessors` — drops tool calls from the model input, memory keeps them |
+| recursion limit / call limits per run | `maxSteps` per `generate()` / `stream()` call, or once in the agent's `defaultOptions`; with a supervisor, on every call |
+| retry and fallback middleware | default error processors (e.g. `StreamErrorRetryProcessor`) retry transient stream failures — check they never replay a write; fallback per `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md` |
