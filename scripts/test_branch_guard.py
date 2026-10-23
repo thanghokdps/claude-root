@@ -167,7 +167,23 @@ def test_a_repository_the_guard_cannot_resolve_fails_closed():
     assert exit_code("cd ~/other && git push origin HEAD") == 2
     assert exit_code("git --git-dir=/tmp/x/.git push origin feat/x") == 2
     assert exit_code("GIT_DIR=/tmp/x/.git git push") == 2
-    assert exit_code("git -C $REPO push origin feat/x:feat/x") == 0
+    assert exit_code("git -C $REPO push origin feat/x:feat/x") == 2
+    assert exit_code("git -C /nonexistent push origin feat/x:feat/x") == 2
+
+
+def test_shell_state_the_guard_cannot_follow_fails_closed():
+    assert exit_code("export GIT_DIR=/tmp/x/.git; git push origin HEAD") == 2
+    assert exit_code("export FOO=1 && git push -u origin feat/x") == 2
+    assert exit_code("GIT_CONFIG_GLOBAL=/tmp/c git push origin feat/x") == 2
+    assert exit_code("(cd /tmp/x && true); git push origin HEAD") == 2
+    assert exit_code("for d in a b; do cd $d; done; git push") == 2
+    assert exit_code("git -c Remote.origin.Push=HEAD:prod push origin") == 2
+    assert exit_code("git --config-env=remote.origin.push=V push origin feat/x") == 2
+
+
+def test_quoted_text_and_commands_without_a_push_are_not_shell_state():
+    assert exit_code('git commit -m "feat: export CSV (cd in docs)" && git push -u origin feat/x') == 0
+    assert exit_code("export FOO=1 && git status") == 0
 
 
 def test_a_source_only_refspec_follows_the_configured_push_mapping():

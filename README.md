@@ -616,7 +616,8 @@ Skips test files (`*.test.*`, `*.spec.*`) and docs for credential scanning.
 |-------|--------|
 | Any direct push to an environment branch: `dev`, `develop`, `stag`, `stage`, `staging`, `prod`, `production` (override with `HARNESS_ENV_BRANCHES="dev qa prod"`; empty turns it off) | BLOCK — merge through a PR |
 | Force, delete or mirror push to `main/master` or an environment branch | BLOCK |
-| A push whose repository or target it cannot resolve (`cd -`, `~`, a variable, `--git-dir`, `GIT_DIR=`), a mirror remote, or a wildcard `remote.*.push` that includes an environment branch | BLOCK (fails closed) |
+| A push whose repository or target it cannot resolve (`cd -`, `~`, a variable, `--git-dir`, a non-repo path), a mirror remote, or a wildcard `remote.*.push` that includes an environment branch | BLOCK (fails closed) |
+| A push in a command with `GIT_DIR` / `GIT_WORK_TREE` / `GIT_CONFIG*`, `export`, a `cd` inside `( )`, `{ }` or a loop, `-c remote.*.push` in any letter case, or `--config-env` (quoted text ignored) | BLOCK (fails closed) |
 | Direct push to `main` or `master` | WARN + 3-second delay |
 | Uncommitted local changes | WARN (changes will not be pushed) |
 
