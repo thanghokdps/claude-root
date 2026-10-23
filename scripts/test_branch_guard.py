@@ -22,8 +22,11 @@ def repo_on(branch, upstream=None, config=()):
     return path
 
 
-def exit_code(command, branch="feat/x", upstream=None, config=()):
+def exit_code(command, branch="feat/x", upstream=None, config=(), env_branches=None):
     env = {**os.environ, "CLAUDE_PROJECT_DIR": repo_on(branch, upstream, config)}
+    env.pop("HARNESS_ENV_BRANCHES", None)
+    if env_branches is not None:
+        env["HARNESS_ENV_BRANCHES"] = env_branches
     payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
     return subprocess.run([HOOK], input=payload, capture_output=True, text=True, env=env).returncode
 
@@ -105,6 +108,27 @@ def test_pushes_hidden_in_subshells_eval_or_aliases_fail_closed():
     assert exit_code("git fp origin main", config=[("alias.fp", "push -f")]) == 2
     assert exit_code("git shipit", config=[("alias.shipit", "!git push -f origin main")]) == 2
     assert exit_code("git st", config=[("alias.st", "status")]) == 0
+
+
+def test_any_direct_push_to_an_environment_branch_is_blocked():
+    for cmd in ["git push origin dev", "git push -u origin staging", "git push origin HEAD:prod",
+                "git push origin feat/x:refs/heads/production", "git push origin stag"]:
+        assert exit_code(cmd) == 2, cmd
+    assert exit_code("git push", branch="dev") == 2
+    assert exit_code("git push origin", branch="feat/x", upstream="stag") == 2
+    assert exit_code("git push origin", config=[("remote.origin.push", "HEAD:refs/heads/prod")]) == 2
+
+
+def test_feature_branches_and_main_are_not_environment_branches():
+    assert exit_code("git push -u origin feat/x") == 0
+    assert exit_code("git push origin feat/prod-banner") == 0
+    assert exit_code("git push", branch="main") == 0
+
+
+def test_environment_branches_can_be_overridden():
+    assert exit_code("git push origin qa", env_branches="qa uat") == 2
+    assert exit_code("git push origin dev", env_branches="qa uat") == 0
+    assert exit_code("git push origin dev", env_branches="") == 0
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# branch-guard.sh — Warn/block direct push to main or master
+# branch-guard.sh — Block any direct push to environment branches (dev, stag, prod) and
+# force/delete pushes to protected ones; warn on a direct push to main or master
 # Trigger: PreToolUse(Bash) when command contains "git push"
 # Exit 2 to block, 0 to allow
 
@@ -22,7 +23,17 @@ PUSH_COMMAND=$(printf '%s' "$HOOK_INPUT" | jq -r '.tool_input.command // empty' 
 # flags elsewhere on the line (`gh pr create --base main --body-file …`, a `-f` inside
 # `feat/dev-fullstack`) never count. Whatever the guard cannot parse fails closed.
 
-PROTECTED_RE='^(main|master|develop|dev)$'
+PROTECTED_RE='^(main|master|develop|dev|stag|stage|staging|prod|production)$'
+
+# Environment branches deploy on push, so code reaches them only through a PR. Override with
+# HARNESS_ENV_BRANCHES="dev qa prod" (space-separated names; anything but [A-Za-z0-9._/-] is dropped;
+# set but empty turns the check off).
+ENV_BRANCHES=${HARNESS_ENV_BRANCHES-dev develop stag stage staging prod production}
+ENV_RE=""
+for name in $ENV_BRANCHES; do
+  [[ "$name" =~ ^[A-Za-z0-9._/-]+$ ]] && ENV_RE+="${ENV_RE:+|}${name//./\\.}"
+done
+[ -n "$ENV_RE" ] && ENV_RE="^(${ENV_RE})$"
 FORCE_RE='^(-[a-zA-Z]*f[a-zA-Z]*|--for.*)$'                     # -f, -uf, --force[-with-lease[=…]|-if-includes]
 DELETE_RE='^(-[a-zA-Z]*d[a-zA-Z]*|--de(l(e(t(e)?)?)?)?)$'
 ALL_REFS_RE='^--(al|all|br|bra|bran|branc|branch|branche|branches)$'
@@ -36,16 +47,18 @@ SHELL_STRING_RE='(^|[^[:alnum:]_])(eval|xargs|(ba|z|da|k)?sh[[:space:]]+-[a-z]*c
 block() {
   echo "" >&2
   echo "🚫 BLOCKED — $1 (branch: $CURRENT_BRANCH)" >&2
-  echo "   Force, delete and mirror pushes to protected branches must be done manually." >&2
+  echo "   Push a feature branch and open a PR; force, delete and mirror pushes must be done manually." >&2
   echo "" >&2
   exit 2
 }
 
-is_protected_ref() {
+target_ref() {
   local ref=${1#+}
-  ref=${ref##*:}; ref=${ref#refs/heads/}
-  [[ "$ref" =~ $PROTECTED_RE ]]
+  ref=${ref##*:}; printf '%s' "${ref#refs/heads/}"
 }
+
+is_protected_ref() { [[ "$(target_ref "$1")" =~ $PROTECTED_RE ]]; }
+is_env_ref() { [ -n "$ENV_RE" ] && [[ "$(target_ref "$1")" =~ $ENV_RE ]]; }
 
 # Strips subshell parens and quotes. `$`, backticks and braces stay (a `{ … }` group is its own
 # word), so a substituted or brace-expanded target still reads as unresolved.
@@ -59,7 +72,7 @@ clean_word() {
 # Prints the reason to block one push (its arguments after `push`), or nothing.
 check_push() {
   local -a args=("$@")
-  local i tok force=0 delete=0 all_refs=0 unresolved=0 protected=0 remote="" refspecs=0 upstream spec configured
+  local i tok force=0 delete=0 all_refs=0 unresolved=0 protected=0 env="" remote="" refspecs=0 upstream spec configured
   for ((i = 0; i < ${#args[@]}; i++)); do
     tok=${args[$i]}
     [[ "$tok" =~ $MIRROR_RE ]] && { echo "mirror push overwrites every branch"; return; }
@@ -74,6 +87,7 @@ check_push() {
     [[ "$tok" == +* ]] && force=1
     [[ "$tok" == :* ]] && delete=1
     is_protected_ref "$tok" && protected=1
+    is_env_ref "$tok" && env=$(target_ref "$tok")
   done
 
   if [ "$refspecs" -eq 0 ]; then                                # no refspec: config decides what is pushed
@@ -83,11 +97,14 @@ check_push() {
       while IFS= read -r spec; do
         [[ "$spec" == +* ]] && force=1
         is_protected_ref "$spec" && protected=1
+        is_env_ref "$spec" && env=$(target_ref "$spec")
       done <<<"$configured"
     else
       is_protected_ref "$CURRENT_BRANCH" && protected=1
+      is_env_ref "$CURRENT_BRANCH" && env=$CURRENT_BRANCH
       upstream=$(git -C "$PROJECT_DIR" config --get "branch.$CURRENT_BRANCH.merge" 2>/dev/null || true)
       [ -n "$upstream" ] && is_protected_ref "$upstream" && protected=1
+      [ -n "$upstream" ] && is_env_ref "$upstream" && env=$(target_ref "$upstream")
       [ "$(git -C "$PROJECT_DIR" config --get push.default 2>/dev/null)" = "matching" ] && all_refs=1
     fi
   fi
@@ -97,6 +114,7 @@ check_push() {
     [ "$unresolved" -eq 1 ] && { echo "forced or deleting push to a target the guard cannot resolve"; return; }
     [ "$protected" -eq 1 ] && { echo "forced or deleting push to a protected branch"; return; }
   fi
+  [ -n "$env" ] && echo "direct push to environment branch '$env' — merge it through a PR"
 }
 
 # Prints the reason to block one shell segment, or nothing.
