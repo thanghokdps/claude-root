@@ -81,7 +81,7 @@ Build the smallest working slice of the chosen shape, test first where practical
 7. One read tool for the first P2 task, against its P3 system, through `/agent-tool` (from the user's API spec when one was given, its Step 0); then one real streamed turn with that task's example message through `/agent-verify-turn`.
 8. The P2 example messages as the first eval cases (`/agent-evals`).
 
-Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later work: nostream helper nodes, stable prompt prefix, kill switch per tool.
+Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later work: nostream helper nodes (Mastra: `generate()` helpers, `lastMessages`, `maxSteps`), stable prompt prefix, kill switch per tool. Build in the scaffold rows of `${CLAUDE_SKILL_DIR}/references/production.md` (durable state, health, env forwarding, fallback, masked tracing).
 
 "Implement all" or "don't ask me again" means: take the recommended option at every remaining question and record it as *defaulted* — it never means skipping a skill. After this first slice, every further feature goes through `/agent-feature` (one at a time, each with its reuse inventory and duplicate check), the chat UI through `/agent-design-ui`, and each feature's Done-when is met before the next starts.
 
@@ -93,4 +93,4 @@ Then `/project-init` writes the project's `.claude/` docs and test strategy from
 
 ## Hand-offs
 
-Scaffold done → `/verify-done` → `/review-checklist` → `/finish-branch`. The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · documents, embeddings or semantic memory → `/agent-rag` · threat model → `/agent-security`.
+Scaffold done → `/verify-done` → `/review-checklist` → `/finish-branch`. Release → `/release-checklist` with `production.md`. The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · documents, embeddings or semantic memory → `/agent-rag` · threat model → `/agent-security`.
