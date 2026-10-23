@@ -131,8 +131,9 @@ check_push() {
     is_env_ref "$tok" && env=$(target_ref "$tok")
   done
 
-  if [ "$CTX_KNOWN" -eq 0 ] && { [ "$refspecs" -eq 0 ] || [ "$head_src" -eq 1 ] || [ "$src_only" -eq 1 ]; }; then
-    echo "push from a repository the guard cannot resolve (cd -, ~, a variable, --git-dir or GIT_DIR)"; return
+  # Unknown repository: its branch, mirror flag and push config cannot be read, so nothing passes.
+  if [ "$CTX_KNOWN" -eq 0 ]; then
+    echo "push from a repository the guard cannot resolve (cd -, ~, a variable, --git-dir, a non-repo path)"; return
   fi
   [ -z "$remote" ] && remote=$(git -C "$PROJECT_DIR" config --get "branch.$CURRENT_BRANCH.remote" 2>/dev/null || echo origin)
   [ "$(git -C "$PROJECT_DIR" config --get "remote.$remote.mirror" 2>/dev/null)" = "true" ] \
@@ -164,10 +165,24 @@ check_push() {
   fi
 }
 
+# Shell state the segment-by-segment reading cannot follow: git's location variables, an export
+# that may set them, or a cd inside a group whose scope ends at `)` or `done`. Quoted text (a
+# commit message) is ignored. Prints a reason when the command also pushes, or nothing.
+context_risk() {
+  local cmd
+  cmd=$(printf '%s' "$PUSH_COMMAND" | sed -E "s/'[^']*'//g; s/\"[^\"]*\"//g")
+  [[ "$cmd" =~ GIT_(DIR|WORK_TREE|CONFIG[A-Z_]*) ]] && { echo "push with GIT_DIR, GIT_WORK_TREE or GIT_CONFIG* in the command"; return; }
+  [[ "$cmd" =~ (^|[\;\&\|\(\{[:space:]])export([[:space:]]|$) ]] && { echo "push in a command that exports variables"; return; }
+  if [[ "$cmd" =~ (^|[\;\&\|\(\{[:space:]])(cd|pushd|popd)([[:space:]]|$) ]] \
+    && [[ "$cmd" =~ [\(\{]|(^|[\;\&\|[:space:]])(if|while|until|for|case)[[:space:]] ]]; then
+    echo "push after a cd inside a group or loop the guard cannot follow"
+  fi
+}
+
 # Prints the reason to block one shell segment, or nothing.
 check_segment() {
   local -a raw words=() alias_words
-  local w i j=-1 cmd="" alias_value
+  local w i j=-1 cmd="" alias_value reason
   read -ra raw <<<"$1"
   [ "${#raw[@]}" -eq 0 ] && return
   for w in "${raw[@]}"; do words+=("$(clean_word "$w")"); done
@@ -182,10 +197,12 @@ check_segment() {
   for ((i = j + 1; i < ${#words[@]}; i++)); do               # git's own options, then the subcommand
     w=${words[$i]}
     [[ "$w" == --git-dir* || "$w" == --work-tree* ]] && CTX_KNOWN=0
+    [[ "$w" == --config-env* ]] && { echo "git --config-env sets config the guard cannot read"; return; }
     if [[ "$w" =~ $GIT_VALUE_OPT_RE ]]; then
       i=$((i + 1))
       [[ "$w" == "-C" ]] && move_to "${words[$i]:-}"
-      [[ "$w" == "-c" && "${words[$i]:-}" =~ ^(remote\..*\.(push|mirror)|push\.default)= ]] \
+      # git config keys are case-insensitive: Remote.origin.Push= is remote.origin.push=
+      [[ "$w" == "-c" && "$(printf '%s' "${words[$i]:-}" | tr '[:upper:]' '[:lower:]')" =~ ^(remote\..*\.(push|mirror)|push\.default)= ]] \
         && { echo "push config set on the command line"; return; }
       continue
     fi
@@ -196,6 +213,7 @@ check_segment() {
   [ "$CTX_KNOWN" -eq 1 ] && load_repo
 
   if [ "$cmd" = "push" ]; then
+    reason=$(context_risk) && [ -n "$reason" ] && { echo "$reason"; return; }
     check_push "${words[@]:$((i + 1))}"
     return
   fi
