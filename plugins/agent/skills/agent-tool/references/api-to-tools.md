@@ -32,28 +32,20 @@ Fill this table in `docs/api/<system>.tools.md` before writing any code:
 
 **Done when:** every endpoint in the source has a row and a decision, and the user has confirmed the table.
 
-## 3. The client layer — one per system, not per tool
+## 3. The client layer — one per system, built by `/api-client`
 
-Lives in `server/<system>/` (`${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`); in shape M it can sit beside `src/mastra/tools/`, imported by them.
+Run `/api-client` Step 3 for each system, with the spec from § 1 as its source of truth. It builds `server/<system>/` (generated `schema.d.ts` with an `api:types` script, `client.ts` on `openapi-fetch`, `errors.ts`, `mappers.ts`), puts base URL, timeout and keys in the env schema, gives every call a timeout and an abort signal, retries only idempotent reads, and writes spec-based MSW mocks. An app route that already uses the system keeps its client: the tools reuse it. In shape M the client can sit beside `src/mastra/tools/`, imported by them.
 
-```
-server/<system>/
-  schema.d.ts     # generated: `openapi-typescript docs/api/<system>.openapi.yaml -o server/<system>/schema.d.ts`; never hand-edited
-  client.ts       # `createClient<paths>({ baseUrl: env.<SYSTEM>_BASE_URL })` from openapi-fetch + auth middleware
-  errors.ts       # upstream status → short deterministic user message (401/403 → not allowed, 404 → not found, 409, 422, 429, 5xx)
-  mappers.ts      # upstream payload → the compact tool output the model quotes
-```
+What a tool needs on top of that client:
 
-- Add an `api:types` script that regenerates `schema.d.ts`; a spec change is regenerate → typecheck → fix, never editing the types.
-- Auth through `client.use({ onRequest({ request }) { request.headers.set("Authorization", …); return request; } })`. The credential comes from request scope (`AsyncLocalStorage`, `config.configurable`, Mastra `requestContext`) per call, never from a module-level variable on the server.
+- **Credential per call from the run's trusted context** (`config.configurable`, Mastra `requestContext`, or `AsyncLocalStorage` set from them), through `client.use({ onRequest })`, never a module-level variable. Pass the run's abort signal, so a cancelled turn cancels the call.
 - **Auth mode per system**, recorded in the ADR's P3 line: *caller token* (the user's own token passed through: the upstream enforces permission) or *server credential* (a service key from env: the tool must check the caller's permission on the specific resource itself, before the call).
-- Base URL, timeout and keys go in the env schema. Every call gets a timeout and the run's abort signal.
-- `mappers.ts` trims: only the fields the task needs, lists capped (first N + total + "ask to narrow"), no raw HTML or blobs. Follow the API's own pagination; never loop over all pages inside one tool call.
+- **Errors the model can say**: `errors.ts` codes map to a short, deterministic user-facing message (401/403 → not allowed, 404 → not found, 409, 422, 429, 5xx), never a raw upstream body.
+- **Mappers trim for the model**: only the fields the task needs, lists capped (first N + total + "ask to narrow"), no raw HTML or blobs. Follow the API's own pagination; never loop over all pages inside one tool call.
 
-## 4. Mocks and tests from the spec
+## 4. Tool tests on the spec's mocks
 
-- `fromOpenApi(spec)` from `@msw/source/open-api` builds MSW handlers that answer with the spec's `example` values (YAML must be parsed to an object first). Tool tests run on them, with no network.
-- Endpoints without examples → add fixtures under `dev/fixtures/<system>/`, never in app code.
+- Tool tests run on the MSW handlers from `/api-client`, with no network. Endpoints without examples → fixtures under `dev/fixtures/<system>/`, never in app code.
 - Each tool keeps its Step 2 tests (schema rejects identity fields · happy path · upstream error → short message). Add one per error mapping the tool can hit.
 
 ## 5. The system already speaks MCP
@@ -68,5 +60,5 @@ Connect to it; do not rewrite its tools.
 ## Order of work
 
 1. § 1–2 for the whole API, confirmed by the user.
-2. § 3–4 once per system.
+2. § 3–4 once per system: `/api-client` builds the client, then the tool-specific additions.
 3. Then `/agent-tool` Steps 1–4 **one tool at a time**, read tools first, each with its turn proven before the next. Write tools go through `/agent-hitl`.
