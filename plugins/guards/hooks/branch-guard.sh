@@ -52,9 +52,16 @@ block() {
   exit 2
 }
 
+# The branch a refspec writes to. A source-only `HEAD`/`@` pushes the current branch, and git
+# resolves `heads/dev` and `refs/heads/dev` to the same ref as `dev`.
 target_ref() {
   local ref=${1#+}
-  ref=${ref##*:}; printf '%s' "${ref#refs/heads/}"
+  [[ "$ref" == HEAD || "$ref" == @ ]] && ref=$CURRENT_BRANCH
+  ref=${ref##*:}; ref=${ref#refs/}; printf '%s' "${ref#heads/}"
+}
+
+has_local_env_branch() {
+  git -C "$PROJECT_DIR" for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep -qE "$ENV_RE"
 }
 
 is_protected_ref() { [[ "$(target_ref "$1")" =~ $PROTECTED_RE ]]; }
@@ -66,6 +73,7 @@ clean_word() {
   local w=$1
   while [[ "$w" == [\(\"\']* ]]; do w=${w:1}; done
   while [[ "$w" == *[\)\"\'] ]]; do w=${w%?}; done
+  w=${w//[\"\']/}                                               # de"v" is dev to the shell
   printf '%s' "${w//\\/}"
 }
 
@@ -114,7 +122,11 @@ check_push() {
     [ "$unresolved" -eq 1 ] && { echo "forced or deleting push to a target the guard cannot resolve"; return; }
     [ "$protected" -eq 1 ] && { echo "forced or deleting push to a protected branch"; return; }
   fi
-  [ -n "$env" ] && echo "direct push to environment branch '$env' — merge it through a PR"
+  [ -n "$env" ] && { echo "direct push to environment branch '$env' — merge it through a PR"; return; }
+  if [ -n "$ENV_RE" ]; then
+    [ "$unresolved" -eq 1 ] && { echo "push to a target the guard cannot resolve while environment branches are guarded"; return; }
+    [ "$all_refs" -eq 1 ] && has_local_env_branch && echo "push of all branches includes an environment branch"
+  fi
 }
 
 # Prints the reason to block one shell segment, or nothing.

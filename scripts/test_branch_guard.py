@@ -119,6 +119,25 @@ def test_any_direct_push_to_an_environment_branch_is_blocked():
     assert exit_code("git push origin", config=[("remote.origin.push", "HEAD:refs/heads/prod")]) == 2
 
 
+def test_environment_branch_spelled_another_way_is_still_blocked():
+    assert exit_code("git push origin HEAD", branch="dev") == 2
+    assert exit_code("git push -u origin @", branch="stag") == 2
+    assert exit_code("git push origin feat/x:heads/prod") == 2
+    assert exit_code('git push origin de"v"') == 2
+    assert exit_code("git push origin $TARGET") == 2
+    assert exit_code("git push --all origin", config=[("branch.dev.description", "x")]) == 0
+    assert exit_code("git push origin HEAD") == 0
+
+
+def test_push_of_all_branches_is_blocked_when_one_is_an_environment_branch():
+    path = repo_on("feat/x")
+    subprocess.run(["git", "-C", path, "branch", "dev"], check=True)
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": path}
+    env.pop("HARNESS_ENV_BRANCHES", None)
+    payload = json.dumps({"tool_input": {"command": "git push --all origin"}})
+    assert subprocess.run([HOOK], input=payload, capture_output=True, text=True, env=env).returncode == 2
+
+
 def test_feature_branches_and_main_are_not_environment_branches():
     assert exit_code("git push -u origin feat/x") == 0
     assert exit_code("git push origin feat/prod-banner") == 0
