@@ -16,7 +16,7 @@ The invariants live in `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`
 
 ## Step 0 — From an API the user provides (when there is one)
 
-The user handed over an API (spec, collection, curl, docs page or MCP server) rather than one tool → follow `${CLAUDE_SKILL_DIR}/references/api-to-tools.md` first: one spec in `docs/api/`, the endpoint → tool table confirmed by the user, then one client per system in `server/<system>/` with generated types, error mapping, trimming and spec-based mocks. An MCP server is connected, never rewrapped.
+The user handed over an API (spec, collection, curl, docs page or MCP server) rather than one tool → follow `${CLAUDE_SKILL_DIR}/references/api-to-tools.md` first: one spec in `docs/api/`, the endpoint → tool table confirmed by the user, then one client per system in `server/<system>/`, built through `/api-client` (generated types, error mapping, spec-based mocks), plus the tool's own credential, error-message and trimming rules. An MCP server is connected, never rewrapped.
 
 Then run Steps 1–4 below **once per tool**, read tools first. Write tools also go through `/agent-hitl`.
 
