@@ -39,6 +39,7 @@ Unit tests prove code paths with no model. Evals prove behaviour with a real mod
 - Case id `<file>::<name>` is the baseline key; renames are declared, not silent.
 - Deterministic checks first (tool chosen, args, data written); an LLM judge only for qualities code cannot check, with the median of N samples and a judge model different from the agent model.
 - Thresholds per scorer (data integrity at 1.0); assert on outcomes, never exact wording.
+- RAG answers: retrieval recall@k on the expected `sourceId` (no LLM, cheap) plus faithfulness and citation scorers, and a "not found" answer for out-of-corpus cases (`/agent-rag` Step 6).
 - CI gate: path-filtered PRs plus a schedule; fail on missing keys, zero executed, or any case going passed → failed against the last good baseline; privacy-scan the report before publishing it.
 
 **Done when:** the suite runs locally, the gate fails on a deliberately broken case, and the report is published only after the privacy scan.

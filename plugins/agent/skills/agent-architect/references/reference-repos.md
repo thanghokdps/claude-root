@@ -16,6 +16,7 @@ Last checked 2026-10-23. The SHA shown is the one read on that date, not a pin.
 | R6 | LangGraph · L2 monorepo | `langchain-ai/js-langgraph-monorepo-example` (@fe2cf06) | `apps/<agent>/{langgraph.json,src/graph.ts,src/state.ts}`, `libs/shared`, root `turbo.json` |
 | R7 | Own AG-UI emitter (shape B) | `ag-ui-protocol/ag-ui` · `integrations/{langgraph,langchain,mastra,server-starter}` | the emitter class and its server entry for the chosen framework |
 | R8 | CopilotKit v2 client or runtime | `CopilotKit/CopilotKit` · `examples/v2/{react,node,node-express,runtime,interrupts-langgraph}` | provider + `agent` prop, runtime route, interrupt render pattern |
+| R9 | RAG (any framework, when P3 lists documents) | `langchain-ai/retrieval-agent-template-js` · `src/retrieval_graph/`; `mastra-ai/mastra` · `templates/template-chat-with-pdf` | ingest apart from retrieval: `index_graph.ts` + `graph.ts` + `retrieval.ts`, or `workflows/` (ingest) + `tools/` (retrieval). Built through `/agent-rag` |
 
 A web client is picked with the agent: R2 or R4 for the route, plus R3 conventions when the chat is built from a design (Q-D) on shadcn/Tailwind.
 

@@ -30,7 +30,7 @@ def stop(session, reply=""):
 
 def test_invocation_injects_checklist_with_done_when():
     out = invoke("inject")
-    assert out["systemMessage"].startswith("📋 /agent-tool — 4 checkpoints: Detect and place")
+    assert out["systemMessage"].startswith("📋 /agent-tool — 5 checkpoints: From an API the user provides")
     ctx = out["hookSpecificOutput"]["additionalContext"]
     assert "- [ ] Step 2 — Contract first — done when:" in ctx and "TaskCreate" in ctx and "⏭" in ctx
 
@@ -60,16 +60,16 @@ def test_task_tools_count_each_completion_then_complete():
 def test_markers_count_done_and_report_open_steps():
     invoke("markers")
     assert stop("markers", "reading the repo…") is None
-    assert stop("markers", "✅ Step 1 — Detect and place").startswith("⏳ 1/4 done — open: Step 2")
-    assert stop("markers", "- ✅ Contract first\n**✅ Step 3 — Implement**\n✅ Step 4 — Prove it in a turn") \
-        == "🏁 Checklist complete — 4/4 for /agent-tool"
+    assert stop("markers", "✅ Step 0 — From an API the user provides").startswith("⏳ 1/5 done — open: Step 1")
+    assert stop("markers", "✅ Step 1 — Detect and place\n- ✅ Contract first\n**✅ Step 3 — Implement**\n"
+                           "✅ Step 4 — Prove it in a turn") == "🏁 Checklist complete — 5/5 for /agent-tool"
 
 
 def test_skipped_steps_never_read_as_complete():
     invoke("skipped")
-    msg = stop("skipped", "⏭ Step 1 — Detect and place\n⏭️ Step 2 — Contract first\n⏭ Step 3 — Implement\n"
+    msg = stop("skipped", "⏭ Step 0 — From an API the user provides\n⏭ Step 1 — Detect and place\n⏭️ Step 2 — Contract first\n⏭ Step 3 — Implement\n"
                           "⏭ Step 4 — Prove it in a turn")
-    assert msg == "⏹ Checklist closed for /agent-tool — ✅ 0 done · ⏭ 4 skipped", msg
+    assert msg == "⏹ Checklist closed for /agent-tool — ✅ 0 done · ⏭ 5 skipped", msg
 
 
 def test_short_marker_matches_no_step():

@@ -20,6 +20,10 @@
     {
       "prompt": "add a createTool to our Mastra agent that looks up an order by id",
       "top_k": 3
+    },
+    {
+      "prompt": "đây là file swagger API của tôi, implement tools cho agent từ nó",
+      "top_k": 3
     }
   ],
   "negative": [
