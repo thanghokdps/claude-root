@@ -18,8 +18,26 @@ PUSH_COMMAND=$(printf '%s' "$HOOK_INPUT" | jq -r '.tool_input.command // empty' 
 
 # ─── Detect force push to protected branches ─────────────────────────────────
 
-if echo "$PUSH_COMMAND" | grep -qE 'git push.*(-f|--force|--force-with-lease)'; then
-  if echo "$CURRENT_BRANCH $PUSH_COMMAND" | grep -qE '\b(main|master|develop|dev)\b'; then
+# Only the push's own arguments count: a later `&& gh pr create --base main --body-file …`
+# and a `-f` inside a branch name (feat/dev-fullstack) once read as a forced push to main.
+PUSH_ARGS=$(printf '%s' "$PUSH_COMMAND" | sed -nE 's/.*git[[:space:]]+push([^;&|]*).*/\1/p' | head -1)
+FORCE_RE='(^|[[:space:]])(-[a-zA-Z]*f[a-zA-Z]*|--force(-with-lease(=[^[:space:]]*)?|-if-includes)?|\+[^[:space:]]+)([[:space:]]|$)'
+PROTECTED_RE='^(main|master|develop|dev)$'
+
+targets_protected() {
+  [[ "$CURRENT_BRANCH" =~ $PROTECTED_RE ]] && return 0
+  local tok ref
+  read -ra tokens <<<"$PUSH_ARGS"
+  for tok in "${tokens[@]}"; do
+    [[ "$tok" == -* ]] && continue
+    ref=${tok#+}; ref=${ref##*:}; ref=${ref#refs/heads/}
+    [[ "$ref" =~ $PROTECTED_RE ]] && return 0
+  done
+  return 1
+}
+
+if [[ "$PUSH_ARGS" =~ $FORCE_RE ]]; then
+  if targets_protected; then
     echo "" >&2
     echo "🚫 BLOCKED — force push to protected branch: $CURRENT_BRANCH" >&2
     echo "   Explicitly requested force pushes must be done manually." >&2
