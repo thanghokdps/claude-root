@@ -191,7 +191,6 @@ prompt
 │   │       ├── hooks.json           ← hook registration (uses ${CLAUDE_PLUGIN_ROOT})
 │   │       ├── scope-gate.sh        ← inject coordinator context on every prompt
 │   │       ├── commit-quality-gate.sh ← block secrets / debug artifacts
-│   │       ├── branch-guard.sh      ← block pushes to dev/stag/prod, force-push to protected
 │   │       ├── risk-corroboration.sh ← block commits when diff risk > declared lane
 │   │       ├── blast-radius-check.sh ← warn on edits outside plan scope
 │   │       ├── format-on-edit.sh    ← run formatter after editing files
@@ -239,7 +238,7 @@ bash <kit-dir>/scripts/install.sh     # <kit-dir> = wherever you cloned the kit
 
 Installs `global/CLAUDE.md` and `plugins/core/rules/` into `~/.claude/`, registers this directory as the local marketplace `harness`, and installs every role plugin plus the `harness` bundle (loaded in place — kit edits are live in new sessions). It backs up what it replaces and migrates an old copy-based or 2.x single-plugin install.
 
-The kit is split by role — see [`plugins/README.md`](plugins/README.md). Installing a role plugin installs its dependencies: `dev` brings `core`, `plan`, `review`; `agent` brings `dev` and `ship` (and through them `core`, `plan`, `review`), because its skills hand off to `/fix-bug`, `/verify-done`, `/review-checklist`, `/write-migration` and `/finish-branch`; hooks are the opt-in `guards`.
+The kit is split by role — see [`plugins/README.md`](plugins/README.md). Installing a role plugin installs its dependencies: `dev` brings `core`, `plan`, `review`; `agent` brings `dev` and `ship` (and through them `core`, `plan`, `review`), because its skills hand off to `/fix-bug`, `/verify-done`, `/review-checklist`, `/write-migration` and `/finish-branch`; hooks are the opt-in `guards`, except `branch-guard`, which ships in `core` and is always on.
 
 From GitHub instead of a local clone:
 
@@ -345,7 +344,7 @@ your-project/
     │   ├── review-checklist/SKILL.md
     │   ├── checkpoint/SKILL.md
     │   └── sync-memory/SKILL.md
-    ├── hooks/                    ← installed by guards plugin
+    ├── hooks/                    ← installed by core (branch-guard) and guards plugins
     │   ├── hooks.json
     │   ├── commit-quality-gate.sh
     │   ├── branch-guard.sh
@@ -606,9 +605,9 @@ Skips test files (`*.test.*`, `*.spec.*`) and docs for credential scanning.
 
 ---
 
-### `branch-guard.sh`
+### `branch-guard.sh` (core, always on)
 
-**Trigger:** `PreToolUse(Bash)` when command matches `git push`
+**Trigger:** `PreToolUse(Bash)` when command matches `git push`. Ships in `plugins/core/hooks/`, so every role install has it.
 
 **Checks:**
 
