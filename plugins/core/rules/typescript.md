@@ -12,6 +12,7 @@ Universal rules for all TypeScript projects.
 - `strict: true` always — no exceptions
 - Never use `any` — use `unknown` then narrow, or a specific type
 - No type assertions (`as Foo`) unless narrowing is genuinely impossible — add a comment explaining why
+- A repo with `tools/oxlint/anti-slop/` runs it in `lint`: fix the finding, or silence it inline with a comment saying why — never edit the vendored rules to pass one PR
 - Prefer `interface` for object shapes that may be extended; `type` for unions, intersections, mapped types
 - Explicit return types on all exported functions — inferred types break public API contracts
 

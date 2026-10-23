@@ -55,6 +55,10 @@ bash "$INIT_SCRIPT" "$(pwd)"
 - Bootstrap `.claude/memory/` (MEMORY.md, project/context.md, user.md)
 - Write a base `CLAUDE.md` with real commands extracted from `package.json` / manifests
 
+## Step 1b — anti-slop (TypeScript repos)
+
+When the repo has `tsconfig.json` or TypeScript in `package.json`, vendor the anti-slop Oxlint rules per `${CLAUDE_PLUGIN_ROOT}/references/anti-slop.md`: pinned upstream SHA, exact Oxlint versions, `lint:slop` inside `lint`, severity by repo age. Ask before adding the dependencies; an existing repo gets its violation count first.
+
 ---
 
 ## Step 2 — Scan the project (intelligence layer)
