@@ -12,6 +12,8 @@ when_to_use: a new capability is requested, or /coordinator classifies the inten
 
 **What it does:** Risk intake → (research) → plan → build → review → commit
 
+Work that has a tracker id goes through `/ticket` instead: it writes the contract to `docs/tickets/<id>/` (committed, unlike `specs/`) and then runs this skill with that plan.
+
 ---
 
 ## Stage 0 — Risk intake

@@ -248,7 +248,7 @@ For small fixes, chores, single-file changes.
 ```
 
 Add more skills if the project's workflow warrants it:
-- Team uses ticket system → `skills/ticket/SKILL.md` (full multi-agent pipeline per ticket)
+- Team uses a ticket system → no project skill: `/ticket` (dev, if installed) writes each ticket's contract to `docs/tickets/<id>/`
 - Has staging deploys → `skills/deploy/SKILL.md`
 - Has DB migrations → `skills/migrate/SKILL.md`
 - Is a monorepo → `skills/add-package/SKILL.md`
