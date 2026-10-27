@@ -1,7 +1,7 @@
 ---
 name: auto-dev
 description: Autonomous developer — executes a full task from a single prompt without interruption. Use when the task is well-defined and you want zero permission prompts.
-model: opus
+model: sonnet
 permissionMode: bypassPermissions
 maxTurns: 80
 ---

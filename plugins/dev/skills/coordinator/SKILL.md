@@ -218,7 +218,7 @@ Status:
 ```
 
 **Model selection** (cost optimization):
-- Complex logic, architecture decisions → `sonnet`
+- Architecture decisions, plans, review → stay in this session (Opus); code from the plan → `sonnet` (`~/.claude/rules/model-cost.md`)
 - Mechanical tasks (tests, formatting, simple CRUD) → `haiku`
 
 ---
@@ -362,7 +362,7 @@ If a dynamic workflow is warranted, tell the user: "This task is codebase-wide. 
 - **Never implement yourself.** Classify, route, synthesize. Agents implement.
 - **Parallel tasks MUST be dispatched in ONE message** with `run_in_background: true` on each Agent call. Separate messages = sequential. Sequential when parallel is correct = wasted time.
 - **Sequential dispatch** only when: file overlap between tasks, explicit dependency, or scope needs clarification.
-- **Model selection**: sonnet for complex tasks, haiku for mechanical/simple tasks.
+- **Model selection** per `~/.claude/rules/model-cost.md`: `sonnet` for code, `haiku` for mechanical tasks; set `model` on every Agent call.
 - **Never advance to Wave N+1** until all Wave N tasks pass verification.
 
 ### Tracking

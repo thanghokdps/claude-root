@@ -69,7 +69,7 @@ Always-loaded context is the budget: add `paths:` frontmatter unless the rule ap
 |-------|---------|
 | `name` | Slash command name — `/name` |
 | `description` | Trigger condition — what makes the model invoke this |
-| `model` | `opus` — every skill in this harness runs on Opus 5 |
+| `model` | `opus` — every skill runs on Opus 5; the work a skill dispatches follows `plugins/core/rules/model-cost.md` |
 | `effort` | `high` / `medium` / `low` |
 | `when_to_use` | Phrase patterns that trigger auto-invocation |
 | `context` / `agent` / `background` | `context: fork` runs it in a subagent; `background: false` waits for the result |
@@ -81,7 +81,7 @@ Any other key is silently ignored by Claude Code (`color`, `isolation` belong to
 
 | Field | Purpose |
 |-------|---------|
-| `model` | `opus` — every agent in this harness runs on Opus 5 |
+| `model` | by role, per `plugins/core/rules/model-cost.md`: `opus` for architect and reviewer, `sonnet` for agents that write code |
 | `permissionMode` | `bypassPermissions` for automation |
 | `maxTurns` | Max agentic turns |
 | `background` | `true` = background dispatch |
