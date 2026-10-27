@@ -115,6 +115,16 @@ def test_named_remotes_override_detection():
     assert code == 0 and rows["main"][0] == "same", rows
 
 
+def test_summary_counts_every_kind():
+    work = setup()
+    commit_and_push(work, "feat/a", "origin")
+    git(work, "tag", "v1")
+    git(work, "push", "-q", "origin", "v1")
+    _, rows = plan(work)
+    kind, _, counts, _ = rows["counts"]
+    assert kind == "summary" and counts == "same=1 push=1 protected=0 diverged=0 tag-push=1 tag-conflict=0", counts
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

@@ -295,6 +295,9 @@ sed -i '' "s/{{GIT_USER}}/$GIT_USER/g"   "$CLAUDE_DIR/memory/user.md" 2>/dev/nul
   sed -i   "s/{{GIT_USER}}/$GIT_USER/g"  "$CLAUDE_DIR/memory/user.md"
 sed -i '' "s/{{GIT_EMAIL}}/$GIT_EMAIL/g" "$CLAUDE_DIR/memory/user.md" 2>/dev/null || \
   sed -i   "s/{{GIT_EMAIL}}/$GIT_EMAIL/g" "$CLAUDE_DIR/memory/user.md"
+# user.md holds the developer's email; on a public repo committing it would publish it.
+grep -qxF '.claude/memory/user.md' "$PROJECT_DIR/.gitignore" 2>/dev/null \
+  || printf '.claude/memory/user.md\n' >> "$PROJECT_DIR/.gitignore"
 
 # ─── Generate project CLAUDE.md ──────────────────────────────────────────────
 

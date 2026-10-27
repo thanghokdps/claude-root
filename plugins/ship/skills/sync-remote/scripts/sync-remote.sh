@@ -72,8 +72,16 @@ plan_tag() {
 }
 
 row remotes "$A $B" "$(g remote get-url "$A") ↔ $(g remote get-url "$B")" ""
-{ g for-each-ref --format='%(refname)' "refs/sync-remote/$A/heads" "refs/sync-remote/$B/heads" \
-    | sed -E 's#^refs/sync-remote/[^/]+/heads/##'; } | sort -u | while read -r b; do plan_branch "$b"; done
-{ g for-each-ref --format='%(refname)' "refs/sync-remote/$A/tags" "refs/sync-remote/$B/tags" \
-    | sed -E 's#^refs/sync-remote/[^/]+/tags/##'; } | sort -u | while read -r t; do plan_tag "$t"; done
+rows=$(
+  { g for-each-ref --format='%(refname)' "refs/sync-remote/$A/heads" "refs/sync-remote/$B/heads" \
+      | sed -E 's#^refs/sync-remote/[^/]+/heads/##'; } | sort -u | while read -r b; do plan_branch "$b"; done
+  { g for-each-ref --format='%(refname)' "refs/sync-remote/$A/tags" "refs/sync-remote/$B/tags" \
+      | sed -E 's#^refs/sync-remote/[^/]+/tags/##'; } | sort -u | while read -r t; do plan_tag "$t"; done
+)
+[ -n "$rows" ] && printf '%s\n' "$rows"
+# Counted here so the skill's per-repo table is copied, not tallied by hand.
+printf '%s\n' "$rows" | awk -F'\t' '
+  { n[$1]++ }
+  END { printf "summary\tcounts\tsame=%d push=%d protected=%d diverged=%d tag-push=%d tag-conflict=%d\t\n",
+        n["same"], n["push"], n["protected"], n["diverged"], n["tag-push"], n["tag-conflict"] }'
 exit 0

@@ -37,7 +37,7 @@ Run per repo: `bash ${CLAUDE_SKILL_DIR}/scripts/sync-remote.sh <repo-dir> [<a> <
 
 Exit 3 → fewer than two matching remotes; exit 4 → not a repo or the fetch failed (auth, network). Report it and go on with the next repo.
 
-Show one table for all repos: repo · in sync · to push · protected · diverged · tag conflicts. Below it, list each `push` row's detail; "only on X" may mean the other side **deleted** it, so name those rows separately.
+Show one table for all repos: repo · in sync · to push · protected · diverged · tag conflicts, copied from each repo's last row (`summary counts same=N push=N …`). Below it, list each `push` row's detail; "only on X" may mean the other side **deleted** it, so name those rows separately.
 
 ## Step 3 — Confirm, then push one ref per command
 

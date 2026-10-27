@@ -49,8 +49,17 @@ claude plugin marketplace update harness >/dev/null 2>&1 || true
 # re-running `install` on an installed bundle adds only one missing dependency per run (CLI 2.1.305).
 claude plugin update harness@harness >/dev/null 2>&1 || true
 for p in $(python3 -c "import json,sys; print(' '.join(p['name'] for p in json.load(open(sys.argv[1]))['plugins']))" "$KIT/.claude-plugin/marketplace.json"); do
-  claude plugin install "$p@harness" 2>&1 | tail -1
+  claude plugin install "$p@harness" >/dev/null 2>&1 || echo "  install failed: $p@harness (run: claude plugin install $p@harness)"
 done
+# The CLI's own message quotes a stale recorded version; folderVersion is what loads in place.
+claude plugin list --json 2>/dev/null | python3 -c '
+import json, sys
+seen = {}
+for p in json.load(sys.stdin):
+    if p["id"].endswith("@harness"):
+        seen[p["id"].split("@")[0]] = p.get("folderVersion") or p.get("version")
+print("  plugins: " + ", ".join(f"{n} {v}" for n, v in sorted(seen.items())))
+' || true
 
 # 4. Migrate old copies: plugin skills would otherwise show up twice.
 for d in "$KIT"/plugins/*/skills/*/; do
