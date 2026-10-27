@@ -26,7 +26,9 @@ Detect the tracker from the id and the remote; read, never guess:
 
 Nothing readable → ask for the text; never write a contract from the title alone. Several ids → read all of them first, then go to Step 5.
 
-**Done when:** the ticket's title, body, acceptance criteria (or their absence) and link are in hand.
+Then search the code for what the ticket asks (its route, the entity and verb in its title, the UI label) before writing anything. Already built in full → say where (file:line per criterion) and ask whether to close the ticket or narrow it; built in part → the contract covers only the missing part and names the existing code it reuses. The same check applies before proposing or creating a ticket.
+
+**Done when:** the ticket's title, body, acceptance criteria (or their absence) and link are in hand, and what the code already does about it is known.
 
 ## Step 2 — Write the contract
 

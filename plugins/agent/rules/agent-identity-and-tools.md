@@ -23,9 +23,11 @@ paths:
 | only changes the browser: navigate, open a panel, fill a form, read the selection, highlight | frontend tool, `useFrontendTool` | `/agent-frontend` |
 | is a backend tool whose call or result the user should see | backend tool + `useRenderTool` card | `/agent-tool` then `/agent-frontend` |
 | asks the user a question mid-turn (choose, clarify) | `useHumanInTheLoop` | `/agent-frontend` |
+| proposes a change the user applies (a new title, a draft): the agent never writes | read-only backend tool returning the proposal + `useRenderTool` card whose Confirm calls the app's existing route, as the user, exactly like the UI button | `/agent-tool` then `/agent-frontend` |
 | needs both (fetch data, then show it in a panel) | two tools: backend read + frontend display; never one browser tool calling the API with the user's token | both |
 
 - A frontend tool never writes server data and never decides authorisation: anything it can do, the user could do by clicking.
+- Agent writes vs user writes: when the agent's tool performs the write, gate it with `/agent-hitl` (backend interrupt). When the agent only proposes and the user's click sends the write through a route the UI already uses (same auth, same ownership check), that is a user write: no interrupt, no pending-action record. The tool stays read-only; it never calls the write route itself.
 - Register a frontend tool only for the agent that may call it, and name it in that agent's prompt like any other tool.
 - Tool name constants are shared (`shared/` package or module) so the backend registry, prompts and frontend renderers cannot drift.
 

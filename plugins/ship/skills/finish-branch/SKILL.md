@@ -24,6 +24,14 @@ git diff --stat "$(git merge-base HEAD origin/HEAD)"...HEAD
 
 Flag uncommitted changes, fixup commits worth squashing, and commits that break the one-logical-change rule.
 
+### No remote yet, or an empty one
+
+A new repo has no `origin` or an `origin` with no branches (`git ls-remote origin` prints nothing). Then:
+
+1. Add the remote in the URL form this machine already uses: an SSH host alias from `~/.ssh/config` (`Host github-<user>`) or the form of another repo's `origin` (`git -C <other-repo> remote get-url origin`). Use HTTPS only if no SSH form is set up — an HTTPS remote asks for a username and password the SSH key does not answer.
+2. The first `main` is the user's push: give them `git push -u origin main` to run. Claude does not push to `main`, even into an empty repo.
+3. Then continue from a feature branch as usual.
+
 ## Step 3 — Ask which way (one question)
 
 Ask through `AskUserQuestion` with these four options, the one that fits the branch first with `(Recommended)`:
