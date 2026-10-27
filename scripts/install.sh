@@ -47,10 +47,16 @@ claude plugin marketplace add "$KIT" >/dev/null 2>&1 || true
 claude plugin marketplace update harness >/dev/null 2>&1 || true
 # Each plugin explicitly: `plugin update` does not install dependencies a new version adds, and
 # re-running `install` on an installed bundle adds only one missing dependency per run (CLI 2.1.305).
-claude plugin update harness@harness >/dev/null 2>&1 || true
+# Versions stay at 1.0.0 until the kit is published, so `plugin update` sees no change and keeps the
+# old cached copy: uninstall every plugin (dependents first, reverse marketplace order), then install fresh.
+PLUGINS=$(python3 -c "import json,sys; print(' '.join(p['name'] for p in json.load(open(sys.argv[1]))['plugins']))" "$KIT/.claude-plugin/marketplace.json")
+for p in $(printf '%s\n' $PLUGINS | tail -r 2>/dev/null || printf '%s\n' $PLUGINS | tac); do
+  claude plugin uninstall "$p@harness" >/dev/null 2>&1 || true
+done
+claude plugin prune >/dev/null 2>&1 || true
 # The CLI's own line can name the version that was installed before this run, so print the kit's
 # versions instead and show CLI output only when an install fails.
-for p in $(python3 -c "import json,sys; print(' '.join(p['name'] for p in json.load(open(sys.argv[1]))['plugins']))" "$KIT/.claude-plugin/marketplace.json"); do
+for p in $PLUGINS; do
   out=$(claude plugin install "$p@harness" 2>&1) || echo "  $p: install failed — $(printf '%s' "$out" | tail -1)"
 done
 echo "  plugins: $(for f in "$KIT"/plugins/*/.claude-plugin/plugin.json; do
