@@ -7,6 +7,7 @@ python3 scripts/test_lint_kit.py
 python3 scripts/test_skill_progress.py
 python3 scripts/test_branch_guard.py
 python3 scripts/test_compare_shots.py
+python3 scripts/test_sync_remote.py
 python3 scripts/lint-kit.py
 python3 scripts/eval-triggers.py
 if command -v claude >/dev/null 2>&1; then
