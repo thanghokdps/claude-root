@@ -34,6 +34,7 @@ Run per repo: `bash ${CLAUDE_SKILL_DIR}/scripts/sync-remote.sh <repo-dir> [<a> <
 | `protected` | `main`/`master` or an environment branch (`HARNESS_ENV_BRANCHES`) | never pushed by Claude; the user runs the printed command or sets up mirroring |
 | `diverged` | each side has commits the other lacks | never pushed; merge through a PR/MR on one side, then sync |
 | `tag-conflict` | same tag name, different commits | never pushed; a person picks the right one |
+| `summary` | last row: the count of each kind above for this repo | the per-repo line of the Step 2 table |
 
 Exit 3 → fewer than two matching remotes; exit 4 → not a repo or the fetch failed (auth, network). Report it and go on with the next repo.
 

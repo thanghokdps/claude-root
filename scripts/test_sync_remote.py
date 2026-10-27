@@ -33,7 +33,7 @@ def setup():
 def plan(work, *extra):
     p = subprocess.run(["bash", SCRIPT, work, *extra], capture_output=True, text=True)
     rows = [line.split("\t") for line in p.stdout.splitlines()]
-    return p.returncode, {r[1]: r for r in rows if r[0] != "remotes"}
+    return p.returncode, {r[1]: r for r in rows if r[0] not in ("remotes", "summary")}
 
 
 def commit_and_push(work, branch, remote):
@@ -99,6 +99,16 @@ def test_tags_missing_and_conflicting():
     git(work, "push", "-q", "lab", "v2")
     _, rows = plan(work)
     assert rows["v1"][0] == "tag-push" and rows["v2"][0] == "tag-conflict", rows
+
+
+def test_last_row_counts_each_kind():
+    work = setup()
+    git(work, "checkout", "-q", "-b", "feat/a")
+    git(work, "commit", "-q", "--allow-empty", "-m", "a")
+    git(work, "push", "-q", "origin", "feat/a")
+    p = subprocess.run(["bash", SCRIPT, work], capture_output=True, text=True)
+    last = p.stdout.splitlines()[-1].split("\t")
+    assert last[0] == "summary" and "same 1 · push 1 · protected 0" in last[2], p.stdout
 
 
 def test_needs_two_remotes():

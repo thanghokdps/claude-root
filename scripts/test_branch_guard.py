@@ -204,6 +204,47 @@ def test_environment_branches_can_be_overridden():
     assert exit_code("git push origin dev", env_branches="") == 0
 
 
+def test_git_push_in_quoted_text_or_a_quoted_heredoc_is_not_a_push():
+    assert exit_code('grep -n "git push -f" log.md', branch="main") == 0
+    assert exit_code('echo "- tried git push --force" | tee -a log.md') == 0
+    assert exit_code("printf '%s\\n' 'git push -f origin main was blocked' >> log.md") == 0
+    assert exit_code("cat > log.md <<'EOF'\ngit push -f origin main\nEOF") == 0
+    assert exit_code("cat > log.md <<-\"EOF\"\n\tgit push -f origin main\n\tEOF\ngit status") == 0
+    assert exit_code("cat > log.md <<'EOF'\nnote\nEOF\ngit push -f origin main") == 2
+    assert exit_code("cat > log.md <<EOF\n$(git push -f origin main)\nEOF") == 2
+
+
+def test_git_at_any_command_position_is_still_checked():
+    for cmd in ["echo $(git push -f origin main)", 'echo "$(git push -f origin main)"', "echo `git push -f origin main`",
+                "FOO=1 git push -f origin main", "sudo git push -f origin main", "time git push -f origin main",
+                "if true; then git push -f origin main; fi", "! git push -f origin main", "/usr/bin/git push -f origin main"]:
+        assert exit_code(cmd) == 2, cmd
+
+
+def test_commits_on_main_or_an_environment_branch_are_blocked():
+    assert exit_code('git commit -m "feat: x"', branch="main") == 2
+    assert exit_code("git add a.txt && git commit -m x", branch="staging") == 2
+    assert exit_code('git commit -m "feat: x"') == 0
+    assert exit_code('git commit -m "feat: x"', branch="qa", env_branches="") == 0
+    assert exit_code('echo "never git commit on main"', branch="main") == 0
+
+
+def test_the_first_commit_of_an_empty_repo_is_allowed():
+    path = tempfile.mkdtemp(prefix="branch-guard-")
+    subprocess.run(["git", "init", "-q", "-b", "main", path], check=True)
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": path}
+    payload = json.dumps({"tool_input": {"command": 'git commit -m "chore: scaffold"'}})
+    assert subprocess.run([HOOK], input=payload, capture_output=True, text=True, env=env).returncode == 0
+
+
+def test_main_branch_warning_only_on_a_push_and_without_a_delay():
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": repo_on("main")}
+    run = lambda cmd: subprocess.run([HOOK], input=json.dumps({"tool_input": {"command": cmd}}),
+                                     capture_output=True, text=True, env=env, timeout=2)
+    assert run("ls -la").stderr == ""
+    assert "WARNING" in run("git push origin main").stderr
+
+
 if __name__ == "__main__":
     tests = [v for k, v in dict(globals()).items() if k.startswith("test_")]
     for t in tests:

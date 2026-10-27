@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# branch-guard.sh — Block any direct push to environment branches (dev, stag, prod) and
-# force/delete pushes to protected ones; warn on a direct push to main or master
-# Trigger: PreToolUse(Bash) when command contains "git push"
+# branch-guard.sh — Block any direct push to environment branches (dev, stag, prod), force/delete
+# pushes to protected ones and commits on main, master or an environment branch; warn on a direct
+# push to main or master
+# Trigger: PreToolUse(Bash), every command
 # Exit 2 to block, 0 to allow
 
 set -uo pipefail
@@ -42,6 +43,7 @@ VALUE_OPT_RE='^(-o|--push-option|--receive-pack|--exec|--repo)$'   # the next wo
 GIT_VALUE_OPT_RE='^(-C|-c|--git-dir|--work-tree|--namespace|--exec-path|--config-env)$'
 EXPANSION_RE='[][$`{}*?~]'
 RISKY_RE='(^|[[:space:]"'"'"'])(-[a-zA-Z]*[fd][a-zA-Z]*|--for|--de|--mi|--al|--br|\+)'
+WRAPPER_RE='^(sudo|command|builtin|env|time|nohup|nice|exec|if|then|else|elif|do|while|until|!|\{)$'
 SHELL_STRING_RE='(^|[^[:alnum:]_])(eval|xargs|(ba|z|da|k)?sh[[:space:]]+-[a-z]*c)([^[:alnum:]_]|$)'
 
 block() {
@@ -187,10 +189,24 @@ check_segment() {
   [ "${#raw[@]}" -eq 0 ] && return
   for w in "${raw[@]}"; do words+=("$(clean_word "$w")"); done
 
+  # git counts only where a command starts: the first word, after VAR=… or a wrapper (sudo, if,
+  # then, …), or inside $( … ) / backticks. `grep "git push -f" log.md` is text, not a push.
+  local at_cmd=1 rw
   for i in "${!words[@]}"; do
-    w=${words[$i]//[\`\$\(]/}
+    rw=${raw[$i]} w=${words[$i]}
+    if [[ "$rw" == *'$('* || "$rw" == *'`'* ]]; then
+      rw=${rw##*\$\(}; rw=${rw##*\`}
+      w=$(clean_word "$rw"); at_cmd=1
+      [ -z "$w" ] && continue
+    fi
+    [ "$at_cmd" -eq 1 ] || continue
     [[ "${w##*/}" == "git" ]] && { j=$i; break; }
-    [[ "$w" =~ ^GIT_(DIR|WORK_TREE)= ]] && CTX_KNOWN=0
+    if [[ "$w" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+      [[ "$w" =~ ^GIT_(DIR|WORK_TREE)= ]] && CTX_KNOWN=0
+      continue
+    fi
+    [[ "$w" =~ $WRAPPER_RE || "$w" == -* ]] && continue
+    at_cmd=0
   done
   [ "$j" -lt 0 ] && return
 
@@ -212,7 +228,13 @@ check_segment() {
   [ -z "$cmd" ] && return
   [ "$CTX_KNOWN" -eq 1 ] && load_repo
 
+  # git.md: never commit on main/master or an environment branch. A repo with no commit yet has
+  # no branch to read, so the first commit of an empty repo still goes through.
+  if [ "$cmd" = "commit" ] && [ "$CTX_KNOWN" -eq 1 ] && { [[ "$CURRENT_BRANCH" =~ ^(main|master)$ ]] || is_env_ref "$CURRENT_BRANCH"; }; then
+    echo "commit on '$CURRENT_BRANCH' — create a branch first: git switch -c <type>/<slug>"; return
+  fi
   if [ "$cmd" = "push" ]; then
+    echo "@push"
     reason=$(context_risk) && [ -n "$reason" ] && { echo "$reason"; return; }
     check_push "${words[@]:$((i + 1))}"
     return
@@ -220,11 +242,12 @@ check_segment() {
   alias_value=$(git -C "$PROJECT_DIR" config --get "alias.$cmd" 2>/dev/null || true)
   [ -z "$alias_value" ] && return
   if [[ "$alias_value" == '!'* ]]; then
+    [[ "$alias_value" == *push* ]] && echo "@push"
     [[ "$alias_value" == *push* && "$alias_value" =~ $RISKY_RE ]] && echo "shell alias '$cmd' runs a push the guard cannot check"
     return
   fi
   read -ra alias_words <<<"$alias_value"
-  [ "${alias_words[0]:-}" = "push" ] && check_push "${alias_words[@]:1}" "${words[@]:$((i + 1))}"
+  [ "${alias_words[0]:-}" = "push" ] && echo "@push" && check_push "${alias_words[@]:1}" "${words[@]:$((i + 1))}"
 }
 
 PUSH_COMMAND=${PUSH_COMMAND//$'\\\n'/ }                         # join backslash-newline continuations
@@ -233,6 +256,20 @@ if [[ "$PUSH_COMMAND" == *push* && "$PUSH_COMMAND" =~ $SHELL_STRING_RE && "$PUSH
   block "push inside eval, xargs or a shell string the guard cannot parse"
 fi
 
+# The body of a quoted heredoc (<<'EOF', <<"EOF") is text, never run: drop it so a log entry
+# that mentions `git push -f` is not read as a push. An unquoted body still expands $( … ), so it stays.
+strip_quoted_heredocs() {
+  awk -v q="'" '
+    BEGIN { open_re = "<<-?[ \t]*[\"" q "][A-Za-z0-9_.-]+[\"" q "]" }
+    skip { t = $0; if (strip) sub(/^\t+/, "", t); if (t == delim) skip = 0; next }
+    { print }
+    match($0, open_re) {
+      d = substr($0, RSTART, RLENGTH); strip = (d ~ /^<<-/)
+      gsub(/^<<-?[ \t]*/, "", d); delim = substr(d, 2, length(d) - 2); skip = 1
+    }'
+}
+
+SAW_PUSH=0
 START_DIR=$PROJECT_DIR START_BRANCH=$CURRENT_BRANCH
 while IFS= read -r segment; do
   read -ra first <<<"$segment"
@@ -241,22 +278,19 @@ while IFS= read -r segment; do
     popd) CTX_KNOWN=0; continue ;;
   esac
   reason=$(check_segment "$segment")
+  [[ "$reason" == @push* ]] && { SAW_PUSH=1; reason=${reason#@push}; reason=${reason#$'\n'}; }
   [ -n "$reason" ] && block "$reason"
-done < <(printf '%s\n' "$PUSH_COMMAND" | tr ';&|' '\n\n\n')
+done < <(printf '%s\n' "$PUSH_COMMAND" | strip_quoted_heredocs | tr ';&|' '\n\n\n')
 PROJECT_DIR=$START_DIR CURRENT_BRANCH=$START_BRANCH
 
-# ─── Warn on direct push to main/master ──────────────────────────────────────
+# ─── Warn on a direct push to main/master, or a push with uncommitted changes ──
+# Only when the command pushes: the hook runs on every Bash call.
 
-if echo "$CURRENT_BRANCH" | grep -qE '^(main|master)$'; then
-  echo "" >&2
-  echo "⚠️  WARNING: Pushing directly to '$CURRENT_BRANCH'" >&2
-  echo "   Consider: create a branch + PR instead." >&2
-  echo "   Proceeding in 3 seconds unless you cancel (Ctrl+C)..." >&2
-  echo "" >&2
-  sleep 3 2>/dev/null || true
+[ "$SAW_PUSH" -eq 1 ] || exit 0
+
+if [[ "$CURRENT_BRANCH" =~ ^(main|master)$ ]]; then
+  echo "⚠️  WARNING: Pushing directly to '$CURRENT_BRANCH' — consider a branch + PR instead." >&2
 fi
-
-# ─── Warn if pushing with uncommitted changes ────────────────────────────────
 
 if ! git -C "$PROJECT_DIR" diff --quiet 2>/dev/null; then
   echo "⚠️  WARNING: You have uncommitted local changes that will NOT be pushed." >&2

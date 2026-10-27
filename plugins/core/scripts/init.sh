@@ -296,6 +296,14 @@ sed -i '' "s/{{GIT_USER}}/$GIT_USER/g"   "$CLAUDE_DIR/memory/user.md" 2>/dev/nul
 sed -i '' "s/{{GIT_EMAIL}}/$GIT_EMAIL/g" "$CLAUDE_DIR/memory/user.md" 2>/dev/null || \
   sed -i   "s/{{GIT_EMAIL}}/$GIT_EMAIL/g" "$CLAUDE_DIR/memory/user.md"
 
+# user.md holds a name and email: keep it out of the repo (a public repo would publish them).
+GITIGNORE="$PROJECT_DIR/.gitignore"
+if ! grep -qxF ".claude/memory/user.md" "$GITIGNORE" 2>/dev/null; then
+  [ -s "$GITIGNORE" ] && [ -n "$(tail -c1 "$GITIGNORE")" ] && echo >> "$GITIGNORE"
+  echo ".claude/memory/user.md" >> "$GITIGNORE"
+  echo "   .gitignore: added .claude/memory/user.md (personal, not committed)"
+fi
+
 # ─── Generate project CLAUDE.md ──────────────────────────────────────────────
 
 echo "📝  Generating CLAUDE.md..."

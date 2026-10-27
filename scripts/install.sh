@@ -48,9 +48,23 @@ claude plugin marketplace update harness >/dev/null 2>&1 || true
 # Each plugin explicitly: `plugin update` does not install dependencies a new version adds, and
 # re-running `install` on an installed bundle adds only one missing dependency per run (CLI 2.1.305).
 claude plugin update harness@harness >/dev/null 2>&1 || true
+# The CLI's own line can name the version that was installed before this run, so print the kit's
+# versions instead and show CLI output only when an install fails.
 for p in $(python3 -c "import json,sys; print(' '.join(p['name'] for p in json.load(open(sys.argv[1]))['plugins']))" "$KIT/.claude-plugin/marketplace.json"); do
-  claude plugin install "$p@harness" 2>&1 | tail -1
+  out=$(claude plugin install "$p@harness" 2>&1) || echo "  $p: install failed — $(printf '%s' "$out" | tail -1)"
 done
+echo "  plugins: $(for f in "$KIT"/plugins/*/.claude-plugin/plugin.json; do
+  python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(f\"{d['name']} {d['version']}\", end=' ')" "$f"; done)"
+
+# A kit kept on two remotes (GitHub + GitLab) can drift: say so before the user installs a stale copy.
+if git -C "$KIT" rev-parse --git-dir >/dev/null 2>&1 && [ "$(git -C "$KIT" remote | wc -l)" -ge 2 ]; then
+  heads=$(for r in $(git -C "$KIT" remote); do
+    printf '%s %s\n' "$r" "$(git -C "$KIT" ls-remote "$r" HEAD 2>/dev/null | cut -c1-12)"; done)
+  if [ "$(printf '%s\n' "$heads" | awk '$2 != "" {print $2}' | sort -u | wc -l)" -gt 1 ]; then
+    echo "  ⚠️  the kit's remotes point at different commits:"; printf '%s\n' "$heads" | sed 's/^/    /'
+    echo "     Bring them in line with /sync-remote (ship) before installing on another machine."
+  fi
+fi
 
 # 4. Migrate old copies: plugin skills would otherwise show up twice.
 for d in "$KIT"/plugins/*/skills/*/; do

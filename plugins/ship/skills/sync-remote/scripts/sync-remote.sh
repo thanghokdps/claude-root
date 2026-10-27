@@ -72,8 +72,14 @@ plan_tag() {
 }
 
 row remotes "$A $B" "$(g remote get-url "$A") ↔ $(g remote get-url "$B")" ""
-{ g for-each-ref --format='%(refname)' "refs/sync-remote/$A/heads" "refs/sync-remote/$B/heads" \
-    | sed -E 's#^refs/sync-remote/[^/]+/heads/##'; } | sort -u | while read -r b; do plan_branch "$b"; done
-{ g for-each-ref --format='%(refname)' "refs/sync-remote/$A/tags" "refs/sync-remote/$B/tags" \
-    | sed -E 's#^refs/sync-remote/[^/]+/tags/##'; } | sort -u | while read -r t; do plan_tag "$t"; done
+rows=$(
+  { g for-each-ref --format='%(refname)' "refs/sync-remote/$A/heads" "refs/sync-remote/$B/heads" \
+      | sed -E 's#^refs/sync-remote/[^/]+/heads/##'; } | sort -u | while read -r b; do plan_branch "$b"; done
+  { g for-each-ref --format='%(refname)' "refs/sync-remote/$A/tags" "refs/sync-remote/$B/tags" \
+      | sed -E 's#^refs/sync-remote/[^/]+/tags/##'; } | sort -u | while read -r t; do plan_tag "$t"; done
+)
+[ -n "$rows" ] && printf '%s\n' "$rows"
+# Last row: the counts per kind, so a run over many repos reads as one line each.
+count() { [ -z "$rows" ] && echo 0 || printf '%s\n' "$rows" | awk -F'\t' -v k="$1" '$1 == k' | wc -l | tr -d ' '; }
+row summary "$dir" "same $(count same) · push $(count push) · protected $(count protected) · diverged $(count diverged) · tag-push $(count tag-push) · tag-conflict $(count tag-conflict)" ""
 exit 0
