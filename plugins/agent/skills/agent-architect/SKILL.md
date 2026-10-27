@@ -77,7 +77,7 @@ Build the smallest working slice of the chosen shape, test first where practical
 1. Env schema that fails at boot on missing or inconsistent config. If the app stores data and there is no ERD (or the user asks for one from the design), write `docs/erd.md` first per `${CLAUDE_SKILL_DIR}/references/data-model.md`, then the DB schema, first migration and owner-scoped repositories from it through `/db-change`.
 2. Identity: verify the token at the edge → server-injected claims → a trusted-context reader for tools (`contextSchema` → `runtime.context`, or Mastra `requestContext` with `MASTRA_RESOURCE_ID_KEY`), with a test that a tool sees the caller's id through the AG-UI adapter; token in request scope only.
 3. One agent registered under one agent id (backend registry or the Mastra `agents` map, `langgraph.json` if used, client `agent` prop), its prompt opening with P1.
-4. Model factory with fallback; a cheap model for routing/summary.
+4. Model factory with three roles, `MODEL_PRIMARY`, `MODEL_FALLBACK` and `MODEL_CHEAP`, named per `${CLAUDE_SKILL_DIR}/references/model-choice.md`: the tier follows the hardest P2 task, volume and budget; exact names are resolved from the provider at setup and written with a cost line into `.env.example` and ADR Q7.
 5. Tracing switch with masking on (`${CLAUDE_PLUGIN_ROOT}/rules/agent-tracing-privacy.md`).
 6. Exact pins and a single copy of the framework core (`@langchain/core` or `@mastra/core`) (`${CLAUDE_PLUGIN_ROOT}/rules/agent-deps-pinning.md`).
 7. One read tool for the first P2 task, against its P3 system, through `/agent-tool` (from the user's API spec when one was given, its Step 0); then one real streamed turn with that task's example message through `/agent-verify-turn`.
