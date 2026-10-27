@@ -233,6 +233,8 @@ Claude works best when it knows who you are and what the project is trying to ac
 
 ### 5.2 — Fill in `.claude/memory/user.md`
 
+`init.sh` adds this file to `.gitignore`: it carries your git name and email, which a public repo would publish.
+
 ```markdown
 ## Role & Background
 Senior fullstack engineer. Comfortable with Next.js and PostgreSQL.
@@ -294,6 +296,12 @@ git commit -m "test: verify hooks"
 # No issues → commit passes
 # Secret or console.log detected → commit blocked with a clear message
 ```
+
+### First push and Remote Control
+
+- **First push of `main` to a new, empty remote is yours.** Claude does not push to `main`; `/finish-branch` prints `git push -u origin main` for you to run, then branches and PRs work as usual.
+- **Before the first PR that runs CI with secrets** (for example an `evals` job), add them: `gh secret set <NAME> --repo <owner>/<repo>`. `/finish-branch` names any the workflows read that the repo lacks.
+- **Driving Claude over Remote Control** (from the claude.ai project or your phone): Claude cannot open a new desktop session for you and `AskUserQuestion` is not shown there, so its questions come as plain text. To run `/ticket <id>` as its own session, open the desktop app → Code → New session in the repo folder and type it there.
 
 ---
 

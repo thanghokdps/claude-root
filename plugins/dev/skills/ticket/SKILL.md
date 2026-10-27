@@ -36,7 +36,9 @@ Create `docs/tickets/<id>/` on a branch `<type>/<id>-<slug>` (never on `main`/`d
 
 1. `intent.md` — the ticket quoted verbatim, the link, the user and the outcome in one sentence each. No new words for what the ticket said.
 2. `spec.md` — acceptance criteria as Given/When/Then, the contract that changes (endpoint, schema, event, UI state), out of scope, and the test matrix row per criterion. A criterion the ticket does not state is an open question, not an invention.
-3. `plan.md` — the slices (`/feature` Stage 3 order), each with its files and its green check; waves where tasks are independent (`${CLAUDE_PLUGIN_ROOT}/references/wave-parallelism.md`).
+3. `plan.md` — the slices (`/feature` Stage 3 order), each with its files and its green check; waves where tasks are independent (`${CLAUDE_PLUGIN_ROOT}/references/wave-parallelism.md`). In an AI-assistant repo (detection in Step 3), write it by running `/agent-feature` Steps 1–4 (agent, if installed): the ADR fit check, the inventory and the slice table with its Runs-in and layer-skill columns go into `plan.md`, so Step 3 starts at its Step 5 instead of deciding the slices twice.
+
+A high-risk ticket waits for the user's approval of the three files before Step 3.
 
 Open questions → ask them now, one per turn as options, before any code. An existing `docs/tickets/<id>/` is updated, not overwritten: keep earlier decisions and add a dated entry under § Changes.
 
@@ -44,7 +46,7 @@ Open questions → ask them now, one per turn as options, before any code. An ex
 
 ## Step 3 — Build
 
-Run `/feature` with `plan.md` as its plan: it skips its own research and plan stages and builds the slices in order, one green before the next. In an AI-assistant repo (a `docs/adr/*agent-architecture*` file exists, or the code imports `@copilotkit/*`, `@mastra/core` or `@langchain/langgraph`), run `/agent-feature` (agent, if installed) with `plan.md` as its brief instead: it adds the ADR fit check, the reuse inventory and where each tool runs (agent or browser) before building. Every deviation from the plan is written back into `plan.md` § Deviations as it happens.
+Run `/feature` with `plan.md` as its plan: it skips its own research and plan stages and builds the slices in order, one green before the next. In an AI-assistant repo (a `docs/adr/*agent-architecture*` file exists, or the code imports `@copilotkit/*`, `@mastra/core` or `@langchain/langgraph`), run `/agent-feature` (agent, if installed) from its Step 5 with `plan.md` as its brief instead: each slice goes through the layer skill its row names. Every deviation from the plan is written back into `plan.md` § Deviations as it happens.
 
 **Done when:** every `spec.md` row is green with its evidence (test path or command).
 
