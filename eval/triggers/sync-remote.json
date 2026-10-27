@@ -1,0 +1,23 @@
+{
+  "skill": "sync-remote",
+  "positive": [
+    {
+      "prompt": "sync the GitHub and GitLab remotes of this repo",
+      "top_k": 3
+    },
+    {
+      "prompt": "đồng bộ branch và tag giữa github và gitlab cho các repo này",
+      "top_k": 3
+    },
+    {
+      "prompt": "gitlab is behind github, push the missing branches and tags",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "finish the branch and open the merge request",
+      "owner": "finish-branch"
+    }
+  ]
+}

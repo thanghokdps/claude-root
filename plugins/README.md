@@ -33,6 +33,7 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [write-migration](ship/skills/write-migration/SKILL.md) | `ship` | `/write-migration <change>` | Expand/contract, reversible, batched backfill, tested down path | high |
 | [verify-done](core/skills/verify-done/SKILL.md) | `core` | `/verify-done` | Fresh evidence for the "done when" check before claiming completion | all |
 | [finish-branch](ship/skills/finish-branch/SKILL.md) | `ship` | `/finish-branch` | Verify → PR/MR, merge, keep or discard → clean up worktree | n/a |
+| [sync-remote](ship/skills/sync-remote/SKILL.md) | `ship` | `/sync-remote [repo-dir …]` | GitHub ↔ GitLab: fast-forward branches and missing tags; main, env branches and diverged refs left to you | medium |
 | [diagnose-session](lead/skills/diagnose-session/SKILL.md) | `lead` | `/diagnose-session [id]` | Transcript evidence for misfires, ignored plans, noisy hooks → kit fix | n/a |
 | [retro](lead/skills/retro/SKILL.md) | `lead` | `/retro [since]` | Weekly retro from commits/PRs/CI → ≤3 things to standardize | n/a |
 | [checkpoint](dev/skills/checkpoint/SKILL.md) | `dev` | `/checkpoint` | Progress vs plan + all quality gates | n/a |

@@ -1,12 +1,12 @@
 {
   "name": "ship",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "author": {
     "name": "Thang Ho Quang"
   },
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
-  "description": "Land and release: finish-branch, ci-triage, release-checklist, write-migration.",
+  "description": "Land and release: finish-branch, ci-triage, release-checklist, write-migration, incident, sync-remote (GitHub ↔ GitLab).",
   "keywords": [
     "release",
     "ci"
