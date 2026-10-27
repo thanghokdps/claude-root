@@ -68,7 +68,7 @@ Per state, with Playwright (MCP or `@playwright/test`): viewport = the frame's s
 python3 ${CLAUDE_SKILL_DIR}/scripts/compare-shots.py design/frames design/actual design/diff
 ```
 
-It writes a side-by-side + diff image per state and a PASS/FAIL table (default 3% of pixels; font rendering alone stays under it). Fix each FAIL — token first, then the primitive, then the screen — re-shoot, re-run. Show the table and the worst side-by-side images in the reply.
+It writes a side-by-side + diff image per state and a PASS/FAIL table (default 3% of pixels; font rendering alone stays under it). Content that differs on every run by design — the agent's answer text, timestamps, avatars — goes in `design/frames/masks.json` as `{"<state>": [[x, y, w, h]]}` boxes in frame pixels: they are drawn grey and left out of the share. Mask only such content, never a component that should match. Fix each FAIL — token first, then the primitive, then the screen — re-shoot, re-run. Show the table and the worst side-by-side images in the reply.
 
 Then the widths no frame covers: shoot every state at the smallest supported width and one middle width (e.g. 390 and 768) to `design/actual/<state>@<width>.png`, and assert per shot `document.documentElement.scrollWidth <= window.innerWidth`, the primary action visible, and any drawer opening and closing. There is no frame to diff these against — check them against the Narrow width row, and show the narrow shots in the reply.
 

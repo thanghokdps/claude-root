@@ -73,6 +73,13 @@ def test_threshold_flag():
     assert code == 1 and "FAIL" in out, out
 
 
+def test_masked_box_is_left_out():
+    d, a, o = setup("mask", block=[20, 70, 120, 110])
+    open(os.path.join(d, "masks.json"), "w").write('{"welcome": [[20, 70, 101, 41]]}')
+    code, out = run(d, a, o)
+    assert code == 0 and "PASS" in out and "1 masked" in out, out
+
+
 if __name__ == "__main__":
     tests = [v for k, v in dict(globals()).items() if k.startswith("test_")]
     for t in tests:
