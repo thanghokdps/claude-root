@@ -2,7 +2,7 @@
 model: opus
 effort: high
 name: ui-feature
-description: Builds or changes a React frontend feature (Next.js, Vite, React Router) the way the repo already builds them. It covers the feature folder, typed fetchers, hooks, and components built from the repo's primitives, with every state (loading, empty, error, optimistic update and rollback), accessibility, design tokens instead of raw values, and responsive layout. It proves the feature with Testing Library tests and a browser check at the project's viewports. Use when the user asks for a page, screen, form, dialog or other UI with no design to match, or to fix UI behaviour. A Figma or mockup to match goes to design-ui first.
+description: Builds or changes a frontend feature in a React app (default and verified on Next.js App Router) the way the repo already builds them. It covers the feature folder, typed fetchers, hooks, and components built from the repo's primitives, with every state (loading, empty, error, optimistic update and rollback), accessibility, design tokens instead of raw values, and responsive layout. It proves the feature with Testing Library tests and a browser check at the project's viewports. Use when the user asks for a page, screen, form, dialog or other UI with no design to match, or to fix UI behaviour. A Figma or mockup to match goes to design-ui first.
 when_to_use: build a page, "làm màn hình", "làm giao diện bằng React", form, dialog, settings page, list with search, frontend feature, React component, loading or empty or error state, UI not updating after save, optimistic update, accessibility, responsive layout
 ---
 
