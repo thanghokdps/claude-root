@@ -42,6 +42,12 @@ return { messages: [...state.messages, aiResponse] }; // duplicates history
 - `temperature: 0` for anything that routes or produces structured output.
 - Check model-specific options against the bound tools (some models reject reasoning-effort with tools); verify on the installed model, not from memory.
 
+## Fixed workflows
+
+- A fixed order of steps (validate → approve → write) is a `StateGraph` with fixed edges and a typed state, not a prompt instruction; conditional edges only where a step's output decides the branch.
+- Compile it once at module level with the checkpointer, and expose it to the agent as one tool or a subgraph node.
+- A step that waits for a human uses `interrupt()` per § Interrupts; code before it runs again on resume, so make it idempotent.
+
 ## Streaming
 
 - `streamEvents(input, { version: "v2" })` — always v2.

@@ -42,7 +42,7 @@ Open questions → ask them now, one per turn as options, before any code. An ex
 
 ## Step 3 — Build
 
-Run `/feature` with `plan.md` as its plan: it skips its own research and plan stages and builds the slices in order, one green before the next. Every deviation from the plan is written back into `plan.md` § Deviations as it happens.
+Run `/feature` with `plan.md` as its plan: it skips its own research and plan stages and builds the slices in order, one green before the next. In an AI-assistant repo (a `docs/adr/*agent-architecture*` file exists, or the code imports `@copilotkit/*`, `@mastra/core` or `@langchain/langgraph`), run `/agent-feature` (agent, if installed) with `plan.md` as its brief instead: it adds the ADR fit check, the reuse inventory and where each tool runs (agent or browser) before building. Every deviation from the plan is written back into `plan.md` § Deviations as it happens.
 
 **Done when:** every `spec.md` row is green with its evidence (test path or command).
 

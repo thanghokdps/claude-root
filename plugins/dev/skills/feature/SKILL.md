@@ -14,6 +14,8 @@ when_to_use: a new capability is requested, or /coordinator classifies the inten
 
 Work that has a tracker id goes through `/ticket` instead: it writes the contract to `docs/tickets/<id>/` (committed, unlike `specs/`) and then runs this skill with that plan.
 
+In an AI-assistant repo (a `docs/adr/*agent-architecture*` file exists, or the code imports `@copilotkit/*`, `@mastra/core` or `@langchain/langgraph`) and a feature the assistant takes part in, hand over to `/agent-feature` (agent, if installed) before Stage 0 and stop here: it checks the feature against the ADR and decides per slice whether a tool runs in the agent or the browser. Features the chat never touches stay here.
+
 ---
 
 ## Stage 0 — Risk intake

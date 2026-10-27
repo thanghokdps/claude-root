@@ -45,7 +45,7 @@ Ask for a feature in plain words, e.g. *"Thêm tính năng cho khách đổi đ�
 | `/agent-tool <tool>` | Adding, renaming or fixing an agent (backend) tool — schema, trusted identity, read vs mutation, its test. Given your API (OpenAPI, Postman, curl, docs or MCP), it first maps endpoints to tools and builds the typed client and mocks. Browser-only tools go to `/agent-frontend` |
 | `/agent-rag <corpus or memory>` | Answering from documents or remembering users by meaning — ingest (chunk, embed, index with model metadata), vector store choice, a retrieval tool with a server-side tenant filter and citations, semantic memory, retrieval evals |
 | `/agent-hitl <write>` | A tool creates, updates or deletes data and needs a confirm card — standard AG-UI interrupt, `useInterrupt`, `resume[]` |
-| `/agent-graph <scope>` | A request lands on the wrong agent; adding an agent, router or supervisor; rewriting a system prompt |
+| `/agent-graph <scope>` | A request lands on the wrong agent; adding an agent, router or supervisor; defining a fixed workflow; rewriting a system prompt |
 | `/agent-frontend <change>` | CopilotKit v2 in React: provider + auth headers, `useAgentContext`, frontend tools (`useFrontendTool`), tool cards (`useRenderTool`), suggestions, file and image attachments, e2e with recorded streams |
 | `/agent-verify-turn [local\|prod-trace]` | Before saying an agent change works, or when a production answer was wrong |
 | `/agent-evals [unit\|dataset\|suite\|observability\|compare-models]` | Fake-model unit tests; an eval dataset (JSONL, example in `skills/agent-evals/references/dataset-example.jsonl`); judged eval suites with a CI gate; Langfuse/LangSmith tracing with masking; comparing models |
@@ -82,7 +82,7 @@ The invariants the skills read before they act. They load only when a skill need
 | [`agent-prompts.md`](rules/agent-prompts.md) | system prompts, tool descriptions, scope rules | `/agent-graph`, `/agent-tool` |
 | [`agent-stock-first.md`](rules/agent-stock-first.md) | use stock CopilotKit / Mastra / LangChain / LangGraph pieces before custom code | all |
 | [`agui-transport.md`](rules/agui-transport.md) | AG-UI 1.0 events, interrupts and resume, untrusted client history, content parts, client contract (0.x lines marked) | `/agent-frontend`, `/agent-hitl` |
-| [`langgraph.md`](rules/langgraph.md) | state, run context (`contextSchema`), short- and long-term memory, graph lifecycle, interrupts | `/agent-graph`, `/agent-hitl` |
+| [`langgraph.md`](rules/langgraph.md) | state, run context (`contextSchema`), short- and long-term memory, graph lifecycle, fixed workflows, interrupts | `/agent-graph`, `/agent-hitl` |
 | [`mastra.md`](rules/mastra.md) | registry, agents and supervisor, `createTool` + request context, approval/suspend, workflows, storage, transport | `/agent-tool`, `/agent-graph`, `/agent-hitl` |
 | [`agent-tracing-privacy.md`](rules/agent-tracing-privacy.md) | tracing switch, masking, what each turn records | `/agent-evals observability`, `/agent-verify-turn` |
 | [`agent-deps-pinning.md`](rules/agent-deps-pinning.md) | exact version pins, one copy of the framework core | `/agent-architect` |

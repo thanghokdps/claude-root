@@ -18,7 +18,7 @@ Everything goes in the same `docs/design/ui-map.md`.
 
 ## At /design-ui Step 1 — Chat states
 
-A chat is mostly states the happy-path frame does not show. Add every row of `${CLAUDE_SKILL_DIR}/references/chat-states.md` to the inventory, with the same ask-as-options rule. Viewports come from the ADR (`Viewports:`, asked in `/agent-architect` Q2v).
+A chat is mostly states the happy-path frame does not show. Add every row of `${CLAUDE_SKILL_DIR}/references/chat-states.md` to the inventory, with the same ask-as-options rule. Viewports come from the ADR (`Viewports:`, set in `/agent-architect` Q2v).
 
 **Done when:** every chat-state row has a frame or a recorded decision.
 
