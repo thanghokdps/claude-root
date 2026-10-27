@@ -25,7 +25,7 @@ Tasks are organized into sequential **waves**. Same-wave tasks execute in parall
 3. **Each task gets its own isolated agent context** — no shared state
 4. **All parallel Agent calls happen in ONE message** with `run_in_background: true` — sending them in separate messages makes them sequential
 5. **Results are collected and committed before the next wave starts**
-6. **Model selection**: sonnet for complex logic, haiku for mechanical tasks (tests, simple CRUD)
+6. **Model selection** (`~/.claude/rules/model-cost.md`): `sonnet` for code from the plan, `haiku` for mechanical tasks (rename, format, types, boilerplate tests, simple CRUD); planning, review and re-plans stay on Opus
 
 ## Wave Planning Template
 

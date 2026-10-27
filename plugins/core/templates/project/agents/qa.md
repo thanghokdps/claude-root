@@ -1,7 +1,7 @@
 ---
 name: qa
 description: qa agent — spawned by coordinator/ticket workflow
-model: opus
+model: sonnet
 permissionMode: bypassPermissions
 maxTurns: 50
 background: true

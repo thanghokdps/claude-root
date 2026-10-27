@@ -38,7 +38,7 @@ When user-invoked skills multiply past what you can remember, the cure is a **ro
 |-------|---------|
 | `name` | slash command — `/name`. Must match the directory name. |
 | `description` | model-invoked: triggers. user-invoked: human summary. |
-| `model` | `opus` across this harness — every skill runs on Opus 5 |
+| `model` | `opus` — every skill runs on Opus 5; subagents it dispatches follow `~/.claude/rules/model-cost.md` (sonnet for code, haiku for mechanical work) |
 | `effort` | `high` / `medium` / `low` |
 | `when_to_use` | phrase patterns that trigger auto-invocation |
 | `disable-model-invocation` | `true` = user-invoked only |
