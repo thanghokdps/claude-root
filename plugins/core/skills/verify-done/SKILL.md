@@ -1,5 +1,4 @@
 ---
-model: opus
 effort: medium
 name: verify-done
 description: Evidence gate before claiming work is finished — re-runs the checks that prove the task's "done when" condition, in this session, and reports output instead of assurances. Use whenever you are about to say done, fixed, passing, ready, or shipped, or before handing off, committing, or opening a PR.

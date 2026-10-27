@@ -1,5 +1,4 @@
 ---
-model: opus
 effort: medium
 name: finish-branch
 description: Closes out a finished feature or fix branch — verifies it, then offers merge, open PR/MR, keep, or discard, and cleans up the worktree and local branch afterwards. Use when the implementation tasks are complete and the work needs to land or be parked.

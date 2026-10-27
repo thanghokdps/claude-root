@@ -1,5 +1,4 @@
 ---
-model: opus
 effort: medium
 name: sync-remote
 description: Keeps a repo's GitHub and GitLab remotes in sync, across one repo or many — fetches both, classifies every branch and tag (same, ahead, only on one side, diverged, conflicting tag), pushes the fast-forwards and missing tags after one confirmation, and leaves main, environment branches and diverged refs to the user. Use when a repo lives on both GitHub and GitLab and the two have drifted, or to check several such repos at once.

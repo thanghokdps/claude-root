@@ -1,5 +1,4 @@
 ---
-model: opus
 effort: medium
 name: checkpoint
 description: Checks progress against the active PLAN.md and runs every quality gate — typecheck, lint, tests — reporting pass/fail per gate. Use to confirm where a feature stands or before handing work off.

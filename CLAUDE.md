@@ -72,7 +72,7 @@ Always-loaded context is the budget: add `paths:` frontmatter unless the rule ap
 |-------|---------|
 | `name` | Slash command name — `/name` |
 | `description` | Trigger condition — what makes the model invoke this |
-| `model` | `opus` — every skill runs on Opus 5; the work a skill dispatches follows `plugins/core/rules/model-cost.md` |
+| `model` | `opus` on skills that decide (plan, architecture, review, security, migration, root cause); omitted on light, mechanical skills so they run on the session's model. The work a skill dispatches follows `plugins/core/rules/model-cost.md` |
 | `effort` | `high` / `medium` / `low` |
 | `when_to_use` | Phrase patterns that trigger auto-invocation |
 | `context` / `agent` / `background` | `context: fork` runs it in a subagent; `background: false` waits for the result |

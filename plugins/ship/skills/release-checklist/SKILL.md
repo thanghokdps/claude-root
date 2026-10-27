@@ -1,5 +1,4 @@
 ---
-model: opus
 effort: medium
 name: release-checklist
 description: Walks a release through a fixed checklist — scope frozen, gates green, migrations safe, release notes drafted, tag, deploy, smoke check, rollback ready — and stops on the first unmet item. Use when cutting a release, tagging a version, or deploying to staging/production.
