@@ -19,6 +19,8 @@ Record the result as one line before any edit: `Shape: A | B | hybrid | M · hos
 Then read `docs/adr/*` if present: the recorded architecture card binds every `agent-*` change. A change that needs a new agent, shape, write path, system or client is an architecture change — stop and ask (`/agent-feature` Step 2), never widen it inside the change.
 Mixed signals (both shapes in one app) → name the app/package each belongs to; never average them.
 
+**Speak only the chosen framework.** Once the shape is recorded (or chosen in `/agent-architect` Q-F), every reply, question, option, plan, ADR, doc and code comment uses only that framework's names. On LangChain/LangGraph (A, B, hybrid) never mention Mastra; on Mastra (M) never mention LangChain or LangGraph. Read only that framework's rules file (`langgraph.md` or `mastra.md`). The other framework comes up only when the user asks about it, or in Q-F before a framework is chosen.
+
 ## Shape A — prebuilt agent (greenfield default)
 
 - `createAgent({ model, tools, middleware })`; behaviour lives in middleware hooks (`beforeAgent`, `wrapModelCall`, `wrapToolCall`, `afterAgent`).
