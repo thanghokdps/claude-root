@@ -9,3 +9,4 @@
 - Say it once per file; don't restate the line below or the identifier.
 - Keep the facts (numbers, error codes, ticket refs, why the obvious approach was rejected); cut the narrative.
 - When shortening a comment, re-check the claim — negations and comparisons invert easily.
+- Change files with the Edit and Write tools, never with shell heredocs, `sed -i` or a script, so the edit hooks (lint, format) run on every change. Shell writes are for generated files and scratch output.
