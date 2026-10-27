@@ -1,6 +1,6 @@
 ---
 plugins: ["../..", "../../../progress", "../../../core", "../../../plan", "../../../review", "../../../dev", "../../../ship"]
-max_turns: 4
+max_turns: 8
 allowed_tools: [Read, Glob, Grep, Skill]
 tags: [routing, workflow]
 ---

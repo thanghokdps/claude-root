@@ -21,7 +21,7 @@ Rules that apply throughout: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md` 
 
 Run `bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh .` and show its table. It checks git, Node ≥ 20, a package manager, a model key (presence only) and a git repo, with the install command for this OS.
 
-- Anything `MISSING` → list it with the printed command and ask before running any install; installing system software is the user's call. A missing model key blocks only Step 4's real turn — the interview can go on.
+- Anything `MISSING` → list it with the printed command, say what it blocks, and go straight on to the interview: the turn ends on the P1 question, never on a setup question. A missing model key or git repo blocks only scaffolding and Step 4's real turn. Ask about installs once the interview is done; never run one without a yes, since installing system software is the user's call.
 - Never ask for the key's value in chat; it goes in `.env`, which stays gitignored.
 
 **Done when:** `missing: 0`, or each missing item is accepted with what it blocks.
