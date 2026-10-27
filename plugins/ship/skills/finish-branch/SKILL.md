@@ -32,6 +32,13 @@ A new repo has no `origin` or an `origin` with no branches (`git ls-remote origi
 2. The first `main` is the user's push: give them `git push -u origin main` to run. Claude does not push to `main`, even into an empty repo.
 3. Then continue from a feature branch as usual.
 
+### Will CI be able to pass, and does it gate the merge?
+
+Before opening a PR/MR:
+
+- Every `secrets.<NAME>` the workflows use (`grep -ho 'secrets\.[A-Z_]*' .github/workflows/*.yml | sort -u`) exists: `gh secret list` (GitLab: CI/CD variables). A missing one → tell the user which and where to add it, or make the job skip with a warning when it is absent; never print a value.
+- The base branch requires checks: `gh api repos/{owner}/{repo}/rules/branches/<base>` lists a `required_status_checks` rule. None → say so in the PR body and offer `/project-init` (core) Step 1c, so a red PR cannot be merged.
+
 ## Step 3 — Ask which way (one question)
 
 Ask through `AskUserQuestion` with these four options, the one that fits the branch first with `(Recommended)`:

@@ -51,11 +51,12 @@ Run `/feature` with `plan.md` as its plan: it skips its own research and plan st
 ## Step 4 — Ship
 
 1. Tick the matrix in `spec.md` (status and evidence per row).
-2. `/verify-done` (core), then `/review-checklist` (review).
+2. `/verify-done` (core), then `/review-checklist` (review). High-risk lane (auth, data writes, migrations, external providers): also `/security-review` and `/code-review`; their findings are fixed or listed in `plan.md` § Deviations. The ticket's folder replaces `specs/<slug>/` from the global rules.
 3. Commit `docs/tickets/<id>/` with the code, `<type>: <what> (#<id>)`.
 4. `/finish-branch` (ship, if installed) opens the PR; its description links the ticket and `docs/tickets/<id>/`.
+5. Wait for the PR's checks. Red → fix on the branch (`/ci-triage` (ship, if installed)). Never call the ticket done, or suggest merging, while a check is red.
 
-**Done when:** the PR is open with the contract in its diff, and its checks are green or their failures named.
+**Done when:** the PR is open with the contract in its diff, and its checks are green, or each failure is named with its fix on the branch.
 
 ## Step 5 — Several tickets in parallel
 

@@ -76,7 +76,11 @@ Show the table, then ask through `AskUserQuestion`: *build as planned (Recommend
 
 Run each slice through its layer skill in dependency order (contract schema → db → API client → endpoint → retrieval → tool → HITL → agent scope → chat frontend → screens → evals), one slice green before the next. Pass the slice row as the brief so the layer skill does not re-decide placement.
 
-**Done when:** each slice's own Done-when is met, and typecheck, lint and tests pass.
+- **Invoke the layer skill** (`/agent-tool`, `/agent-hitl`, `/agent-frontend`, `/agent-design-ui`, `/agent-evals`, `/db-change`, `/api-endpoint` …) with the Skill tool for every slice, even a small one. Never build a slice inline from memory of what the skill says: its checks (no identity in the schema, no write before confirm, states, tokens) are what the slice is reviewed against. A slice with no matching skill says so in its row.
+- **Code goes to a cheaper model.** Inside the layer skill, the main session decides; the code for the slice goes to one `sonnet` subagent (`model: "sonnet"`) whose brief is the slice row, the contract and the test to make pass, per `model-cost.md` (core). The main session reviews its diff before the next slice.
+- **Edit files with Edit or Write**, not shell heredocs, `sed` or scripts, so the repo's edit hooks (lint, format) run on every change.
+
+**Done when:** each slice's own Done-when is met, its layer skill was invoked (or its row says why none fits), and typecheck, lint and tests pass.
 
 ## Step 6 — Duplicate check on the diff
 
@@ -95,7 +99,7 @@ If `jscpd` is installed, also run `npx jscpd <changed dirs> --min-tokens 50`. Fi
 
 ## Step 7 — Prove it
 
-Run `/agent-verify-turn` with each example message from Step 1 and one message the feature must not handle. Add the passing turns to the eval suite via `/agent-evals`.
+Run `/agent-verify-turn` with each example message from Step 1 and one message the feature must not handle; a manual check in the app adds to it and never replaces it. Add the passing turns to the eval suite via `/agent-evals`.
 
 **Done when:** the right agent and tools fire for each example, the out-of-scope message is declined, and the eval cases exist.
 
