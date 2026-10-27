@@ -1,5 +1,4 @@
 ---
-model: opus
 effort: low
 name: sync-memory
 description: Pulls the latest commits and rebuilds memory from your own, updating .claude/memory/commits/ and last-sync.txt. Use at the start of a session on a team project.

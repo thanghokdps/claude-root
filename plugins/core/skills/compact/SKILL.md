@@ -1,5 +1,4 @@
 ---
-model: opus
 effort: high
 name: compact
 description: Compact the current conversation — summarize what's been done, merge into persistent memory and HANDOFF.md, so the next session resumes with full context. Run when conversation is getting long or before ending a session.
