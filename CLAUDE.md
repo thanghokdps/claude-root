@@ -42,7 +42,9 @@ Install / update: `bash scripts/install.sh` — needed for global/CLAUDE.md and 
 
 Behaviour evals (real model, paid, not in check.sh): `bash scripts/eval-plugin.sh <plugin>` runs `plugins/<plugin>/evals/` — one routing case per demo prompt, graded by which skill fired (`tool_used: Skill`). Before a demo: add `--runs 3 --ablation with-without`.
 
-Release: bump `version` in the changed plugins' `plugin.json` (a GitHub install compares versions on `/plugin update`), merge, then `claude plugin tag plugins/<plugin> --push` → tag `<plugin>--v<version>`.
+Versions: every plugin stays at `1.0.0` until the kit is published — never bump a `version` on a change. After merging, reinstall with `bash scripts/install.sh` (it uninstalls and reinstalls every plugin, since an unchanged version keeps the old cached copy).
+
+Release (only once published): bump `version` in the changed plugins' `plugin.json` (a GitHub install compares versions on `/plugin update`), merge, then `claude plugin tag plugins/<plugin> --push` → tag `<plugin>--v<version>`.
 
 ---
 
