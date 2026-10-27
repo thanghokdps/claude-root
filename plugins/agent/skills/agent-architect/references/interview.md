@@ -40,7 +40,7 @@ Ask only what Claude cannot infer or what is costly to reverse. Everything else 
 |---|---|
 | P1–P4, the problem: nobody but the user knows it | Q1 host, Q2 clients, Q2v viewports, Q-L layout, Q-T test location |
 | Q-F framework, only when no stack is named | Q3 agent shape (from P2 by the `shapes.md` rule), Q5 identity (from the auth the repo or stack names) |
-| Q4 writes: does any tool change data (it decides the confirm step) | Q6 memory, Q7 providers and fallback, Q8 tracing and masking, Q9 must-pass evals (from P2's examples) |
+| Q4 writes: does any tool change data (it decides the confirm step) | Q6 memory, Q7 providers and models (primary, fallback, cheap) with a cost line, from `model-choice.md`, Q8 tracing and masking, Q9 must-pass evals (from P2's examples) |
 | Q-D design link, only when none was given | |
 
 A default comes from, in order: the kickoff doc set, the repo, the request, the recommended option. After the asked questions, show the defaults card: one table (`Question · Default · From`) and one `AskUserQuestion` with *Accept all (Recommended)* / *Change some*. *Change some* → ask only the picked rows, each as its own question. Accepted rows go in the ADR as *defaulted*, with their source. A defaulted Q2v still sets the viewports every later skill shoots at, so it is never dropped, only not asked.
