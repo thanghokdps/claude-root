@@ -16,7 +16,7 @@ Action intent → classify lane silently (`/coordinator` holds the full logic):
 |------|------|----------|
 | tiny | 1 file, reversible | Just do it |
 | normal | multi-file, internal | Built-in **plan mode** → approve → implement → verify |
-| high-risk | hard gate hit | `specs/<slug>/` (SUMMARY, PLAN, TEST_MATRIX, ESCALATIONS) → user confirms → build → review |
+| high-risk | hard gate hit | `specs/<slug>/` (SUMMARY, PLAN, TEST_MATRIX, ESCALATIONS) — or, under `/ticket`, its committed `docs/tickets/<id>/` — → user confirms → build → review |
 
 Hard gates (always high-risk): auth/authz, data migration, security/audit, external providers, public contracts, weakening validation, `.claude/` config.
 Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the tool exists; never block on it.

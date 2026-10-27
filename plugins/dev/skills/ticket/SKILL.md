@@ -26,7 +26,9 @@ Detect the tracker from the id and the remote; read, never guess:
 
 Nothing readable → ask for the text; never write a contract from the title alone. Several ids → read all of them first, then go to Step 5.
 
-**Done when:** the ticket's title, body, acceptance criteria (or their absence) and link are in hand.
+Then search the code for the behaviour the ticket asks for (its route, component, repository function, UI label). Already there, in whole or in part → say where, with paths, and ask whether the ticket is done, narrower than it reads, or still wanted, before Step 2.
+
+**Done when:** the ticket's title, body, acceptance criteria (or their absence) and link are in hand, and the search for existing behaviour is reported.
 
 ## Step 2 — Write the contract
 
@@ -34,7 +36,9 @@ Create `docs/tickets/<id>/` on a branch `<type>/<id>-<slug>` (never on `main`/`d
 
 1. `intent.md` — the ticket quoted verbatim, the link, the user and the outcome in one sentence each. No new words for what the ticket said.
 2. `spec.md` — acceptance criteria as Given/When/Then, the contract that changes (endpoint, schema, event, UI state), out of scope, and the test matrix row per criterion. A criterion the ticket does not state is an open question, not an invention.
-3. `plan.md` — the slices (`/feature` Stage 3 order), each with its files and its green check; waves where tasks are independent (`${CLAUDE_PLUGIN_ROOT}/references/wave-parallelism.md`).
+3. `plan.md` — the slices (`/feature` Stage 3 order), each with its files and its green check; waves where tasks are independent (`${CLAUDE_PLUGIN_ROOT}/references/wave-parallelism.md`). In an AI-assistant repo (detection in Step 3), write it by running `/agent-feature` Steps 1–4 (agent, if installed): the ADR fit check, the inventory and the slice table with its Runs-in and layer-skill columns go into `plan.md`, so Step 3 starts at its Step 5 instead of deciding the slices twice.
+
+The lane follows the global hard gates; a high-risk ticket keeps its contract here, in `docs/tickets/<id>/`, instead of `specs/<slug>/`, and waits for the user's approval of the three files before Step 3.
 
 Open questions → ask them now, one per turn as options, before any code. An existing `docs/tickets/<id>/` is updated, not overwritten: keep earlier decisions and add a dated entry under § Changes.
 
@@ -42,14 +46,14 @@ Open questions → ask them now, one per turn as options, before any code. An ex
 
 ## Step 3 — Build
 
-Run `/feature` with `plan.md` as its plan: it skips its own research and plan stages and builds the slices in order, one green before the next. In an AI-assistant repo (a `docs/adr/*agent-architecture*` file exists, or the code imports `@copilotkit/*`, `@mastra/core` or `@langchain/langgraph`), run `/agent-feature` (agent, if installed) with `plan.md` as its brief instead: it adds the ADR fit check, the reuse inventory and where each tool runs (agent or browser) before building. Every deviation from the plan is written back into `plan.md` § Deviations as it happens.
+Run `/feature` with `plan.md` as its plan: it skips its own research and plan stages and builds the slices in order, one green before the next. In an AI-assistant repo (a `docs/adr/*agent-architecture*` file exists, or the code imports `@copilotkit/*`, `@mastra/core` or `@langchain/langgraph`), run `/agent-feature` (agent, if installed) from its Step 5 with `plan.md` as its brief instead: each slice goes through the layer skill its row names. Every deviation from the plan is written back into `plan.md` § Deviations as it happens.
 
 **Done when:** every `spec.md` row is green with its evidence (test path or command).
 
 ## Step 4 — Ship
 
 1. Tick the matrix in `spec.md` (status and evidence per row).
-2. `/verify-done` (core), then `/review-checklist` (review).
+2. `/verify-done` (core), then `/review-checklist` (review). High-risk lane: also the built-in `/code-review`, and `/security-review` when the diff touches auth, authorisation or a write to user data; record each finding and its fix in `plan.md` § Deviations.
 3. Commit `docs/tickets/<id>/` with the code, `<type>: <what> (#<id>)`.
 4. `/finish-branch` (ship, if installed) opens the PR; its description links the ticket and `docs/tickets/<id>/`.
 

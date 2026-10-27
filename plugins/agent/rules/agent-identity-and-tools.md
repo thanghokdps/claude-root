@@ -26,6 +26,7 @@ paths:
 | needs both (fetch data, then show it in a panel) | two tools: backend read + frontend display; never one browser tool calling the API with the user's token | both |
 
 - A frontend tool never writes server data and never decides authorisation: anything it can do, the user could do by clicking.
+- **Propose-only exception** to "writes add `/agent-hitl`": the agent tool only validates and returns a proposal (no write, no pending record), and the user's Confirm calls an existing app route that already authenticates and checks ownership of that one resource — a write the user can already make by clicking elsewhere. Allowed only when all of that holds and a lost card leaves nothing half-done; the ADR records the exception as a decision. A new write path, a write the user cannot already make, several resources or an audit entry go through the backend interrupt.
 - Register a frontend tool only for the agent that may call it, and name it in that agent's prompt like any other tool.
 - Tool name constants are shared (`shared/` package or module) so the backend registry, prompts and frontend renderers cannot drift.
 

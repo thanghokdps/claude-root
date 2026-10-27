@@ -3,6 +3,7 @@
 - Optimize for the reader: names say what, not how; one job per function (~30 lines); nesting >3 → guard clauses.
 - DRY at three copies, not two. Delete dead code and unused imports — git remembers.
 - No N+1 queries or I/O inside loops; profile before optimizing.
+- Change source files with Edit/Write, not `python`/`sed`/heredoc scripts through Bash: the repo's edit hooks (lint, format) fire only on Edit/Write.
 
 ## Comments
 - Explain WHY, never WHAT. Default 1 line; exported symbol with a real constraint 2–3; subtle invariant ≤6; more than that belongs in docs.

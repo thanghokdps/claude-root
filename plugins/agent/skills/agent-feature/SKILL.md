@@ -12,7 +12,7 @@ when_to_use: add a feature to the chatbot, "thêm tính năng cho chatbot", "là
 
 A feature built without reading the architecture creates a second way of doing what the repo already does. This skill decides *where* each piece goes and *what it reuses*; the layer skills do the building. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md`, `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`.
 
-Everything decided here goes in `docs/features/<slug>.md`. Started from `/ticket <id>`: its `docs/tickets/<id>/plan.md` is the brief, and the decisions go there instead.
+Everything decided here goes in `docs/features/<slug>.md`. Started from `/ticket <id>`: its `docs/tickets/<id>/plan.md` is the brief, and the decisions go there instead. `/ticket` runs Steps 1–4 while writing that plan; when `plan.md` already holds the fit check, the inventory and the slice table, start at Step 5.
 
 ---
 
@@ -76,7 +76,11 @@ Show the table, then ask through `AskUserQuestion`: *build as planned (Recommend
 
 Run each slice through its layer skill in dependency order (contract schema → db → API client → endpoint → retrieval → tool → HITL → agent scope → chat frontend → screens → evals), one slice green before the next. Pass the slice row as the brief so the layer skill does not re-decide placement.
 
-**Done when:** each slice's own Done-when is met, and typecheck, lint and tests pass.
+- Invoke the layer skill for the slice (the Skill tool, `/agent-tool` …), even when its first steps only confirm what the row says: its Done-when and test list are the slice's checklist. Building a slice inline instead is a deviation, written into the plan with its reason.
+- Typing the code of an approved slice goes to a subagent per `~/.claude/rules/model-cost.md` (`model: "sonnet"`; the brief is the slice row, the contract and the test to make pass). The diff comes back to this session for review before the next slice.
+- Change files with Edit and Write, not shell scripts, so the repo's edit hooks (lint, format) run on every change.
+
+**Done when:** each slice's own Done-when is met, the plan names the layer skill that ran for it (or the recorded deviation), and typecheck, lint and tests pass.
 
 ## Step 6 — Duplicate check on the diff
 
@@ -95,7 +99,7 @@ If `jscpd` is installed, also run `npx jscpd <changed dirs> --min-tokens 50`. Fi
 
 ## Step 7 — Prove it
 
-Run `/agent-verify-turn` with each example message from Step 1 and one message the feature must not handle. Add the passing turns to the eval suite via `/agent-evals`.
+Run `/agent-verify-turn` with each example message from Step 1 and one message the feature must not handle. Add the passing turns to the eval suite via `/agent-evals`. A manual check in the running app is extra evidence, not a substitute: it does not record which agent and tools fired.
 
 **Done when:** the right agent and tools fire for each example, the out-of-scope message is declined, and the eval cases exist.
 
