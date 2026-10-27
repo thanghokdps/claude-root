@@ -36,7 +36,7 @@ Create `docs/tickets/<id>/` on a branch `<type>/<id>-<slug>` (never on `main`/`d
 
 1. `intent.md` — the ticket quoted verbatim, the link, the user and the outcome in one sentence each. No new words for what the ticket said.
 2. `spec.md` — acceptance criteria as Given/When/Then, the contract that changes (endpoint, schema, event, UI state), out of scope, and the test matrix row per criterion. A criterion the ticket does not state is an open question, not an invention.
-3. `plan.md` — the slices (`/feature` Stage 3 order), each with its files and its green check; waves where tasks are independent (`${CLAUDE_PLUGIN_ROOT}/references/wave-parallelism.md`). In an AI-assistant repo (detection in Step 3), write it by running `/agent-feature` Steps 1–4 (agent, if installed): the ADR fit check, the inventory and the slice table with its Runs-in and layer-skill columns go into `plan.md`, so Step 3 starts at its Step 5 instead of deciding the slices twice.
+3. `plan.md` — opens with two lines the commit and PR hooks read: `Risk: high` or `Risk: normal` (high = auth, data writes, migrations, external providers), and `Skills: /<skill>, …` naming the layer skill of every slice (plus `/agent-verify-turn` in an AI-assistant repo). Then the slices (`/feature` Stage 3 order), each with its files and its green check; waves where tasks are independent (`${CLAUDE_PLUGIN_ROOT}/references/wave-parallelism.md`). In an AI-assistant repo (detection in Step 3), write it by running `/agent-feature` Steps 1–4 (agent, if installed): the ADR fit check, the inventory and the slice table with its Runs-in and layer-skill columns go into `plan.md`, so Step 3 starts at its Step 5 instead of deciding the slices twice.
 
 A high-risk ticket waits for the user's approval of the three files before Step 3.
 
@@ -47,6 +47,8 @@ Open questions → ask them now, one per turn as options, before any code. An ex
 ## Step 3 — Build
 
 Run `/feature` with `plan.md` as its plan: it skips its own research and plan stages and builds the slices in order, one green before the next. In an AI-assistant repo (a `docs/adr/*agent-architecture*` file exists, or the code imports `@copilotkit/*`, `@mastra/core` or `@langchain/langgraph`), run `/agent-feature` (agent, if installed) from its Step 5 with `plan.md` as its brief instead: each slice goes through the layer skill its row names. Every deviation from the plan is written back into `plan.md` § Deviations as it happens.
+
+The plugin's hooks enforce this. `ticket-ledger.sh` records every skill and subagent that runs on the branch. `ticket-gate.sh` blocks a commit that carries code until every skill on the `Skills:` line has run, `/agent-verify-turn` (agent, if installed) has run when any `/agent-*` skill is listed, and at least one subagent with `model: "sonnet"` or `"haiku"` wrote code. It blocks the PR until `/verify-done` and `/review-checklist` have run, plus `/security-review` and `/code-review` on `Risk: high`. A check that truly does not apply is waived with a line `skip /<skill>: <reason>` (or `skip subagents: <reason>`) under § Deviations; the reason is then on record in the PR.
 
 **Done when:** every `spec.md` row is green with its evidence (test path or command).
 
