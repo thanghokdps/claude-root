@@ -9,4 +9,4 @@
 - Say it once per file; don't restate the line below or the identifier.
 - Keep the facts (numbers, error codes, ticket refs, why the obvious approach was rejected); cut the narrative.
 - When shortening a comment, re-check the claim — negations and comparisons invert easily.
-- Change files with the Edit and Write tools, never with shell heredocs, `sed -i` or a script, so the edit hooks (lint, format) run on every change. Shell writes are for generated files and scratch output.
+- Change files with the Edit and Write tools, never with shell heredocs, `sed -i` or a script, so the edit hooks (lint, format) run on every change. Shell writes are for generated files and scratch output. The `edit-guard` hook (core) blocks `sed -i`, `perl -i`, redirects, `tee` and inline scripts that write a tracked repo path; write scratch output outside the repo or to a gitignored path, and keep a generator in a script file.

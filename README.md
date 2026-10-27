@@ -617,8 +617,40 @@ Skips test files (`*.test.*`, `*.spec.*`) and docs for credential scanning.
 | Force, delete or mirror push to `main/master` or an environment branch | BLOCK |
 | A push whose repository or target it cannot resolve (`cd -`, `~`, a variable, `--git-dir`, a non-repo path), a mirror remote, or a wildcard `remote.*.push` that includes an environment branch | BLOCK (fails closed) |
 | A push in a command with `GIT_DIR` / `GIT_WORK_TREE` / `GIT_CONFIG*`, `export`, a `cd` inside `( )`, `{ }` or a loop, `-c remote.*.push` in any letter case, or `--config-env` (quoted text ignored) | BLOCK (fails closed) |
-| Direct push to `main` or `master` | WARN + 3-second delay |
-| Uncommitted local changes | WARN (changes will not be pushed) |
+| Commit on `main`, `master` or an environment branch (except the first commit of an empty repo) | BLOCK — create a branch first |
+| Direct push to `main` or `master` | WARN |
+| Uncommitted local changes, on a push | WARN (changes will not be pushed) |
+
+---
+
+### `edit-guard.sh` (core, always on)
+
+**Trigger:** `PreToolUse(Bash)`, inside a git worktree.
+
+Repo files change through Edit/Write, so the per-edit lint and format hooks see every change.
+
+| Check | Action |
+|-------|--------|
+| `sed -i`, `perl -i` on a repo file | BLOCK |
+| `>`, `>>`, `tee` or a heredoc writing a tracked (not gitignored) repo path | BLOCK |
+| An inline `python`/`node`/`ruby` script (heredoc, `-c`, `-e`) that writes a repo file | BLOCK |
+| Targets outside the repo, gitignored paths, `.git/`, `/dev/*`; a script kept in a file | allowed |
+
+---
+
+### `ticket-ledger.sh` + `ticket-gate.sh` (dev, always on)
+
+**Trigger:** the ledger on `PostToolUse(Skill|Agent|Task)` and `UserPromptExpansion`; the gate on `PreToolUse(Bash)` for `git commit` / `gh pr create` and on `mcp__github__create_pull_request`.
+
+Applies on a branch `<type>/<id>-<slug>` with `docs/tickets/<id>/plan.md`. The ledger (in `.git/`, never committed) records the skills and subagents that ran on the branch.
+
+| Check | Action |
+|-------|--------|
+| `plan.md` has no `Risk:` or `Skills:` line | BLOCK commit with code, and PR |
+| A skill on the `Skills:` line, or `/agent-verify-turn` when an `/agent-*` skill is listed, never ran | BLOCK commit with code, and PR |
+| No subagent ran with `model: sonnet` or `haiku` | BLOCK commit with code, and PR |
+| `/verify-done` or `/review-checklist` never ran; on `Risk: high`, `/security-review` or `/code-review` never ran | BLOCK PR |
+| `skip /<skill>: <reason>` or `skip subagents: <reason>` in `plan.md` | waives that check, with the reason on record |
 
 ---
 
