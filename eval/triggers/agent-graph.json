@@ -16,6 +16,14 @@
     {
       "prompt": "Hỏi về hóa đơn mà agent support lại trả lời",
       "top_k": 1
+    },
+    {
+      "prompt": "define a workflow for the agent: validate the refund, wait for approval, then write it",
+      "top_k": 3
+    },
+    {
+      "prompt": "tạo workflow cho agent Mastra với createWorkflow và createStep",
+      "top_k": 3
     }
   ],
   "negative": [

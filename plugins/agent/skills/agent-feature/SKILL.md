@@ -12,7 +12,7 @@ when_to_use: add a feature to the chatbot, "thêm tính năng cho chatbot", "là
 
 A feature built without reading the architecture creates a second way of doing what the repo already does. This skill decides *where* each piece goes and *what it reuses*; the layer skills do the building. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md`, `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`.
 
-Everything decided here goes in `docs/features/<slug>.md`.
+Everything decided here goes in `docs/features/<slug>.md`. Started from `/ticket <id>`: its `docs/tickets/<id>/plan.md` is the brief, and the decisions go there instead.
 
 ---
 
@@ -52,14 +52,15 @@ Fill the inventory from `${CLAUDE_SKILL_DIR}/references/reuse-inventory.md`: too
 
 Split the feature into slices per layer and give each one decision:
 
-| Slice | Layer | Decision | Existing piece | Why not reuse (for new) | Built by |
-|-------|-------|----------|----------------|-------------------------|----------|
-| look up order | tool | **reuse** | `tools/orders/get-order.ts` | — | — |
-| cancel order | tool + confirm | **new** | — | no write tool exists for orders | `/agent-tool` → `/agent-hitl` |
-| cancel card | frontend | **extend** | `OrderCard` | — | `/agent-frontend` |
-| `cancelled_at` column | db | **new** | — | orders have no cancel state | `/db-change` |
-| order history page | screen | **new** | — | no page lists past orders | `/ui-feature` |
+| Slice | Layer | Runs in | Decision | Existing piece | Why not reuse (for new) | Built by |
+|-------|-------|---------|----------|----------------|-------------------------|----------|
+| look up order | tool | agent | **reuse** | `tools/orders/get-order.ts` | — | — |
+| cancel order | tool + confirm | agent (backend interrupt) | **new** | — | no write tool exists for orders | `/agent-tool` → `/agent-hitl` |
+| cancel card | frontend | browser (`useInterrupt` card) | **extend** | `OrderCard` | — | `/agent-frontend` |
+| `cancelled_at` column | db | server | **new** | — | orders have no cancel state | `/db-change` |
+| order history page | screen | browser | **new** | — | no page lists past orders | `/ui-feature` |
 
+- **Runs in** follows `agent-identity-and-tools.md` § Where a tool lives: server data, identity, secrets or audit → agent tool; browser-only effects (navigate, open a panel, fill a form) → frontend tool; fetch-then-show → two tools. A write is always confirmed by the backend interrupt (`/agent-hitl`), never by `useHumanInTheLoop`.
 - **reuse** when an existing piece already does it; **extend** when a parameter, a field or a variant covers it; **new** only with a reason the two above cannot meet.
 - A new piece that resembles an existing one (same upstream, same entity, same card shape) is an *extend* unless the reason says otherwise.
 - Layer owners, agent side: tool `/agent-tool` · agent scope, routing, prompt `/agent-graph` · write with confirm `/agent-hitl` · documents, embeddings, semantic memory `/agent-rag` · chat client wiring `/agent-frontend` · chat look from a design `/agent-design-ui` · tests and evals `/agent-evals`.
