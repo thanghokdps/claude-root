@@ -207,7 +207,7 @@ def check_release(commit, what, version=None, existing_tag_ok=False):
 
 
 reasons, asks = [], []
-TAG_CONFIG = re.compile(r"followtags|remote\.[^.\s]+\.(?:push|mirror)\b", re.I)
+TAG_CONFIG = re.compile(r"followtags|remote\..+\.(?:push|mirror)\b", re.I)  # remote names may hold dots
 
 
 def deny(msg):
@@ -244,6 +244,12 @@ def push_command(args):
     broad = [a for a in ("--tags", "--mirror", "--follow-tags") if a in args]
     if broad:
         deny(f"git push {broad[0]} can publish release tags that were never approved: push the one tag: git push origin v<version>")
+        return
+    # Push refspecs, mirror or followTags already in the repo's config act on a plain `git push` too.
+    r = run(["git", "config", "--get-regexp", r"^(remote\..*\.(push|mirror)|push\.followtags)$"])
+    if r.returncode == 0 and r.stdout.strip() and not all(l.split()[-1].lower() == "false" for l in r.stdout.splitlines()):
+        deny("this repo's git config sets remote.*.push, remote.*.mirror or push.followTags, so a push may publish "
+             "release tags: a person pushes from here, or removes that setting first.")
         return
     for ref in pos[1:]:
         if re.search(r"[*?\[]", ref):  # refs/*:refs/* or *:* reach tags too, so any wildcard is too broad
@@ -283,6 +289,8 @@ for seg in segments(cmd):
         i = 1
         while i < len(toks) and toks[i] in ("-C", "-c"):
             i += 2
+        if toks[i:i + 1] == ["remote"] and any(t.startswith("--mirror") for t in toks[i + 1:]):
+            deny("git remote --mirror makes every push mirror all refs, release tags included; a person sets that by hand.")
         if toks[i:i + 1] == ["config"] and any(TAG_CONFIG.search(t) for t in toks[i + 1:]):
             deny("git config push.followTags / remote.*.push / remote.*.mirror would make later pushes publish release tags; a person sets that by hand.")
         if toks[i:i + 1] == ["push"]:
