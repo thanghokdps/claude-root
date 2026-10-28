@@ -75,18 +75,21 @@ if re.search(GIT + r"(?:stash\b|clean\b|reset\b[^;&|\n]*--(?:hard|merge|keep)|(?
 # A folder pathspec (git checkout -- src/, rm -r src) reaches the locked test without naming it.
 if re.search(AT + r"(?:git(?:\s+-[Cc]\s+\S+)*\s+(?:checkout|restore|rm)|rm)\b", cmd):
     # (resolved path, is a glob prefix): a folder reaches what is under it, a glob prefix reaches any name it starts.
-    reached, words, base = [], re.split(r"[\s;&|()]+", cmd), cwd
-    for i, w in enumerate(words):
-        if i and words[i - 1] == "-C":  # git -C <dir>: later pathspecs are relative to <dir>
-            base = os.path.realpath(os.path.join(cwd, os.path.expanduser(w.strip("'\""))))
-            continue
-        w = re.sub(r"^:(?:\([^)]*\)|[!^/]*)", "", w.strip("'\""))  # pathspec magic (:/src, :(glob)src)
-        if w.startswith("-") or not w:
-            continue
-        glob_at = re.search(r"[*?\[]", w)
-        literal = w[:glob_at.start()] if glob_at else w
-        full = os.path.join(base, os.path.expanduser(literal))
-        reached.append((os.path.realpath(full) + (os.sep if literal.endswith("/") or not literal else ""), bool(glob_at)))
+    reached = []
+    for seg in re.split(r"&&|\|\||[;|\n]", cmd):
+        words, bases = re.split(r"[\s()]+", seg.strip()), {cwd}  # a git -C <dir> applies to its own command only
+        for i, w in enumerate(words):
+            if i and words[i - 1] == "-C":  # pathspecs after it may be relative to <dir>: check both bases
+                bases.add(os.path.realpath(os.path.join(cwd, os.path.expanduser(w.strip("'\"")))))
+                continue
+            w = re.sub(r"^:(?:\([^)]*\)|[!^/]*)", "", w.strip("'\""))  # pathspec magic (:/src, :(glob)src)
+            if w.startswith("-") or not w:
+                continue
+            glob_at = re.search(r"[*?\[]", w)
+            literal = w[:glob_at.start()] if glob_at else w
+            for base in bases:
+                full = os.path.realpath(os.path.join(base, os.path.expanduser(literal)))
+                reached.append((full + (os.sep if literal.endswith("/") or not literal else ""), bool(glob_at)))
     for full, rel in paths.items():
         if any(full.startswith(r) if g else (r != full and full.startswith(r.rstrip(os.sep) + os.sep))
                for r, g in reached):

@@ -59,6 +59,7 @@ def test_bash_that_undoes_the_lock_is_blocked():
                 "git reset --hard", "git reset --keep HEAD~1", "git checkout -- src/", "git restore src",
                 "rm -rf ./src", "git checkout -- ':/src'", "git restore 'src/*.ts'", f"git checkout -- {os.path.join(r, 'src')}", "git checkout -- 'src/bu*'", "git checkout -- '*'",
                 "git -C src checkout -- .", "git -C src checkout -- bug.test.ts",
+                "git -C /tmp status; git checkout -- src/", "git -C /tmp checkout -- src/",
                 "git checkout .", "git restore -- .", "git clean -fd",
                 "cp /tmp/x src/bug.test.ts", "echo x > src/bug.test.ts", "sed -i '' 's/a/b/' src/bug.test.ts"]:
         assert hook(r, "Bash", command=cmd) == 2, cmd

@@ -28,8 +28,9 @@ cmd = (ev.get("tool_input") or {}).get("command") or ""
 cwd = ev.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
 
 
-def run(args, timeout=20):
-    return subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=timeout)
+def run(args, timeout=20, env=None):
+    return subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=timeout,
+                          env={**os.environ, **env} if env else None)
 
 
 try:
@@ -239,14 +240,16 @@ def eas_command(args, env):
             asks.append(f"eas {sub} changes what production users get; confirm it is the intended rollback or rollout.")
 
 
-def push_command(args):
+def push_command(args, gitopts=(), env=None):
     pos = [a for a in args if not a.startswith("-")]
     broad = [a for a in ("--tags", "--mirror", "--follow-tags") if a in args]
     if broad:
         deny(f"git push {broad[0]} can publish release tags that were never approved: push the one tag: git push origin v<version>")
         return
-    # Push refspecs, mirror or followTags already in the repo's config act on a plain `git push` too.
-    r = run(["git", "config", "--get-regexp", r"^(remote\..*\.(push|mirror)|push\.followtags)$"])
+    # Push refspecs, mirror or followTags already in the config act on a plain `git push` too: read them with
+    # the push's own -C/-c and GIT_* environment, so the check sees the config the push will use.
+    gitenv = {k: v for k, v in (env or {}).items() if k.startswith("GIT_")}
+    r = run(["git", *gitopts, "config", "--get-regexp", r"^(remote\..*\.(push|mirror)|push\.followtags)$"], env=gitenv)
     if r.returncode == 0 and r.stdout.strip() and not all(l.split()[-1].lower() == "false" for l in r.stdout.splitlines()):
         deny("this repo's git config sets remote.*.push, remote.*.mirror or push.followTags, so a push may publish "
              "release tags: a person pushes from here, or removes that setting first.")
@@ -296,7 +299,11 @@ for seg in segments(cmd):
         if toks[i:i + 1] == ["push"]:
             if any(TAG_CONFIG.search(t) for t in toks[1:i] + [v for k, v in env.items() if k.startswith("GIT_CONFIG")]):
                 deny("git -c push.followTags pushes release tags along with the branch: push the one tag: git push origin v<version>")
-            push_command(toks[i + 1:])
+            # Config pulled in from elsewhere can't be judged from the command line.
+            elif (any(re.match(r"include", t, re.I) for t in toks[2:i:2])
+                  or set(env) & {"GIT_DIR", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM", "GIT_CONFIG_PARAMETERS"}):
+                deny("git push with include.path/includeIf, GIT_DIR or GIT_CONFIG_* overrides can't be checked: push without them.")
+            push_command(toks[i + 1:], toks[1:i], env)
     else:
         args = eas_args(toks)
         if args is not None:
