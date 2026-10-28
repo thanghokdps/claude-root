@@ -34,7 +34,7 @@
 |-------|---------|---------|
 | feature | `/feature <description>` | Risk intake → plan → build → review |
 | fix-bug | `/fix-bug <symptom>` | Root cause → fix → verify → commit |
-| review-checklist | `/review-checklist [PR]` | correctness → tests → readability → security → scope; ≥3 actionable comments |
+| review-checklist | `/review-checklist [PR]` | correctness → tests → scale → readability → security → scope; numbered findings, each with a failing case |
 | checkpoint | `/checkpoint` | Progress vs plan + quality gates |
 | sync-memory | `/sync-memory` | Pull latest + rebuild memory from your commits |
 
