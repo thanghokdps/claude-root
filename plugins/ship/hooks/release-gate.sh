@@ -283,7 +283,10 @@ def push_command(args, gitopts=(), env=None):
 
 SHELLS = {"eval", "source", ".", "sh", "bash", "zsh", "dash", "ksh", "fish"}
 INFO = {"which", "type", "whereis", "man", "echo", "printf", "brew", "apt", "apt-get", "grep", "rg"}  # name git, don't run it
-VALUE_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--super-prefix", "--config-env"}
+VALUE_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--super-prefix", "--config-env", "--attr-source"}
+FLAG_OPTS = {"--no-pager", "-P", "-p", "--paginate", "--bare", "--no-replace-objects", "--literal-pathspecs",
+             "--glob-pathspecs", "--noglob-pathspecs", "--icase-pathspecs", "--no-optional-locks", "--no-advice",
+             "--no-lazy-fetch"}
 BUILTINS = set("add am apply archive bisect blame branch cat-file check-ignore checkout cherry-pick clean clone commit "
                "config describe diff fetch for-each-ref format-patch gc grep hash-object help init log ls-files "
                "ls-remote ls-tree merge merge-base mv notes pull push rebase reflog remote reset restore rev-list "
@@ -312,13 +315,18 @@ for seg in segs:
         toks[0] = "git"
         if toks[git_subcommand(toks):][:1] == ["push"]:
             pushes = True
-    elif (toks[0] not in INFO and any(is_git(t) for t in toks[1:-1])) or \
+    elif (toks[0] not in INFO and any(is_git(t) for t in toks[1:])) or \
             any(t.startswith(("$(", "`", "(")) and is_git(t) for t in toks[1:]):
         # git run through something (sudo -u x git, xargs git, nice -n 5 git, $(git …)): its options and the
         # wrapper's own can't be told apart, so a gated repo runs git directly.
         pushes = wrapped = True
     if toks[0] in SHELLS and any(re.search(r"\bgit\b", t) for t in toks[1:]):
         pushes = wrapped = True  # git inside a string or script the hook can't parse
+    # A shell reading its commands from stdin (… | sh, bash < file, bash -s) or a command named by a variable
+    # runs text the hook never sees.
+    if (toks[0] in SHELLS - {"eval", "source", "."} and (len(toks) == 1 or "-s" in toks[1:] or "<" in seg)) \
+            or toks[0].startswith("$"):
+        pushes = wrapped = True
 # Anything run before a push in the same command (export, set -a, cd, source, eval…) can change the env or repo
 # it runs in, which the checks below (in the hook's own env and cwd) can't follow: a push runs on its own.
 if wrapped:
@@ -341,11 +349,20 @@ for seg in segs:
     elif toks[0] == "git":
         i = git_subcommand(toks)
         sub = toks[i] if i < len(toks) else ""
+        opts = toks[1:i]
+        unknown = [o for j, o in enumerate(opts) if o.startswith("-") and o not in VALUE_OPTS | FLAG_OPTS
+                   and "=" not in o and not (j and opts[j - 1] in VALUE_OPTS)]
+        overridden = any(o.startswith(("--config-env", "--git-dir", "--work-tree")) or o == "-c" for o in opts) or \
+            any(k.startswith("GIT_") or k in ("HOME", "XDG_CONFIG_HOME") for k in env)
         # An alias can expand to a push the checks below never see.
-        if any(re.match(r"alias\.", t, re.I) for t in toks[1:i]):
+        if unknown:
+            deny(f"git {unknown[0]} is a global option the release checks don't know; run git without it.")
+        elif any(re.search(r"alias\.", t, re.I) for t in opts):
             deny("git -c alias.* can turn any subcommand into a push; run the git command it stands for.")
-        elif sub and sub not in BUILTINS and run(["git", "config", "--get", f"alias.{sub}"]).returncode == 0:
-            deny(f"git {sub} is an alias; run the git command it stands for, so the release checks can see it.")
+        elif sub and sub not in BUILTINS and (overridden or run(
+                ["git", *[t for j, o in enumerate(opts) if o == "-C" and j + 1 < len(opts) for t in (o, opts[j + 1])],
+                 "config", "--get", f"alias.{sub}"]).returncode == 0):
+            deny(f"git {sub} may be an alias; run the git command it stands for, so the release checks can see it.")
         if sub == "config" and any(re.match(r"alias\.", t, re.I) for t in toks[i + 1:]) and \
                 any("push" in t or t.startswith("!") for t in toks[i + 1:]):
             deny("a git alias that pushes or runs a shell command would slip past the release checks; a person sets that by hand.")

@@ -234,7 +234,15 @@ def test_tag_push_needs_the_release_for_that_tag():
     git(path, "config", "alias.p", "push")
     assert gate(path, "git p origin v1.4.0", b)[0] == "deny"
     git(path, "config", "--unset", "alias.p")
-    for cmd in ["git status", "git log --oneline -3", "which git", "brew install git", "git lfs pull"]:
+    other = repo()
+    git(other, "config", "alias.p", "push")
+    for cmd in [f"git -C {other} p origin v1.4.0", "git -c x.y=1 p origin", "GIT_CONFIG_GLOBAL=/tmp/g git p",
+                "git --attr-source HEAD push origin v9.9.9", "git --weird-opt push origin feat/x",
+                "find . -exec git push \\;", "xargs -I{} git", "cat cmds.txt | sh", "bash < cmds.txt",
+                "bash -s", "$GIT push origin feat/x"]:
+        assert gate(path, cmd, b)[0] == "deny", cmd
+    for cmd in ["git status", "git log --oneline -3", "which git", "brew install git", "git lfs pull",
+                "bash scripts/build.sh"]:
         assert gate(path, cmd, b)[0] == "allow", cmd
     other = repo()
     git(other, "config", "remote.origin.push", "refs/tags/*:refs/tags/*")
