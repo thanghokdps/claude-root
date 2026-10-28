@@ -44,12 +44,24 @@ Ticket: <link> · Opened by: <reporter> · Read: <YYYY-MM-DD>
 |----|------|-------------|-----|--------|----------|
 | AC1 | yes | yes | no | planned | — |
 
+## Cross-check
+| AC | Design | API | App today | Gap |
+|----|--------|-----|-----------|-----|
+| AC1 | <frame / screenshot, states> | <endpoint, fields, auth, errors> | <route / component / service> | <none, or C#> |
+
+## Concerns
+| C# | Between | Severity | Owner | Question | Decision |
+|----|---------|----------|-------|----------|----------|
+| C1 | design ↔ API | blocking | backend | <question to paste as-is>. Recommended: <answer> | |
+
 ## Decisions
 - <YYYY-MM-DD> <question> → <answer> (<who>)
 
 ## Changes
 - none
 ```
+
+Severity: `blocking` (cannot build without an answer), `decide` (buildable on the recommended answer, kept as an assumption), `note` (FYI). Decision stays empty until answered, then `<YYYY-MM-DD> <answer> (<who>)`, and is copied to § Decisions. `ticket-gate.sh` blocks a code commit while a `blocking` row has no Decision.
 
 Status: `planned` · `in_progress` · `implemented` (evidence required: test path or command) · `changed` · `retired`.
 

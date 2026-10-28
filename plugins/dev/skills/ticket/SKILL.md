@@ -38,11 +38,18 @@ Create `docs/tickets/<id>/` on a branch `<type>/<id>-<slug>` (never on `main`/`d
 2. `spec.md` — acceptance criteria as Given/When/Then, the contract that changes (endpoint, schema, event, UI state), out of scope, and the test matrix row per criterion. A criterion the ticket does not state is an open question, not an invention.
 3. `plan.md` — opens with two lines the commit and PR hooks read: `Risk: high` or `Risk: normal` (high = auth, data writes, migrations, external providers), and `Skills: /<skill>, …` naming the layer skill of every slice (plus `/agent-verify-turn` in an AI-assistant repo). Then the slices (`/feature` Stage 3 order), each with its files and its green check; waves where tasks are independent (`${CLAUDE_PLUGIN_ROOT}/references/wave-parallelism.md`). In an AI-assistant repo (detection in Step 3), write it by running `/agent-feature` Steps 1–4 (agent, if installed): the ADR fit check, the inventory and the slice table with its Runs-in and layer-skill columns go into `plan.md`, so Step 3 starts at its Step 5 instead of deciding the slices twice.
 
+Before `spec.md` is final, cross-check every criterion and fill its `## Cross-check` row:
+- Design: which frame or screenshot shows it, and which states (empty, loading, error) are drawn.
+- API: endpoint, params, the fields the screen needs against the response, auth, error format. Read the API spec file; call a dev server with GET only, if at all.
+- App today: the existing route, component or service it touches.
+
+Each mismatch (ticket ↔ design, design ↔ API, ticket ↔ app, design ↔ app) becomes a concern `C#` in `## Concerns` with a severity: `blocking` (cannot build without an answer), `decide` (buildable on the recommended answer, recorded as an assumption), `note` (FYI); and an owner: PO, design, backend or dev. Report gaps, never fill them silently: a behavior nobody specified is a question, not a new criterion. Facts the repo answers go through `/resolve-question`. A choice for PO, design or backend is written as a question to paste as-is, ending `Recommended: …`, and grouped per owner in `spec.md`; offer each group to the user as a message to copy.
+
 A high-risk ticket waits for the user's approval of the three files before Step 3. Worked in auto mode ("implement all, don't ask"), every choice taken for the user is challenged and recorded under `## Auto decisions` in `plan.md` (`${CLAUDE_PLUGIN_ROOT}/references/auto-decisions.md`); the `auto-decisions` hook blocks the stop until it is.
 
 Open questions → run `/resolve-question` on them now, before any code: it answers the facts from the repo with a citation and asks the user only the choices, one per turn as options. An existing `docs/tickets/<id>/` is updated, not overwritten: keep earlier decisions and add a dated entry under § Changes.
 
-**Done when:** the three files exist, every criterion has a test row, and no open question is unanswered or unrecorded.
+**Done when:** the three files exist, every criterion has a test row and a cross-check row, no open question is unanswered or unrecorded, and no `blocking` concern lacks a Decision (or the user waived it: `skip concerns: <reason>` under plan.md § Deviations; `ticket-gate.sh` blocks code commits otherwise).
 
 ## Step 3 — Build
 

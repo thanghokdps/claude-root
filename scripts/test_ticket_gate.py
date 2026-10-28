@@ -127,6 +127,44 @@ def test_ledger_entries_from_another_branch_do_not_count():
     assert gate(path)[0] == 2
 
 
+SPEC = ("# 7 — Spec\n\n## Concerns\n| C# | Between | Severity | Owner | Question | Decision |\n"
+        "|----|---------|----------|-------|----------|----------|\n{rows}\n\n## Decisions\n- none\n")
+
+
+def ready_repo(rows, **kw):
+    path = repo(**kw)
+    full_build(path)
+    with open(os.path.join(path, "docs", "tickets", "7", "spec.md"), "w") as f:
+        f.write(SPEC.format(rows=rows))
+    return path
+
+
+def test_open_blocking_concern_blocks_a_code_commit():
+    path = ready_repo("| C1 | design ↔ API | **blocking** | backend | Which field? Recommended: id | |\n"
+                      "| C2 | ticket ↔ app | `Blocking` | PO | Scope? Recommended: no | — |")
+    code, err = gate(path)
+    assert code == 2 and "C1 is blocking and has no decision" in err and "C2 is blocking" in err, err
+
+
+def test_answered_or_waived_blocking_concern_passes():
+    row = "| C1 | design ↔ API | blocking | backend | Which field? Recommended: id | 2026-01-02 use id (PO) |"
+    assert gate(ready_repo(row))[0] == 0
+    open_row = row.replace("2026-01-02 use id (PO)", "")
+    assert gate(ready_repo(open_row, waivers="- skip concerns: PO away, assumed id\n"))[0] == 0
+
+
+def test_decide_and_note_concerns_do_not_block():
+    path = ready_repo("| C1 | design ↔ app | decide | dev | Reuse Card? Recommended: yes | |\n"
+                      "| C2 | ticket ↔ design | note | design | Icon differs. Recommended: keep | |")
+    assert gate(path)[0] == 0
+
+
+def test_docs_only_commit_ignores_an_open_blocking_concern():
+    path = ready_repo("| C1 | design ↔ API | blocking | backend | Which field? Recommended: id | |")
+    subprocess.run(["git", "-C", path, "reset", "-q", "src/app.ts"], check=True)
+    assert gate(path)[0] == 0
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:
