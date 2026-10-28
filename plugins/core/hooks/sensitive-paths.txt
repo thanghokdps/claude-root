@@ -34,3 +34,5 @@ application-prod*.properties
 .claude/settings.json
 .claude/settings.local.json
 .claude/hooks/**
+.claude/secret-paths.txt
+.claude/sensitive-paths.txt

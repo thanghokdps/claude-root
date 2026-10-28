@@ -44,7 +44,8 @@ def test_bash_readers_and_copiers_are_denied():
     cwd = repo()
     for cmd in ["cat .env", "grep KEY .env", "source .env", "set -a; . .env", "base64 key.p8", "cp .env /tmp/x",
                 "cat \"config/.env.local\"", "export $(cat .env)", "FOO=1 head -n1 .env", "cat < .env",
-                "ls && sed -n 1,3p .env", "cat ~/.ssh/id_ecdsa", "grep -e KEY .env", "rg KEY .env"]:
+                "ls && sed -n 1,3p .env", "cat ~/.ssh/id_ecdsa", "grep -e KEY .env", "rg KEY .env",
+                "cat {.env,x}", "cat src/{a.ts,.env}"]:
         assert bash(cmd, cwd) == "deny", cmd
 
 
@@ -87,6 +88,65 @@ def test_writing_a_secret_still_asks_in_sensitive_path():
     assert decide(SENSITIVE, "Write", {"file_path": ".env"}, cwd) == "ask"
     assert decide(SENSITIVE, "Write", {"file_path": "ios/AuthKey_X.p8"}, cwd) == "ask"
     assert decide(SENSITIVE, "Write", {"file_path": ".env.example"}, cwd) == "allow"
+
+
+def touch(cwd, rel, text=""):
+    full = os.path.join(cwd, rel)
+    os.makedirs(os.path.dirname(full), exist_ok=True)
+    with open(full, "w") as f:
+        f.write(text)
+
+
+def test_repo_list_cannot_weaken_or_reach_outside_the_repo():
+    cwd = repo()
+    touch(cwd, ".claude/secret-paths.txt", "!.env\n!*.p8\n*.pass\n")
+    assert decide(GUARD, "Read", {"file_path": ".env"}, cwd) == "deny"
+    assert decide(GUARD, "Read", {"file_path": "ios/AuthKey_X.p8"}, cwd) == "deny"
+    assert decide(GUARD, "Read", {"file_path": ".env.example"}, cwd) == "allow"
+    assert decide(GUARD, "Read", {"file_path": "a/b.pass"}, cwd) == "deny"
+    outside = repo()
+    assert decide(GUARD, "Read", {"file_path": os.path.join(outside, "b.pass")}, cwd) == "allow"
+    assert decide(SENSITIVE, "Write", {"file_path": ".claude/secret-paths.txt"}, cwd) == "ask"
+    assert decide(SENSITIVE, "Write", {"file_path": ".claude/sensitive-paths.txt"}, cwd) == "ask"
+
+
+def test_matching_is_case_blind():
+    cwd = repo()
+    for p in [".ENV", "Key.P8", "config/.Env.Local"]:
+        assert decide(GUARD, "Read", {"file_path": p}, cwd) == "deny", p
+    assert decide(GUARD, "Read", {"file_path": ".Env.Example"}, cwd) == "allow"
+
+
+def test_bash_globs_shell_strings_and_more_readers():
+    cwd = repo()
+    touch(cwd, ".env", "K=1")
+    touch(cwd, "src/a.ts")
+    for cmd in ["cat .en*", "cat .e?v", "cat .[e]nv", "cat *.p8", "cat ./.en*", "bash -c \"cat .env\"",
+                "sh -c 'cat .env'", "zsh -lc 'cat .env'", "eval 'cat .env'", "eval cat .env",
+                "bash -c \"bash -c 'cat .env'\"", "vim .env", "nano .env", "tar cf /tmp/x.tar .env",
+                "openssl enc -in .env", "cat \"$HOME/.ssh/id_rsa\"", "xargs cat .env", "cat < .en*"]:
+        assert bash(cmd, cwd) == "deny", cmd
+    for cmd in ["ls .env", "rm .env", "echo .env", "echo .env | xargs cat", "cat src/*.ts", "cat *",
+                "bash -c 'echo hi'", "eval 'ls .env'", "git commit -m \"x .env\"", "xargs cat < src/a.ts"]:
+        assert bash(cmd, cwd) == "allow", cmd
+
+
+def test_grep_over_a_directory_checks_files_it_would_search():
+    cwd = repo()
+    touch(cwd, "ios/AuthKey_X.p8")
+    touch(cwd, "src/a.ts")
+    assert decide(GUARD, "Grep", {"pattern": "x"}, cwd) == "deny"
+    assert decide(GUARD, "Grep", {"pattern": "x", "path": "ios"}, cwd) == "deny"
+    assert decide(GUARD, "Grep", {"pattern": "x", "glob": "*.ts"}, cwd) == "allow"
+    assert decide(GUARD, "Grep", {"pattern": "x", "path": "src"}, cwd) == "allow"
+    ignored = repo()
+    touch(ignored, ".gitignore", ".env\n")
+    touch(ignored, ".env", "K=1")
+    touch(ignored, ".env.example", "K=")
+    assert decide(GUARD, "Grep", {"pattern": "x"}, ignored) == "allow"
+    touch(ignored, ".claude/secret-paths.txt", "*.pass\n")
+    touch(ignored, "a/b.pass")
+    assert decide(GUARD, "Grep", {"pattern": "x"}, ignored) == "deny"
 
 
 if __name__ == "__main__":
