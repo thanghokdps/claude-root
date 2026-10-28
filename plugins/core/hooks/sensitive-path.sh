@@ -11,7 +11,9 @@ command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
 LIST="$(dirname "$0")/sensitive-paths.txt"
 
-HOOK_INPUT="$INPUT" LIST="$LIST" python3 - <<'PY'
+SECRETS="$(dirname "$0")/secret-paths.txt"
+
+HOOK_INPUT="$INPUT" LIST="$LIST" SECRETS="$SECRETS" python3 - <<'PY'
 import fnmatch, glob, json, os, re, subprocess, sys
 
 try:
@@ -60,7 +62,8 @@ def rel(path):
 
 def rules():
     out = []
-    for f in (os.environ.get("LIST", ""), os.path.join(top, ".claude", "sensitive-paths.txt")):
+    for f in (os.environ.get("SECRETS", ""), os.environ.get("LIST", ""),
+              os.path.join(top, ".claude", "secret-paths.txt"), os.path.join(top, ".claude", "sensitive-paths.txt")):
         try:
             for line in open(f, encoding="utf-8"):
                 line = line.strip()
