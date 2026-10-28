@@ -55,8 +55,17 @@ def test_bash_that_undoes_the_lock_is_blocked():
     r = locked_repo()
     for cmd in ["git checkout -- src/bug.test.ts", "git restore src/bug.test.ts", "rm src/bug.test.ts",
                 "mv src/bug.test.ts /tmp/x", "git stash", "rm .git/claude-fix-lock.json",
-                "echo '{}' > .git/claude-fix-lock.json"]:
+                "echo '{}' > .git/claude-fix-lock.json", f"bash {LOCKER} check; rm .git/claude-fix-lock.json",
+                "git reset --hard", "git checkout .", "git restore -- .", "git clean -fd",
+                "cp /tmp/x src/bug.test.ts", "echo x > src/bug.test.ts", "sed -i '' 's/a/b/' src/bug.test.ts"]:
         assert hook(r, "Bash", command=cmd) == 2, cmd
+
+
+def test_unlock_asks_the_user():
+    r = locked_repo()
+    payload = json.dumps({"tool_name": "Bash", "cwd": r, "tool_input": {"command": f"bash {LOCKER} unlock"}})
+    out = subprocess.run([HOOK], input=payload, capture_output=True, text=True)
+    assert out.returncode == 0 and json.loads(out.stdout)["hookSpecificOutput"]["permissionDecision"] == "ask"
 
 
 def test_other_bash_is_allowed():
