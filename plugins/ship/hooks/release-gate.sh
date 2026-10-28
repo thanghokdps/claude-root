@@ -281,13 +281,12 @@ def push_command(args, gitopts=(), env=None):
             deny(reason)
 
 
-# An earlier export/set -a/cd in the same command changes the env or repo the push runs in, which the checks
-# below (run here, in the hook's own env and cwd) can't follow.
-if re.search(r"\bgit\b.*\bpush\b", cmd, re.S) and re.search(
-        r"(?:^|[\s;&|(])(?:(?:export|declare\s+-\w*x\w*|typeset\s+-\w*x\w*)\s+)?(?:GIT_\w+|HOME|XDG_CONFIG_HOME)=|"
-        r"\bset\s+-\w*a|(?:^|[;&|(]\s*)(?:cd|pushd)\s", cmd):
-    deny("git push after export/set -a/cd in the same command runs with an env or repo these checks can't see: "
-         "run the push as its own command.")
+# Anything run before a push in the same command (export, set -a, cd, source, eval…) can change the env or repo
+# it runs in, which the checks below (in the hook's own env and cwd) can't follow: a push runs on its own.
+if re.search(r"\bgit(?:\s+-[cC]\s+\S+)*\s+push\b", cmd) and (
+        re.search(r"[;&|\n{}()`!]|\$\(", cmd) or re.match(r"\s*(?:eval|source|\.|builtin|command)\s", cmd)):
+    deny("git push must run as its own command here (no ;, &&, |, newline, subshell, $( ), eval or source around "
+         "it), so the release checks see the env and repo it really runs in.")
 
 for seg in segments(cmd):
     env, toks = tokens(seg)

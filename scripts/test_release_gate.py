@@ -212,10 +212,13 @@ def test_tag_push_needs_the_release_for_that_tag():
     assert gate(path, "HOME=/tmp/h git push origin feat/x", b)[0] == "deny"
     assert gate(path, "GIT_TRACE=1 git push origin feat/x", b)[0] == "deny"
     for cmd in ["export GIT_DIR=/tmp/o.git; git push origin feat/x", "set -a; HOME=/tmp/h; git push origin feat/x",
-                "declare -x XDG_CONFIG_HOME=/tmp/c && git push origin feat/x", "cd /tmp/other && git push origin v1.4.0"]:
+                "declare -x XDG_CONFIG_HOME=/tmp/c && git push origin feat/x", "cd /tmp/other && git push origin v1.4.0",
+                "export FOO=1\ngit push origin feat/x", "{ cd /tmp; git push origin feat/x; }", "(git push origin feat/x)",
+                "eval git push origin feat/x", "echo $(git push origin feat/x)", "source x.sh && git push origin feat/x"]:
         assert gate(path, cmd, b)[0] == "deny", cmd
-    assert gate(path, "export FOO=1; git push origin feat/x", b)[0] == "allow"
+    assert gate(path, "git push origin feat/x", b)[0] == "allow"
     assert gate(path, "cd /tmp && ls", b)[0] == "allow"
+    assert gate(path, "git add a.ts && git commit -m \"feat: push notifications (#12)\"", b)[0] == "allow"
     other = repo()
     git(other, "config", "remote.origin.push", "refs/tags/*:refs/tags/*")
     assert gate(path, f"git -C {other} push origin feat/x", b)[0] == "deny"  # config read where the push runs
