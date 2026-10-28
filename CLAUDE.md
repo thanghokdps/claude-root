@@ -26,7 +26,7 @@ A **source library** and the `harness` marketplace of role plugins (local direct
                 everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/ → progress
     plan        kickoff brainstorming grill domain-model writing-plans codebase-design → progress
     review      review-checklist review-diff blast-radius create-pr                   → progress
-      dev         coordinator feature ticket fix-bug tdd checkpoint design-ui           → core, plan, review
+      dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint design-ui → core, plan, review
                 api-endpoint db-change ui-feature api-client (BE · DB · FE · API integration)
                 + ticket-ledger, ticket-gate hooks (always on: a ticket's commit/PR waits for its plan's skills)
     ship        finish-branch ci-triage release-checklist write-migration incident sync-remote → core

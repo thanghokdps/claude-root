@@ -17,11 +17,13 @@ Also installs: `dev`.
 |-------|--------|
 | SessionStart (startup|resume|clear|compact) | `session-resume.sh` |
 | UserPromptSubmit | `scope-gate.sh` |
+| PreToolUse (every tool) | `step-limit.sh` — a subagent past `CLAUDE_STEP_LIMIT` (90) tool calls is stopped and must report |
 | PreToolUse (Bash) | `commit-quality-gate.sh` |
 | PreToolUse (Bash) | `risk-corroboration.sh` |
 | PostToolUse (Edit|Write) | `blast-radius-check.sh` |
 | PostToolUse (Edit|Write) | `format-on-edit.sh` |
 | PostToolUse (Bash) | `headroom-compress.sh` |
+| PostToolUse (Bash) | `run-log.sh` — logs each command to `.git/claude-run-log.jsonl` for the PR's Witness line |
 | Stop | `session-handoff.sh` |
 | Stop | `state-breadcrumb.sh` |
 | Stop | `notify-on-finish.sh` |

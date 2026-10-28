@@ -27,6 +27,8 @@ Read-only git only, no variables or `$(…)`: anything the CLI cannot permission
 
 Also read `specs/<slug>/SUMMARY.md` if it exists — use "What changed" and "Rationale" sections.
 
+Then run `bash ${CLAUDE_SKILL_DIR}/scripts/witness.sh`: the test, lint, build and eval commands this branch really ran, read from the run log that the run-log hook (guards, if installed) writes. Paste its output as is into **Witness**.
+
 ### Step 2 — Analyze changes
 
 Group changes by:
@@ -62,6 +64,13 @@ Examples:
 | path/to/file.py | modified | <brief note> |
 | path/to/new.py | added | |
 
+## Demonstration
+
+- **Before:** <what a user or caller saw before: the error, the output, the missing screen; a command and its output, or a screenshot>
+- **After:** <the same thing now, produced the same way>
+- **Delta:** <one line: what changed for the user>
+- **Witness:** <the witness script's output, unedited>
+
 ## Test coverage
 
 <How was this tested? What commands verify it?>
@@ -89,4 +98,6 @@ Display the template and say:
 - No line-by-line code explanations in the body
 - Title must be ≤ 72 characters
 - If SUMMARY.md exists in specs/, use its Rationale as the PR summary
+- **Demonstration is shown, not claimed** — Before and After are outputs or screenshots taken the same way, never "works now". A change with no visible behaviour (refactor, docs) says so in Delta and points at the unchanged test run.
+- Never type or edit the Witness line: when the script says "not recorded", keep that line and name the commands to run in Test coverage
 - Do NOT push or create the PR — output only
