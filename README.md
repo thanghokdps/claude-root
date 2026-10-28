@@ -12,16 +12,25 @@ A Claude Code kit centred on **building one AI assistant end to end** on Copilot
 /plugin install agent@harness          # pulls in its own dependencies (progress) automatically
 ```
 
-Then, in an empty folder:
+Then open Claude Code in an empty folder and **say what you want to build, in your own words**. No command to remember:
 
 ```text
-/agent-architect greenfield            # checks Node, package manager, model key, git → interview → ADR → scaffold → first real streamed turn
-/agent-feature <capability>            # every feature after that: ADR check → reuse inventory → tool → HITL → frontend → evals
+Tôi muốn làm một chatbot giúp khách tra cứu và đổi địa chỉ đơn hàng
 ```
 
-| I want to… | Run |
+Claude picks the right skill from that sentence (here `agent-architect`) and **asks before it builds**, one question per turn, each with a recommendation:
+
+1. **The problem:** who uses it and why, the 3–5 things users will ask (with one real example message each), the systems it reads or writes, and what it must refuse.
+2. **The choices that are costly to change:** host, clients, single app or monorepo, design. Everything else is defaulted and shown on one card for you to confirm.
+3. **Then it builds:** checks Node, the package manager, the model key and git; writes the architecture record (`docs/adr/`); scaffolds the smallest slice; and proves it with one real streamed turn.
+
+After that, ask for each feature the same way, e.g. *"Thêm tính năng cho khách đổi địa chỉ giao hàng"*. `agent-feature` checks it against the architecture record, asks what is unclear, reuses what exists, and builds it layer by layer.
+
+Say it in plain words, as above. The command column is what fires, and what to type only when you want to force it:
+
+| I want to… | Fires |
 |---|---|
-| Start an assistant, or audit one | `/agent-architect greenfield` · `/agent-architect audit` |
+| Start an assistant, or audit one | `/agent-architect` (`greenfield` · `audit`) |
 | Add a feature | `/agent-feature` (it calls the layer skills below in order) |
 | Add a backend tool · a frontend tool | `/agent-tool` · `/agent-frontend` (`useFrontendTool`) |
 | Confirm before a write | `/agent-hitl` |
@@ -34,7 +43,7 @@ Then, in an empty folder:
 | Eval dataset, prompt evals, tracing | `/agent-evals dataset` · `suite` · `observability` |
 | Security review | `/agent-security` |
 
-Skills fire on their own from what you type; the slash command is optional. Details and the rules each skill follows: [`plugins/agent/README.md`](plugins/agent/README.md).
+Skills fire on their own from what you type; the slash command is optional. A vague request gets questions first, never a guessed build. Details and the rules each skill follows: [`plugins/agent/README.md`](plugins/agent/README.md).
 
 ## Quickstart — the whole kit (optional)
 
@@ -57,7 +66,7 @@ Bootstrap a project:
 cd my-project && claude
 /project-init                                       # scans the repo, writes .claude/ docs, rules, memory
 
-# Empty folder (not an AI assistant — for one, use /agent-architect greenfield above)
+# Empty folder (not an AI assistant — for one, describe it in plain words as above)
 mkdir my-app && cd my-app && git init && claude
 /kickoff <your PRD, ERD, ADR, stack docs>           # reads what you have, grills only the gaps → docs/kickoff.md
 /brainstorming <idea>                               # only if an approach is still open → specs/<slug>/design.md

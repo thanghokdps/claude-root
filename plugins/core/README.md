@@ -8,6 +8,8 @@ Session and project basics every role uses: verify-done evidence gate, project-i
 
 `hooks/sensitive-path.sh` runs before Edit, Write and Bash. An edit to a secret (`.env*`, keys), CI/deploy config or `.claude/settings*.json` asks the user first, unless the ticket's `plan.md` names the path. Patterns: `hooks/sensitive-paths.txt` plus the repo's `.claude/sensitive-paths.txt`; `CLAUDE_SENSITIVE_PATHS=0` turns it off.
 
+`hooks/step-limit.sh` runs before every tool call. A subagent past `CLAUDE_STEP_LIMIT` (90) tool calls is stopped and must reply with what is done, what is stuck and the last error, so the main session can re-plan. The main session is not counted unless `CLAUDE_STEP_LIMIT_MAIN=1`. It costs no tokens.
+
 `hooks/compact-advisor.sh` runs on Stop. Past `CLAUDE_COMPACT_ADVISE_TOKENS` (200k) of context it shows the user one line suggesting `/compact`, again every 100k more. The model never sees it, so it costs nothing.
 
 ## Install

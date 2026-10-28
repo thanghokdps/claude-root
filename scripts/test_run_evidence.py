@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Tests for guards step-limit.sh, run-log.sh, push-evidence.sh, create-pr's witness.sh and blast-radius's hotspots.sh. Run: python3 scripts/test_run_evidence.py"""
+"""Tests for core step-limit.sh, guards run-log.sh, push-evidence.sh, create-pr's witness.sh and blast-radius's hotspots.sh. Run: python3 scripts/test_run_evidence.py"""
 import json
 import os
 import subprocess
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STEP = os.path.join(ROOT, "plugins", "guards", "hooks", "step-limit.sh")
+STEP = os.path.join(ROOT, "plugins", "core", "hooks", "step-limit.sh")
 RUNLOG = os.path.join(ROOT, "plugins", "guards", "hooks", "run-log.sh")
 WITNESS = os.path.join(ROOT, "plugins", "review", "skills", "create-pr", "scripts", "witness.sh")
 PUSH = os.path.join(ROOT, "plugins", "guards", "hooks", "push-evidence.sh")

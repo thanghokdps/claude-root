@@ -12,6 +12,10 @@
     {
       "prompt": "implement a new capability in the existing agent without duplicating code",
       "top_k": 3
+    },
+    {
+      "prompt": "Thêm tính năng cho khách đổi địa chỉ giao hàng",
+      "top_k": 3
     }
   ],
   "negative": [
