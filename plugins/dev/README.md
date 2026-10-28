@@ -9,6 +9,8 @@ Build and fix: coordinator lane router, feature, fix-bug red loop, tdd, design-u
 /plugin install dev@harness
 ```
 
+GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
+
 Also installs: `core`, `plan`, `review`.
 
 ## Skills

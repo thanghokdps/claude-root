@@ -71,7 +71,10 @@ user prompt
 
 ```bash
 # Clone anywhere — install.sh finds the kit from its own location, so no fixed path is assumed
-git clone git@github.com:thanghokdps/claude-root.git <kit-dir>
+# Clone from GitLab (VPN + SSH key on GitLab)…
+git clone git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git <kit-dir>
+# …or from the GitHub mirror (same commit):
+# git clone git@github.com:thanghokdps/claude-root.git <kit-dir>
 bash <kit-dir>/scripts/install.sh
 ```
 
@@ -84,10 +87,19 @@ The installer is idempotent and takes no arguments. It:
 3. Registers `<kit-dir>` as the local marketplace `harness` and installs every plugin (loaded in place — kit edits are live in new sessions)
 4. Migrates an old copy-based install (moves duplicate skills to the backup, drops old hook registrations)
 
-Without cloning — inside Claude Code:
+Without cloning, inside Claude Code: add the marketplace from **one** source. Use GitLab on the company network or VPN, with an SSH key on GitLab; otherwise use the GitHub mirror.
 
 ```
 /plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
+```
+
+```
+/plugin marketplace add thanghokdps/claude-root
+```
+
+Then:
+
+```
 /plugin install harness@harness
 ```
 

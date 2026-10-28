@@ -17,7 +17,7 @@ Not included: `lead` (retro, skill authoring) and `guards` (commit-blocking hook
 /plugin install agent@harness
 ```
 
-Then `/reload-plugins` (or open a new session). Update later with `/plugin marketplace update harness`.
+Inside the team, add the company GitLab copy instead (same commit; the URL is in the [root README](../../README.md#quickstart--ai-assistant)). Then `/reload-plugins` (or open a new session). Update later with `/plugin marketplace update harness`.
 
 ## Start on a blank machine
 

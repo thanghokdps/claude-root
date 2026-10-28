@@ -9,6 +9,8 @@ Review a diff or PR: review-checklist, review-diff, blast-radius impact analysis
 /plugin install review@harness
 ```
 
+GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
+
 Also installs: `progress`.
 
 ## Skills

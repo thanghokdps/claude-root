@@ -6,11 +6,21 @@ A Claude Code kit centred on **building one AI assistant end to end** on Copilot
 
 ## Quickstart — AI assistant
 
+Inside Claude Code, add the kit from **one** of two sources. Both hold the same commit, kept in step with `/sync-remote`:
+
+| Source | Use it when | Add the marketplace |
+|---|---|---|
+| **GitLab** (team) | You are on the company network or VPN, with Reporter access to `thang.hoquang/claude-kit` and an SSH key on GitLab | `/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git` |
+| **GitHub** (public mirror) | Outside the VPN, or without GitLab access | `/plugin marketplace add thanghokdps/claude-root` |
+
+Then, whichever source you added:
+
 ```bash
-# Inside Claude Code — no clone, no fixed path (company GitLab: SSH key + VPN; outside it: thanghokdps/claude-root)
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
-/plugin install agent@harness          # pulls in its own dependencies (progress) automatically
+/plugin install agent@harness          # pulls in its own dependencies automatically
+/reload-plugins
 ```
+
+Update later with `/plugin marketplace update harness`. It pulls from the source you added. If git asks for a password or times out on GitLab, check the VPN and your SSH key, or use GitHub.
 
 Then open Claude Code in an empty folder and **say what you want to build, in your own words**. No command to remember:
 
@@ -54,8 +64,10 @@ Install everything (`agent` plus the dev-loop plugins and global rules) when you
 /plugin install harness@harness
 
 # Or from a clone, which also installs global/CLAUDE.md and the global rules.
-# Clone anywhere — install.sh resolves its own location.
-git clone git@github.com:thanghokdps/claude-root.git <any-dir>/harness
+# Clone anywhere — install.sh resolves its own location. From GitLab (VPN + SSH key)…
+git clone git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git <any-dir>/harness
+# …or from the GitHub mirror (same commit):
+# git clone git@github.com:thanghokdps/claude-root.git <any-dir>/harness
 bash <any-dir>/harness/scripts/install.sh        # no env vars needed; see .env.sample for optional ones
 ```
 
@@ -245,14 +257,23 @@ prompt
 bash <kit-dir>/scripts/install.sh     # <kit-dir> = wherever you cloned the kit
 ```
 
-Installs `global/CLAUDE.md` and `plugins/core/rules/` into `~/.claude/`, registers this directory as the local marketplace `harness`, and installs every role plugin plus the `harness` bundle (loaded in place — kit edits are live in new sessions). It backs up what it replaces and migrates an old copy-based or 2.x single-plugin install.
+Installs `global/CLAUDE.md` and `plugins/core/rules/` into `~/.claude/`, registers this directory as the local marketplace `harness` (or keeps `harness` from GitLab or GitHub if you already added it there), and installs every role plugin plus the `harness` bundle (from a local folder, kit edits are live in new sessions). It backs up what it replaces and migrates an old copy-based or 2.x single-plugin install.
 
 The kit is split by role — see [`plugins/README.md`](plugins/README.md). Installing a role plugin installs its dependencies: `dev` brings `core`, `plan`, `review`; `agent` brings `dev` and `ship` (and through them `core`, `plan`, `review`), because its skills hand off to `/fix-bug`, `/verify-done`, `/review-checklist`, `/write-migration` and `/finish-branch`; hooks are the opt-in `guards`, except `branch-guard`, which ships in `core` and is always on.
 
-From the team's GitLab instead of a local clone (needs read access to `thang.hoquang/claude-kit`, an SSH key on GitLab and the VPN; the same commit is on GitHub as `thanghokdps/claude-root`):
+Instead of a local clone, add the marketplace from GitLab (VPN + SSH key) or from GitHub. Run one of these two lines; the source table in the Quickstart says which:
 
 ```
 /plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
+```
+
+```
+/plugin marketplace add thanghokdps/claude-root
+```
+
+Then:
+
+```
 /plugin install agent@harness     # one role (+ its dependencies)
 /plugin install harness@harness       # everything
 ```
