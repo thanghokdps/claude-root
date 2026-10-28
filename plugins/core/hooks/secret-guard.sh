@@ -193,7 +193,7 @@ def secret_in_scope(path, glob_param):
                 seen += 1
                 f = os.path.join(d, name)
                 if seen > 5000:
-                    return None
+                    return full  # too big to check: fail closed, the reason asks for a narrower path
                 if is_secret([name, f.lstrip(os.sep)], False) and in_glob(f, glob_param):
                     return f
         return None
