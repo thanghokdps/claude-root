@@ -77,10 +77,11 @@ if re.search(AT + r"(?:git(?:\s+-[Cc]\s+\S+)*\s+(?:checkout|restore|rm)|rm)\b", 
     # (resolved path, is a glob prefix): a folder reaches what is under it, a glob prefix reaches any name it starts.
     reached = []
     for seg in re.split(r"&&|\|\||[;|\n]", cmd):
-        words, bases = re.split(r"[\s()]+", seg.strip()), {cwd}  # a git -C <dir> applies to its own command only
+        words, bases, chain = re.split(r"[\s()]+", seg.strip()), {cwd}, cwd  # a git -C applies to its own command only
         for i, w in enumerate(words):
-            if i and words[i - 1] == "-C":  # pathspecs after it may be relative to <dir>: check both bases
-                bases.add(os.path.realpath(os.path.join(cwd, os.path.expanduser(w.strip("'\"")))))
+            if i and words[i - 1] == "-C":  # chained -C dirs resolve from the previous one, as git does
+                chain = os.path.realpath(os.path.join(chain, os.path.expanduser(w.strip("'\""))))
+                bases.add(chain)
                 continue
             w = re.sub(r"^:(?:\([^)]*\)|[!^/]*)", "", w.strip("'\""))  # pathspec magic (:/src, :(glob)src)
             if w.startswith("-") or not w:

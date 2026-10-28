@@ -209,6 +209,58 @@ def test_tag_push_needs_the_release_for_that_tag():
     assert gate(path, "git -c include.path=/tmp/x.cfg push origin feat/x", b)[0] == "deny"
     assert gate(path, "GIT_CONFIG_GLOBAL=/tmp/x.cfg git push origin feat/x", b)[0] == "deny"
     assert gate(path, "GIT_DIR=/tmp/other.git git push origin feat/x", b)[0] == "deny"
+    assert gate(path, "HOME=/tmp/h git push origin feat/x", b)[0] == "deny"
+    assert gate(path, "GIT_TRACE=1 git push origin feat/x", b)[0] == "deny"
+    for cmd in ["export GIT_DIR=/tmp/o.git; git push origin feat/x", "set -a; HOME=/tmp/h; git push origin feat/x",
+                "declare -x XDG_CONFIG_HOME=/tmp/c && git push origin feat/x", "cd /tmp/other && git push origin v1.4.0",
+                "export FOO=1\ngit push origin feat/x", "{ cd /tmp; git push origin feat/x; }", "(git push origin feat/x)",
+                "eval git push origin feat/x", "echo $(git push origin feat/x)", "source x.sh && git push origin feat/x"]:
+        assert gate(path, cmd, b)[0] == "deny", cmd
+    assert gate(path, "git push origin feat/x", b)[0] == "allow"
+    assert gate(path, "cd /tmp && ls", b)[0] == "allow"
+    assert gate(path, "git add a.ts && git commit -m \"feat: push notifications (#12)\"", b)[0] == "allow"
+    for cmd in ["cd /tmp; \"git\" push origin feat/x", "cd /tmp; g\\it push origin feat/x",
+                "cd /tmp; git --no-pager push origin feat/x", "cd /tmp; command git push origin feat/x",
+                "bash -c 'git push origin feat/x'", "git --no-pager push --tags",
+                "git --git-dir=/tmp/o.git push origin feat/x", "git -P push origin HEAD:refs/tags/v9.0.0"]:
+        assert gate(path, cmd, b)[0] == "deny", cmd
+    assert gate(path, "git --no-pager push origin feat/x", b)[0] == "allow"
+    for cmd in ["git --git-dir /tmp/o.git push origin feat/x", "git --work-tree /tmp/w push origin feat/x",
+                "git -c alias.p=push p origin v1.4.0", "sudo -u bob git push origin feat/x",
+                "nice -n 5 git push origin feat/x", "/usr/bin/git push --tags", "xargs git push < refs.txt",
+                "sh -c 'git p origin v1.4.0'", "eval \"git $SUB origin\"",
+                "git config alias.ship '!git push --tags'"]:
+        assert gate(path, cmd, b)[0] == "deny", cmd
+    git(path, "config", "alias.p", "push")
+    assert gate(path, "git p origin v1.4.0", b)[0] == "deny"
+    git(path, "config", "--unset", "alias.p")
+    other = repo()
+    git(other, "config", "alias.p", "push")
+    for cmd in [f"git -C {other} p origin v1.4.0", "git -c x.y=1 p origin", "GIT_CONFIG_GLOBAL=/tmp/g git p",
+                "git --attr-source HEAD push origin v9.9.9", "git --weird-opt push origin feat/x",
+                "find . -exec git push \\;", "xargs -I{} git", "cat cmds.txt | sh", "bash < cmds.txt",
+                "bash -s", "$GIT push origin feat/x", "cat x | /bin/sh", "bash -xs < cmds.txt", "/bin/bash<cmds.txt",
+                "sudo $G push origin feat/x", "git --exec-path=/tmp/x push origin feat/x", "git flow release finish",
+                "PATH=/tmp/x:$PATH git status", "sudo bash -c 'git push --tags'", "cat x |& sudo /bin/bash",
+                "cat x | nice -n 5 sh", "GIT_EXEC_PATH=/tmp git status", "PAGER=/tmp/p git log",
+                "git -c core.pager=/tmp/p log", "git -c core.hooksPath=/tmp/h commit -m x",
+                "git --config-env=core.sshCommand=SSH fetch", "git -c gpg.program=/tmp/x commit -m x",
+                "git -c diff.x.command=/tmp/x diff", "EDITOR=/tmp/x git commit", "LD_PRELOAD=/tmp/x.so git status",
+                "python3 -c \"import os; os.system('git push --tags')\"", "perl -e 'system(\"git push\")'",
+                "node -e \"require('child_process').execSync('git push')\"", "busybox sh -c 'git push'",
+                "python3 -c \"import os; os.system('g'+'it pu'+'sh')\"", "ruby -e 'system %w[g i t].join'",
+                "awk 'BEGIN{system(\"gi\" \"t push\")}'", "/usr/bin/python3 -c 'print(1)'",
+                "python3 -Wignore -c 'print(1)'", "python3 -Ic 'print(1)'", "node --eval=1", "sudo node -e 1",
+                "env python3 -c 1", "cat x.py | python3", "python3 - < x.py", "python3 < x.py", "node",
+                "python3 missing.py"]:
+        assert gate(path, cmd, b)[0] == "deny", cmd
+    os.makedirs(os.path.join(path, "scripts"))
+    for name in ("gen.py", "build.js"):
+        open(os.path.join(path, "scripts", name), "w").close()
+    for cmd in ["git status", "git log --oneline -3", "which git", "brew install git", "git lfs pull",
+                "bash scripts/build.sh", "cat .gitignore", "ls .git", "npm run test", "python3 scripts/gen.py",
+                "node scripts/build.js", "node --version", "python3 -V"]:
+        assert gate(path, cmd, b)[0] == "allow", cmd
     other = repo()
     git(other, "config", "remote.origin.push", "refs/tags/*:refs/tags/*")
     assert gate(path, f"git -C {other} push origin feat/x", b)[0] == "deny"  # config read where the push runs

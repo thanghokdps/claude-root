@@ -248,8 +248,9 @@ def push_command(args, gitopts=(), env=None):
         return
     # Push refspecs, mirror or followTags already in the config act on a plain `git push` too: read them with
     # the push's own -C/-c and GIT_* environment, so the check sees the config the push will use.
-    gitenv = {k: v for k, v in (env or {}).items() if k.startswith("GIT_")}
-    r = run(["git", *gitopts, "config", "--get-regexp", r"^(remote\..*\.(push|mirror)|push\.followtags)$"], env=gitenv)
+    # Only -C reaches the subprocess; env and other -c overrides were denied before we get here.
+    copts = [t for j, o in enumerate(gitopts) if o == "-C" and j + 1 < len(gitopts) for t in (o, gitopts[j + 1])]
+    r = run(["git", *copts, "config", "--get-regexp", r"^(remote\..*\.(push|mirror)|push\.followtags)$"])
     if r.returncode == 0 and r.stdout.strip() and not all(l.split()[-1].lower() == "false" for l in r.stdout.splitlines()):
         deny("this repo's git config sets remote.*.push, remote.*.mirror or push.followTags, so a push may publish "
              "release tags: a person pushes from here, or removes that setting first.")
@@ -280,18 +281,124 @@ def push_command(args, gitopts=(), env=None):
             deny(reason)
 
 
-for seg in segments(cmd):
+SHELLS = {"eval", "source", ".", "sh", "bash", "zsh", "dash", "ksh", "fish"}
+RUNNERS = {"sudo", "doas", "nice", "ionice", "nohup", "time", "timeout", "env", "command", "builtin", "exec", "xargs",
+           "parallel", "find", "stdbuf", "caffeinate", "watch"}  # run the next word as a command
+RUN = r"(?:(?:\S*/)?(?:" + "|".join(sorted(RUNNERS)) + r")\b[^|;&\n]*?\s+)*"  # runner words before a program
+INTERPRETER = re.compile(r"^(?:python[\d.]*|perl[\d.]*|ruby|node|nodejs|deno|bun|php|lua[\d.]*|tclsh|osascript|"
+                         r"busybox|[gnm]?awk|Rscript|julia|pwsh)$")
+INLINE_FLAG = re.compile(r"^(?:-[A-Za-z]*[ceEpr][A-Za-z]*|--(?:eval|print|command|exec)(?:=.*)?)$")
+# git as a word inside another program's argument (python -c "…git push…", perl -e, node -e, osascript): `.git`
+# and `.gitignore` are paths, not the command.
+GIT_WORD = re.compile(r"(?:^|[\s'\"/;(`$|&])git(?=$|[\s'\";)`|&])")
+INFO = {"which", "type", "whereis", "man", "echo", "printf", "brew", "apt", "apt-get", "grep", "rg"}  # name git, don't run it
+VALUE_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--super-prefix", "--config-env", "--attr-source"}
+FLAG_OPTS = {"--no-pager", "-P", "-p", "--paginate", "--bare", "--no-replace-objects", "--literal-pathspecs",
+             "--glob-pathspecs", "--noglob-pathspecs", "--icase-pathspecs", "--no-optional-locks", "--no-advice",
+             "--no-lazy-fetch"}
+BUILTINS = set("add am apply archive bisect blame branch cat-file check-ignore checkout cherry-pick clean clone commit "
+               "config describe diff fetch for-each-ref format-patch gc grep hash-object help init log ls-files "
+               "ls-remote ls-tree merge merge-base mv notes pull push rebase reflog remote reset restore rev-list "
+               "rev-parse revert rm shortlog show show-ref stash status submodule switch symbolic-ref tag "
+               "update-index version worktree lfs".split())
+
+
+def git_subcommand(toks):
+    """Index of git's subcommand, past every global option (those in VALUE_OPTS take the next word)."""
+    i = 1
+    while i < len(toks) and toks[i].startswith("-"):
+        i += 2 if toks[i] in VALUE_OPTS else 1
+    return i
+
+
+def is_git(tok):
+    return os.path.basename(tok.strip("$(){}`")) == "git"
+
+
+segs, pushes, wrapped = segments(cmd), False, False
+for seg in segs:
     env, toks = tokens(seg)
     if not toks:
         continue
+    if is_git(toks[0]):
+        toks[0] = "git"
+        if toks[git_subcommand(toks):][:1] == ["push"]:
+            pushes = True
+    elif (toks[0] not in INFO and any(is_git(t) or GIT_WORD.search(t) for t in toks[1:])) or \
+            any(t.startswith(("$(", "`", "(")) and is_git(t) for t in toks[1:]):
+        # git run through something (sudo -u x git, xargs git, nice -n 5 git, $(git …)): its options and the
+        # wrapper's own can't be told apart, so a gated repo runs git directly.
+        pushes = wrapped = True
+    if toks[0] in SHELLS and any(re.search(r"\bgit\b", t) for t in toks[1:]):
+        pushes = wrapped = True  # git inside a string or script the hook can't parse
+    # Inline code (python -c, node -e, perl -e, awk '…', or code on stdin) can build any command from pieces no
+    # scan can follow: an interpreter anywhere in the command (sudo node …, env python3 …) runs only a script file.
+    for j, t in enumerate(toks):
+        if not INTERPRETER.match(os.path.basename(t)):
+            continue
+        rest = toks[j + 1:]
+        script = next((a for a in rest if not a.startswith("-")), None)
+        piped = re.search(r"\|&?\s*" + RUN + r"(?:\S*/)?" + re.escape(os.path.basename(t)) + r"\b", cmd)
+        reads_stdin = "-" in rest or "<" in seg or piped or not rest  # `node --version` alone runs no code
+        if (re.match(r"^[gnm]?awk$", os.path.basename(t)) or any(INLINE_FLAG.match(a) for a in rest)
+                or (script and not os.path.isfile(os.path.join(cwd, script))) or (not script and reads_stdin)):
+            pushes = wrapped = True
+        break
+    # A shell reading its commands from stdin (… | sh, bash < file, bash -s) or a command named by a variable
+    # runs text the hook never sees.
+    shell = os.path.basename(toks[0]) in SHELLS - {"eval", "source", "."}
+    if (shell and (not any(re.match(r"^-\w*c", t) for t in toks[1:]) and len(toks) == 1
+                   or any(re.match(r"^-\w*s", t) for t in toks[1:]) or "<" in seg)) \
+            or toks[0].startswith("$") \
+            or (os.path.basename(toks[0]) in RUNNERS and any(t.startswith("$") or os.path.basename(t) in SHELLS
+                                                             for t in toks[1:])):
+        pushes = wrapped = True
+# A pipe into a shell (… | sh, … |& sudo /bin/bash -s) feeds it text the hook never sees.
+if re.search(r"\|&?\s*" + RUN + r"(?:\S*/)?(?:sh|bash|zsh|dash|ksh|fish)\b", cmd) or \
+        re.search(r"(?:^|[\s;&|(])(?:\S*/)?(?:sh|bash|zsh|dash|ksh|fish)\s*<", cmd):
+    pushes = wrapped = True
+# Anything run before a push in the same command (export, set -a, cd, source, eval…) can change the env or repo
+# it runs in, which the checks below (in the hook's own env and cwd) can't follow: a push runs on its own.
+if wrapped:
+    deny("git must run directly here, not through sudo/xargs/env-style wrappers, $( ), eval, sh -c or inline code "
+         "(python -c, node -e, awk), so the release checks see the command it really runs. Put scripts in a file.")
+elif pushes and (len([s for s in segs if s.strip()]) > 1 or re.search(r"[{}()`!]|\$\(", cmd)):
+    deny("git push must run as its own command here (no ;, &&, |, newline, subshell, $( ), eval or source around "
+         "it), so the release checks see the env and repo it really runs in.")
+
+for seg in segs:
+    env, toks = tokens(seg)
+    if not toks:
+        continue
+    if is_git(toks[0]):
+        toks[0] = "git"
     if toks[0] == "gh" and toks[1:3] == ["pr", "review"] and ("--approve" in toks or "-a" in toks):
         deny("gh pr review --approve: approving is a person's decision. Ask the reviewer to approve it on GitHub.")
     elif toks[0] == "glab" and toks[1:3] == ["mr", "approve"]:
         deny("glab mr approve: approving is a person's decision. Ask the reviewer to approve it on GitLab.")
     elif toks[0] == "git":
-        i = 1
-        while i < len(toks) and toks[i] in ("-C", "-c"):
-            i += 2
+        i = git_subcommand(toks)
+        sub = toks[i] if i < len(toks) else ""
+        opts = toks[1:i]
+        # Only allowlisted global options, in either form (--exec-path=/x would pick another git-<sub>).
+        unknown = [o for j, o in enumerate(opts) if o.startswith("-") and o.split("=", 1)[0] not in VALUE_OPTS | FLAG_OPTS
+                   and not (j and opts[j - 1] in VALUE_OPTS)]
+        if unknown:
+            deny(f"git {unknown[0]} is a global option the release checks don't allow; run git without it.")
+        elif any(re.search(r"alias\.", t, re.I) for t in opts):
+            deny("git -c alias.* can turn any subcommand into a push; run the git command it stands for.")
+        elif sub and sub not in BUILTINS:
+            # An alias or an external git-<sub> on PATH can run a push the checks below never see.
+            deny(f"git {sub} isn't a built-in git command (an alias or a git-{sub} program); run the git command it stands for.")
+        # Env and config can pick another program, pager, hook or helper for any subcommand, and there are too
+        # many such keys to list: in a gated repo git runs with neither set on its command line.
+        if env:
+            deny(f"git with {sorted(env)[0]}=… set on the command line can run another program; run git without it.")
+        if any(o == "-c" or o.startswith("--config-env") for o in opts):
+            deny("git -c/--config-env can make git run another program; run git without it.")
+        if sub == "config" and any(re.match(r"alias\.", t, re.I) for t in toks[i + 1:]) and \
+                any("push" in t or t.startswith("!") for t in toks[i + 1:]):
+            deny("a git alias that pushes or runs a shell command would slip past the release checks; a person sets that by hand.")
         if toks[i:i + 1] == ["remote"] and any(t.startswith("--mirror") for t in toks[i + 1:]):
             deny("git remote --mirror makes every push mirror all refs, release tags included; a person sets that by hand.")
         if toks[i:i + 1] == ["config"] and any(TAG_CONFIG.search(t) for t in toks[i + 1:]):
@@ -299,11 +406,15 @@ for seg in segments(cmd):
         if toks[i:i + 1] == ["push"]:
             if any(TAG_CONFIG.search(t) for t in toks[1:i] + [v for k, v in env.items() if k.startswith("GIT_CONFIG")]):
                 deny("git -c push.followTags pushes release tags along with the branch: push the one tag: git push origin v<version>")
-            # Config pulled in from elsewhere can't be judged from the command line.
-            elif (any(re.match(r"include", t, re.I) for t in toks[2:i:2])
-                  or set(env) & {"GIT_DIR", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM", "GIT_CONFIG_PARAMETERS"}):
-                deny("git push with include.path/includeIf, GIT_DIR or GIT_CONFIG_* overrides can't be checked: push without them.")
-            push_command(toks[i + 1:], toks[1:i], env)
+            # Config pulled in from elsewhere can't be judged from the command line, so a push carries none.
+            elif (any(re.match(r"include", t, re.I) for t in toks[1:i])
+                  or any(t.startswith(("--git-dir", "--work-tree", "--exec-path", "--namespace", "--config-env"))
+                         for t in toks[1:i])
+                  or any(k.startswith("GIT_") or k in ("HOME", "XDG_CONFIG_HOME") for k in env)):
+                deny("git push with include.path/includeIf, --git-dir/--work-tree, GIT_* or HOME/XDG_CONFIG_HOME "
+                     "overrides can't be checked: push without them.")
+            else:
+                push_command(toks[i + 1:], toks[1:i], env)
     else:
         args = eas_args(toks)
         if args is not None:

@@ -4,7 +4,9 @@ Applies when the repo has `eas.json`. It replaces checklist items 3 (migrations)
 
 ## Enforcement
 
-The `ship` hook `release-gate.sh` runs on every Bash command in an `eas.json` repo. It denies a production `eas build` / `eas submit` / `eas update` and a `v*` tag push unless a `release/<version>` PR (GitHub) or MR (GitLab) covers the commit and a person other than its author approved its current head. It also denies approving from this session. Config, all optional: `.claude/release-gate.json` → `{"profiles":["production"],"channels":["production"],"approvers":[]}`. If it denies, relay the reason; never retry with another profile, channel or `APP_VARIANT`. Rollback, republish and rollout commands on the production channel ask the user first.
+The `ship` hook `release-gate.sh` runs on every Bash command in an `eas.json` repo. It denies a production `eas build` / `eas submit` / `eas update` and a `v*` tag push unless a `release/<version>` PR (GitHub) or MR (GitLab) covers the commit and a person other than its author approved its current head. It also denies approving from this session. Config, all optional: `.claude/release-gate.json` → `{"profiles":["production"],"channels":["production"],"approvers":[]}`. If it denies, relay the reason; never retry with another profile, channel or `APP_VARIANT`. Rollback, republish and rollout commands on the production channel ask the user first. Run release commands directly: git behind a wrapper, `eval`, `sh -c`, a pipe into a shell or an alias is denied. A script file (`bash scripts/x.sh`) is not read, so keep release steps out of scripts. Inline code (`python -c`, `node -e`, `awk '…'`) is denied in this repo.
+
+The gate guards this session only. The real lock is on the server: protect `v*` tags (GitHub ruleset or GitLab protected tags) so only release managers can create them, and limit who can run production builds and submits on EAS and the stores.
 
 GitLab's approvals API does not say which commit was approved, so on GitLab the gate trusts the MR's current approvals: turn on *Settings → Merge requests → Remove all approvals when commits are added* so a push after approval resets them.
 
