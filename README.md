@@ -42,6 +42,8 @@ Dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra, chưa cần
 
 `agent-architect` switches to **skeleton** mode. It takes the stack you named as given and asks only what you left open and is costly to change (framework, host, clients, single app or monorepo), plus one line on who the chatbot is for ("a general assistant" is fine). It never asks about tasks, tools or features. Then it builds the app shell from the vendor's reference repo with exact pins, the env schema, identity, one agent with no tools, the model factory, masked tracing and the stock chat UI with your theme tokens, and proves it with one real streamed "hello" turn. No tools, no confirm cards and no domain tables (a database you named gets its connection and migrations only). It ends by listing the features still to build, each as the sentence to give `agent-feature`.
 
+Any supported framework works the same way: swap "Mastra" for "LangChain" or "LangGraph" (both build a `createAgent` agent), or say "custom LangGraph graph" for your own `StateGraph`. Changing the framework while the skeleton has no features rebuilds the skeleton. Once features exist, it is a planned migration. Full rules: [`skeleton.md`](plugins/agent/skills/agent-architect/references/skeleton.md).
+
 After that, ask for each feature the same way, e.g. *"Thêm tính năng cho khách đổi địa chỉ giao hàng"*. `agent-feature` checks it against the architecture record, asks what is unclear, reuses what exists, and builds it layer by layer.
 
 Say it in plain words, as above. The command column is what fires, and what to type only when you want to force it:

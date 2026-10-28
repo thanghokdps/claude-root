@@ -46,14 +46,14 @@ Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kick
 - **One question per turn, as choices**: `AskUserQuestion` with 2–4 options, the recommended one first with `(Recommended)`, per `interview.md` § Shape of each question; numbered options when the tool is absent. Never a prose question the user must answer in free text. Skip what the repo or the request already answers.
 - **Viewports are always set** (Q2v) for any web client, even when every frame is desktop-sized: defaulted to phone (375px) plus desktop and shown on the card.
 - **Layout is defaulted, never silent**: single app (L1) or monorepo on pnpm + Turborepo (L2), per `${CLAUDE_SKILL_DIR}/references/layouts.md`, chosen from the clients and deploy answers and shown on the card.
-- The shape follows Q-F (`shapes.md` § Framework). A named stack is used as given: Mastra → **M**, LangChain → **A**, custom graph → **B**/hybrid. With no stack named, recommend **A** (createAgent + middleware + CopilotRuntime v2), unless the host is edge/Workers or a contract the runtime cannot express forces **B**. Use the decision rule in `shapes.md` for single agent vs supervisor in every framework.
+- The shape follows Q-F (`shapes.md` § Framework). A named stack is used as given: Mastra → **M**, LangChain or plain LangGraph → **A** (`createAgent` runs on the LangGraph runtime), custom graph or `StateGraph` → **B**/hybrid. With no stack named, recommend **A** (createAgent + middleware + CopilotRuntime v2), unless the host is edge/Workers or a contract the runtime cannot express forces **B**. Use the decision rule in `shapes.md` for single agent vs supervisor in every framework.
 - Every non-L0 choice names its rung and its reason (`${CLAUDE_SKILL_DIR}/references/stock-map.md`).
 
 **Done when:** P1–P4, Q-F, Q4 and Q-D are answered, and the defaults card (Q1–Q9, Q2v, Q-L, Q-T) is accepted or its changed rows answered; anything deferred is recorded with a risk.
 
 ## Step 2s — Skeleton interview (empty chatbot, no features)
 
-The user wants a running, empty chatbot on a stack they name, and nothing else. Skip P2–P4, Step 2b's grill and the ADR's Problem section.
+The user wants a running, empty chatbot on a stack they name, and nothing else. Skip P2–P4, Step 2b's grill and the ADR's Problem section. Read `${CLAUDE_SKILL_DIR}/references/skeleton.md` first: it maps what the user named to a shape and reference row (plain "LangGraph" means shape A), and lists the card defaults, what gets built, the done checks, the closing message and what to do when the framework changes later.
 
 - Take every stack choice the request names as given: framework, frontend, backend, database, ORM, auth, package manager, host, layout. Ask only what it leaves open that is costly to change: Q-F (framework) when none is named, Q1 (host), Q2 (clients), Q-L (layout). One question per turn, as choices, the recommended one first. Never ask about tasks, tools or features.
 - Everything else is defaulted and shown on one defaults card.
@@ -95,7 +95,7 @@ Build the smallest working slice of the chosen shape, test first where practical
 7. One read tool for the first P2 task, against its P3 system, through `/agent-tool` (from the user's API spec when one was given, its Step 0); then one real streamed turn with that task's example message through `/agent-verify-turn`.
 8. The P2 example messages as the first eval cases (`/agent-evals`).
 
-**Skeleton mode** (Step 2s) builds steps 0, 2–6 and stops there. No tool, no HITL, no ERD and no domain tables: a named database gets only its connection, the migration setup and, when Q6 keeps history, the conversation tables. No evals beyond one smoke case. The agent has no tools and a prompt that opens with P1. The proof is one real streamed turn with "hello" through `/agent-verify-turn`, plus the stock chat UI rendering it. The chat UI stays stock `CopilotChat` with theme tokens. The reply ends with the features still to build, each phrased as the sentence to give `/agent-feature`.
+**Skeleton mode** (Step 2s) builds steps 0, 2–6 and stops there. No tool, no HITL, no ERD and no domain tables: a named database gets only its connection, the migration setup and, when Q6 keeps history, the conversation tables. No evals beyond one smoke case. The agent has no tools and a prompt that opens with P1. The proof is one real streamed turn with "hello" through `/agent-verify-turn`, plus the stock chat UI rendering it. The chat UI stays stock `CopilotChat` with theme tokens. The reply ends with the features still to build, each phrased as the sentence to give `/agent-feature`. Skeleton readings of steps 2–4 (identity test without a tool, model tier without P2), the done checklist and the closing message are in `references/skeleton.md`.
 
 Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later work: nostream helper nodes (Mastra: `generate()` helpers, `lastMessages`, `maxSteps`), stable prompt prefix, kill switch per tool. Build in the scaffold rows of `${CLAUDE_SKILL_DIR}/references/production.md` (durable state, health, env forwarding, fallback, masked tracing).
 
