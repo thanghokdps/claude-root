@@ -197,6 +197,15 @@ def test_tag_push_needs_the_release_for_that_tag():
     assert gate(path, "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=push.followTags GIT_CONFIG_VALUE_0=true git push origin main",
                 b)[0] == "deny"
     assert gate(path, "git config push.followTags true", b)[0] == "deny"
+    assert gate(path, "git config remote.origin.push 'refs/tags/*:refs/tags/*'", b)[0] == "deny"
+    assert gate(path, "git -c remote.origin.mirror=true push origin main", b)[0] == "deny"
+    assert gate(path, "git push origin HEAD:tags/v1.5.0", b)[0] == "deny"
+    assert gate(path, "git config remote.my.fork.push 'refs/tags/*'", b)[0] == "deny"
+    assert gate(path, "git remote add --mirror=push backup git@x:y.git", b)[0] == "deny"
+    git(path, "config", "remote.origin.push", "refs/tags/*:refs/tags/*")
+    assert gate(path, "git push origin feat/x", b)[0] == "deny"
+    git(path, "config", "--unset", "remote.origin.push")
+    assert gate(path, "git push origin feat/x", b)[0] == "allow"
     assert second != first
 
 
