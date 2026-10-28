@@ -8,6 +8,9 @@ python3 scripts/test_skill_progress.py
 python3 scripts/test_branch_guard.py
 python3 scripts/test_edit_guard.py
 python3 scripts/test_ticket_gate.py
+python3 scripts/test_secret_guard.py
+python3 scripts/test_test_lock.py
+python3 scripts/test_release_gate.py
 python3 scripts/test_compare_shots.py
 python3 scripts/test_text_styles.py
 python3 scripts/test_sync_remote.py

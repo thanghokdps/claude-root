@@ -124,10 +124,13 @@ A correct seam exercises the real bug pattern as it occurs at the call site. A s
 With a correct seam:
 
 1. Turn the minimised repro into a failing test there.
-2. Watch it fail.
-3. Apply the smallest fix that addresses the root cause.
-4. Watch it pass.
+2. Watch it fail, for the reported reason. Then lock it: `bash ${CLAUDE_SKILL_DIR}/scripts/lock-tests.sh lock <test files>`. The test-lock hook now blocks edits to it.
+3. Apply the smallest fix that addresses the root cause, without touching the locked test.
+4. Watch it pass; prove it with `lock-tests.sh check` (exit 0) plus the green run.
 5. Re-run the Phase 1 loop against the original, un-minimised scenario.
+6. Commit the test together with the fix, then `lock-tests.sh unlock`.
+
+A test that turns out wrong: tell the user why, and unlock only after their yes.
 
 A fix needing a larger structural change stops here — report it and propose it as a separate `/feature`.
 
@@ -137,6 +140,7 @@ A fix needing a larger structural change stops here — report it and propose it
 
 - [ ] Original repro no longer reproduces (re-run the Phase 1 loop)
 - [ ] Regression test passes, or the missing seam is documented
+- [ ] Lock checked intact, test committed with the fix, lock removed (`lock-tests.sh unlock`)
 - [ ] All `[DEBUG-...]` instrumentation removed — grep the prefix
 - [ ] Throwaway harnesses deleted
 - [ ] `specs/<slug>/TEST_MATRIX.md` has the new regression row

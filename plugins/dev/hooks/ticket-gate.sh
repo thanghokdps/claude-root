@@ -9,6 +9,7 @@
 #   - plan.md has no Skills: line or no Risk: line
 #   - a listed skill never ran; /agent-verify-turn never ran though an /agent-* skill is listed
 #   - no subagent ran with model sonnet or haiku (the code is written by a cheaper model)
+#   - commit only: spec.md § Concerns has a `blocking` row with an empty Decision (waive: `skip concerns: <reason>`)
 #   - PR only: /verify-done or /review-checklist never ran; Risk: high and /security-review or /code-review never ran
 # A line `skip /<skill>: <reason>` (or `skip subagents: <reason>`) in plan.md waives one check, with the reason on record.
 command -v python3 >/dev/null 2>&1 || exit 0
@@ -102,6 +103,21 @@ if missing:
 cheap = [a for a in agents if re.search(r"sonnet|haiku", a.get("model") or "", re.I)]
 if not cheap and "subagents" not in waived:
     problems.append("no subagent ran with model sonnet or haiku; dispatch the slice's code to one (Agent tool, model: sonnet)")
+
+spec_path = os.path.join(top, "docs", "tickets", ticket, "spec.md")
+if action == "commit" and "concerns" not in waived and os.path.exists(spec_path):
+    in_concerns = False
+    for line in open(spec_path, encoding="utf-8").read().splitlines():
+        if re.match(r"^#{1,6}\s", line):
+            in_concerns = bool(re.match(r"^#{1,6}\s+Concerns\b", line, re.I))
+            continue
+        if not in_concerns or not line.lstrip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 6 or re.sub(r"[*`\s]", "", cells[2]).lower() != "blocking":
+            continue
+        if re.sub(r"[*`\s]", "", cells[-1]) in ("", "—", "-", "–"):
+            problems.append(f"{cells[0] or 'a concern'} is blocking and has no decision (spec.md § Concerns)")
 
 if problems:
     what = "commit" if action == "commit" else "open the PR"
