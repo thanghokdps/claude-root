@@ -284,6 +284,10 @@ def push_command(args, gitopts=(), env=None):
 SHELLS = {"eval", "source", ".", "sh", "bash", "zsh", "dash", "ksh", "fish"}
 RUNNERS = {"sudo", "doas", "nice", "ionice", "nohup", "time", "timeout", "env", "command", "builtin", "exec", "xargs",
            "parallel", "find", "stdbuf", "caffeinate", "watch"}  # run the next word as a command
+RUN = r"(?:(?:\S*/)?(?:" + "|".join(sorted(RUNNERS)) + r")\b[^|;&\n]*?\s+)*"  # runner words before a program
+INTERPRETER = re.compile(r"^(?:python[\d.]*|perl[\d.]*|ruby|node|nodejs|deno|bun|php|lua[\d.]*|tclsh|osascript|"
+                         r"busybox|[gnm]?awk|Rscript|julia|pwsh)$")
+INLINE_FLAG = re.compile(r"^(?:-[A-Za-z]*[ceEpr][A-Za-z]*|--(?:eval|print|command|exec)(?:=.*)?)$")
 # git as a word inside another program's argument (python -c "…git push…", perl -e, node -e, osascript): `.git`
 # and `.gitignore` are paths, not the command.
 GIT_WORD = re.compile(r"(?:^|[\s'\"/;(`$|&])git(?=$|[\s'\";)`|&])")
@@ -327,12 +331,19 @@ for seg in segs:
         pushes = wrapped = True
     if toks[0] in SHELLS and any(re.search(r"\bgit\b", t) for t in toks[1:]):
         pushes = wrapped = True  # git inside a string or script the hook can't parse
-    # Inline code (python -c, node -e, perl -e, awk '…') can build any command from pieces no scan can follow.
-    prog = os.path.basename(toks[0])
-    if (re.match(r"^(?:python[\d.]*|perl|ruby|node|deno|bun|php|lua|tclsh|osascript|busybox)$", prog)
-            and any(t in ("-c", "-e", "-E", "-r", "-p", "--eval", "--print") for t in toks[1:])) \
-            or re.match(r"^[gnm]?awk$", prog):
-        pushes = wrapped = True
+    # Inline code (python -c, node -e, perl -e, awk '…', or code on stdin) can build any command from pieces no
+    # scan can follow: an interpreter anywhere in the command (sudo node …, env python3 …) runs only a script file.
+    for j, t in enumerate(toks):
+        if not INTERPRETER.match(os.path.basename(t)):
+            continue
+        rest = toks[j + 1:]
+        script = next((a for a in rest if not a.startswith("-")), None)
+        piped = re.search(r"\|&?\s*" + RUN + r"(?:\S*/)?" + re.escape(os.path.basename(t)) + r"\b", cmd)
+        reads_stdin = "-" in rest or "<" in seg or piped or not rest  # `node --version` alone runs no code
+        if (re.match(r"^[gnm]?awk$", os.path.basename(t)) or any(INLINE_FLAG.match(a) for a in rest)
+                or (script and not os.path.isfile(os.path.join(cwd, script))) or (not script and reads_stdin)):
+            pushes = wrapped = True
+        break
     # A shell reading its commands from stdin (… | sh, bash < file, bash -s) or a command named by a variable
     # runs text the hook never sees.
     shell = os.path.basename(toks[0]) in SHELLS - {"eval", "source", "."}
@@ -343,7 +354,6 @@ for seg in segs:
                                                              for t in toks[1:])):
         pushes = wrapped = True
 # A pipe into a shell (… | sh, … |& sudo /bin/bash -s) feeds it text the hook never sees.
-RUN = r"(?:(?:\S*/)?(?:" + "|".join(sorted(RUNNERS)) + r")\b[^|;&\n]*?\s+)*"
 if re.search(r"\|&?\s*" + RUN + r"(?:\S*/)?(?:sh|bash|zsh|dash|ksh|fish)\b", cmd) or \
         re.search(r"(?:^|[\s;&|(])(?:\S*/)?(?:sh|bash|zsh|dash|ksh|fish)\s*<", cmd):
     pushes = wrapped = True

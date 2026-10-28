@@ -249,11 +249,17 @@ def test_tag_push_needs_the_release_for_that_tag():
                 "python3 -c \"import os; os.system('git push --tags')\"", "perl -e 'system(\"git push\")'",
                 "node -e \"require('child_process').execSync('git push')\"", "busybox sh -c 'git push'",
                 "python3 -c \"import os; os.system('g'+'it pu'+'sh')\"", "ruby -e 'system %w[g i t].join'",
-                "awk 'BEGIN{system(\"gi\" \"t push\")}'", "/usr/bin/python3 -c 'print(1)'"]:
+                "awk 'BEGIN{system(\"gi\" \"t push\")}'", "/usr/bin/python3 -c 'print(1)'",
+                "python3 -Wignore -c 'print(1)'", "python3 -Ic 'print(1)'", "node --eval=1", "sudo node -e 1",
+                "env python3 -c 1", "cat x.py | python3", "python3 - < x.py", "python3 < x.py", "node",
+                "python3 missing.py"]:
         assert gate(path, cmd, b)[0] == "deny", cmd
+    os.makedirs(os.path.join(path, "scripts"))
+    for name in ("gen.py", "build.js"):
+        open(os.path.join(path, "scripts", name), "w").close()
     for cmd in ["git status", "git log --oneline -3", "which git", "brew install git", "git lfs pull",
                 "bash scripts/build.sh", "cat .gitignore", "ls .git", "npm run test", "python3 scripts/gen.py",
-                "node scripts/build.js"]:
+                "node scripts/build.js", "node --version", "python3 -V"]:
         assert gate(path, cmd, b)[0] == "allow", cmd
     other = repo()
     git(other, "config", "remote.origin.push", "refs/tags/*:refs/tags/*")
