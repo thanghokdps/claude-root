@@ -71,7 +71,8 @@ user prompt
 
 ```bash
 # Clone anywhere — install.sh finds the kit from its own location, so no fixed path is assumed
-git clone git@github.com:thanghokdps/claude-root.git <kit-dir>
+git clone git@github.com:thanghokdps/claude-root.git <kit-dir>      # GitHub
+# or: git clone git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git <kit-dir>   # GitLab (VPN + SSH key)
 bash <kit-dir>/scripts/install.sh
 ```
 
@@ -87,7 +88,8 @@ The installer is idempotent and takes no arguments. It:
 Without cloning — inside Claude Code:
 
 ```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
+/plugin marketplace add thanghokdps/claude-root     # GitHub (public)
+# or: /plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git   # GitLab (team: VPN + SSH key)
 /plugin install harness@harness
 ```
 
@@ -141,6 +143,8 @@ claude
 2. Interview, one question at a time: users, clients (web/mobile/chat), tasks, systems, writes, observability. It writes an ADR to `docs/adr/`.
 3. Scaffold on request: pinned versions, env schema, identity, one agent, one read tool, a tracing switch and the first eval cases. It is done when one real turn streams end to end.
 4. `/project-init`, then add capabilities with `/agent-feature`. The chat UI comes from `/agent-frontend` or `/agent-design-ui <figma>`.
+
+For an empty skeleton with no features, name the stack and say so (*"set up an empty chatbot on Next.js + CopilotKit + LangGraph, no features yet"*). `agent-architect` runs in skeleton mode: it asks only the open stack choices and one line on who it is for, builds the shell, identity, one agent with no tools, model factory, tracing, pins and the stock chat UI, and stops at one real streamed "hello" turn.
 
 ### Method A — Via Claude Code (recommended)
 

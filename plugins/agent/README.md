@@ -13,7 +13,7 @@ Not included: `lead` (retro, skill authoring) and `guards` (commit-blocking hook
 ## Install
 
 ```
-/plugin marketplace add thanghokdps/claude-root
+/plugin marketplace add thanghokdps/claude-root     # GitHub; or your team's GitLab mirror (root README § Install)
 /plugin install agent@harness
 ```
 
@@ -29,6 +29,8 @@ Open Claude Code in an empty folder and say what you want to build, e.g. *"Tôi 
 4. **Grill** — every task gets an owner agent and tool, every write a confirm path, every vague answer a recorded risk.
 5. **ADR + scaffold** — `docs/adr/<NNNN>-agent-architecture.md`, then the smallest working slice of your layout, ending on one real streamed turn with your first task's example message.
 
+Only want an empty skeleton? Name the stack and say "no features yet", e.g. *"Dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra, chưa cần feature gì"*. It asks only the open stack choices and who the chatbot is for, builds the shell with one agent and no tools, and stops at one real streamed "hello" turn.
+
 If the designer has a Figma file or mockups, give the link when asked — `agent-design-ui` turns it into the chat UI after the scaffold.
 
 ## Grow it, one feature at a time
@@ -39,7 +41,7 @@ Ask for a feature in plain words, e.g. *"Thêm tính năng cho khách đổi đ�
 
 | Skill | Reach for it when |
 |-------|-------------------|
-| `/agent-architect [greenfield\|audit]` | Starting an assistant (just describe it; this fires and interviews you first), or auditing one for custom code that stock middleware now covers |
+| `/agent-architect [greenfield\|skeleton\|audit]` | Starting an assistant (just describe it; this fires and interviews you first), an empty skeleton on a stack you name with no features yet, or auditing one for custom code that stock middleware now covers |
 | `/agent-feature <capability>` | Adding a feature to an existing assistant — within its ADR, reusing what is there, then a duplicate check |
 | `/agent-design-ui <figma link \| folder>` | A design for the chat: runs `/design-ui` (dev) for frames, tokens, primitives and the screenshot diff, and adds the chat states, the `[data-copilotkit]` theme and stock vs custom per chat element |
 | `/agent-tool <tool>` | Adding, renaming or fixing an agent (backend) tool — schema, trusted identity, read vs mutation, its test. Given your API (OpenAPI, Postman, curl, docs or MCP), it first maps endpoints to tools and builds the typed client and mocks. Browser-only tools go to `/agent-frontend` |

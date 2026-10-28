@@ -5,7 +5,8 @@ Land and release: finish-branch, ci-triage, release-checklist, write-migration.
 ## Install
 
 ```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
+/plugin marketplace add thanghokdps/claude-root     # GitHub (public, no VPN)
+# or: /plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git   # GitLab (team: VPN + SSH key)
 /plugin install ship@harness
 ```
 

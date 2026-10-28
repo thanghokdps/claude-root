@@ -5,7 +5,8 @@ Improve the process: weekly retro, session diagnosis, authoring skills.
 ## Install
 
 ```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
+/plugin marketplace add thanghokdps/claude-root     # GitHub (public, no VPN)
+# or: /plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git   # GitLab (team: VPN + SSH key)
 /plugin install lead@harness
 ```
 

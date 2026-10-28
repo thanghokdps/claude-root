@@ -3,7 +3,8 @@
 The kit is a marketplace of role plugins. Install one role and its dependencies come with it:
 
 ```
-/plugin marketplace add thanghokdps/claude-root
+/plugin marketplace add thanghokdps/claude-root     # GitHub (public, no VPN)
+# or: /plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git   # GitLab (team: VPN + SSH key)
 /plugin install agent@harness      # one role
 /plugin install harness@harness        # everything
 ```
@@ -59,7 +60,7 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [compound](core/skills/compound/SKILL.md) | `core` | `/compound` | Crystallize session learnings → `docs/solutions/` | n/a |
 | [btw](core/skills/btw/SKILL.md) | `core` | `/btw <question>` | Quick lookup mid-task, no tasks or side effects | n/a |
 | [figma-to-screen](core/stacks/react-native/skills/figma-to-screen/SKILL.md) | `core` stacks/react-native (copied by init.sh) | `/figma-to-screen` | Figma frame → screen implementation | normal |
-| [agent-architect](agent/skills/agent-architect/SKILL.md) | `agent` | `/agent-architect [greenfield\|audit]` | AI assistant architecture: one-question interview → ADR → scaffold, or stock-vs-custom audit | normal/high |
+| [agent-architect](agent/skills/agent-architect/SKILL.md) | `agent` | `/agent-architect [greenfield\|skeleton\|audit]` | AI assistant architecture: one-question interview → ADR → scaffold, an empty skeleton on a named stack, or stock-vs-custom audit | normal/high |
 | [agent-feature](agent/skills/agent-feature/SKILL.md) | `agent` | `/agent-feature <capability>` | Feature in an existing assistant: ADR fit check, reuse inventory, reuse/extend/new per slice, duplicate check | normal |
 | [agent-design-ui](agent/skills/agent-design-ui/SKILL.md) | `agent` | `/agent-design-ui <figma\|folder>` | `/design-ui` + chat states, CopilotKit theme, ladder per chat element | normal |
 | [agent-tool](agent/skills/agent-tool/SKILL.md) | `agent` | `/agent-tool <tool>` | Agent tool: trusted identity, read vs mutation, retry/audit, short description, test | normal |

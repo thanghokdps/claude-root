@@ -5,7 +5,8 @@ Design before code: kickoff (docs-first project intake), brainstorming, grill, d
 ## Install
 
 ```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
+/plugin marketplace add thanghokdps/claude-root     # GitHub (public, no VPN)
+# or: /plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git   # GitLab (team: VPN + SSH key)
 /plugin install plan@harness
 ```
 

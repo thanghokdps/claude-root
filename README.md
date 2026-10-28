@@ -6,11 +6,20 @@ A Claude Code kit centred on **building one AI assistant end to end** on Copilot
 
 ## Quickstart — AI assistant
 
+Inside Claude Code, add the marketplace from **GitHub or GitLab**. Both hold the same commit and give the same marketplace `harness`, so every command after this line is the same:
+
+| Source | When | Add the marketplace |
+|---|---|---|
+| **GitHub** (public) | Anyone, no VPN | `/plugin marketplace add thanghokdps/claude-root` |
+| **GitLab** (team) | Reporter access to `thang.hoquang/claude-kit`, VPN on, SSH key on GitLab | `/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git` |
+| GitLab over HTTPS | You sign in to GitLab with a token, not SSH | `/plugin marketplace add https://gitlab.asoft-python.com/thang.hoquang/claude-kit.git` |
+
 ```bash
-# Inside Claude Code — no clone, no fixed path (company GitLab: SSH key + VPN; outside it: thanghokdps/claude-root)
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
 /plugin install agent@harness          # pulls in its own dependencies (progress) automatically
+/reload-plugins
 ```
+
+Quick check for GitLab: if `git clone git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git` works in your terminal without a password prompt, the marketplace works too. Update later with `/plugin marketplace update harness`.
 
 Then open Claude Code in an empty folder and **say what you want to build, in your own words**. No command to remember:
 
@@ -24,13 +33,21 @@ Claude picks the right skill from that sentence (here `agent-architect`) and **a
 2. **The choices that are costly to change:** host, clients, single app or monorepo, design. Everything else is defaulted and shown on one card for you to confirm.
 3. **Then it builds:** checks Node, the package manager, the model key and git; writes the architecture record (`docs/adr/`); scaffolds the smallest slice; and proves it with one real streamed turn.
 
+**Just an empty skeleton on your stack, no features yet?** Say so and name the stack:
+
+```text
+Dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra, chưa cần feature gì
+```
+
+`agent-architect` switches to **skeleton** mode. It takes the stack you named as given and asks only what you left open and is costly to change (framework, host, clients, single app or monorepo), plus one line on who the chatbot is for ("a general assistant" is fine). It never asks about tasks, tools or features. Then it builds the app shell from the vendor's reference repo with exact pins, the env schema, identity, one agent with no tools, the model factory, masked tracing and the stock chat UI with your theme tokens, and proves it with one real streamed "hello" turn. No tools, no confirm cards, no database unless you named one. Features come later, one at a time, in plain words.
+
 After that, ask for each feature the same way, e.g. *"Thêm tính năng cho khách đổi địa chỉ giao hàng"*. `agent-feature` checks it against the architecture record, asks what is unclear, reuses what exists, and builds it layer by layer.
 
 Say it in plain words, as above. The command column is what fires, and what to type only when you want to force it:
 
 | I want to… | Fires |
 |---|---|
-| Start an assistant, or audit one | `/agent-architect` (`greenfield` · `audit`) |
+| Start an assistant, an empty skeleton on my stack, or audit one | `/agent-architect` (`greenfield` · `skeleton` · `audit`) |
 | Add a feature | `/agent-feature` (it calls the layer skills below in order) |
 | Add a backend tool · a frontend tool | `/agent-tool` · `/agent-frontend` (`useFrontendTool`) |
 | Confirm before a write | `/agent-hitl` |
@@ -54,8 +71,9 @@ Install everything (`agent` plus the dev-loop plugins and global rules) when you
 /plugin install harness@harness
 
 # Or from a clone, which also installs global/CLAUDE.md and the global rules.
-# Clone anywhere — install.sh resolves its own location.
-git clone git@github.com:thanghokdps/claude-root.git <any-dir>/harness
+# Clone anywhere (install.sh resolves its own location), from either source:
+git clone git@github.com:thanghokdps/claude-root.git <any-dir>/harness      # GitHub
+git clone git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git <any-dir>/harness   # GitLab
 bash <any-dir>/harness/scripts/install.sh        # no env vars needed; see .env.sample for optional ones
 ```
 
@@ -249,10 +267,11 @@ Installs `global/CLAUDE.md` and `plugins/core/rules/` into `~/.claude/`, registe
 
 The kit is split by role — see [`plugins/README.md`](plugins/README.md). Installing a role plugin installs its dependencies: `dev` brings `core`, `plan`, `review`; `agent` brings `dev` and `ship` (and through them `core`, `plan`, `review`), because its skills hand off to `/fix-bug`, `/verify-done`, `/review-checklist`, `/write-migration` and `/finish-branch`; hooks are the opt-in `guards`, except `branch-guard`, which ships in `core` and is always on.
 
-From the team's GitLab instead of a local clone (needs read access to `thang.hoquang/claude-kit`, an SSH key on GitLab and the VPN; the same commit is on GitHub as `thanghokdps/claude-root`):
+Without a clone, from GitHub or the team's GitLab (GitLab needs read access to `thang.hoquang/claude-kit`, an SSH key on GitLab and the VPN; both hold the same commit):
 
 ```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
+/plugin marketplace add thanghokdps/claude-root     # GitHub
+/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git   # or GitLab: pick one
 /plugin install agent@harness     # one role (+ its dependencies)
 /plugin install harness@harness       # everything
 ```
