@@ -41,7 +41,7 @@ Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/
 
 ## Step 2 — Greenfield interview
 
-Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kickoff doc set); ask only what is still open. Ask only the rows `interview.md` § Asked or defaulted marks as asked: the problem (P1–P4) before any technology, then Q-F (only when no stack is named), Q4 (writes) and Q-D (only when no design was given). Every other question is defaulted from the doc set, the repo, the request or the recommendation, and shown on **one** defaults card the user accepts or changes.
+Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kickoff doc set); ask only what is still open. Ask only the rows `interview.md` § Asked or defaulted marks as asked: the problem (P1–P4) before any technology, then Q-F (only when no stack is named) and Q4 (writes). Q-D (design) is never asked: a Figma link or mockup in the request or the doc set is used, and without one the chat is CopilotKit's recommended stock UI (`CopilotChat` v2 with theme tokens), shown on the card. Every other question is defaulted from the doc set, the repo, the request or the recommendation, and shown on **one** defaults card the user accepts or changes.
 
 - **One question per turn, as choices**: `AskUserQuestion` with 2–4 options, the recommended one first with `(Recommended)`, per `interview.md` § Shape of each question; numbered options when the tool is absent. Never a prose question the user must answer in free text. Skip what the repo or the request already answers.
 - **Viewports are always set** (Q2v) for any web client, even when every frame is desktop-sized: defaulted to phone (375px) plus desktop and shown on the card.
@@ -49,7 +49,7 @@ Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kick
 - The shape follows Q-F (`shapes.md` § Framework). A named stack is used as given: Mastra → **M**, LangChain or plain LangGraph → **A** (`createAgent` runs on the LangGraph runtime), custom graph or `StateGraph` → **B**/hybrid. With no stack named, recommend **A** (createAgent + middleware + CopilotRuntime v2), unless the host is edge/Workers or a contract the runtime cannot express forces **B**. Use the decision rule in `shapes.md` for single agent vs supervisor in every framework.
 - Every non-L0 choice names its rung and its reason (`${CLAUDE_SKILL_DIR}/references/stock-map.md`).
 
-**Done when:** P1–P4, Q-F, Q4 and Q-D are answered, and the defaults card (Q1–Q9, Q2v, Q-L, Q-T) is accepted or its changed rows answered; anything deferred is recorded with a risk.
+**Done when:** P1–P4, Q-F and Q4 are answered, and the defaults card (Q1–Q9, Q2v, Q-L, Q-T, Q-D) is accepted or its changed rows answered; anything deferred is recorded with a risk.
 
 ## Step 2s — Skeleton interview (empty chatbot, no features)
 

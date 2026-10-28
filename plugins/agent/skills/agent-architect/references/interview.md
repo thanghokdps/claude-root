@@ -28,7 +28,7 @@ The assistant is built from these answers: every task in P2 must end up owned by
 | 7 | **Models** — providers, fallback order, caller-supplied keys, a cheap model for router/summary/suggestions? | Fallback middleware vs cascade model; key in request scope only |
 | 8 | **Observability & privacy** — tracing provider, masking, retention, compliance controls? | Masked-by-default tracing; HMAC user ids |
 | 9 | **Evals** — which behaviours are must-pass, which judge model, where does the CI gate sit? | Eval tree separate from unit tests; baseline diff gate |
-| D | **Design** — is there a Figma file, mockup or screenshot of the chat? Ask after Q2 | Yes → link recorded in the ADR; after the scaffold, `/agent-design-ui` builds the chat from it. No → stock `CopilotChat` with theme tokens |
+| D | **Design** — defaulted, not asked: a Figma file, mockup or screenshot in the request or the doc set is used; otherwise CopilotKit's recommended stock UI | Link given → recorded in the ADR; after the scaffold, `/agent-design-ui` builds the chat from it. None → stock `CopilotChat` (v2) with theme tokens, shown on the defaults card |
 | L | **Repo layout** — one app or a monorepo? Ask after Q2 (clients) | `layouts.md`: L1 single app · L2 pnpm + Turborepo. An existing repo's layout is detected, not asked |
 | T | **Test location** — `__tests__/` next to the code, or a separate `tests/` folder outside `src/` mirroring it? Ask after Q-L, only when the repo has no tests yet | Runner `include`/`testMatch`, where every skill writes tests. Existing tests → detect their layout and follow it, never ask |
 
@@ -41,7 +41,7 @@ Ask only what Claude cannot infer or what is costly to reverse. Everything else 
 | P1–P4, the problem: nobody but the user knows it | Q1 host, Q2 clients, Q2v viewports, Q-L layout, Q-T test location |
 | Q-F framework, only when no stack is named | Q3 agent shape (from P2 by the `shapes.md` rule), Q5 identity (from the auth the repo or stack names) |
 | Q4 writes: does any tool change data (it decides the confirm step) | Q6 memory, Q7 providers and models (primary, fallback, cheap) with a cost line, from `model-choice.md`, Q8 tracing and masking, Q9 must-pass evals (from P2's examples) |
-| Q-D design link, only when none was given | |
+| | Q-D design: the link the user gave, otherwise CopilotKit's recommended stock chat UI (`CopilotChat` v2 with theme tokens). Never asked; a Figma link given later goes to `/agent-design-ui` |
 
 A default comes from, in order: the kickoff doc set, the repo, the request, the recommended option. After the asked questions, show the defaults card: one table (`Question · Default · From`) and one `AskUserQuestion` with *Accept all (Recommended)* / *Change some*. *Change some* → ask only the picked rows, each as its own question. Accepted rows go in the ADR as *defaulted*, with their source. A defaulted Q2v still sets the viewports every later skill shoots at, so it is never dropped, only not asked.
 

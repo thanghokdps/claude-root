@@ -31,7 +31,7 @@ Open Claude Code in an empty folder and say what you want to build, e.g. *"Tôi 
 
 Only want an empty skeleton? Name the stack and say "no features yet", e.g. *"Dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra, chưa cần feature gì"*. It asks only the open stack choices and who the chatbot is for, builds the shell with one agent and no tools, and stops at one real streamed "hello" turn.
 
-If the designer has a Figma file or mockups, give the link when asked — `agent-design-ui` turns it into the chat UI after the scaffold.
+Design is never asked. Put a Figma file or mockup in your first message (or give it any time later) and `agent-design-ui` turns it into the chat UI after the scaffold. Without one, the chat uses CopilotKit's recommended stock UI (`CopilotChat` v2 with theme tokens).
 
 ## Grow it, one feature at a time
 
