@@ -9,6 +9,8 @@ Design before code: kickoff (docs-first project intake), brainstorming, grill, d
 /plugin install plan@harness
 ```
 
+GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
+
 Also installs: `progress`.
 
 ## Skills

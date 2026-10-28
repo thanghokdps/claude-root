@@ -19,6 +19,8 @@ Session and project basics every role uses: verify-done evidence gate, project-i
 /plugin install core@harness
 ```
 
+GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
+
 Also installs: `progress`.
 
 ## Skills

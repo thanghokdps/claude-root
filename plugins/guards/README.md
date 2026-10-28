@@ -9,6 +9,8 @@ Personal guard-rail hooks: commit gate, scope gate, blast-radius and session han
 /plugin install guards@harness
 ```
 
+GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
+
 Also installs: `dev`.
 
 ## Hooks

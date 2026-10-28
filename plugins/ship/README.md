@@ -9,6 +9,8 @@ Land and release: finish-branch, ci-triage, release-checklist, write-migration.
 /plugin install ship@harness
 ```
 
+GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
+
 Also installs: `core`.
 
 ## Skills

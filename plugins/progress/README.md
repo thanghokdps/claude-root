@@ -9,6 +9,8 @@ Shows a skill's checklist when it starts and each checkpoint as it completes (âœ
 /plugin install progress@harness
 ```
 
+GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
+
 No other plugin needed.
 
 ## Hooks

@@ -9,6 +9,8 @@ Improve the process: weekly retro, session diagnosis, authoring skills.
 /plugin install lead@harness
 ```
 
+GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
+
 Also installs: `core`.
 
 ## Skills
