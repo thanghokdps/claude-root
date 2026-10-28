@@ -248,8 +248,9 @@ def push_command(args, gitopts=(), env=None):
         return
     # Push refspecs, mirror or followTags already in the config act on a plain `git push` too: read them with
     # the push's own -C/-c and GIT_* environment, so the check sees the config the push will use.
-    gitenv = {k: v for k, v in (env or {}).items() if k.startswith("GIT_")}
-    r = run(["git", *gitopts, "config", "--get-regexp", r"^(remote\..*\.(push|mirror)|push\.followtags)$"], env=gitenv)
+    # Only -C reaches the subprocess; env and other -c overrides were denied before we get here.
+    copts = [t for pair in zip(gitopts[::2], gitopts[1::2]) if pair[0] == "-C" for t in pair]
+    r = run(["git", *copts, "config", "--get-regexp", r"^(remote\..*\.(push|mirror)|push\.followtags)$"])
     if r.returncode == 0 and r.stdout.strip() and not all(l.split()[-1].lower() == "false" for l in r.stdout.splitlines()):
         deny("this repo's git config sets remote.*.push, remote.*.mirror or push.followTags, so a push may publish "
              "release tags: a person pushes from here, or removes that setting first.")
@@ -299,11 +300,12 @@ for seg in segments(cmd):
         if toks[i:i + 1] == ["push"]:
             if any(TAG_CONFIG.search(t) for t in toks[1:i] + [v for k, v in env.items() if k.startswith("GIT_CONFIG")]):
                 deny("git -c push.followTags pushes release tags along with the branch: push the one tag: git push origin v<version>")
-            # Config pulled in from elsewhere can't be judged from the command line.
+            # Config pulled in from elsewhere can't be judged from the command line, so a push carries none.
             elif (any(re.match(r"include", t, re.I) for t in toks[2:i:2])
-                  or set(env) & {"GIT_DIR", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM", "GIT_CONFIG_PARAMETERS"}):
-                deny("git push with include.path/includeIf, GIT_DIR or GIT_CONFIG_* overrides can't be checked: push without them.")
-            push_command(toks[i + 1:], toks[1:i], env)
+                  or any(k.startswith("GIT_") or k in ("HOME", "XDG_CONFIG_HOME") for k in env)):
+                deny("git push with include.path/includeIf, GIT_* or HOME/XDG_CONFIG_HOME overrides can't be checked: push without them.")
+            else:
+                push_command(toks[i + 1:], toks[1:i], env)
     else:
         args = eas_args(toks)
         if args is not None:

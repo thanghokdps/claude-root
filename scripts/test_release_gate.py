@@ -209,6 +209,8 @@ def test_tag_push_needs_the_release_for_that_tag():
     assert gate(path, "git -c include.path=/tmp/x.cfg push origin feat/x", b)[0] == "deny"
     assert gate(path, "GIT_CONFIG_GLOBAL=/tmp/x.cfg git push origin feat/x", b)[0] == "deny"
     assert gate(path, "GIT_DIR=/tmp/other.git git push origin feat/x", b)[0] == "deny"
+    assert gate(path, "HOME=/tmp/h git push origin feat/x", b)[0] == "deny"
+    assert gate(path, "GIT_TRACE=1 git push origin feat/x", b)[0] == "deny"
     other = repo()
     git(other, "config", "remote.origin.push", "refs/tags/*:refs/tags/*")
     assert gate(path, f"git -C {other} push origin feat/x", b)[0] == "deny"  # config read where the push runs
