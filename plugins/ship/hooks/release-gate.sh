@@ -281,6 +281,14 @@ def push_command(args, gitopts=(), env=None):
             deny(reason)
 
 
+# An earlier export/set -a/cd in the same command changes the env or repo the push runs in, which the checks
+# below (run here, in the hook's own env and cwd) can't follow.
+if re.search(r"\bgit\b.*\bpush\b", cmd, re.S) and re.search(
+        r"(?:^|[\s;&|(])(?:(?:export|declare\s+-\w*x\w*|typeset\s+-\w*x\w*)\s+)?(?:GIT_\w+|HOME|XDG_CONFIG_HOME)=|"
+        r"\bset\s+-\w*a|(?:^|[;&|(]\s*)(?:cd|pushd)\s", cmd):
+    deny("git push after export/set -a/cd in the same command runs with an env or repo these checks can't see: "
+         "run the push as its own command.")
+
 for seg in segments(cmd):
     env, toks = tokens(seg)
     if not toks:
