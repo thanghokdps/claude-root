@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for guards step-limit.sh, run-log.sh, push-evidence.sh and create-pr's witness.sh. Run: python3 scripts/test_run_evidence.py"""
+"""Tests for guards step-limit.sh, run-log.sh, push-evidence.sh, create-pr's witness.sh and blast-radius's hotspots.sh. Run: python3 scripts/test_run_evidence.py"""
 import json
 import os
 import subprocess
@@ -10,6 +10,7 @@ STEP = os.path.join(ROOT, "plugins", "guards", "hooks", "step-limit.sh")
 RUNLOG = os.path.join(ROOT, "plugins", "guards", "hooks", "run-log.sh")
 WITNESS = os.path.join(ROOT, "plugins", "review", "skills", "create-pr", "scripts", "witness.sh")
 PUSH = os.path.join(ROOT, "plugins", "guards", "hooks", "push-evidence.sh")
+HOTSPOTS = os.path.join(ROOT, "plugins", "review", "skills", "blast-radius", "scripts", "hotspots.sh")
 
 
 def step(payload, tmp, **env):
@@ -99,6 +100,19 @@ def test_push_gate_ignores_other_commands_and_missing_log():
     path = pushed_repo("2026-01-01T00:00:00Z")
     assert push(path, "git status") == ""
     assert push(pushed_repo(), "gh pr create --fill") == ""
+
+
+def test_hotspots_rank_changed_files_and_skip_lockfiles():
+    path = repo()
+    for i in range(3):
+        for name in (["app.py", "package-lock.json"] if i else ["app.py", "package-lock.json", "util.py"]):
+            with open(os.path.join(path, name), "a") as f:
+                f.write(f"{i}\n")
+        subprocess.run(["git", "-C", path, "add", "-A"], check=True)
+        subprocess.run(["git", "-C", path, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", str(i)], check=True)
+    out = subprocess.run(["bash", HOTSPOTS], capture_output=True, text=True, cwd=path).stdout.split("\n")
+    assert out[0].split() == ["3", "app.py"] and out[1].split() == ["1", "util.py"], out
+    assert not any("package-lock.json" in line for line in out), out
 
 
 if __name__ == "__main__":

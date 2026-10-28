@@ -24,6 +24,8 @@ git diff --stat                      # uncommitted
 
 Pick whichever matches what the user is asking about. If ambiguous, ask once.
 
+Then run `bash ${CLAUDE_SKILL_DIR}/scripts/hotspots.sh`: the repo's most-changed files over the last year. A changed file in that list is a node many features pass through: it counts as **Flow participation** in Stage 3 even when its callers look few.
+
 If the change is **proposed but not written yet**, take the described change and treat the named symbols as the change set.
 
 Extract from the diff the list of **changed symbols** — exported functions, classes, types, routes, env vars, table names, event names, config keys. These are the seeds for Stage 2.
@@ -112,7 +114,7 @@ Score **each affected node**, then the change overall.
 | Factor | Weight | Fires when |
 |---|---|---|
 | Test gap | 0.30 | Stage 2e found no test file referencing this node |
-| Flow participation | 0.25 | Node sits on a critical path (auth, payment, data write, startup) |
+| Flow participation | 0.25 | Node sits on a critical path (auth, payment, data write, startup), or its file is in the Stage 1 hotspot list |
 | Security surface | 0.20 | Node name or body touches auth, token, password, secret, permission, crypto, session |
 | Cross-boundary | 0.15 | Callers live in a different module/package/service |
 | High fan-in | 0.10 | 5+ distinct call sites |

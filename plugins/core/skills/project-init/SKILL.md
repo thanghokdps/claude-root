@@ -76,7 +76,14 @@ find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.go" 
 cat README.md 2>/dev/null | head -60
 ```
 
-Read: entry points, main config, core models, test setup, CI config.
+Hotspots (the files changed most often in the last year, where a change needs the closest review):
+
+```bash
+git log --since="12 months ago" --no-merges --name-only --format= | grep -v '^$' \
+  | grep -vE '(lock\.json|lock\.yaml|\.lock|go\.sum)$' | sort | uniq -c | sort -rn | head -15
+```
+
+Read: entry points, main config, core models, test setup, CI config, and the top hotspots.
 
 Identify and note:
 - Language + framework + versions
@@ -101,6 +108,7 @@ If the project has a kickoff doc set, written by `/kickoff` (plan, if installed)
 - Key architectural decisions (why, not just what)
 - One typical request traced end-to-end
 - External dependencies table
+- Hotspots: the top 10 from Step 2, one line each on what the file holds
 
 ### `docs/conventions.md`
 - Naming rules (files, classes, functions, constants)
