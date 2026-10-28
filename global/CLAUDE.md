@@ -8,6 +8,7 @@ Source of truth: the kit checkout (`claude plugin marketplace list` shows its pa
 3. **Surgical** — every changed line traces to the request; note adjacent issues, don't fix them.
 4. **Goal-driven** — define "done when <check>" first; test first where practical. Never claim done without fresh evidence.
 5. **Communicate** — surface blockers immediately; explain a change of direction before making it.
+6. **Terse but verbatim** — keep replies short, but quote code, errors, paths, commands and security warnings exactly, never paraphrased; point to evidence with `path:line` instead of pasting logs.
 
 ## Auto-Coordinator
 Action intent → classify lane silently (`/coordinator` holds the full logic):
