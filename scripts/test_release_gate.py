@@ -241,7 +241,10 @@ def test_tag_push_needs_the_release_for_that_tag():
                 "find . -exec git push \\;", "xargs -I{} git", "cat cmds.txt | sh", "bash < cmds.txt",
                 "bash -s", "$GIT push origin feat/x", "cat x | /bin/sh", "bash -xs < cmds.txt", "/bin/bash<cmds.txt",
                 "sudo $G push origin feat/x", "git --exec-path=/tmp/x push origin feat/x", "git flow release finish",
-                "PATH=/tmp/x:$PATH git status"]:
+                "PATH=/tmp/x:$PATH git status", "sudo bash -c 'git push --tags'", "cat x |& sudo /bin/bash",
+                "cat x | nice -n 5 sh", "GIT_EXEC_PATH=/tmp git status", "PAGER=/tmp/p git log",
+                "git -c core.pager=/tmp/p log", "git -c core.hooksPath=/tmp/h commit -m x",
+                "git --config-env=core.sshCommand=SSH fetch"]:
         assert gate(path, cmd, b)[0] == "deny", cmd
     for cmd in ["git status", "git log --oneline -3", "which git", "brew install git", "git lfs pull",
                 "bash scripts/build.sh"]:

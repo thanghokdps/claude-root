@@ -284,6 +284,8 @@ def push_command(args, gitopts=(), env=None):
 SHELLS = {"eval", "source", ".", "sh", "bash", "zsh", "dash", "ksh", "fish"}
 RUNNERS = {"sudo", "doas", "nice", "ionice", "nohup", "time", "timeout", "env", "command", "builtin", "exec", "xargs",
            "parallel", "find", "stdbuf", "caffeinate", "watch"}  # run the next word as a command
+RUN_CONFIG = re.compile(r"^(?:core\.(?:pager|hookspath|sshcommand|fsmonitor|editor|askpass|gitproxy)|pager\.|"
+                        r"diff\.external|.*\.textconv|filter\.|credential\.|sequence\.editor|alias\.|include)", re.I)
 INFO = {"which", "type", "whereis", "man", "echo", "printf", "brew", "apt", "apt-get", "grep", "rg"}  # name git, don't run it
 VALUE_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--super-prefix", "--config-env", "--attr-source"}
 FLAG_OPTS = {"--no-pager", "-P", "-p", "--paginate", "--bare", "--no-replace-objects", "--literal-pathspecs",
@@ -330,10 +332,12 @@ for seg in segs:
     if (shell and (not any(re.match(r"^-\w*c", t) for t in toks[1:]) and len(toks) == 1
                    or any(re.match(r"^-\w*s", t) for t in toks[1:]) or "<" in seg)) \
             or toks[0].startswith("$") \
-            or (toks[0] in RUNNERS and any(t.startswith("$") for t in toks[1:])):
+            or (os.path.basename(toks[0]) in RUNNERS and any(t.startswith("$") or os.path.basename(t) in SHELLS
+                                                             for t in toks[1:])):
         pushes = wrapped = True
-# A pipe into a shell (… | sh, … | /bin/bash -s) feeds it text the hook never sees.
-if re.search(r"\|\s*(?:\S*/)?(?:sh|bash|zsh|dash|ksh|fish)\b", cmd) or \
+# A pipe into a shell (… | sh, … |& sudo /bin/bash -s) feeds it text the hook never sees.
+RUN = r"(?:(?:\S*/)?(?:" + "|".join(sorted(RUNNERS)) + r")\b[^|;&\n]*?\s+)*"
+if re.search(r"\|&?\s*" + RUN + r"(?:\S*/)?(?:sh|bash|zsh|dash|ksh|fish)\b", cmd) or \
         re.search(r"(?:^|[\s;&|(])(?:\S*/)?(?:sh|bash|zsh|dash|ksh|fish)\s*<", cmd):
     pushes = wrapped = True
 # Anything run before a push in the same command (export, set -a, cd, source, eval…) can change the env or repo
@@ -369,8 +373,14 @@ for seg in segs:
         elif sub and sub not in BUILTINS:
             # An alias or an external git-<sub> on PATH can run a push the checks below never see.
             deny(f"git {sub} isn't a built-in git command (an alias or a git-{sub} program); run the git command it stands for.")
-        if "PATH" in env:
-            deny("git with PATH set on the command line can run another git; run it without that.")
+        # These pick which program, config or pager git runs, for any subcommand.
+        if any(k.startswith("GIT_") or k in ("PATH", "PAGER", "HOME", "XDG_CONFIG_HOME") for k in env):
+            deny("git with GIT_*, PATH, PAGER, HOME or XDG_CONFIG_HOME set on the command line can run another "
+                 "program or config; run it without that.")
+        if any(RUN_CONFIG.search(t) for j, t in enumerate(opts) if j and opts[j - 1] in ("-c", "--config-env")) or \
+                any(RUN_CONFIG.search(t.split("=", 1)[1]) for t in opts if t.startswith("--config-env=")):
+            deny("git -c/--config-env with a key that runs a command (pager, hooks, ssh, fsmonitor, editor, textconv, "
+                 "filter, credential helper) can't be checked; run git without it.")
         if sub == "config" and any(re.match(r"alias\.", t, re.I) for t in toks[i + 1:]) and \
                 any("push" in t or t.startswith("!") for t in toks[i + 1:]):
             deny("a git alias that pushes or runs a shell command would slip past the release checks; a person sets that by hand.")
