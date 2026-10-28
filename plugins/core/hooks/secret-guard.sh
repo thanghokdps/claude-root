@@ -80,6 +80,9 @@ def secret_path(path):
 
 def secret_name(name):
     """A glob or pattern that is itself the name of a secret file (.env*, *.p8, **/.env)."""
+    alts = expand_braces(name, 65)
+    if len(alts) > 1:
+        return len(alts) > 64 or any(secret_name(a) for a in alts)
     last = name.replace("\\", "/").rstrip("/").split("/")[-1]
     if not last:
         return False
@@ -102,7 +105,9 @@ def expand_braces(a, limit=64):
 
 
 def arg_hit(a):
-    return any(one_arg_hit(x) for x in expand_braces(a))
+    alts = expand_braces(a, 65)
+    # More alternatives than we check could hide a secret past the cap: fail closed.
+    return len(alts) > 64 or any(one_arg_hit(x) for x in alts)
 
 
 def one_arg_hit(a):
@@ -167,10 +172,30 @@ def bash_hits(cmd, depth=0):
     return hits
 
 
+def in_glob(f, glob_param):
+    """Whether ripgrep's --glob would keep f. Braces are expanded; a `!` negation can't be judged here, so it keeps f."""
+    if not glob_param or glob_param.startswith("!"):
+        return True
+    return any(match(os.path.basename(f), g) or match(f, g) for g in expand_braces(glob_param))
+
+
 def secret_in_scope(path, glob_param):
-    """First secret file a Grep over `path` (default cwd) would search, honouring .gitignore; None on any doubt."""
+    """First secret file a Grep over `path` (default cwd) would search, honouring .gitignore inside the repo."""
     full = os.path.realpath(os.path.join(cwd, os.path.expanduser(path or ".")))
+    if not os.path.isdir(full):
+        return None
     if not (full == top or full.startswith(top + os.sep)):
+        # Outside the repo (~/.ssh, a sibling project) there is no .gitignore to lean on: walk it, capped.
+        seen = 0
+        for d, dirs, files in os.walk(full):
+            dirs[:] = [x for x in dirs if x not in (".git", "node_modules")]
+            for name in files:
+                seen += 1
+                f = os.path.join(d, name)
+                if seen > 5000:
+                    return None
+                if is_secret([name, f.lstrip(os.sep)], False) and in_glob(f, glob_param):
+                    return f
         return None
     try:
         r = subprocess.run(["git", "-C", top, "ls-files", "-z", "-co", "--exclude-standard", "--",
@@ -180,7 +205,7 @@ def secret_in_scope(path, glob_param):
     if r.returncode != 0:
         return None
     for f in filter(None, r.stdout.split("\0")):
-        if is_secret([f]) and (not glob_param or match(os.path.basename(f), glob_param) or match(f, glob_param)):
+        if is_secret([f]) and in_glob(f, glob_param):
             return f
     return None
 

@@ -45,7 +45,8 @@ def test_bash_readers_and_copiers_are_denied():
     for cmd in ["cat .env", "grep KEY .env", "source .env", "set -a; . .env", "base64 key.p8", "cp .env /tmp/x",
                 "cat \"config/.env.local\"", "export $(cat .env)", "FOO=1 head -n1 .env", "cat < .env",
                 "ls && sed -n 1,3p .env", "cat ~/.ssh/id_ecdsa", "grep -e KEY .env", "rg KEY .env",
-                "cat {.env,x}", "cat src/{a.ts,.env}"]:
+                "cat {.env,x}", "cat src/{a.ts,.env}",
+                "cat {" + ",".join(f"f{n}" for n in range(70)) + "}"]:
         assert bash(cmd, cwd) == "deny", cmd
 
 
@@ -139,6 +140,10 @@ def test_grep_over_a_directory_checks_files_it_would_search():
     assert decide(GUARD, "Grep", {"pattern": "x", "path": "ios"}, cwd) == "deny"
     assert decide(GUARD, "Grep", {"pattern": "x", "glob": "*.ts"}, cwd) == "allow"
     assert decide(GUARD, "Grep", {"pattern": "x", "path": "src"}, cwd) == "allow"
+    assert decide(GUARD, "Grep", {"pattern": "x", "glob": "{*.ts,*.p8}"}, cwd) == "deny"
+    outside = tempfile.mkdtemp(prefix="secret-outside-")
+    touch(outside, "id_rsa")
+    assert decide(GUARD, "Grep", {"pattern": "x", "path": outside}, cwd) == "deny"
     ignored = repo()
     touch(ignored, ".gitignore", ".env\n")
     touch(ignored, ".env", "K=1")
