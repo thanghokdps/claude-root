@@ -52,6 +52,7 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [review-diff](review/skills/review-diff/SKILL.md) | `review` | `/review-diff` | Diff walkthrough with Mermaid architecture diagrams | n/a |
 | [blast-radius](review/skills/blast-radius/SKILL.md) | `review` | `/blast-radius` | Change impact before merge: callers, consumers, contracts, untested paths, rollback plan | n/a |
 | [create-pr](review/skills/create-pr/SKILL.md) | `review` | `/create-pr` | Branch diff → PR description | n/a |
+| [resolve-pr-feedback](review/skills/resolve-pr-feedback/SKILL.md) | `review` | `/resolve-pr-feedback [PR]` | Every open review thread: fix, answer or decline, one push, a reply on each | n/a |
 | [verify-feature](core/stacks/react-native/skills/verify-feature/SKILL.md) | `core` stacks/react-native (copied by init.sh) | `/verify-feature` | Lint + typecheck + tests across affected workspaces | n/a |
 | [gen-tests](core/stacks/react-native/skills/gen-tests/SKILL.md) | `core` stacks/react-native (copied by init.sh) | `/gen-tests <path>` | Scaffold tests for code that already exists | n/a |
 | [compact](core/skills/compact/SKILL.md) | `core` | `/compact` | Summarize session → HANDOFF.md + memory | n/a |

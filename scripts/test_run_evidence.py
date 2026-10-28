@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for guards step-limit.sh, run-log.sh and create-pr's witness.sh. Run: python3 scripts/test_run_evidence.py"""
+"""Tests for guards step-limit.sh, run-log.sh, push-evidence.sh and create-pr's witness.sh. Run: python3 scripts/test_run_evidence.py"""
 import json
 import os
 import subprocess
@@ -9,6 +9,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STEP = os.path.join(ROOT, "plugins", "guards", "hooks", "step-limit.sh")
 RUNLOG = os.path.join(ROOT, "plugins", "guards", "hooks", "run-log.sh")
 WITNESS = os.path.join(ROOT, "plugins", "review", "skills", "create-pr", "scripts", "witness.sh")
+PUSH = os.path.join(ROOT, "plugins", "guards", "hooks", "push-evidence.sh")
 
 
 def step(payload, tmp, **env):
@@ -58,6 +59,46 @@ def test_run_log_feeds_witness():
 def test_witness_without_log_says_not_recorded():
     out = subprocess.run(["bash", WITNESS], capture_output=True, text=True, cwd=repo()).stdout
     assert "not recorded" in out, out
+
+
+def pushed_repo(check_ts=None):
+    """A clone with one unpushed commit; check_ts, if set, is the time of a logged test run."""
+    origin = repo()
+    run = lambda *a, cwd: subprocess.run(["git", "-C", cwd, *a], check=True, capture_output=True)
+    run("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "base", cwd=origin)
+    path = tempfile.mkdtemp(prefix="push-evidence-")
+    subprocess.run(["git", "clone", "-q", origin, path], check=True, capture_output=True)
+    with open(os.path.join(path, "app.py"), "w") as f:
+        f.write("x = 1\n")
+    os.utime(os.path.join(path, "app.py"), (1_800_000_000, 1_800_000_000))  # 2027-01-15
+    run("add", "app.py", cwd=path)
+    run("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "change", cwd=path)
+    if check_ts:
+        with open(os.path.join(path, ".git", "claude-run-log.jsonl"), "w") as f:
+            f.write(json.dumps({"ts": check_ts, "cmd": "npm test", "last": "ok", "interrupted": False}) + "\n")
+    return path
+
+
+def push(path, command="git push"):
+    payload = json.dumps({"tool_input": {"command": command}, "cwd": path})
+    r = subprocess.run([PUSH], input=payload, capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    return r.stdout
+
+
+def test_push_without_a_later_check_asks():
+    out = push(pushed_repo("2026-01-01T00:00:00Z"))
+    assert '"permissionDecision":"ask"' in out and "before the last change" in out, out
+
+
+def test_push_after_a_check_is_silent():
+    assert push(pushed_repo("2028-01-01T00:00:00Z")) == ""
+
+
+def test_push_gate_ignores_other_commands_and_missing_log():
+    path = pushed_repo("2026-01-01T00:00:00Z")
+    assert push(path, "git status") == ""
+    assert push(pushed_repo(), "gh pr create --fill") == ""
 
 
 if __name__ == "__main__":
