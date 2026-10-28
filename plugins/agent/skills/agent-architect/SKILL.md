@@ -9,7 +9,7 @@ allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh *)
 
 # agent-architect
 
-**Invoke:** `/agent-architect [greenfield | audit]`
+**Invoke:** `/agent-architect [greenfield | skeleton | audit]`
 
 Picking the wrong shape is the most expensive mistake in an assistant: every later skill builds on it. This skill makes that choice explicit, writes it down, and only then scaffolds.
 
@@ -32,6 +32,7 @@ Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/
 
 - No doc set, no code, and the user mentions documents they have (PRD, ERD, tech stack) → offer `/kickoff` first, so the interview starts from them.
 
+- No agent code yet, and the user asks for a skeleton, an empty chatbot or "no features yet" → **skeleton** (Step 2s).
 - No agent code yet → **greenfield** (Step 2).
 - Agent code exists → **audit** (Step 3).
 - An ADR exists and the user did not ask to revisit → report the recorded card and stop.
@@ -49,6 +50,17 @@ Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kick
 - Every non-L0 choice names its rung and its reason (`${CLAUDE_SKILL_DIR}/references/stock-map.md`).
 
 **Done when:** P1–P4, Q-F, Q4 and Q-D are answered, and the defaults card (Q1–Q9, Q2v, Q-L, Q-T) is accepted or its changed rows answered; anything deferred is recorded with a risk.
+
+## Step 2s — Skeleton interview (empty chatbot, no features)
+
+The user wants a running, empty chatbot on a stack they name, and nothing else. Skip P2–P4, Step 2b's grill and the ADR's Problem section.
+
+- Take every stack choice the request names as given: framework, frontend, backend, database, host, layout. Ask only what it leaves open that is costly to change: Q-F (framework) when none is named, Q1 (host), Q2 (clients), Q-L (layout). One question per turn, as choices, the recommended one first. Never ask about tasks, tools or features.
+- Everything else is defaulted and shown on one defaults card.
+- Ask P1 in one line ("Who is it for, in one sentence?"). It becomes the prompt's opening line, and "a general assistant" is an accepted answer.
+- Write a short ADR (`docs/adr/<NNNN>-agent-architecture.md`): the stack, the card and "Features: none yet; each comes through `/agent-feature`".
+
+**Done when:** the stack is fully named and the defaults card is accepted.
 
 ## Step 2b — Grill the card
 
@@ -83,13 +95,15 @@ Build the smallest working slice of the chosen shape, test first where practical
 7. One read tool for the first P2 task, against its P3 system, through `/agent-tool` (from the user's API spec when one was given, its Step 0); then one real streamed turn with that task's example message through `/agent-verify-turn`.
 8. The P2 example messages as the first eval cases (`/agent-evals`).
 
+**Skeleton mode** (Step 2s) builds steps 0, 2–6 and stops there. No tool, no HITL, no database or ERD unless the user named a database (then the schema with no tables beyond what identity needs), and no evals beyond one smoke case. The agent has no tools and a prompt that opens with P1. The proof is one real streamed turn with "hello" through `/agent-verify-turn`, plus the stock chat UI rendering it. The chat UI stays stock `CopilotChat` with theme tokens. Every feature comes later through `/agent-feature`.
+
 Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later work: nostream helper nodes (Mastra: `generate()` helpers, `lastMessages`, `maxSteps`), stable prompt prefix, kill switch per tool. Build in the scaffold rows of `${CLAUDE_SKILL_DIR}/references/production.md` (durable state, health, env forwarding, fallback, masked tracing).
 
 "Implement all" or "don't ask me again" means: take the recommended option at every remaining question and record it as *defaulted* — it never means skipping a skill. After this first slice, every further feature goes through `/agent-feature` (one at a time, each with its reuse inventory and duplicate check), the chat UI through `/agent-design-ui`, and each feature's Done-when is met before the next starts.
 
 Then `/project-init` writes the project's `.claude/` docs and test strategy from the scaffold just built.
 
-**Done when:** format, typecheck, lint and tests pass, and one real turn streams end to end with its evidence shown.
+**Done when:** format, typecheck, lint and tests pass, and one real turn streams end to end with its evidence shown (skeleton: the "hello" turn).
 
 ---
 

@@ -34,13 +34,21 @@ Claude picks the right skill from that sentence (here `agent-architect`) and **a
 2. **The choices that are costly to change:** host, clients, single app or monorepo, design. Everything else is defaulted and shown on one card for you to confirm.
 3. **Then it builds:** checks Node, the package manager, the model key and git; writes the architecture record (`docs/adr/`); scaffolds the smallest slice; and proves it with one real streamed turn.
 
+**Just an empty skeleton on your stack, no features yet?** Say so and name the stack:
+
+```text
+Dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra, chưa cần feature gì
+```
+
+`agent-architect` switches to **skeleton** mode. It takes the stack you named as given and asks only what you left open and is costly to change (framework, host, clients, single app or monorepo), plus one line on who the chatbot is for ("a general assistant" is fine). It never asks about tasks, tools or features. Then it builds the app shell from the vendor's reference repo with exact pins, the env schema, identity, one agent with no tools, the model factory, masked tracing and the stock chat UI with your theme tokens, and proves it with one real streamed "hello" turn. No tools, no confirm cards, no database unless you named one. Features come later, one at a time, in plain words.
+
 After that, ask for each feature the same way, e.g. *"Thêm tính năng cho khách đổi địa chỉ giao hàng"*. `agent-feature` checks it against the architecture record, asks what is unclear, reuses what exists, and builds it layer by layer.
 
 Say it in plain words, as above. The command column is what fires, and what to type only when you want to force it:
 
 | I want to… | Fires |
 |---|---|
-| Start an assistant, or audit one | `/agent-architect` (`greenfield` · `audit`) |
+| Start an assistant, an empty skeleton on my stack, or audit one | `/agent-architect` (`greenfield` · `skeleton` · `audit`) |
 | Add a feature | `/agent-feature` (it calls the layer skills below in order) |
 | Add a backend tool · a frontend tool | `/agent-tool` · `/agent-frontend` (`useFrontendTool`) |
 | Confirm before a write | `/agent-hitl` |
