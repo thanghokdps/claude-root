@@ -74,10 +74,16 @@ if re.search(GIT + r"(?:stash\b|clean\b|reset\b[^;&|\n]*--(?:hard|merge|keep)|(?
 
 # A folder pathspec (git checkout -- src/, rm -r src) reaches the locked test without naming it.
 if re.search(AT + r"(?:git(?:\s+-[Cc]\s+\S+)*\s+(?:checkout|restore|rm)|rm)\b", cmd):
-    words = {w.strip("'\"").rstrip("/").removeprefix("./") for w in re.split(r"[\s;&|()]+", cmd)}
-    for rel in paths.values():
-        parts = rel.split("/")
-        if words & {"/".join(parts[:k]) for k in range(1, len(parts))}:
+    reached, words = set(), re.split(r"[\s;&|()]+", cmd)
+    for i, w in enumerate(words):
+        if i and words[i - 1] == "-C":  # git -C <repo> names the repo, not a pathspec
+            continue
+        w = re.sub(r"^:(?:\([^)]*\)|[!^/]*)", "", w.strip("'\""))  # pathspec magic (:/src, :(glob)src)
+        w = re.split(r"[*?\[]", w)[0]  # a glob reaches whatever its literal prefix holds
+        if w and not w.startswith("-"):
+            reached.add(os.path.realpath(os.path.join(cwd, os.path.expanduser(w))))
+    for full, rel in paths.items():
+        if any(r != full and full.startswith(r.rstrip(os.sep) + os.sep) for r in reached):
             block(f"test-lock: this command reaches the folder of {rel}, which is locked. "
                   "Name the files you mean, or unlock first with the user's yes.")
 
