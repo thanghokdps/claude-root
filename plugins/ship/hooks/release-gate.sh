@@ -281,48 +281,74 @@ def push_command(args, gitopts=(), env=None):
             deny(reason)
 
 
-WRAPPERS = {"command", "builtin", "exec", "nohup", "time", "sudo", "xargs", "nice"}
-SHELLS = {"eval", "source", ".", "sh", "bash", "zsh"}
+SHELLS = {"eval", "source", ".", "sh", "bash", "zsh", "dash", "ksh", "fish"}
+INFO = {"which", "type", "whereis", "man", "echo", "printf", "brew", "apt", "apt-get", "grep", "rg"}  # name git, don't run it
+VALUE_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--super-prefix", "--config-env"}
+BUILTINS = set("add am apply archive bisect blame branch cat-file check-ignore checkout cherry-pick clean clone commit "
+               "config describe diff fetch for-each-ref format-patch gc grep hash-object help init log ls-files "
+               "ls-remote ls-tree merge merge-base mv notes pull push rebase reflog remote reset restore rev-list "
+               "rev-parse revert rm shortlog show show-ref stash status submodule switch symbolic-ref tag "
+               "update-index version worktree lfs".split())
 
 
 def git_subcommand(toks):
-    """Index of git's subcommand, past every global option (-C/-c take a value, --no-pager and -P don't)."""
+    """Index of git's subcommand, past every global option (those in VALUE_OPTS take the next word)."""
     i = 1
     while i < len(toks) and toks[i].startswith("-"):
-        i += 2 if toks[i] in ("-C", "-c") else 1
+        i += 2 if toks[i] in VALUE_OPTS else 1
     return i
+
+
+def is_git(tok):
+    return os.path.basename(tok.strip("$(){}`")) == "git"
 
 
 segs, pushes, wrapped = segments(cmd), False, False
 for seg in segs:
     env, toks = tokens(seg)
-    while toks and toks[0] in WRAPPERS:
-        toks = toks[1:]
-    if toks and toks[0] == "git" and toks[git_subcommand(toks):][:1] == ["push"]:
-        pushes = True
-    if toks and toks[0] in SHELLS and any("push" in t for t in toks[1:]):
-        pushes = wrapped = True  # a push inside a string or script the hook can't parse
-    bare = [t.strip("$(){}`") for t in toks]
-    if "git" in bare and "push" in bare:
-        pushes = True  # (git push …), $(git push …): grouping glued to the words
+    if not toks:
+        continue
+    if is_git(toks[0]):
+        toks[0] = "git"
+        if toks[git_subcommand(toks):][:1] == ["push"]:
+            pushes = True
+    elif (toks[0] not in INFO and any(is_git(t) for t in toks[1:-1])) or \
+            any(t.startswith(("$(", "`", "(")) and is_git(t) for t in toks[1:]):
+        # git run through something (sudo -u x git, xargs git, nice -n 5 git, $(git …)): its options and the
+        # wrapper's own can't be told apart, so a gated repo runs git directly.
+        pushes = wrapped = True
+    if toks[0] in SHELLS and any(re.search(r"\bgit\b", t) for t in toks[1:]):
+        pushes = wrapped = True  # git inside a string or script the hook can't parse
 # Anything run before a push in the same command (export, set -a, cd, source, eval…) can change the env or repo
 # it runs in, which the checks below (in the hook's own env and cwd) can't follow: a push runs on its own.
-if pushes and (wrapped or len([s for s in segs if s.strip()]) > 1 or re.search(r"[{}()`!]|\$\(", cmd)):
+if wrapped:
+    deny("git must run directly here, not through sudo/xargs/env-style wrappers, $( ), eval or sh -c, so the "
+         "release checks see the command it really runs.")
+elif pushes and (len([s for s in segs if s.strip()]) > 1 or re.search(r"[{}()`!]|\$\(", cmd)):
     deny("git push must run as its own command here (no ;, &&, |, newline, subshell, $( ), eval or source around "
          "it), so the release checks see the env and repo it really runs in.")
 
 for seg in segs:
     env, toks = tokens(seg)
-    while toks and toks[0] in WRAPPERS:
-        toks = toks[1:]
     if not toks:
         continue
+    if is_git(toks[0]):
+        toks[0] = "git"
     if toks[0] == "gh" and toks[1:3] == ["pr", "review"] and ("--approve" in toks or "-a" in toks):
         deny("gh pr review --approve: approving is a person's decision. Ask the reviewer to approve it on GitHub.")
     elif toks[0] == "glab" and toks[1:3] == ["mr", "approve"]:
         deny("glab mr approve: approving is a person's decision. Ask the reviewer to approve it on GitLab.")
     elif toks[0] == "git":
         i = git_subcommand(toks)
+        sub = toks[i] if i < len(toks) else ""
+        # An alias can expand to a push the checks below never see.
+        if any(re.match(r"alias\.", t, re.I) for t in toks[1:i]):
+            deny("git -c alias.* can turn any subcommand into a push; run the git command it stands for.")
+        elif sub and sub not in BUILTINS and run(["git", "config", "--get", f"alias.{sub}"]).returncode == 0:
+            deny(f"git {sub} is an alias; run the git command it stands for, so the release checks can see it.")
+        if sub == "config" and any(re.match(r"alias\.", t, re.I) for t in toks[i + 1:]) and \
+                any("push" in t or t.startswith("!") for t in toks[i + 1:]):
+            deny("a git alias that pushes or runs a shell command would slip past the release checks; a person sets that by hand.")
         if toks[i:i + 1] == ["remote"] and any(t.startswith("--mirror") for t in toks[i + 1:]):
             deny("git remote --mirror makes every push mirror all refs, release tags included; a person sets that by hand.")
         if toks[i:i + 1] == ["config"] and any(TAG_CONFIG.search(t) for t in toks[i + 1:]):

@@ -225,6 +225,17 @@ def test_tag_push_needs_the_release_for_that_tag():
                 "git --git-dir=/tmp/o.git push origin feat/x", "git -P push origin HEAD:refs/tags/v9.0.0"]:
         assert gate(path, cmd, b)[0] == "deny", cmd
     assert gate(path, "git --no-pager push origin feat/x", b)[0] == "allow"
+    for cmd in ["git --git-dir /tmp/o.git push origin feat/x", "git --work-tree /tmp/w push origin feat/x",
+                "git -c alias.p=push p origin v1.4.0", "sudo -u bob git push origin feat/x",
+                "nice -n 5 git push origin feat/x", "/usr/bin/git push --tags", "xargs git push < refs.txt",
+                "sh -c 'git p origin v1.4.0'", "eval \"git $SUB origin\"",
+                "git config alias.ship '!git push --tags'"]:
+        assert gate(path, cmd, b)[0] == "deny", cmd
+    git(path, "config", "alias.p", "push")
+    assert gate(path, "git p origin v1.4.0", b)[0] == "deny"
+    git(path, "config", "--unset", "alias.p")
+    for cmd in ["git status", "git log --oneline -3", "which git", "brew install git", "git lfs pull"]:
+        assert gate(path, cmd, b)[0] == "allow", cmd
     other = repo()
     git(other, "config", "remote.origin.push", "refs/tags/*:refs/tags/*")
     assert gate(path, f"git -C {other} push origin feat/x", b)[0] == "deny"  # config read where the push runs
