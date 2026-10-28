@@ -154,6 +154,8 @@ claude
 3. Scaffold on request: pinned versions, env schema, identity, one agent, one read tool, a tracing switch and the first eval cases. It is done when one real turn streams end to end.
 4. `/project-init`, then add capabilities with `/agent-feature`. The chat UI comes from `/agent-frontend` or `/agent-design-ui <figma>`.
 
+For an empty skeleton with no features, name the stack and say so (*"set up an empty chatbot on Next.js + CopilotKit + LangGraph, no features yet"*). `agent-architect` runs in skeleton mode: it asks only the open stack choices and one line on who it is for, builds the shell, identity, one agent with no tools, model factory, tracing, pins and the stock chat UI, and stops at one real streamed "hello" turn.
+
 ### Method A — Via Claude Code (recommended)
 
 ```bash

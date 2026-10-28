@@ -24,6 +24,14 @@
     {
       "prompt": "I want to build an assistant that helps our support team answer order questions",
       "top_k": 3
+    },
+    {
+      "prompt": "dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra, chưa cần feature gì",
+      "top_k": 3
+    },
+    {
+      "prompt": "set up an empty chatbot project on LangGraph and Next.js, no features yet",
+      "top_k": 3
     }
   ],
   "negative": [
