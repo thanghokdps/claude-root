@@ -55,10 +55,10 @@ Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kick
 
 The user wants a running, empty chatbot on a stack they name, and nothing else. Skip P2–P4, Step 2b's grill and the ADR's Problem section.
 
-- Take every stack choice the request names as given: framework, frontend, backend, database, host, layout. Ask only what it leaves open that is costly to change: Q-F (framework) when none is named, Q1 (host), Q2 (clients), Q-L (layout). One question per turn, as choices, the recommended one first. Never ask about tasks, tools or features.
+- Take every stack choice the request names as given: framework, frontend, backend, database, ORM, auth, package manager, host, layout. Ask only what it leaves open that is costly to change: Q-F (framework) when none is named, Q1 (host), Q2 (clients), Q-L (layout). One question per turn, as choices, the recommended one first. Never ask about tasks, tools or features.
 - Everything else is defaulted and shown on one defaults card.
 - Ask P1 in one line ("Who is it for, in one sentence?"). It becomes the prompt's opening line, and "a general assistant" is an accepted answer.
-- Write a short ADR (`docs/adr/<NNNN>-agent-architecture.md`): the stack, the card and "Features: none yet; each comes through `/agent-feature`".
+- Write a short ADR (`docs/adr/<NNNN>-agent-architecture.md`): the stack, the card, and P2–P4 and Q4 recorded as *deferred to `/agent-feature`*.
 
 **Done when:** the stack is fully named and the defaults card is accepted.
 
@@ -95,7 +95,7 @@ Build the smallest working slice of the chosen shape, test first where practical
 7. One read tool for the first P2 task, against its P3 system, through `/agent-tool` (from the user's API spec when one was given, its Step 0); then one real streamed turn with that task's example message through `/agent-verify-turn`.
 8. The P2 example messages as the first eval cases (`/agent-evals`).
 
-**Skeleton mode** (Step 2s) builds steps 0, 2–6 and stops there. No tool, no HITL, no database or ERD unless the user named a database (then the schema with no tables beyond what identity needs), and no evals beyond one smoke case. The agent has no tools and a prompt that opens with P1. The proof is one real streamed turn with "hello" through `/agent-verify-turn`, plus the stock chat UI rendering it. The chat UI stays stock `CopilotChat` with theme tokens. Every feature comes later through `/agent-feature`.
+**Skeleton mode** (Step 2s) builds steps 0, 2–6 and stops there. No tool, no HITL, no ERD and no domain tables: a named database gets only its connection, the migration setup and, when Q6 keeps history, the conversation tables. No evals beyond one smoke case. The agent has no tools and a prompt that opens with P1. The proof is one real streamed turn with "hello" through `/agent-verify-turn`, plus the stock chat UI rendering it. The chat UI stays stock `CopilotChat` with theme tokens. The reply ends with the features still to build, each phrased as the sentence to give `/agent-feature`.
 
 Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later work: nostream helper nodes (Mastra: `generate()` helpers, `lastMessages`, `maxSteps`), stable prompt prefix, kill switch per tool. Build in the scaffold rows of `${CLAUDE_SKILL_DIR}/references/production.md` (durable state, health, env forwarding, fallback, masked tracing).
 
