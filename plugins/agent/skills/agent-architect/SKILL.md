@@ -3,7 +3,7 @@ model: opus
 effort: high
 name: agent-architect
 description: Chooses and records the architecture of an AI assistant built on Mastra, LangChainJS or LangGraph with CopilotKit / AG-UI. It runs a one-question-at-a-time architecture interview for a new assistant, or a stock-versus-custom audit of an existing one, then scaffolds the chosen shape from the vendor's official reference repo. Use when starting an AI assistant or chatbot project, adding a new assistant product, choosing a framework (Mastra, createAgent or StateGraph), or asking whether custom agent code can be replaced by stock.
-when_to_use: new AI assistant or chatbot, "I want to build an assistant that helps …", "build a chatbot for our customers / support team", "tôi muốn làm một chatbot / trợ lý AI", described in plain words with no command, "chọn kiến trúc agent", "Mastra hay LangChain", "createAgent hay StateGraph", "custom graph hay agent dựng sẵn", scaffold a CopilotKit + LangGraph or Mastra app, skeleton theo repo mẫu chính chủ (ui-dojo, CopilotKit examples), audit an agent repo for custom code that stock now covers, /project-init suggested it
+when_to_use: new AI assistant or chatbot, "I want to build an assistant that helps …", "build a chatbot for our customers / support team", "tôi muốn làm một chatbot / trợ lý AI", described in plain words with no command, empty skeleton with no features ("dựng skeleton chatbot, chưa làm feature", "just the skeleton with Next.js + Mastra + Postgres"), "chọn kiến trúc agent", "Mastra hay LangChain", "createAgent hay StateGraph", "custom graph hay agent dựng sẵn", scaffold a CopilotKit + LangGraph or Mastra app, skeleton theo repo mẫu chính chủ (ui-dojo, CopilotKit examples), audit an agent repo for custom code that stock now covers, /project-init suggested it
 allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh *)
 ---
 
@@ -48,7 +48,9 @@ Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kick
 - The shape follows Q-F (`shapes.md` § Framework). A named stack is used as given: Mastra → **M**, LangChain → **A**, custom graph → **B**/hybrid. With no stack named, recommend **A** (createAgent + middleware + CopilotRuntime v2), unless the host is edge/Workers or a contract the runtime cannot express forces **B**. Use the decision rule in `shapes.md` for single agent vs supervisor in every framework.
 - Every non-L0 choice names its rung and its reason (`${CLAUDE_SKILL_DIR}/references/stock-map.md`).
 
-**Done when:** P1–P4, Q-F, Q4 and Q-D are answered, and the defaults card (Q1–Q9, Q2v, Q-L, Q-T) is accepted or its changed rows answered; anything deferred is recorded with a risk.
+**Skeleton only.** When the user asks for an empty skeleton ("chỉ dựng skeleton", "chưa làm feature", "just the skeleton with <stack>"), ask only P1 (one line; "a general chat assistant" is a valid answer) and Q-F, and take every stack piece the user named as given: framework, frontend, database, ORM, auth, package manager, host. P2–P4 and Q4 are recorded as *deferred to `/agent-feature`*, and the defaults card shows the rest. Step 2b is skipped; the ADR still gets written, with the deferred rows.
+
+**Done when:** P1–P4, Q-F, Q4 and Q-D are answered (skeleton only: P1 and Q-F, the rest deferred), and the defaults card (Q1–Q9, Q2v, Q-L, Q-T) is accepted or its changed rows answered; anything deferred is recorded with a risk.
 
 ## Step 2b — Grill the card
 
@@ -82,6 +84,12 @@ Build the smallest working slice of the chosen shape, test first where practical
 6. Exact pins and a single copy of the framework core (`@langchain/core` or `@mastra/core`) (`${CLAUDE_PLUGIN_ROOT}/rules/agent-deps-pinning.md`).
 7. One read tool for the first P2 task, against its P3 system, through `/agent-tool` (from the user's API spec when one was given, its Step 0); then one real streamed turn with that task's example message through `/agent-verify-turn`.
 8. The P2 example messages as the first eval cases (`/agent-evals`).
+
+Skeleton only: steps 0–6 run as written, with these changes:
+- **No tool and no domain data.** Step 7 adds no tool. Its real turn uses a plain greeting, and the agent answers without tools. Step 1 creates no domain tables: only the database connection, the migration setup and, when Q6 keeps history, the conversation tables.
+- **One chat page.** It is wired to the agent, with no feature screens.
+- **One smoke eval.** Step 8 adds a single case: the greeting gets a streamed answer.
+- **A list of features left.** The reply ends with the deferred P2 to P4 rows, each phrased as the sentence to give `/agent-feature`.
 
 Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later work: nostream helper nodes (Mastra: `generate()` helpers, `lastMessages`, `maxSteps`), stable prompt prefix, kill switch per tool. Build in the scaffold rows of `${CLAUDE_SKILL_DIR}/references/production.md` (durable state, health, env forwarding, fallback, masked tracing).
 

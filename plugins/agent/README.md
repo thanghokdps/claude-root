@@ -29,6 +29,8 @@ Open Claude Code in an empty folder and say what you want to build, e.g. *"Tôi 
 4. **Grill** — every task gets an owner agent and tool, every write a confirm path, every vague answer a recorded risk.
 5. **ADR + scaffold** — `docs/adr/<NNNN>-agent-architecture.md`, then the smallest working slice of your layout, ending on one real streamed turn with your first task's example message.
 
+**Skeleton only:** say *"Dựng skeleton chatbot với Next.js, LangGraph, Postgres + Drizzle. Chưa làm feature nào hết"*. Step 2 asks only the purpose and the framework, and uses your stack as given. Steps 3–4 are defaulted on one card. Step 5 builds the skeleton with no tool and no domain tables, proves it with a greeting, and ends with the list of features to give `agent-feature`.
+
 If the designer has a Figma file or mockups, give the link when asked — `agent-design-ui` turns it into the chat UI after the scaffold.
 
 ## Grow it, one feature at a time

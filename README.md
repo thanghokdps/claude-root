@@ -24,6 +24,22 @@ Claude picks the right skill from that sentence (here `agent-architect`) and **a
 2. **The choices that are costly to change:** host, clients, single app or monorepo, design. Everything else is defaulted and shown on one card for you to confirm.
 3. **Then it builds:** checks Node, the package manager, the model key and git; writes the architecture record (`docs/adr/`); scaffolds the smallest slice; and proves it with one real streamed turn.
 
+**Only the skeleton, no features yet.** Name your stack and say there are no features yet:
+
+```text
+Dựng skeleton chatbot với Next.js, LangGraph, Postgres + Drizzle, Better Auth. Chưa làm feature nào hết.
+```
+
+Claude asks only what the assistant is for (one line is enough) and which framework to use if you named none. It uses every piece of the stack you named as given, shows the rest as defaults on one card, and records the tasks as *deferred* in the architecture record. What you get:
+
+- the project in your stack, with tests, lint and format set up;
+- env checks, login identity, one agent and the model settings;
+- masked tracing, and the database connection with migrations but no domain tables;
+- one chat page;
+- one real streamed answer to a greeting, which proves it runs, plus a smoke eval.
+
+It adds no tools, no feature screens and no data model. It ends by listing the features still to build, each as the sentence to give `agent-feature`.
+
 After that, ask for each feature the same way, e.g. *"Thêm tính năng cho khách đổi địa chỉ giao hàng"*. `agent-feature` checks it against the architecture record, asks what is unclear, reuses what exists, and builds it layer by layer.
 
 Say it in plain words, as above. The command column is what fires, and what to type only when you want to force it:

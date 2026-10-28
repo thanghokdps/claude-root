@@ -24,6 +24,10 @@
     {
       "prompt": "I want to build an assistant that helps our support team answer order questions",
       "top_k": 3
+    },
+    {
+      "prompt": "dựng skeleton chatbot với Next.js, LangGraph, Postgres và Drizzle, chưa làm feature nào hết",
+      "top_k": 3
     }
   ],
   "negative": [
