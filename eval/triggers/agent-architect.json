@@ -32,6 +32,14 @@
     {
       "prompt": "set up an empty chatbot project on LangGraph and Next.js, no features yet",
       "top_k": 3
+    },
+    {
+      "prompt": "init chatbot với Next.js và LangGraph",
+      "top_k": 3
+    },
+    {
+      "prompt": "init chatbot empty features",
+      "top_k": 3
     }
   ],
   "negative": [

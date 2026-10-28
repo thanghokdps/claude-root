@@ -34,13 +34,17 @@ Claude picks the right skill from that sentence (here `agent-architect`) and **a
 2. **The choices that are costly to change:** host, clients, single app or monorepo. Everything else is defaulted and shown on one card for you to confirm. Design is never asked: give a Figma link or mockup in your request if you have one; without one the chat is CopilotKit's stock `CopilotChat` with theme tokens.
 3. **Then it builds:** checks Node, the package manager, the model key and git; writes the architecture record (`docs/adr/`); scaffolds the smallest slice; and proves it with one real streamed turn.
 
-**Just an empty skeleton on your stack, no features yet?** Say so and name the stack:
+**Just the frame, no features yet?** Say *dựng* or *init* and name the stack, without saying what the chatbot does:
 
 ```text
 Dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra, chưa cần feature gì
 ```
 
-`agent-architect` switches to **skeleton** mode. It takes the stack you named as given and asks only what you left open and is costly to change (framework, host, clients, single app or monorepo), plus one line on who the chatbot is for ("a general assistant" is fine). It never asks about tasks, tools or features. Then it builds the app shell from the vendor's reference repo with exact pins, the env schema, identity, one agent with no tools, the model factory, masked tracing and the stock chat UI with your theme tokens, and proves it with one real streamed "hello" turn. No tools, no confirm cards and no domain tables (a database you named gets its connection and migrations only). It ends by listing the features still to build, each as the sentence to give `agent-feature`.
+or *"init chatbot với Next.js và LangGraph"*. Only when you describe what the assistant helps with does Claude run the full interview and plan above.
+
+`agent-architect` switches to **skeleton** mode and asks nothing when you named a stack. It takes the stack you named as given and decides everything else itself (host, layout, models, tracing, design), listing those defaults in one table you can change later. Then it builds the app shell from the vendor's reference repo with exact pins, the env schema, identity, one agent with no tools, the model factory, masked tracing and the stock chat UI with your theme tokens, and proves it with one real streamed "hello" turn. No tools, no confirm cards and no domain tables (a database you named gets its connection and migrations only). It ends by listing the features still to build, each as the sentence to give `agent-feature`.
+
+Any supported framework works the same way: swap "Mastra" for "LangChain" or "LangGraph" (both build a `createAgent` agent), or say "custom LangGraph graph" for your own `StateGraph`. With no stack named at all (*"init chatbot empty features"*), Claude asks only the framework and the frontend and database. Changing the framework while the skeleton has no features rebuilds the skeleton; once features exist, it is a planned migration. Full rules: [`skeleton.md`](plugins/agent/skills/agent-architect/references/skeleton.md).
 
 After that, ask for each feature the same way, e.g. *"Thêm tính năng cho khách đổi địa chỉ giao hàng"*. `agent-feature` checks it against the architecture record, asks what is unclear, reuses what exists, and builds it layer by layer.
 

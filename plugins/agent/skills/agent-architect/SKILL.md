@@ -21,7 +21,7 @@ Rules that apply throughout: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md` 
 
 Run `bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh .` and show its table. It checks git, Node ≥ 20, a package manager, a model key (presence only) and a git repo, with the install command for this OS.
 
-- Anything `MISSING` → list it with the printed command, say what it blocks, and go straight on to the interview: the turn ends on the P1 question, never on a setup question. A missing model key or git repo blocks only scaffolding and Step 4's real turn. Ask about installs once the interview is done; never run one without a yes, since installing system software is the user's call.
+- Anything `MISSING` → list it with the printed command, say what it blocks, and go straight on to the interview: the turn ends on the P1 question (skeleton: on the scaffold, or on Q-F when no framework is named), never on a setup question. A missing model key or git repo blocks only scaffolding and Step 4's real turn. Ask about installs once the interview is done; never run one without a yes, since installing system software is the user's call.
 - Never ask for the key's value in chat; it goes in `.env`, which stays gitignored.
 
 **Done when:** `missing: 0`, or each missing item is accepted with what it blocks.
@@ -32,8 +32,8 @@ Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/
 
 - No doc set, no code, and the user mentions documents they have (PRD, ERD, tech stack) → offer `/kickoff` first, so the interview starts from them.
 
-- No agent code yet, and the user asks for a skeleton, an empty chatbot or "no features yet" → **skeleton** (Step 2s).
-- No agent code yet → **greenfield** (Step 2).
+- No agent code yet, and the request sets up, inits or scaffolds a chatbot without saying what it should do (a skeleton, an empty chatbot, "no features yet", only a stack) → **skeleton** (Step 2s).
+- No agent code yet, and the request describes what the assistant helps with → **greenfield** (Step 2).
 - Agent code exists → **audit** (Step 3).
 - An ADR exists and the user did not ask to revisit → report the recorded card and stop.
 
@@ -46,25 +46,21 @@ Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kick
 - **One question per turn, as choices**: `AskUserQuestion` with 2–4 options, the recommended one first with `(Recommended)`, per `interview.md` § Shape of each question; numbered options when the tool is absent. Never a prose question the user must answer in free text. Skip what the repo or the request already answers.
 - **Viewports are always set** (Q2v) for any web client, even when every frame is desktop-sized: defaulted to phone (375px) plus desktop and shown on the card.
 - **Layout is defaulted, never silent**: single app (L1) or monorepo on pnpm + Turborepo (L2), per `${CLAUDE_SKILL_DIR}/references/layouts.md`, chosen from the clients and deploy answers and shown on the card.
-- The shape follows Q-F (`shapes.md` § Framework). A named stack is used as given: Mastra → **M**, LangChain → **A**, custom graph → **B**/hybrid. With no stack named, recommend **A** (createAgent + middleware + CopilotRuntime v2), unless the host is edge/Workers or a contract the runtime cannot express forces **B**. Use the decision rule in `shapes.md` for single agent vs supervisor in every framework.
+- The shape follows Q-F (`shapes.md` § Framework). A named stack is used as given: Mastra → **M**, LangChain or plain LangGraph → **A** (`createAgent` runs on the LangGraph runtime), custom graph or `StateGraph` → **B**/hybrid. With no stack named, recommend **A** (createAgent + middleware + CopilotRuntime v2), unless the host is edge/Workers or a contract the runtime cannot express forces **B**. Use the decision rule in `shapes.md` for single agent vs supervisor in every framework.
 - Every non-L0 choice names its rung and its reason (`${CLAUDE_SKILL_DIR}/references/stock-map.md`).
 
 **Done when:** P1–P4, Q-F and Q4 are answered, and the defaults card (Q1–Q9, Q2v, Q-L, Q-T, Q-D) is accepted or its changed rows answered; anything deferred is recorded with a risk.
 
-## Step 2s — Skeleton interview (empty chatbot, no features)
+## Step 2s — Skeleton (empty chatbot on the named stack)
 
-The user wants an empty chatbot that runs on the stack they name, and nothing else: no tools, no features, no domain data. Requests like "dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra, chưa cần feature gì" or "set up an empty chatbot on LangGraph and Next.js, no features yet" land here.
+The user wants the frame of a chatbot on their stack, running and able to chat, and nothing else: no tools, no features, no domain data. Read `${CLAUDE_SKILL_DIR}/references/skeleton.md` first; it holds the recognition rule, the stack map, the defaults card, the done checklist and the closing message.
 
-1. **Read the stack from the request.** Every piece it names is a fact, never a question: framework, frontend, backend, database, ORM, auth, package manager, host, layout. Map the framework with `shapes.md` § Framework: "Mastra" → **M**; "LangChain", "LangGraph" or "createAgent" → **A**; "custom graph" or "StateGraph" → **B**. Pick the reference row in `reference-repos.md`: M → R2 (in-process CopilotKit) or R1 (own Mastra server); A → R4; B → R5; a LangGraph shape on L2 → R6.
-2. **Ask at most two questions**, one per turn, as `AskUserQuestion` choices with the recommended one first:
-   - P1, in one line: "Who is it for, in one sentence?", with *A general assistant (Recommended)* first. The answer opens the agent's prompt.
-   - Q-F, only when the request names no framework. Recommend **A**.
+1. **Recognise it** (`skeleton.md` § 1): a request to set up, init, dựng or scaffold a chatbot that does not say what it should do ("init chatbot empty features", "dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra", "init chatbot với Next.js và LangGraph"). A request that says what the assistant helps with goes to Step 2.
+2. **Map the stack** (`skeleton.md` § 2). Every named piece is a fact, never a question. Plain "LangGraph" or "LangChain" → **A**; "custom graph" or "StateGraph" → **B**; "Mastra" → **M**. Write the shape line and the reference row.
+3. **Ask only when no stack is named** (`skeleton.md` § 3): then the framework, and the frontend and database, as `AskUserQuestion` choices. With a stack named, ask nothing. Never ask P1–P4, Q4, Q-D, auth, host, clients or layout, and never ask to accept the card.
+4. **Show the defaults card** (`skeleton.md` § 3) as information, and **write a short ADR** (`docs/adr/<NNNN>-agent-architecture.md`): the shape line, the named stack, the reference row, the card, and a *Deferred* section listing P2–P4 and Q4 as "to `/agent-feature`". No Problem section and no Step 2b grill.
 
-   Never ask about tasks, tools, writes, systems, features (P2–P4, Q4) or design (Q-D).
-3. **Show one defaults card** for everything else, each row with its source (the request, the repo or the recommendation): Q1 host, Q2 clients, Q2v viewports, Q-L layout, Q-T test location, Q5 identity, Q6 memory, Q7 models, Q8 tracing, Q-D design. Q-D is a Figma link or mockup when the user gave one, otherwise CopilotKit's stock `CopilotChat` with theme tokens. *Change some* → ask only the picked rows.
-4. **Write a short ADR** (`docs/adr/<NNNN>-agent-architecture.md`): the `Shape:` line, the named stack, the reference row, the accepted card, and a *Deferred* section listing P2–P4 and Q4 as "to `/agent-feature`". No Problem section and no Step 2b grill.
-
-**Done when:** the shape line and the reference row are written, every stack piece is named or defaulted on the accepted card, and the ADR is on disk. Then Step 4s.
+**Done when:** the shape line and the reference row are written, every stack piece is named or defaulted, and the ADR is on disk. Then Step 4s, in the same turn.
 
 ## Step 2b — Grill the card
 
@@ -113,8 +109,8 @@ Step 4's rules hold (reference repo mirrored at a resolved SHA, core only, exact
 
 0. **Project shell** from the Step 2s reference row, in the chosen layout: `git init`, the named package manager, TypeScript strict, test runner on the Q-T location, ESLint, Prettier + `format:check`, path alias, `styles/tokens.css`, `.env.example`.
 1. **Env schema** that fails at boot on missing config. A named database gets its client, its connection variable and the migration setup; tables only for what Q5 auth and Q6 history need. No ERD and no domain tables.
-2. **Identity** as Step 4 item 2, on the named auth (or the defaulted Q5), with its test that the agent sees the caller's id.
-3. **One agent** under one agent id, with **no tools**, its prompt opening with P1.
+2. **Identity** as Step 4 item 2, on the named auth or the dev user (`skeleton.md` § 4), with its test that the agent's trusted context carries the caller's id.
+3. **One agent** under the id `assistant`, with **no tools**: its prompt opens with P1, says it has no tools yet, and refuses anything that needs data or actions (`skeleton.md` § 4).
 4. **Model factory**: `MODEL_PRIMARY`, `MODEL_FALLBACK`, `MODEL_CHEAP` per `model-choice.md`, sized for general chat; names and a cost line in `.env.example` and ADR Q7.
 5. **Tracing switch** with masking on.
 6. **Pins**: exact versions, one copy of the framework core.
@@ -123,9 +119,9 @@ Step 4's rules hold (reference repo mirrored at a resolved SHA, core only, exact
 
 Never in skeleton mode: a tool (backend or frontend), a HITL confirm, a domain table or ERD, a RAG index, a second agent or a router, a feature screen. Each is a feature and goes through `/agent-feature`.
 
-End the reply with **Next features**: the deferred rows as a numbered list, each one sentence the user can give `/agent-feature` (e.g. "Thêm tool tra cứu đơn hàng theo mã"). With none known, two examples that fit P1.
+End with the closing message in `skeleton.md` § 6: the stack built, the run command, and **Next features** as sentences to give `/agent-feature`. Switching framework later follows `skeleton.md` § 7.
 
-**Done when:** format, typecheck, lint and tests pass, the "hello" turn streams end to end with its evidence shown, the smoke eval passes, and the Next features list is in the reply. Then `/project-init`.
+**Done when:** every box in `skeleton.md` § 5 is ticked with its evidence, and the closing message is in the reply. Then `/project-init`.
 
 ---
 
