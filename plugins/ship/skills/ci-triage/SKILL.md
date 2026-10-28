@@ -32,7 +32,7 @@ Check the cheapest proof first: does the failing file or assertion overlap the d
 
 ```
 Verdict: regression | flaky | environment
-Root cause: <one sentence>
+Root cause: <one sentence> | unconfirmed — missing <evidence>
 Evidence: <log line / file:line / local repro result>
 Next: <fix in file:line | quarantine + ticket | re-run / fix runner config>
 ```

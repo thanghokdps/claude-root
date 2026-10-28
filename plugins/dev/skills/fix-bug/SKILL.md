@@ -134,6 +134,8 @@ A test that turns out wrong: tell the user why, and unlock only after their yes.
 
 A fix needing a larger structural change stops here — report it and propose it as a separate `/feature`.
 
+**Debug spiral:** three fixes in a row that leave the loop red — or three user reports of "still broken" — means stop editing code. Name the assumption that is most likely wrong (the loop asserts the wrong symptom, the repro is not the user's bug, the code that runs is not the code you edit), and ask the user one diagnostic question that would settle it.
+
 ---
 
 ## Phase 6 — Clean up, commit, post-mortem
@@ -163,7 +165,7 @@ If the root cause was genuinely non-obvious, record it via `/compound` so the cl
 Report cause first:
 
 ```markdown
-**Cause:** <the real mechanism>
+**Cause:** <the real mechanism, and the probe that proved it — or "unconfirmed: <best hypothesis>, <the evidence still missing>">
 **Fix:** <path:line — what changed>
 **Siblings:** <same pattern elsewhere: fixed / listed / none found>
 **Proof:** <failing-then-passing test + re-run repro>
