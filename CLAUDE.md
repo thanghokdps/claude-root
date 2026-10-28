@@ -22,13 +22,13 @@ A **source library** and the `harness` marketplace of role plugins (local direct
   .claude-plugin/marketplace.json  ← lists the 10 plugins below
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
-    core        verify-done btw compact compound sync-memory project-init + branch-guard, edit-guard hooks (always on) — plus scripts/init.sh and
+    core        verify-done btw compact compound sync-memory project-init + branch-guard, edit-guard, sensitive-path, compact-advisor hooks (always on) — plus scripts/init.sh and
                 everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/ → progress
     plan        kickoff brainstorming grill domain-model writing-plans codebase-design → progress
     review      review-checklist review-diff blast-radius create-pr                   → progress
       dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint design-ui → core, plan, review
                 api-endpoint db-change ui-feature api-client (BE · DB · FE · API integration)
-                + ticket-ledger, ticket-gate hooks (always on: a ticket's commit/PR waits for its plan's skills)
+                + ticket-ledger, ticket-gate, auto-decisions hooks (always on: a ticket's commit/PR waits for its plan's skills)
     ship        finish-branch ci-triage release-checklist write-migration incident sync-remote → core
     agent       agent-* + rules/ the skills read on demand                            → progress, dev, ship
     lead        retro diagnose-session writing-skills                                 → core

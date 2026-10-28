@@ -11,6 +11,9 @@
         "matcher": "Bash|mcp__github__create_pull_request",
         "hooks": [{ "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/ticket-gate.sh" }]
       }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/auto-decisions.sh" }] }
     ]
   }
 }
