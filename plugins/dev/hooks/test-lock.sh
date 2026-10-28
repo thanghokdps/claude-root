@@ -68,9 +68,18 @@ if re.search(AT + r"(?:bash\s+|sh\s+)?\S*lock-tests\.sh\s+unlock\b", cmd):
 
 # These sweep up the uncommitted locked test without naming it.
 GIT = AT + r"git(?:\s+-[Cc]\s+\S+)*\s+"
-if re.search(GIT + r"(?:stash\b|clean\b|reset\b[^;&|\n]*--hard|(?:checkout|restore)\b[^;&|\n]*\s\.(?:\s|$))", cmd):
+if re.search(GIT + r"(?:stash\b|clean\b|reset\b[^;&|\n]*--(?:hard|merge|keep)|(?:checkout|restore)\b[^;&|\n]*\s\.(?:\s|$))", cmd):
     block("test-lock: this git command would undo or shelve the locked regression test. "
           "Unlock first, with the user's yes if the test is wrong.")
+
+# A folder pathspec (git checkout -- src/, rm -r src) reaches the locked test without naming it.
+if re.search(AT + r"(?:git(?:\s+-[Cc]\s+\S+)*\s+(?:checkout|restore|rm)|rm)\b", cmd):
+    words = {w.strip("'\"").rstrip("/").removeprefix("./") for w in re.split(r"[\s;&|()]+", cmd)}
+    for rel in paths.values():
+        parts = rel.split("/")
+        if words & {"/".join(parts[:k]) for k in range(1, len(parts))}:
+            block(f"test-lock: this command reaches the folder of {rel}, which is locked. "
+                  "Name the files you mean, or unlock first with the user's yes.")
 
 mutates = re.search(AT + r"(?:git(?:\s+-[Cc]\s+\S+)*\s+(?:checkout|restore|rm|mv)|rm|mv|cp|tee|truncate|install|ln|sed|perl)\b", cmd)
 written = [m.group(1) for m in re.finditer(r">{1,2}\|?\s*([^\s;&|<>()]+)", cmd)]
