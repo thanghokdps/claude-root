@@ -5,7 +5,7 @@ Everything: installs all nine role plugins.
 ## Install
 
 ```
-/plugin marketplace add thanghokdps/claude-root
+/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
 /plugin install harness@harness
 ```
 

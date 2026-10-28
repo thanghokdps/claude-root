@@ -5,7 +5,7 @@ Build and fix: coordinator lane router, feature, fix-bug red loop, tdd, design-u
 ## Install
 
 ```
-/plugin marketplace add thanghokdps/claude-root
+/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
 /plugin install dev@harness
 ```
 

@@ -5,7 +5,7 @@ Improve the process: weekly retro, session diagnosis, authoring skills.
 ## Install
 
 ```
-/plugin marketplace add thanghokdps/claude-root
+/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
 /plugin install lead@harness
 ```
 

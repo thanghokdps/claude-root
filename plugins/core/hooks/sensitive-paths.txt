@@ -33,6 +33,17 @@ helm/**
 infra/**
 deploy/**
 
+# Production config
+*.prod.*
+*.production.*
+**/config/prod/**
+**/config/production/**
+**/config/prod.*
+**/config/production.*
+appsettings.Production.json
+application-prod*.yml
+application-prod*.properties
+
 # Claude's own permissions and hooks
 .claude/settings.json
 .claude/settings.local.json

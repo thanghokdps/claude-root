@@ -37,13 +37,15 @@ def asks(path, tool, **ti):
 def test_sensitive_edits_ask():
     path = repo()
     for f in [".env", "apps/web/.env.local", "certs/server.pem", ".github/workflows/ci.yml",
-              ".claude/settings.json", "Dockerfile", "infra/main.tf"]:
+              ".claude/settings.json", "Dockerfile", "infra/main.tf", "config/production.json",
+              "apps/api/config/prod/db.yml", "next.config.prod.mjs", "src/main/resources/application-prod.yml"]:
         assert asks(path, "Edit", file_path=os.path.join(path, f)), f
 
 
 def test_ordinary_and_example_files_pass():
     path = repo()
-    for f in ["src/app.ts", ".env.example", "docs/env.md", "src/server/deploy-notes.ts", "README.md"]:
+    for f in ["src/app.ts", ".env.example", "docs/env.md", "src/server/deploy-notes.ts", "README.md",
+              "src/products/product.ts", "config/development.json"]:
         assert not asks(path, "Write", file_path=os.path.join(path, f)), f
 
 

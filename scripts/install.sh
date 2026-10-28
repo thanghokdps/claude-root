@@ -3,8 +3,8 @@
 #
 #   1. Back up ~/.claude/CLAUDE.md, rules/, settings.json and the skills this kit replaces
 #   2. Install global/CLAUDE.md and rules/*.md (the only always-loaded files)
-#   3. Register this directory as a local marketplace and install the harness bundle, which
-#      pulls in every role plugin as a dependency (copied to the plugin cache — re-run after edits)
+#   3. Register this directory as a local marketplace (unless `harness` is already registered from
+#      another source, e.g. GitLab, which is kept) and install every plugin into the plugin cache
 #   4. Migrate from the old copy-based install: move kit skills out of ~/.claude/skills and
 #      drop kit hook registrations from ~/.claude/settings.json (the plugin registers them now)
 #
@@ -43,8 +43,16 @@ if claude plugin marketplace list 2>/dev/null | grep -q "thang-kit"; then
   claude plugin marketplace remove thang-kit >/dev/null 2>&1 || true
   echo "  migrated: removed thang-kit marketplace and thang-* plugins"
 fi
-claude plugin marketplace add "$KIT" >/dev/null 2>&1 || true
-claude plugin marketplace update harness >/dev/null 2>&1 || true
+# A team install registers `harness` from GitLab; adding this directory over it fails (the source must
+# match the user's extraKnownMarketplaces entry), so keep that source and only update it.
+SOURCE=$(claude plugin marketplace list 2>/dev/null | awk '/❯ harness$/ {getline; sub(/^ *Source: */, ""); print; exit}')
+if [ -z "$SOURCE" ]; then
+  claude plugin marketplace add "$KIT" >/dev/null 2>&1 || true
+  SOURCE="Folder ($KIT)"
+fi
+claude plugin marketplace update harness >/dev/null 2>&1 || echo "  marketplace update failed (VPN off?) — installing from the last fetched copy"
+echo "  plugins from: $SOURCE"
+case "$SOURCE" in Folder*) ;; *) echo "  local edits in $KIT reach this install only after push + /sync-remote" ;; esac
 # Each plugin explicitly: `plugin update` does not install dependencies a new version adds, and
 # re-running `install` on an installed bundle adds only one missing dependency per run (CLI 2.1.305).
 # Versions stay at 1.0.0 until the kit is published, so `plugin update` sees no change and keeps the
