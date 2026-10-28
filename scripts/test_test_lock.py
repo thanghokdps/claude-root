@@ -56,7 +56,8 @@ def test_bash_that_undoes_the_lock_is_blocked():
     for cmd in ["git checkout -- src/bug.test.ts", "git restore src/bug.test.ts", "rm src/bug.test.ts",
                 "mv src/bug.test.ts /tmp/x", "git stash", "rm .git/claude-fix-lock.json",
                 "echo '{}' > .git/claude-fix-lock.json", f"bash {LOCKER} check; rm .git/claude-fix-lock.json",
-                "git reset --hard", "git checkout .", "git restore -- .", "git clean -fd",
+                "git reset --hard", "git reset --keep HEAD~1", "git checkout -- src/", "git restore src",
+                "rm -rf ./src", "git checkout .", "git restore -- .", "git clean -fd",
                 "cp /tmp/x src/bug.test.ts", "echo x > src/bug.test.ts", "sed -i '' 's/a/b/' src/bug.test.ts"]:
         assert hook(r, "Bash", command=cmd) == 2, cmd
 

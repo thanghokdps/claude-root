@@ -238,11 +238,6 @@ def eas_command(args, env):
             asks.append(f"eas {sub} changes what production users get; confirm it is the intended rollback or rollout.")
 
 
-def is_tag(ref):
-    return ref.startswith("refs/tags/") or (
-        not ref.startswith("refs/") and run(["git", "show-ref", "--verify", "--quiet", f"refs/tags/{ref}"]).returncode == 0)
-
-
 def push_command(args):
     pos = [a for a in args if not a.startswith("-")]
     broad = [a for a in ("--tags", "--mirror", "--follow-tags") if a in args]
@@ -250,15 +245,16 @@ def push_command(args):
         deny(f"git push {broad[0]} can publish release tags that were never approved: push the one tag: git push origin v<version>")
         return
     for ref in pos[1:]:
-        if re.search(r"[*?\[]", ref) and ("refs/tags" in ref or ref.lstrip("+").startswith("v")):
+        if re.search(r"[*?\[]", ref):  # refs/*:refs/* or *:* reach tags too, so any wildcard is too broad
             deny(f"git push {ref} can publish release tags that were never approved: push the one tag: git push origin v<version>")
             continue
         # A refspec src:dst publishes src under dst, so the tag's name comes from dst and its commit from src.
         src, _, dst = ref.lstrip("+").partition(":") if ":" in ref else (ref.lstrip("+"), "", ref.lstrip("+"))
         name = re.sub(r"^refs/tags/", "", dst)
-        if not re.match(r"^v\d", name) or not (is_tag(dst) or is_tag(src)):
+        # An unqualified v<digit> dst may land as a tag on the remote, so only refs/heads/… is safely a branch.
+        if not re.match(r"^v\d", name) or dst.startswith("refs/heads/"):
             continue
-        if not src:
+        if not src or "--delete" in args or "-d" in args:
             deny(f"git push :{dst} deletes release tag {name}; a person does that by hand.")
             continue
         r = run(["git", "rev-parse", "--verify", "--quiet", f"{src}^{{commit}}"])
@@ -286,8 +282,10 @@ for seg in segments(cmd):
         i = 1
         while i < len(toks) and toks[i] in ("-C", "-c"):
             i += 2
+        if toks[i:i + 1] == ["config"] and any("followtags" in t.lower() for t in toks[i + 1:]):
+            deny("git config push.followTags would make every later push publish release tags; a person sets that by hand.")
         if toks[i:i + 1] == ["push"]:
-            if any("followtags" in t.lower() for t in toks[1:i]):
+            if any("followtags" in t.lower() for t in toks[1:i] + [v for k, v in env.items() if k.startswith("GIT_CONFIG")]):
                 deny("git -c push.followTags pushes release tags along with the branch: push the one tag: git push origin v<version>")
             push_command(toks[i + 1:])
     else:
