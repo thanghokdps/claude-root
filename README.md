@@ -201,7 +201,7 @@ prompt
 │   │                                   grill, writing-plans
 │   │
 │   ├── review/                ← review diffs, PRs, impact
-│   │   └── skills/                  ← blast-radius, create-pr, review-checklist, review-diff
+│   │   └── skills/                  ← blast-radius, create-pr, debt-ledger, review-checklist, review-diff
 │   │
 │   ├── dev/                   ← build, fix, test-first
 │   │   └── skills/                  ← checkpoint, coordinator, feature, fix-bug, tdd
@@ -497,7 +497,7 @@ Specs dir: specs/add-dark-mode/
 
 **Invoke:** `/review-checklist` (current branch) or `/review-checklist 123`
 
-Walks correctness → tests → readability → security → scope, checks the PR description is self-contained, and returns ≥3 actionable `file:line` comments. Renamed from `code-review` so the built-in `/code-review` and `/code-review ultra` are no longer shadowed — escalate to those for risky branches.
+Walks correctness → tests → scale → readability → security → scope, checks the PR description is self-contained, and returns numbered `file:line` findings, each with the concrete case that fails and what happens if it is skipped. Renamed from `code-review` so the built-in `/code-review` and `/code-review ultra` are no longer shadowed — escalate to those for risky branches.
 
 ---
 
@@ -586,6 +586,14 @@ Delegates to `scripts/sync-team.sh`. What it does:
 4. Collect your commits since last sync → write to `memory/commits/<date>.md`
 5. Collect team commits → flag files you both touched
 6. Pop stash; update MEMORY.md index
+
+---
+
+### `/debt-ledger [marker]` — List deliberate shortcuts
+
+**Invoke:** `/debt-ledger` (or `/debt-ledger TODO` for another marker)
+
+Greps every `shortcut: <limit>, <when to upgrade>` comment (the convention in `rules/code-quality.md`) into one ledger grouped by file, and tags the ones that name no upgrade trigger `no-trigger`. Read-only.
 
 ---
 
