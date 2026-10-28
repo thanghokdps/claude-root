@@ -10,8 +10,8 @@ In the first real ticket demo (27 Oct 2026) the model skipped the layer skills, 
 
 What must happen is checked by a hook, not only written in a skill:
 
-- Always on (`core`, `dev`): `branch-guard` (no commits to main or environment branches), `edit-guard` (repo files change through Edit/Write so per-edit hooks run), `ticket-gate` with `ticket-ledger` (a ticket's commit and PR wait for the skills its plan names, `/verify-done` and `/review-checklist`).
-- Opt-in (`guards`): commit quality, scope gate, blast radius, step limit, run log, push evidence, session handoff.
+- Always on (`core`, `dev`): `branch-guard` (no commits to main or environment branches), `edit-guard` (repo files change through Edit/Write so per-edit hooks run), `ticket-gate` with `ticket-ledger` (a ticket's commit and PR wait for the skills its plan names, `/verify-done` and `/review-checklist`), `sensitive-path` (secrets, CI and deploy files ask first), `step-limit` (a subagent past 90 tool calls stops and reports).
+- Opt-in (`guards`): commit quality, scope gate, blast radius, run log, push evidence, session handoff.
 - Hooks exit 0 or 2, never 1. A hint that should not block uses `additionalContext` or a permission `ask`.
 
 ## Consequences

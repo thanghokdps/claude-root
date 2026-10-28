@@ -5,7 +5,7 @@ Personal guard-rail hooks: commit gate, scope gate, blast-radius and session han
 ## Install
 
 ```
-/plugin marketplace add thanghokdps/claude-root
+/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git   # team: VPN + GitLab access; public mirror: thanghokdps/claude-root
 /plugin install guards@harness
 ```
 
@@ -17,7 +17,6 @@ Also installs: `dev`.
 |-------|--------|
 | SessionStart (startup|resume|clear|compact) | `session-resume.sh` |
 | UserPromptSubmit | `scope-gate.sh` |
-| PreToolUse (every tool) | `step-limit.sh` — a subagent past `CLAUDE_STEP_LIMIT` (90) tool calls is stopped and must report |
 | PreToolUse (Bash) | `commit-quality-gate.sh` |
 | PreToolUse (Bash) | `risk-corroboration.sh` |
 | PreToolUse (Bash) | `push-evidence.sh` — before `git push` / PR / MR, asks when no test, lint or build ran after the last change |
