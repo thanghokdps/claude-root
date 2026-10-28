@@ -284,8 +284,9 @@ def push_command(args, gitopts=(), env=None):
 SHELLS = {"eval", "source", ".", "sh", "bash", "zsh", "dash", "ksh", "fish"}
 RUNNERS = {"sudo", "doas", "nice", "ionice", "nohup", "time", "timeout", "env", "command", "builtin", "exec", "xargs",
            "parallel", "find", "stdbuf", "caffeinate", "watch"}  # run the next word as a command
-RUN_CONFIG = re.compile(r"^(?:core\.(?:pager|hookspath|sshcommand|fsmonitor|editor|askpass|gitproxy)|pager\.|"
-                        r"diff\.external|.*\.textconv|filter\.|credential\.|sequence\.editor|alias\.|include)", re.I)
+# git as a word inside another program's argument (python -c "…git push…", perl -e, node -e, osascript): `.git`
+# and `.gitignore` are paths, not the command.
+GIT_WORD = re.compile(r"(?:^|[\s'\"/;(`$|&])git(?=$|[\s'\";)`|&])")
 INFO = {"which", "type", "whereis", "man", "echo", "printf", "brew", "apt", "apt-get", "grep", "rg"}  # name git, don't run it
 VALUE_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--super-prefix", "--config-env", "--attr-source"}
 FLAG_OPTS = {"--no-pager", "-P", "-p", "--paginate", "--bare", "--no-replace-objects", "--literal-pathspecs",
@@ -319,7 +320,7 @@ for seg in segs:
         toks[0] = "git"
         if toks[git_subcommand(toks):][:1] == ["push"]:
             pushes = True
-    elif (toks[0] not in INFO and any(is_git(t) for t in toks[1:])) or \
+    elif (toks[0] not in INFO and any(is_git(t) or GIT_WORD.search(t) for t in toks[1:])) or \
             any(t.startswith(("$(", "`", "(")) and is_git(t) for t in toks[1:]):
         # git run through something (sudo -u x git, xargs git, nice -n 5 git, $(git …)): its options and the
         # wrapper's own can't be told apart, so a gated repo runs git directly.
@@ -373,14 +374,12 @@ for seg in segs:
         elif sub and sub not in BUILTINS:
             # An alias or an external git-<sub> on PATH can run a push the checks below never see.
             deny(f"git {sub} isn't a built-in git command (an alias or a git-{sub} program); run the git command it stands for.")
-        # These pick which program, config or pager git runs, for any subcommand.
-        if any(k.startswith("GIT_") or k in ("PATH", "PAGER", "HOME", "XDG_CONFIG_HOME") for k in env):
-            deny("git with GIT_*, PATH, PAGER, HOME or XDG_CONFIG_HOME set on the command line can run another "
-                 "program or config; run it without that.")
-        if any(RUN_CONFIG.search(t) for j, t in enumerate(opts) if j and opts[j - 1] in ("-c", "--config-env")) or \
-                any(RUN_CONFIG.search(t.split("=", 1)[1]) for t in opts if t.startswith("--config-env=")):
-            deny("git -c/--config-env with a key that runs a command (pager, hooks, ssh, fsmonitor, editor, textconv, "
-                 "filter, credential helper) can't be checked; run git without it.")
+        # Env and config can pick another program, pager, hook or helper for any subcommand, and there are too
+        # many such keys to list: in a gated repo git runs with neither set on its command line.
+        if env:
+            deny(f"git with {sorted(env)[0]}=… set on the command line can run another program; run git without it.")
+        if any(o == "-c" or o.startswith("--config-env") for o in opts):
+            deny("git -c/--config-env can make git run another program; run git without it.")
         if sub == "config" and any(re.match(r"alias\.", t, re.I) for t in toks[i + 1:]) and \
                 any("push" in t or t.startswith("!") for t in toks[i + 1:]):
             deny("a git alias that pushes or runs a shell command would slip past the release checks; a person sets that by hand.")

@@ -244,10 +244,13 @@ def test_tag_push_needs_the_release_for_that_tag():
                 "PATH=/tmp/x:$PATH git status", "sudo bash -c 'git push --tags'", "cat x |& sudo /bin/bash",
                 "cat x | nice -n 5 sh", "GIT_EXEC_PATH=/tmp git status", "PAGER=/tmp/p git log",
                 "git -c core.pager=/tmp/p log", "git -c core.hooksPath=/tmp/h commit -m x",
-                "git --config-env=core.sshCommand=SSH fetch"]:
+                "git --config-env=core.sshCommand=SSH fetch", "git -c gpg.program=/tmp/x commit -m x",
+                "git -c diff.x.command=/tmp/x diff", "EDITOR=/tmp/x git commit", "LD_PRELOAD=/tmp/x.so git status",
+                "python3 -c \"import os; os.system('git push --tags')\"", "perl -e 'system(\"git push\")'",
+                "node -e \"require('child_process').execSync('git push')\"", "busybox sh -c 'git push'"]:
         assert gate(path, cmd, b)[0] == "deny", cmd
     for cmd in ["git status", "git log --oneline -3", "which git", "brew install git", "git lfs pull",
-                "bash scripts/build.sh"]:
+                "bash scripts/build.sh", "cat .gitignore", "ls .git", "npm run test"]:
         assert gate(path, cmd, b)[0] == "allow", cmd
     other = repo()
     git(other, "config", "remote.origin.push", "refs/tags/*:refs/tags/*")
