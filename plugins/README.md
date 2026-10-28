@@ -69,6 +69,7 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [agent-verify-turn](agent/skills/agent-verify-turn/SKILL.md) | `agent` | `/agent-verify-turn [local\|prod-trace]` | Real turn + AG-UI stream as evidence; classify a production trace before fixing | all |
 | [agent-evals](agent/skills/agent-evals/SKILL.md) | `agent` | `/agent-evals [unit\|dataset\|suite\|observability\|compare-models]` | Fake-model unit tests, JSONL eval dataset, judged suite with baseline gate, tracing setup, model comparison | normal |
 | [agent-security](agent/skills/agent-security/SKILL.md) | `agent` | `/agent-security [scope]` | Agent threat model: injection, confused deputy, exfiltration, trace PII, compliance mapping | high |
+| [agent-prompt-review](agent/skills/agent-prompt-review/SKILL.md) | `agent` | `/agent-prompt-review [path\|diff]` | Prompt, tool-description and output-schema diff read as the model reads it, with an eval per must-fix | normal |
 
 ## Skill handoff map
 

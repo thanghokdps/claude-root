@@ -1,0 +1,39 @@
+# Paths an edit must ask a person about first (sensitive-path.sh). One gitignore-style glob per line,
+# matched against the path relative to the repo root; `!glob` exempts. A repo adds its own in
+# .claude/sensitive-paths.txt with the same format.
+
+# Secrets (a pattern without a slash matches the file name in any folder)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+**/secrets/**
+**/secrets.*
+**/credentials*.json
+
+# CI and deploy
+.github/workflows/**
+.gitlab-ci.yml
+.gitlab/ci/**
+**/Dockerfile*
+**/docker-compose*.yml
+**/docker-compose*.yaml
+*.tf
+*.tfvars
+terraform/**
+k8s/**
+helm/**
+infra/**
+deploy/**
+
+# Claude's own permissions and hooks
+.claude/settings.json
+.claude/settings.local.json
+.claude/hooks/**

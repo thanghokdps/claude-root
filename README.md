@@ -654,6 +654,30 @@ Applies on a branch `<type>/<id>-<slug>` with `docs/tickets/<id>/plan.md`. The l
 
 ---
 
+### `sensitive-path.sh` (core, always on)
+
+**Trigger:** `PreToolUse(Edit|Write|MultiEdit|NotebookEdit|Bash)`.
+
+| Check | Action |
+|-------|--------|
+| Edit or shell write (`>`, `tee`, `sed -i`, `cp`/`mv` onto it) of a path in `sensitive-paths.txt` or the repo's `.claude/sensitive-paths.txt`: secrets, CI/deploy, Claude settings | ASK the user |
+| The path is named in the ticket's `plan.md` or a `specs/*/PLAN.md` | allowed |
+
+### `compact-advisor.sh` (core, always on)
+
+**Trigger:** `Stop`. Context past 200k tokens (`CLAUDE_COMPACT_ADVISE_TOKENS`) → one line to the user suggesting `/compact`, repeated every 100k more. Never blocks; no tokens.
+
+### `auto-decisions.sh` (dev, always on)
+
+**Trigger:** `Stop`, in auto or bypass-permissions mode, on a ticket branch whose `plan.md` says `Risk: high`.
+
+| Check | Action |
+|-------|--------|
+| No `## Auto decisions` section, or an entry without `challenged:` | BLOCK the stop once, with the format (`plugins/dev/references/auto-decisions.md`) |
+| `- none: <why>` | allowed |
+
+---
+
 ### `scope-gate.sh`
 
 **Trigger:** `UserPromptSubmit` (every prompt)

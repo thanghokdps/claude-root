@@ -6,6 +6,10 @@ Session and project basics every role uses: verify-done evidence gate, project-i
 
 `hooks/branch-guard.sh` runs before every Bash call. It blocks any direct push to an environment branch (`dev develop stag stage staging prod production`; override with `HARNESS_ENV_BRANCHES`, empty turns it off) and force, delete or mirror pushes to protected branches, and fails closed on shell state it cannot follow. Every role plugin depends on `core`, so every install gets it, in any repo, with no project config.
 
+`hooks/sensitive-path.sh` runs before Edit, Write and Bash. An edit to a secret (`.env*`, keys), CI/deploy config or `.claude/settings*.json` asks the user first, unless the ticket's `plan.md` names the path. Patterns: `hooks/sensitive-paths.txt` plus the repo's `.claude/sensitive-paths.txt`; `CLAUDE_SENSITIVE_PATHS=0` turns it off.
+
+`hooks/compact-advisor.sh` runs on Stop. Past `CLAUDE_COMPACT_ADVISE_TOKENS` (200k) of context it shows the user one line suggesting `/compact`, again every 100k more. The model never sees it, so it costs nothing.
+
 ## Install
 
 ```

@@ -50,6 +50,7 @@ Ask for a feature in plain words, e.g. *"Thêm tính năng cho khách đổi đ�
 | `/agent-verify-turn [local\|prod-trace]` | Before saying an agent change works, or when a production answer was wrong |
 | `/agent-evals [unit\|dataset\|suite\|observability\|compare-models]` | Fake-model unit tests; an eval dataset (JSONL, example in `skills/agent-evals/references/dataset-example.jsonl`); judged eval suites with a CI gate; Langfuse/LangSmith tracing with masking; comparing models |
 | `/agent-security [scope]` | A new tool, data source or client; before shipping; compliance questions |
+| `/agent-prompt-review [path\|diff]` | A diff changes a system prompt, tool description or output schema — injection openings, capability drift, ambiguity, fragile output, tokens |
 
 Skills fire on their own from what you type — the slash command is optional.
 
