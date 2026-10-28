@@ -40,7 +40,7 @@ Create `docs/tickets/<id>/` on a branch `<type>/<id>-<slug>` (never on `main`/`d
 
 A high-risk ticket waits for the user's approval of the three files before Step 3.
 
-Open questions → ask them now, one per turn as options, before any code. An existing `docs/tickets/<id>/` is updated, not overwritten: keep earlier decisions and add a dated entry under § Changes.
+Open questions → run `/resolve-question` on them now, before any code: it answers the facts from the repo with a citation and asks the user only the choices, one per turn as options. An existing `docs/tickets/<id>/` is updated, not overwritten: keep earlier decisions and add a dated entry under § Changes.
 
 **Done when:** the three files exist, every criterion has a test row, and no open question is unanswered or unrecorded.
 
@@ -66,7 +66,7 @@ The plugin's hooks enforce this. `ticket-ledger.sh` records every skill and suba
 
 1. Read every ticket (Step 1) and draft each `plan.md` file list.
 2. **Overlap check** — tickets whose plans touch the same files, the same migration sequence, or the same shared contract run one after another, in dependency order. Say which and why.
-3. The independent ones run at once, **one git worktree and one branch per ticket**. Dispatch them in ONE message: one Agent call per ticket with `isolation: "worktree"`, `run_in_background: true` and `model: "sonnet"` (`~/.claude/rules/model-cost.md`: this session keeps the plans and reviews on Opus), each told to run Steps 2–4 of this skill for its id only. Questions an agent needs answered come back to you; it waits rather than guesses.
+3. The independent ones run at once, **one git worktree and one branch per ticket**. Dispatch them in ONE message: one Agent call per ticket with `isolation: "worktree"`, `run_in_background: true` and `model: "sonnet"` (`~/.claude/rules/model-cost.md`: this session keeps the plans and reviews on Opus), each told to run Steps 2–4 of this skill for its id only. Questions an agent needs answered come back to you as `Blocked: <question>`; you run `/resolve-question` on them, and the agent waits rather than guesses.
 4. Report a table as each finishes: ticket · branch · PR · status. A failed ticket never blocks the others; it is reported with its failure.
 
 Without the Agent tool, give the user one command pair per ticket instead — `git worktree add ../<repo>-<id> -b <type>/<id>-<slug>` then `claude` in that folder with `/ticket <id>` — so each runs as its own session.

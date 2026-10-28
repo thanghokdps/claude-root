@@ -1,0 +1,23 @@
+{
+  "skill": "resolve-question",
+  "positive": [
+    {
+      "prompt": "the ticket has three open questions, sort out which ones you can answer from the repo before asking me",
+      "top_k": 3
+    },
+    {
+      "prompt": "the subagent is blocked on a question about where the auth middleware lives",
+      "top_k": 3
+    },
+    {
+      "prompt": "answer these open questions with file:line citations and only ask me the real choices",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "work ticket 412",
+      "owner": "ticket"
+    }
+  ]
+}

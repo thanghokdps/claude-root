@@ -11,6 +11,7 @@ python3 scripts/test_ticket_gate.py
 python3 scripts/test_compare_shots.py
 python3 scripts/test_text_styles.py
 python3 scripts/test_sync_remote.py
+python3 scripts/test_run_evidence.py
 python3 scripts/lint-kit.py
 python3 scripts/eval-triggers.py
 if command -v claude >/dev/null 2>&1; then

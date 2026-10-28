@@ -129,6 +129,8 @@ After commit: `save-commit-memory.sh` hook fires automatically and saves to memo
 
 ## Confidence escalation rules
 
+An open question mid-task goes through `/resolve-question` first, so the user is asked only what the repo cannot answer.
+
 Stop and ask the user if:
 - Confidence drops below medium at any stage
 - A hard gate is discovered mid-task

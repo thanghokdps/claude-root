@@ -43,6 +43,7 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [writing-plans](plan/skills/writing-plans/SKILL.md) | `plan` | `/writing-plans` | Approved design → wave-organized `PLAN.md` | normal/high |
 | [domain-model](plan/skills/domain-model/SKILL.md) | `plan` | `/domain-model` | Ubiquitous language → `.claude/docs/glossary.md` + ADRs | normal/high |
 | [design-ui](dev/skills/design-ui/SKILL.md) | `dev` | `/design-ui <figma\|folder>` | Design → UI: states, tokens, primitives from the UI library, screenshot diff incl. narrow widths | normal |
+| [resolve-question](dev/skills/resolve-question/SKILL.md) | `dev` | `/resolve-question <q>` | Fact → `file:line` citation; choice → asked as options. Fewer questions to the user | all |
 | [tdd](dev/skills/tdd/SKILL.md) | `dev` | `/tdd` | Red → green loop, one seam and one slice per cycle | all |
 | [codebase-design](plan/skills/codebase-design/SKILL.md) | `plan` | `/codebase-design` | Deep-module vocabulary — depth, seam, leverage, locality | reference |
 | [writing-skills](lead/skills/writing-skills/SKILL.md) | `lead` | `/writing-skills` | How to author and prune skills in this harness | reference |
