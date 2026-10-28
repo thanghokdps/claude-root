@@ -151,7 +151,7 @@ def gh_releases(commit):
         author = (p.get("author") or {}).get("login")
         ok = any(
             rv.get("state") == "APPROVED" and allowed((rv.get("author") or {}).get("login"), author)
-            and (rv.get("commit") is None or rv["commit"].get("oid") == head)
+            and (rv.get("commit") or {}).get("oid") == head
             for rv in p.get("reviews") or []
         )
         found.append((p["headRefName"][len("release/"):], f"PR #{p.get('number')}", ok))
@@ -238,17 +238,33 @@ def eas_command(args, env):
             asks.append(f"eas {sub} changes what production users get; confirm it is the intended rollback or rollout.")
 
 
+def is_tag(ref):
+    return ref.startswith("refs/tags/") or (
+        not ref.startswith("refs/") and run(["git", "show-ref", "--verify", "--quiet", f"refs/tags/{ref}"]).returncode == 0)
+
+
 def push_command(args):
     pos = [a for a in args if not a.startswith("-")]
-    if "--tags" in args:
-        deny("git push --tags can publish release tags that were never approved: push the one tag: git push origin v<version>")
+    broad = [a for a in ("--tags", "--mirror", "--follow-tags") if a in args]
+    if broad:
+        deny(f"git push {broad[0]} can publish release tags that were never approved: push the one tag: git push origin v<version>")
         return
     for ref in pos[1:]:
-        name = re.sub(r"^refs/tags/", "", ref.split(":")[-1])
-        if ref.startswith(":") or not name.startswith("v"):
+        if re.search(r"[*?\[]", ref) and ("refs/tags" in ref or ref.lstrip("+").startswith("v")):
+            deny(f"git push {ref} can publish release tags that were never approved: push the one tag: git push origin v<version>")
             continue
-        commit = tag_commit(name)
+        # A refspec src:dst publishes src under dst, so the tag's name comes from dst and its commit from src.
+        src, _, dst = ref.lstrip("+").partition(":") if ":" in ref else (ref.lstrip("+"), "", ref.lstrip("+"))
+        name = re.sub(r"^refs/tags/", "", dst)
+        if not re.match(r"^v\d", name) or not (is_tag(dst) or is_tag(src)):
+            continue
+        if not src:
+            deny(f"git push :{dst} deletes release tag {name}; a person does that by hand.")
+            continue
+        r = run(["git", "rev-parse", "--verify", "--quiet", f"{src}^{{commit}}"])
+        commit = r.stdout.strip() if r.returncode == 0 else None
         if not commit:
+            deny(f"git push {ref}: can't resolve {src} to a commit, so the release approval can't be checked.")
             continue
         try:
             reason = check_release(commit, f"git push {name}", version=name[1:], existing_tag_ok=True)
@@ -271,6 +287,8 @@ for seg in segments(cmd):
         while i < len(toks) and toks[i] in ("-C", "-c"):
             i += 2
         if toks[i:i + 1] == ["push"]:
+            if any("followtags" in t.lower() for t in toks[1:i]):
+                deny("git -c push.followTags pushes release tags along with the branch: push the one tag: git push origin v<version>")
             push_command(toks[i + 1:])
     else:
         args = eas_args(toks)

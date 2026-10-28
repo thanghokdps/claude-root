@@ -180,7 +180,23 @@ def test_tag_push_needs_the_release_for_that_tag():
     assert gate(path, "git push origin v1.4.0", b)[0] == "deny"
     assert gate(path, "git push origin feat/x", b)[0] == "allow"
     assert gate(path, f"git -C {path} push origin v1.4.0", b)[0] == "deny"
+    # refspecs publish src under a tag name that need not exist locally
+    assert gate(path, "git push origin HEAD:refs/tags/v1.4.0", b)[0] == "deny"
+    assert gate(path, f"git push origin {first}:refs/tags/v1.4.0", b)[0] == "allow"
+    assert gate(path, "git push origin nope:refs/tags/v1.4.0", b)[0] == "deny"
+    assert gate(path, "git push origin :refs/tags/v1.4.0", b)[0] == "deny"
+    for flag in ("--mirror", "--follow-tags"):
+        assert gate(path, f"git push {flag} origin", b)[0] == "deny", flag
+    assert gate(path, "git push origin 'refs/tags/*:refs/tags/*'", b)[0] == "deny"
+    assert gate(path, "git -c push.followTags=true push origin main", b)[0] == "deny"
     assert second != first
+
+
+def test_review_without_its_commit_does_not_count():
+    path = repo()
+    sha = git(path, "rev-parse", "HEAD")
+    review = {"author": {"login": "bob"}, "state": "APPROVED"}
+    assert gate(path, PROD, stubs(gh=[gh_pr(sha, [review])]))[0] == "deny"
 
 
 def test_production_channel_rollback_asks():
