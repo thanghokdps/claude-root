@@ -67,7 +67,7 @@ Skills fire on their own from what you type — the slash command is optional.
 
 ## Check the routing yourself
 
-`evals/` holds one case per routing demo prompt, one that must not fire, and behaviour cases: `greenfield-problem-first` (prerequisites checked, then the problem asked before any technology), `feature-conflicts-adr` (a feature the ADR rules out is stopped and raised, not built) `design-to-chat` (a frame + tokens mapped onto v2 tokens and a ui-map), `hitl-standard-interrupt` (the stock AG-UI 1.0 confirm path planned, no custom endpoint) and `verify-agui-1` (a captured stream checked against the 1.0 rules). From a clone of the repo:
+`evals/` holds one case per routing demo prompt, one that must not fire, and behaviour cases: `greenfield-problem-first` (prerequisites checked, then the problem asked before any technology), `skeleton-no-questions` (an init with a named stack asks nothing and builds), `feature-conflicts-adr` (a feature the ADR rules out is stopped and raised, not built) `design-to-chat` (a frame + tokens mapped onto v2 tokens and a ui-map), `hitl-standard-interrupt` (the stock AG-UI 1.0 confirm path planned, no custom endpoint) and `verify-agui-1` (a captured stream checked against the 1.0 rules). From a clone of the repo:
 
 ```bash
 bash scripts/eval-plugin.sh agent
