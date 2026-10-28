@@ -249,7 +249,7 @@ def push_command(args, gitopts=(), env=None):
     # Push refspecs, mirror or followTags already in the config act on a plain `git push` too: read them with
     # the push's own -C/-c and GIT_* environment, so the check sees the config the push will use.
     # Only -C reaches the subprocess; env and other -c overrides were denied before we get here.
-    copts = [t for pair in zip(gitopts[::2], gitopts[1::2]) if pair[0] == "-C" for t in pair]
+    copts = [t for j, o in enumerate(gitopts) if o == "-C" and j + 1 < len(gitopts) for t in (o, gitopts[j + 1])]
     r = run(["git", *copts, "config", "--get-regexp", r"^(remote\..*\.(push|mirror)|push\.followtags)$"])
     if r.returncode == 0 and r.stdout.strip() and not all(l.split()[-1].lower() == "false" for l in r.stdout.splitlines()):
         deny("this repo's git config sets remote.*.push, remote.*.mirror or push.followTags, so a push may publish "
@@ -281,15 +281,40 @@ def push_command(args, gitopts=(), env=None):
             deny(reason)
 
 
+WRAPPERS = {"command", "builtin", "exec", "nohup", "time", "sudo", "xargs", "nice"}
+SHELLS = {"eval", "source", ".", "sh", "bash", "zsh"}
+
+
+def git_subcommand(toks):
+    """Index of git's subcommand, past every global option (-C/-c take a value, --no-pager and -P don't)."""
+    i = 1
+    while i < len(toks) and toks[i].startswith("-"):
+        i += 2 if toks[i] in ("-C", "-c") else 1
+    return i
+
+
+segs, pushes, wrapped = segments(cmd), False, False
+for seg in segs:
+    env, toks = tokens(seg)
+    while toks and toks[0] in WRAPPERS:
+        toks = toks[1:]
+    if toks and toks[0] == "git" and toks[git_subcommand(toks):][:1] == ["push"]:
+        pushes = True
+    if toks and toks[0] in SHELLS and any("push" in t for t in toks[1:]):
+        pushes = wrapped = True  # a push inside a string or script the hook can't parse
+    bare = [t.strip("$(){}`") for t in toks]
+    if "git" in bare and "push" in bare:
+        pushes = True  # (git push …), $(git push …): grouping glued to the words
 # Anything run before a push in the same command (export, set -a, cd, source, eval…) can change the env or repo
 # it runs in, which the checks below (in the hook's own env and cwd) can't follow: a push runs on its own.
-if re.search(r"\bgit(?:\s+-[cC]\s+\S+)*\s+push\b", cmd) and (
-        re.search(r"[;&|\n{}()`!]|\$\(", cmd) or re.match(r"\s*(?:eval|source|\.|builtin|command)\s", cmd)):
+if pushes and (wrapped or len([s for s in segs if s.strip()]) > 1 or re.search(r"[{}()`!]|\$\(", cmd)):
     deny("git push must run as its own command here (no ;, &&, |, newline, subshell, $( ), eval or source around "
          "it), so the release checks see the env and repo it really runs in.")
 
-for seg in segments(cmd):
+for seg in segs:
     env, toks = tokens(seg)
+    while toks and toks[0] in WRAPPERS:
+        toks = toks[1:]
     if not toks:
         continue
     if toks[0] == "gh" and toks[1:3] == ["pr", "review"] and ("--approve" in toks or "-a" in toks):
@@ -297,9 +322,7 @@ for seg in segments(cmd):
     elif toks[0] == "glab" and toks[1:3] == ["mr", "approve"]:
         deny("glab mr approve: approving is a person's decision. Ask the reviewer to approve it on GitLab.")
     elif toks[0] == "git":
-        i = 1
-        while i < len(toks) and toks[i] in ("-C", "-c"):
-            i += 2
+        i = git_subcommand(toks)
         if toks[i:i + 1] == ["remote"] and any(t.startswith("--mirror") for t in toks[i + 1:]):
             deny("git remote --mirror makes every push mirror all refs, release tags included; a person sets that by hand.")
         if toks[i:i + 1] == ["config"] and any(TAG_CONFIG.search(t) for t in toks[i + 1:]):
@@ -308,9 +331,12 @@ for seg in segments(cmd):
             if any(TAG_CONFIG.search(t) for t in toks[1:i] + [v for k, v in env.items() if k.startswith("GIT_CONFIG")]):
                 deny("git -c push.followTags pushes release tags along with the branch: push the one tag: git push origin v<version>")
             # Config pulled in from elsewhere can't be judged from the command line, so a push carries none.
-            elif (any(re.match(r"include", t, re.I) for t in toks[2:i:2])
+            elif (any(re.match(r"include", t, re.I) for t in toks[1:i])
+                  or any(t.startswith(("--git-dir", "--work-tree", "--exec-path", "--namespace", "--config-env"))
+                         for t in toks[1:i])
                   or any(k.startswith("GIT_") or k in ("HOME", "XDG_CONFIG_HOME") for k in env)):
-                deny("git push with include.path/includeIf, GIT_* or HOME/XDG_CONFIG_HOME overrides can't be checked: push without them.")
+                deny("git push with include.path/includeIf, --git-dir/--work-tree, GIT_* or HOME/XDG_CONFIG_HOME "
+                     "overrides can't be checked: push without them.")
             else:
                 push_command(toks[i + 1:], toks[1:i], env)
     else:

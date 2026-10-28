@@ -219,6 +219,12 @@ def test_tag_push_needs_the_release_for_that_tag():
     assert gate(path, "git push origin feat/x", b)[0] == "allow"
     assert gate(path, "cd /tmp && ls", b)[0] == "allow"
     assert gate(path, "git add a.ts && git commit -m \"feat: push notifications (#12)\"", b)[0] == "allow"
+    for cmd in ["cd /tmp; \"git\" push origin feat/x", "cd /tmp; g\\it push origin feat/x",
+                "cd /tmp; git --no-pager push origin feat/x", "cd /tmp; command git push origin feat/x",
+                "bash -c 'git push origin feat/x'", "git --no-pager push --tags",
+                "git --git-dir=/tmp/o.git push origin feat/x", "git -P push origin HEAD:refs/tags/v9.0.0"]:
+        assert gate(path, cmd, b)[0] == "deny", cmd
+    assert gate(path, "git --no-pager push origin feat/x", b)[0] == "allow"
     other = repo()
     git(other, "config", "remote.origin.push", "refs/tags/*:refs/tags/*")
     assert gate(path, f"git -C {other} push origin feat/x", b)[0] == "deny"  # config read where the push runs
