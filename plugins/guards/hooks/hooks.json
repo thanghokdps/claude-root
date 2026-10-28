@@ -10,7 +10,6 @@
       { "hooks": [{ "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/scope-gate.sh" }] }
     ],
     "PreToolUse": [
-      { "hooks": [{ "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/step-limit.sh" }] },
       {
         "matcher": "Bash",
         "hooks": [

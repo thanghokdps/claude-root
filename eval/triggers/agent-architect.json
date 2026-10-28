@@ -16,6 +16,14 @@
     {
       "prompt": "dựng skeleton chatbot bằng Mastra + CopilotKit theo repo mẫu chính chủ",
       "top_k": 3
+    },
+    {
+      "prompt": "Tôi muốn làm một chatbot giúp khách tra cứu và đổi địa chỉ đơn hàng",
+      "top_k": 3
+    },
+    {
+      "prompt": "I want to build an assistant that helps our support team answer order questions",
+      "top_k": 3
     }
   ],
   "negative": [

@@ -135,7 +135,7 @@ claude
 4. `/project-init` now detects the stack and writes `.claude/` from real commands and paths.
 5. Continue with the daily loop: describe the next feature, `/review-checklist`, `/finish-branch`.
 
-**AI assistant (CopilotKit / AG-UI / LangGraph).** Use `/agent-architect greenfield` instead of steps 1–3:
+**AI assistant (CopilotKit / AG-UI / LangGraph).** Instead of steps 1–3, say what the assistant should do in plain words (for example *"a chatbot that helps customers track and change their orders"*). `agent-architect` fires and runs these steps, asking before it builds:
 
 1. Preflight: checks Node, the package manager, a model key (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env`; see `.env.sample`) and git.
 2. Interview, one question at a time: users, clients (web/mobile/chat), tasks, systems, writes, observability. It writes an ADR to `docs/adr/`.

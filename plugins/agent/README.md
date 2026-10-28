@@ -39,7 +39,7 @@ Ask for a feature in plain words, e.g. *"Thêm tính năng cho khách đổi đ�
 
 | Skill | Reach for it when |
 |-------|-------------------|
-| `/agent-architect [greenfield\|audit]` | Starting an assistant, or auditing one for custom code that stock middleware now covers |
+| `/agent-architect [greenfield\|audit]` | Starting an assistant (just describe it; this fires and interviews you first), or auditing one for custom code that stock middleware now covers |
 | `/agent-feature <capability>` | Adding a feature to an existing assistant — within its ADR, reusing what is there, then a duplicate check |
 | `/agent-design-ui <figma link \| folder>` | A design for the chat: runs `/design-ui` (dev) for frames, tokens, primitives and the screenshot diff, and adds the chat states, the `[data-copilotkit]` theme and stock vs custom per chat element |
 | `/agent-tool <tool>` | Adding, renaming or fixing an agent (backend) tool — schema, trusted identity, read vs mutation, its test. Given your API (OpenAPI, Postman, curl, docs or MCP), it first maps endpoints to tools and builds the typed client and mocks. Browser-only tools go to `/agent-frontend` |
