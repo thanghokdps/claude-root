@@ -11,6 +11,8 @@ when_to_use: cutting a release, tagging a version, deploying to staging or prod,
 
 Project override: if the repo has `RELEASE.md` or `.claude/docs/release.md`, its steps come first; this list fills the gaps.
 
+Mobile app (`eas.json` in the repo): read `${CLAUDE_SKILL_DIR}/references/mobile.md`. It replaces items 3, 7 and 8, and the `release-gate` hook enforces the approval.
+
 ## Checklist — stop at the first ❌
 
 | # | Item | How to verify |

@@ -23,4 +23,8 @@ Also installs: `core`.
 | `/release-checklist` | Walks a release through a fixed checklist — scope frozen, gates green, migrations safe, release notes drafted, tag, deploy, smoke check, rollback ready — and stops on the first unmet item |
 | `/write-migration` | Writes or reviews a database/schema migration so it is reversible, non-locking and deployable while old code still runs — expand/contract, backfill separated, down path tested |
 
+## Hooks
+
+`release-gate` (only in a repo with `eas.json` or `.claude/release-gate.json`): a production `eas build`, `eas submit`, `eas update` or a `v*` tag push needs a `release/<version>` PR/MR approved by someone other than its author on the exact commit; approving a PR/MR from the session is always denied. Mobile release steps: `/release-checklist` → `references/mobile.md`.
+
 All plugins: [`../README.md`](../README.md).
