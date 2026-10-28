@@ -172,7 +172,11 @@ def test_tag_push_needs_the_release_for_that_tag():
     assert gate(path, "git push origin refs/tags/v1.4.0", b)[0] == "allow"
     d, why = gate(path, "git push --tags", b)
     assert d == "deny" and "push the one tag" in why, why
-    assert gate(path, "git push origin v1.5.0", b)[0] == "allow"  # no such local tag: nothing to push
+    assert gate(path, "git push origin v1.5.0", b)[0] == "deny"  # nothing to resolve: can't be checked
+    assert gate(path, "git push origin HEAD:v1.5.0", b)[0] == "deny"  # may land as a tag on the remote
+    assert gate(path, "git push origin HEAD:refs/heads/v1.5.0", b)[0] == "allow"
+    assert gate(path, "git push --delete origin v1.4.0", b)[0] == "deny"
+    assert gate(path, "git push -d origin v1.4.0", b)[0] == "deny"
     git(path, "tag", "v1.5.0")
     assert gate(path, "git push origin v1.5.0", b)[0] == "deny"  # release is for 1.4.0
     second = commit(path, "b.txt")
@@ -189,6 +193,10 @@ def test_tag_push_needs_the_release_for_that_tag():
         assert gate(path, f"git push {flag} origin", b)[0] == "deny", flag
     assert gate(path, "git push origin 'refs/tags/*:refs/tags/*'", b)[0] == "deny"
     assert gate(path, "git -c push.followTags=true push origin main", b)[0] == "deny"
+    assert gate(path, "git push origin 'refs/*:refs/*'", b)[0] == "deny"
+    assert gate(path, "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=push.followTags GIT_CONFIG_VALUE_0=true git push origin main",
+                b)[0] == "deny"
+    assert gate(path, "git config push.followTags true", b)[0] == "deny"
     assert second != first
 
 
