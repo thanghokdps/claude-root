@@ -20,6 +20,7 @@ Also installs: `dev`.
 | PreToolUse (every tool) | `step-limit.sh` — a subagent past `CLAUDE_STEP_LIMIT` (90) tool calls is stopped and must report |
 | PreToolUse (Bash) | `commit-quality-gate.sh` |
 | PreToolUse (Bash) | `risk-corroboration.sh` |
+| PreToolUse (Bash) | `push-evidence.sh` — before `git push` / PR / MR, asks when no test, lint or build ran after the last change |
 | PostToolUse (Edit|Write) | `blast-radius-check.sh` |
 | PostToolUse (Edit|Write) | `format-on-edit.sh` |
 | PostToolUse (Bash) | `headroom-compress.sh` |
