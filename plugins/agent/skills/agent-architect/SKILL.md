@@ -41,7 +41,7 @@ Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/
 
 ## Step 2 — Greenfield interview
 
-Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kickoff doc set); ask only what is still open. Ask only the rows `interview.md` § Asked or defaulted marks as asked: the problem (P1–P4) before any technology, then Q-F (only when no stack is named), Q4 (writes) and Q-D (only when no design was given). Every other question is defaulted from the doc set, the repo, the request or the recommendation, and shown on **one** defaults card the user accepts or changes.
+Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kickoff doc set); ask only what is still open. Ask only the rows `interview.md` § Asked or defaulted marks as asked: the problem (P1–P4) before any technology, then Q-F (only when no stack is named) and Q4 (writes). Q-D is never asked: a Figma link or mockup the user gives is used, and with none the chat is CopilotKit's stock `CopilotChat` with theme tokens, shown on the card. Every other question is defaulted from the doc set, the repo, the request or the recommendation, and shown on **one** defaults card the user accepts or changes.
 
 - **One question per turn, as choices**: `AskUserQuestion` with 2–4 options, the recommended one first with `(Recommended)`, per `interview.md` § Shape of each question; numbered options when the tool is absent. Never a prose question the user must answer in free text. Skip what the repo or the request already answers.
 - **Viewports are always set** (Q2v) for any web client, even when every frame is desktop-sized: defaulted to phone (375px) plus desktop and shown on the card.
@@ -49,18 +49,22 @@ Pre-fill every answer the kickoff doc set holds (`interview.md` § From the kick
 - The shape follows Q-F (`shapes.md` § Framework). A named stack is used as given: Mastra → **M**, LangChain → **A**, custom graph → **B**/hybrid. With no stack named, recommend **A** (createAgent + middleware + CopilotRuntime v2), unless the host is edge/Workers or a contract the runtime cannot express forces **B**. Use the decision rule in `shapes.md` for single agent vs supervisor in every framework.
 - Every non-L0 choice names its rung and its reason (`${CLAUDE_SKILL_DIR}/references/stock-map.md`).
 
-**Done when:** P1–P4, Q-F, Q4 and Q-D are answered, and the defaults card (Q1–Q9, Q2v, Q-L, Q-T) is accepted or its changed rows answered; anything deferred is recorded with a risk.
+**Done when:** P1–P4, Q-F and Q4 are answered, and the defaults card (Q1–Q9, Q2v, Q-L, Q-T, Q-D) is accepted or its changed rows answered; anything deferred is recorded with a risk.
 
 ## Step 2s — Skeleton interview (empty chatbot, no features)
 
-The user wants a running, empty chatbot on a stack they name, and nothing else. Skip P2–P4, Step 2b's grill and the ADR's Problem section.
+The user wants an empty chatbot that runs on the stack they name, and nothing else: no tools, no features, no domain data. Requests like "dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra, chưa cần feature gì" or "set up an empty chatbot on LangGraph and Next.js, no features yet" land here.
 
-- Take every stack choice the request names as given: framework, frontend, backend, database, ORM, auth, package manager, host, layout. Ask only what it leaves open that is costly to change: Q-F (framework) when none is named, Q1 (host), Q2 (clients), Q-L (layout). One question per turn, as choices, the recommended one first. Never ask about tasks, tools or features.
-- Everything else is defaulted and shown on one defaults card.
-- Ask P1 in one line ("Who is it for, in one sentence?"). It becomes the prompt's opening line, and "a general assistant" is an accepted answer.
-- Write a short ADR (`docs/adr/<NNNN>-agent-architecture.md`): the stack, the card, and P2–P4 and Q4 recorded as *deferred to `/agent-feature`*.
+1. **Read the stack from the request.** Every piece it names is a fact, never a question: framework, frontend, backend, database, ORM, auth, package manager, host, layout. Map the framework with `shapes.md` § Framework: "Mastra" → **M**; "LangChain", "LangGraph" or "createAgent" → **A**; "custom graph" or "StateGraph" → **B**. Pick the reference row in `reference-repos.md`: M → R2 (in-process CopilotKit) or R1 (own Mastra server); A → R4; B → R5; a LangGraph shape on L2 → R6.
+2. **Ask at most two questions**, one per turn, as `AskUserQuestion` choices with the recommended one first:
+   - P1, in one line: "Who is it for, in one sentence?", with *A general assistant (Recommended)* first. The answer opens the agent's prompt.
+   - Q-F, only when the request names no framework. Recommend **A**.
 
-**Done when:** the stack is fully named and the defaults card is accepted.
+   Never ask about tasks, tools, writes, systems, features (P2–P4, Q4) or design (Q-D).
+3. **Show one defaults card** for everything else, each row with its source (the request, the repo or the recommendation): Q1 host, Q2 clients, Q2v viewports, Q-L layout, Q-T test location, Q5 identity, Q6 memory, Q7 models, Q8 tracing, Q-D design. Q-D is a Figma link or mockup when the user gave one, otherwise CopilotKit's stock `CopilotChat` with theme tokens. *Change some* → ask only the picked rows.
+4. **Write a short ADR** (`docs/adr/<NNNN>-agent-architecture.md`): the `Shape:` line, the named stack, the reference row, the accepted card, and a *Deferred* section listing P2–P4 and Q4 as "to `/agent-feature`". No Problem section and no Step 2b grill.
+
+**Done when:** the shape line and the reference row are written, every stack piece is named or defaulted on the accepted card, and the ADR is on disk. Then Step 4s.
 
 ## Step 2b — Grill the card
 
@@ -95,18 +99,36 @@ Build the smallest working slice of the chosen shape, test first where practical
 7. One read tool for the first P2 task, against its P3 system, through `/agent-tool` (from the user's API spec when one was given, its Step 0); then one real streamed turn with that task's example message through `/agent-verify-turn`.
 8. The P2 example messages as the first eval cases (`/agent-evals`).
 
-**Skeleton mode** (Step 2s) builds steps 0, 2–6 and stops there. No tool, no HITL, no ERD and no domain tables: a named database gets only its connection, the migration setup and, when Q6 keeps history, the conversation tables. No evals beyond one smoke case. The agent has no tools and a prompt that opens with P1. The proof is one real streamed turn with "hello" through `/agent-verify-turn`, plus the stock chat UI rendering it. The chat UI stays stock `CopilotChat` with theme tokens. The reply ends with the features still to build, each phrased as the sentence to give `/agent-feature`.
-
 Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later work: nostream helper nodes (Mastra: `generate()` helpers, `lastMessages`, `maxSteps`), stable prompt prefix, kill switch per tool. Build in the scaffold rows of `${CLAUDE_SKILL_DIR}/references/production.md` (durable state, health, env forwarding, fallback, masked tracing).
 
 "Implement all" or "don't ask me again" means: take the recommended option at every remaining question and record it as *defaulted* — it never means skipping a skill. After this first slice, every further feature goes through `/agent-feature` (one at a time, each with its reuse inventory and duplicate check), the chat UI through `/agent-design-ui`, and each feature's Done-when is met before the next starts.
 
 Then `/project-init` writes the project's `.claude/` docs and test strategy from the scaffold just built.
 
-**Done when:** format, typecheck, lint and tests pass, and one real turn streams end to end with its evidence shown (skeleton: the "hello" turn).
+**Done when:** format, typecheck, lint and tests pass, and one real turn streams end to end with its evidence shown.
+
+## Step 4s — Skeleton scaffold (after Step 2s)
+
+Step 4's rules hold (reference repo mirrored at a resolved SHA, core only, exact pins, test first where practical, `optimisation.md` and `production.md` scaffold rows), but build only these, in order:
+
+0. **Project shell** from the Step 2s reference row, in the chosen layout: `git init`, the named package manager, TypeScript strict, test runner on the Q-T location, ESLint, Prettier + `format:check`, path alias, `styles/tokens.css`, `.env.example`.
+1. **Env schema** that fails at boot on missing config. A named database gets its client, its connection variable and the migration setup; tables only for what Q5 auth and Q6 history need. No ERD and no domain tables.
+2. **Identity** as Step 4 item 2, on the named auth (or the defaulted Q5), with its test that the agent sees the caller's id.
+3. **One agent** under one agent id, with **no tools**, its prompt opening with P1.
+4. **Model factory**: `MODEL_PRIMARY`, `MODEL_FALLBACK`, `MODEL_CHEAP` per `model-choice.md`, sized for general chat; names and a cost line in `.env.example` and ADR Q7.
+5. **Tracing switch** with masking on.
+6. **Pins**: exact versions, one copy of the framework core.
+7. **One chat page**: CopilotKit's stock `CopilotChat` wired to the agent id, styled by theme tokens only, checked at the Q2v viewports. A given design goes to `/agent-design-ui` after this step; no design means the stock chat stays, unasked.
+8. **Proof**: one real streamed turn with "hello" through `/agent-verify-turn`, its stream evidence shown, and one smoke eval case (the greeting gets a streamed answer) through `/agent-evals`.
+
+Never in skeleton mode: a tool (backend or frontend), a HITL confirm, a domain table or ERD, a RAG index, a second agent or a router, a feature screen. Each is a feature and goes through `/agent-feature`.
+
+End the reply with **Next features**: the deferred rows as a numbered list, each one sentence the user can give `/agent-feature` (e.g. "Thêm tool tra cứu đơn hàng theo mã"). With none known, two examples that fit P1.
+
+**Done when:** format, typecheck, lint and tests pass, the "hello" turn streams end to end with its evidence shown, the smoke eval passes, and the Next features list is in the reply. Then `/project-init`.
 
 ---
 
 ## Hand-offs
 
-Scaffold done → `/verify-done` → `/review-checklist` → `/finish-branch`. Release → `/release-checklist` with `production.md`. The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · documents, embeddings or semantic memory → `/agent-rag` · threat model → `/agent-security`.
+Scaffold or skeleton done → `/verify-done` → `/review-checklist` → `/finish-branch`. Release → `/release-checklist` with `production.md`. The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · documents, embeddings or semantic memory → `/agent-rag` · threat model → `/agent-security`.

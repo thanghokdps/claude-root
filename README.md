@@ -31,7 +31,7 @@ Tôi muốn làm một chatbot giúp khách tra cứu và đổi địa chỉ đ
 Claude picks the right skill from that sentence (here `agent-architect`) and **asks before it builds**, one question per turn, each with a recommendation:
 
 1. **The problem:** who uses it and why, the 3–5 things users will ask (with one real example message each), the systems it reads or writes, and what it must refuse.
-2. **The choices that are costly to change:** host, clients, single app or monorepo, design. Everything else is defaulted and shown on one card for you to confirm.
+2. **The choices that are costly to change:** host, clients, single app or monorepo. Everything else is defaulted and shown on one card for you to confirm. Design is never asked: give a Figma link or mockup in your request if you have one; without one the chat is CopilotKit's stock `CopilotChat` with theme tokens.
 3. **Then it builds:** checks Node, the package manager, the model key and git; writes the architecture record (`docs/adr/`); scaffolds the smallest slice; and proves it with one real streamed turn.
 
 **Just an empty skeleton on your stack, no features yet?** Say so and name the stack:
