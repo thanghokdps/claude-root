@@ -247,10 +247,13 @@ def test_tag_push_needs_the_release_for_that_tag():
                 "git --config-env=core.sshCommand=SSH fetch", "git -c gpg.program=/tmp/x commit -m x",
                 "git -c diff.x.command=/tmp/x diff", "EDITOR=/tmp/x git commit", "LD_PRELOAD=/tmp/x.so git status",
                 "python3 -c \"import os; os.system('git push --tags')\"", "perl -e 'system(\"git push\")'",
-                "node -e \"require('child_process').execSync('git push')\"", "busybox sh -c 'git push'"]:
+                "node -e \"require('child_process').execSync('git push')\"", "busybox sh -c 'git push'",
+                "python3 -c \"import os; os.system('g'+'it pu'+'sh')\"", "ruby -e 'system %w[g i t].join'",
+                "awk 'BEGIN{system(\"gi\" \"t push\")}'", "/usr/bin/python3 -c 'print(1)'"]:
         assert gate(path, cmd, b)[0] == "deny", cmd
     for cmd in ["git status", "git log --oneline -3", "which git", "brew install git", "git lfs pull",
-                "bash scripts/build.sh", "cat .gitignore", "ls .git", "npm run test"]:
+                "bash scripts/build.sh", "cat .gitignore", "ls .git", "npm run test", "python3 scripts/gen.py",
+                "node scripts/build.js"]:
         assert gate(path, cmd, b)[0] == "allow", cmd
     other = repo()
     git(other, "config", "remote.origin.push", "refs/tags/*:refs/tags/*")

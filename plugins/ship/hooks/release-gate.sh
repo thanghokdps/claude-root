@@ -327,6 +327,12 @@ for seg in segs:
         pushes = wrapped = True
     if toks[0] in SHELLS and any(re.search(r"\bgit\b", t) for t in toks[1:]):
         pushes = wrapped = True  # git inside a string or script the hook can't parse
+    # Inline code (python -c, node -e, perl -e, awk '…') can build any command from pieces no scan can follow.
+    prog = os.path.basename(toks[0])
+    if (re.match(r"^(?:python[\d.]*|perl|ruby|node|deno|bun|php|lua|tclsh|osascript|busybox)$", prog)
+            and any(t in ("-c", "-e", "-E", "-r", "-p", "--eval", "--print") for t in toks[1:])) \
+            or re.match(r"^[gnm]?awk$", prog):
+        pushes = wrapped = True
     # A shell reading its commands from stdin (… | sh, bash < file, bash -s) or a command named by a variable
     # runs text the hook never sees.
     shell = os.path.basename(toks[0]) in SHELLS - {"eval", "source", "."}
@@ -344,8 +350,8 @@ if re.search(r"\|&?\s*" + RUN + r"(?:\S*/)?(?:sh|bash|zsh|dash|ksh|fish)\b", cmd
 # Anything run before a push in the same command (export, set -a, cd, source, eval…) can change the env or repo
 # it runs in, which the checks below (in the hook's own env and cwd) can't follow: a push runs on its own.
 if wrapped:
-    deny("git must run directly here, not through sudo/xargs/env-style wrappers, $( ), eval or sh -c, so the "
-         "release checks see the command it really runs.")
+    deny("git must run directly here, not through sudo/xargs/env-style wrappers, $( ), eval, sh -c or inline code "
+         "(python -c, node -e, awk), so the release checks see the command it really runs. Put scripts in a file.")
 elif pushes and (len([s for s in segs if s.strip()]) > 1 or re.search(r"[{}()`!]|\$\(", cmd)):
     deny("git push must run as its own command here (no ;, &&, |, newline, subshell, $( ), eval or source around "
          "it), so the release checks see the env and repo it really runs in.")
