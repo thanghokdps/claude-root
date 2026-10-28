@@ -5,7 +5,7 @@ Review a diff or PR: review-checklist, review-diff, blast-radius impact analysis
 ## Install
 
 ```
-/plugin marketplace add thanghokdps/claude-root
+/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
 /plugin install review@harness
 ```
 

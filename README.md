@@ -7,8 +7,8 @@ A Claude Code kit centred on **building one AI assistant end to end** on Copilot
 ## Quickstart — AI assistant
 
 ```bash
-# Inside Claude Code — no clone, no fixed path
-/plugin marketplace add thanghokdps/claude-root
+# Inside Claude Code — no clone, no fixed path (company GitLab: SSH key + VPN; outside it: thanghokdps/claude-root)
+/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
 /plugin install agent@harness          # pulls in its own dependencies (progress) automatically
 ```
 
@@ -249,15 +249,15 @@ Installs `global/CLAUDE.md` and `plugins/core/rules/` into `~/.claude/`, registe
 
 The kit is split by role — see [`plugins/README.md`](plugins/README.md). Installing a role plugin installs its dependencies: `dev` brings `core`, `plan`, `review`; `agent` brings `dev` and `ship` (and through them `core`, `plan`, `review`), because its skills hand off to `/fix-bug`, `/verify-done`, `/review-checklist`, `/write-migration` and `/finish-branch`; hooks are the opt-in `guards`, except `branch-guard`, which ships in `core` and is always on.
 
-From GitHub instead of a local clone:
+From the team's GitLab instead of a local clone (needs read access to `thang.hoquang/claude-kit`, an SSH key on GitLab and the VPN; the same commit is on GitHub as `thanghokdps/claude-root`):
 
 ```
-/plugin marketplace add thanghokdps/claude-root
+/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
 /plugin install agent@harness     # one role (+ its dependencies)
 /plugin install harness@harness       # everything
 ```
 
-**Update:** skills/hooks — nothing to do for a local install (loaded in place); GitHub install → `/plugin marketplace update harness`. A new plugin, `global/CLAUDE.md` or `rules/` changed → re-run `install.sh` (`plugin update` does not install a dependency a new version adds).
+**Update:** skills/hooks — nothing to do for a local install (loaded in place); GitLab or GitHub install → `/plugin marketplace update harness` (kit changes reach GitLab through `/sync-remote`). A new plugin, `global/CLAUDE.md` or `rules/` changed → re-run `install.sh` (`plugin update` does not install a dependency a new version adds).
 
 **Check before committing:** `bash scripts/check.sh` (skill lint incl. the plugin dependency check, trigger eval, `claude plugin validate` per plugin).
 

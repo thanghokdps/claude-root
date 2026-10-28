@@ -5,7 +5,7 @@ Shows a skill's checklist when it starts and each checkpoint as it completes (âœ
 ## Install
 
 ```
-/plugin marketplace add thanghokdps/claude-root
+/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
 /plugin install progress@harness
 ```
 

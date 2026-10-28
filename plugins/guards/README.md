@@ -5,7 +5,7 @@ Personal guard-rail hooks: commit gate, scope gate, blast-radius and session han
 ## Install
 
 ```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git   # team: VPN + GitLab access; public mirror: thanghokdps/claude-root
+/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
 /plugin install guards@harness
 ```
 
