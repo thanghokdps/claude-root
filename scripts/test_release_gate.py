@@ -252,7 +252,10 @@ def test_tag_push_needs_the_release_for_that_tag():
                 "awk 'BEGIN{system(\"gi\" \"t push\")}'", "/usr/bin/python3 -c 'print(1)'",
                 "python3 -Wignore -c 'print(1)'", "python3 -Ic 'print(1)'", "node --eval=1", "sudo node -e 1",
                 "env python3 -c 1", "cat x.py | python3", "python3 - < x.py", "python3 < x.py", "node",
-                "python3 missing.py"]:
+                "python3 missing.py", "python3 -Wd -Ic 1", "node --input-type=module -", "node -r ./x.js",
+                "NODE_OPTIONS='--require /tmp/x.js' node scripts/build.js", "python3.12 -c 1", "pypy3 -c 1",
+                "ts-node -e 1", "vim -c '!git push' x", "emacs --eval '(shell-command \"git push\")'",
+                "python3 /tmp/outside.py"]:
         assert gate(path, cmd, b)[0] == "deny", cmd
     os.makedirs(os.path.join(path, "scripts"))
     for name in ("gen.py", "build.js"):

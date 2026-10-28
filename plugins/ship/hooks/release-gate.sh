@@ -285,9 +285,10 @@ SHELLS = {"eval", "source", ".", "sh", "bash", "zsh", "dash", "ksh", "fish"}
 RUNNERS = {"sudo", "doas", "nice", "ionice", "nohup", "time", "timeout", "env", "command", "builtin", "exec", "xargs",
            "parallel", "find", "stdbuf", "caffeinate", "watch"}  # run the next word as a command
 RUN = r"(?:(?:\S*/)?(?:" + "|".join(sorted(RUNNERS)) + r")\b[^|;&\n]*?\s+)*"  # runner words before a program
-INTERPRETER = re.compile(r"^(?:python[\d.]*|perl[\d.]*|ruby|node|nodejs|deno|bun|php|lua[\d.]*|tclsh|osascript|"
-                         r"busybox|[gnm]?awk|Rscript|julia|pwsh)$")
-INLINE_FLAG = re.compile(r"^(?:-[A-Za-z]*[ceEpr][A-Za-z]*|--(?:eval|print|command|exec)(?:=.*)?)$")
+INTERPRETER = re.compile(r"^(?:python|pypy|perl|ruby|irb|php|node|nodejs|lua|luajit|tclsh|deno|bun|ts-node|tsx|"
+                         r"osascript|busybox|expect|jshell|swift|Rscript|julia|pwsh|[gnm]?awk)[\w.-]*$")
+EDITORS = re.compile(r"^(?:vim?|nvim|ex|emacs)$")  # run commands with -c / +cmd / --eval
+SAFE_INTERP_OPTS = {"-u", "-B", "--no-warnings"}
 # git as a word inside another program's argument (python -c "…git push…", perl -e, node -e, osascript): `.git`
 # and `.gitignore` are paths, not the command.
 GIT_WORD = re.compile(r"(?:^|[\s'\"/;(`$|&])git(?=$|[\s'\";)`|&])")
@@ -334,14 +335,24 @@ for seg in segs:
     # Inline code (python -c, node -e, perl -e, awk '…', or code on stdin) can build any command from pieces no
     # scan can follow: an interpreter anywhere in the command (sudo node …, env python3 …) runs only a script file.
     for j, t in enumerate(toks):
-        if not INTERPRETER.match(os.path.basename(t)):
+        name = os.path.basename(t)
+        if EDITORS.match(name) and any(a.startswith(("-c", "+", "--eval", "--cmd")) for a in toks[j + 1:]):
+            pushes = wrapped = True
+            break
+        if not INTERPRETER.match(name):
             continue
+        # Only `<interp> [safe opts] <script in the repo> [args]`, or a bare `--version`: any other option,
+        # env (NODE_OPTIONS, PERL5OPT…), stdin or awk program may carry code.
         rest = toks[j + 1:]
-        script = next((a for a in rest if not a.startswith("-")), None)
-        piped = re.search(r"\|&?\s*" + RUN + r"(?:\S*/)?" + re.escape(os.path.basename(t)) + r"\b", cmd)
-        reads_stdin = "-" in rest or "<" in seg or piped or not rest  # `node --version` alone runs no code
-        if (re.match(r"^[gnm]?awk$", os.path.basename(t)) or any(INLINE_FLAG.match(a) for a in rest)
-                or (script and not os.path.isfile(os.path.join(cwd, script))) or (not script and reads_stdin)):
+        k = 0
+        while k < len(rest) and rest[k] in SAFE_INTERP_OPTS:
+            k += 1
+        first = rest[k] if k < len(rest) else None
+        version_only = rest in (["--version"], ["-v"], ["-V"])
+        script = first and not first.startswith("-") and os.path.realpath(os.path.join(cwd, first))
+        in_repo = script and script.startswith(os.path.realpath(top) + os.sep) and os.path.isfile(script)
+        piped = re.search(r"\|&?\s*" + RUN + r"(?:\S*/)?" + re.escape(name) + r"\b", cmd)
+        if env or re.match(r"^[gnm]?awk", name) or "<" in seg or piped or not (version_only or in_repo):
             pushes = wrapped = True
         break
     # A shell reading its commands from stdin (… | sh, bash < file, bash -s) or a command named by a variable
