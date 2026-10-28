@@ -30,4 +30,9 @@ Also installs: `core`, `plan`, `review`.
 | `/resolve-question` | Answers an open question from the repo with a `file:line` citation before anyone guesses; asks the user only the real choices, as options |
 | `/tdd` | Drives implementation as a red → green loop — one seam, one failing test, one minimal implementation per cycle |
 
+## Hooks
+
+- `ticket-ledger` + `ticket-gate`: a ticket's code commit waits for the skills its `plan.md` names and for every `blocking` concern in `spec.md` to have a decision; its PR waits for `/verify-done` and `/review-checklist`.
+- `test-lock`: while `/fix-bug` has locked the test that reproduces a bug (`scripts/lock-tests.sh`), edits to that test are blocked, so the fix changes the code, not the test.
+
 All plugins: [`../README.md`](../README.md).
