@@ -65,7 +65,7 @@ flowchart TD
   A[git clone the kit anywhere] --> B[bash scripts/install.sh]
   B --> X{project?}
   X -->|existing repo| C[cd your-project; claude; /project-init]
-  X -->|empty folder| Y[git init; /brainstorming → /writing-plans → scaffold<br/>or /agent-architect greenfield]
+  X -->|empty folder| Y[git init; /brainstorming → /writing-plans → scaffold<br/>or describe the assistant → agent-architect]
   Y --> C
   C --> D{prompt}
   D -->|tiny| E[just do it]
