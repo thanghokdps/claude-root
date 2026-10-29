@@ -1152,27 +1152,13 @@ Agent templates live in `plugins/core/templates/project/agents/` and are copied 
 
 Command templates live in `plugins/core/templates/project/commands/` and are copied to `.claude/commands/` during project bootstrap. Unlike skills (which have a `SKILL.md` wrapper with frontmatter), commands are raw prompt text loaded directly — lighter weight for simple workflows.
 
+`/ticket`, `/compact` and `/compound` are skills (`dev:ticket`, `core:compact`, `core:compound`), not commands: a command of the same name would shadow them with older behaviour.
+
 | Command | Invoke | What it does |
 |---------|--------|-------------|
-| `/ticket` | `/ticket #<issue> <description>` | Full 5-agent pipeline: PM → Architect → Wave Developer → Reviewer → QA |
 | `/task` | `/task <description>` | Lightweight single-task: read conventions → implement → verify → commit |
 | `/auto` | `/auto <description>` | Autonomous single-prompt dev: plan waves → execute → commit (no interruptions) |
-| `/compact` | `/compact` | Summarize session → write HANDOFF.md → merge learnings into solutions/ |
-| `/compound` | `/compound` | Crystallize session learnings → write to docs/solutions/ |
-
-### `/ticket` pipeline detail
-
-```
-PM agent       → research ticket, find affected files, identify reuse
-    ↓
-Architect      → technical plan with wave-organized tasks
-    ↓
-Wave Developer → implement per plan (parallel waves where possible)
-    ↓
-Reviewer       → APPROVED or CHANGES REQUIRED (max 2 retry cycles)
-    ↓
-QA/Verifier    → lint + types + tests + golden path + commit
-```
+| `/workflow` | `/workflow <description>` | Write and launch a dynamic workflow for large tasks: audits, multi-file migrations, deep research |
 
 ---
 
