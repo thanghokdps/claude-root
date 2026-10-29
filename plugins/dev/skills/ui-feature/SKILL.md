@@ -54,6 +54,12 @@ Run the app (or the design-states page) and drive the feature with Playwright MC
 
 **Done when:** the screenshots and a clean console are shown, at every viewport.
 
+## Step 5 — Quality floor and taste
+
+Follow `${CLAUDE_PLUGIN_ROOT}/references/taste.md`: create `DESIGN.md` / `PRODUCT.md` if missing, save the Step 4 screenshots to `design/actual/<state>.png`, evaluate `dump-ui-styles.js` in each state and run `python3 ${CLAUDE_PLUGIN_ROOT}/skills/design-ui/scripts/check-ui.py` on the dumps, then dispatch the taste reviewer with only the screenshots and those two files.
+
+**Done when:** `check-ui.py` exits 0 or each remaining hit is a listed false positive, no P0/P1 taste finding is open without the user's acceptance, and both lists are in the reply and the PR description.
+
 ---
 
 Hand-offs: a design to match → `/design-ui` · the endpoint behind it → `/api-endpoint` · fetchers and error mapping → `/api-client` · done → `/verify-done` → `/review-checklist`.
