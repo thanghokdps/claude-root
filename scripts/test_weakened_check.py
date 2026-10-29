@@ -183,6 +183,40 @@ def test_submodules_are_not_diffed_inside():
     assert not os.path.exists(pwned)
 
 
+def test_docs_that_mention_a_pattern_are_silent():
+    r = repo()
+    staged(r, "docs/guide.md", "Never add `// @ts-ignore` or `test.skip(` to get green.\n")
+    staged(r, "notes.txt", "# noqa is banned here\n")
+    assert hook(r) == ""
+    staged(r, "docs/page.mdx", "{/* eslint-disable */}\n")  # MDX is code: its JSX runs
+    assert "docs/page.mdx:1" in reason(hook(r))
+
+
+def test_multi_line_coverage_thresholds_are_paired_by_key():
+    jest = "module.exports = {\n  coverageThreshold: {\n    global: {\n      branches: 80,\n      lines: 90,\n    },\n  },\n};\n"
+    vitest = "export default { test: { coverage: { thresholds: { lines: 80, functions: 75 } } } };\n"
+    r = repo()
+    for name, text in (("jest.config.js", jest), ("vitest.config.ts", vitest)):
+        write(r, name, text)
+    git(r, "add", "-A")
+    git(r, "commit", "-qm", "thresholds")
+    staged(r, "jest.config.js", jest.replace("branches: 80", "branches: 50"))
+    text = reason(hook(r))
+    assert "threshold-loosened" in text and "jest.config.js:4" in text and "80 -> 50" in text
+    r2 = repo()
+    for name, t in (("jest.config.js", jest), ("vitest.config.ts", vitest)):
+        write(r2, name, t)
+    git(r2, "add", "-A")
+    git(r2, "commit", "-qm", "thresholds")
+    staged(r2, "vitest.config.ts", vitest.replace("functions: 75", "functions: 85"))
+    assert hook(r2) == ""
+    staged(r2, "vitest.config.ts", vitest.replace("lines: 80", "lines: 60"))
+    assert "vitest.config.ts:1" in reason(hook(r2))
+    staged(r2, "src/app.ts", "const style = { lines: 2 };\n")  # same key outside a coverage config
+    staged(r2, "vitest.config.ts", vitest)
+    assert hook(r2) == ""
+
+
 def test_non_commit_commands_are_ignored():
     r = repo()
     staged(r, "src/app.ts", BASE["src/app.ts"] + "// @ts-ignore\n")

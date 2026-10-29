@@ -3,7 +3,9 @@
 # Trigger: PreToolUse(Bash), only for git commit. Reads the staged diff (git diff HEAD for commit -a) and asks on:
 #   - an added suppression (eslint-disable, @ts-ignore, # noqa, …) or skip (.skip(, .only(, xit(, t.Skip(, …)
 #   - a deleted test file, or a kept test file that loses more assertion lines than it gains
-#   - coverageThreshold / fail_under / --cov-fail-under lowered, max-warnings raised
+#   - coverageThreshold / fail_under / --cov-fail-under lowered (also a branches|functions|lines|statements key
+#     in a jest/vitest/nyc/c8 config), max-warnings raised
+# Docs (.md, .txt, …) only mention patterns, so their added lines are not read for suppressions or skips.
 # Tightening is silent. Diff walk ported from addyosmani/agent-skills constraint-driven-development floor-guard.md.
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
@@ -99,7 +101,15 @@ THRESHOLDS = [(re.compile(r"coverageThreshold\b.*?(\d+(?:\.\d+)?)"), "floor"),
               (re.compile(r"--cov-fail-under\D*?(\d+(?:\.\d+)?)"), "floor"),
               (re.compile(r"max-warnings\D*?(\d+)"), "ceiling")]
 
+# Prose only mentions a suppression or skip; it cannot apply one. Not .mdx: its JSX runs.
+DOCS = re.compile(r"\.(?:md|txt|rst|adoc)$")
+# Jest/vitest/nyc/c8 write each coverage metric on its own key, often lines below `coverageThreshold`.
+COVERAGE_FILE = re.compile(r"(?:^|/)(?:(?:jest|vitest|vite)\.config\.[cm]?[jt]s|package\.json|\.nycrc(?:\.json)?|\.c8rc(?:\.json)?)$")
+METRIC = re.compile(r"\"?\b(branches|functions|lines|statements)\"?\s*:\s*(\d+(?:\.\d+)?)")
+
 for f, n, text in added:
+    if DOCS.search(f):
+        continue
     if SUPPRESSIONS.search(text):
         flag("suppression", f, n, text)
     if SKIPS.search(text):
@@ -124,6 +134,14 @@ for key, kind in THRESHOLDS:
             a, b = float(was.group(1)), float(now.group(1))
             if (b < a) if kind == "floor" else (b > a):
                 flag("threshold-loosened", f, n, f"{was.group(1)} -> {now.group(1)}: {text}")
+
+for f, n, text in removed:
+    if not COVERAGE_FILE.search(f) or THRESHOLDS[0][0].search(text):  # a one-line coverageThreshold is above
+        continue
+    for metric, was in METRIC.findall(text):
+        now = next((v for g, _, t in added if g == f for k, v in METRIC.findall(t) if k == metric), None)
+        if now is not None and float(now) < float(was):
+            flag("threshold-loosened", f, n, f"{metric} {was} -> {now}: {text}")
 
 if findings:
     shown = findings[:10] + ([f"… and {len(findings) - 10} more"] if len(findings) > 10 else [])
