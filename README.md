@@ -131,7 +131,7 @@ Skills fire on their own from what you type; the slash command is optional. A va
 
 ## Quickstart — the whole kit (optional)
 
-Install everything (`agent` plus the dev-loop plugins and global rules) when you also want the general workflow:
+Install everything (the dev-loop plugins and global rules; `install.sh` also adds the domain plugins `agent` and `workplace`, off until a repo needs them) when you also want the general workflow:
 
 ```bash
 # Inside Claude Code
@@ -349,7 +349,7 @@ Then:
 
 ```
 /plugin install agent@harness     # one role (+ its dependencies)
-/plugin install harness@harness       # everything
+/plugin install harness@harness       # the eight role plugins (domain plugins: install each)
 ```
 
 **Update:** skills/hooks — nothing to do for a local install (loaded in place); GitLab or GitHub install → `/plugin marketplace update harness` (kit changes reach GitLab through `/sync-remote`). A new plugin, `global/CLAUDE.md` or `rules/` changed → re-run `install.sh` (`plugin update` does not install a dependency a new version adds).

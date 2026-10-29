@@ -36,7 +36,8 @@ A **source library** and the `harness` marketplace of role plugins (local direct
                 a domain pack = a plugin folder + its detect condition in core's repo-profile.sh + install.sh's off list
     lead        retro diagnose-session writing-skills                                 → core
     guards      hooks/hooks.json + hook scripts (opt-in)                              → dev
-    harness     bundle, depends on all ten
+    harness     bundle of the eight role plugins — never the domain plugins (agent, workplace): a bundle
+                dependency cannot be disabled, so it could not stay off at user scope
   global/CLAUDE.md    ← installed to ~/.claude/CLAUDE.md
   eval/triggers/      ← one routing case per skill
   scripts/            ← install.sh, check.sh, lint-kit.py, eval-triggers.py (kit tooling, not shipped)
