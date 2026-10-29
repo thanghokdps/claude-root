@@ -126,6 +126,14 @@ for old in runs[:-20]:
             os.remove(f)
         except OSError:
             pass
+# A session's .count/.offset files are only read by that session: drop them 30 days after it last ran.
+import time
+for f in glob.glob(os.path.join(state, "*.count")) + glob.glob(os.path.join(state, "*.offset")):
+    try:
+        if os.path.getmtime(f) < time.time() - 30 * 86400:
+            os.remove(f)
+    except OSError:
+        pass
 PY
 
 cd "$TOP" || exit 0

@@ -170,6 +170,20 @@ def test_digest_has_text_and_tool_names_but_no_tool_output():
         assert "private reasoning" not in text
 
 
+def test_stale_session_state_is_pruned_on_reflection():
+    s = setup()
+    calls(s, 50)
+    old = os.path.join(s["state"], "old-sess.count")
+    fresh = os.path.join(s["state"], "fresh-sess.count")
+    for p in (old, fresh):
+        with open(p, "w") as f:
+            f.write("3")
+    os.utime(old, (time.time() - 31 * 86400,) * 2)
+    hook(s, "Stop")
+    spawns(s, 1)
+    assert not os.path.exists(old) and os.path.exists(fresh)
+
+
 def test_planted_key_is_scrubbed():
     s = setup()
     calls(s, 50)
