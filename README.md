@@ -191,7 +191,7 @@ prompt
 │   │   ├── rules/                   ← universal rules (behavior, git, security, testing, etc.)
 │   │   │   └── stacks/             ← stack-specific rules (fastapi, nextjs, python, etc.)
 │   │   ├── scripts/init.sh          ← bootstrap .claude/ for a project (stack-aware)
-│   │   ├── skills/                  ← btw, compact, compound, project-init,
+│   │   ├── skills/                  ← btw, compact, compound, docs-sync, project-init,
 │   │   │                               sync-memory, verify-done
 │   │   ├── stacks/                  ← full stack bundles (nextjs, python, react-native)
 │   │   └── templates/               ← CLAUDE.md.template, settings.json.template, etc.
@@ -564,6 +564,14 @@ Collects what exists first, in order: requirements → prerequisites → tech st
 5. Update global memory if user-level preferences were learned
 
 **Next session:** Claude reads `specs/HANDOFF.md` automatically via CLAUDE.md, then deletes it.
+
+---
+
+### `/docs-sync` — Keep `.claude/docs/` current after each feature
+
+**Invoke:** `/docs-sync` (runs from `/feature`, `/agent-feature` and `/finish-branch`)
+
+Maps the branch's diff to the docs it makes stale (routes → `entry-points.md`, layers → `architecture.md`, commands and dependencies → `stack.md`, patterns → `conventions.md`), edits only those sections with paths that exist, and commits them with the code. Agents read `.claude/docs/` instead of rescanning, so a stale doc sends them to the wrong place.
 
 ---
 

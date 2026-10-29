@@ -29,7 +29,11 @@ CLAUDE.md         ← project-specific coordinator config
 
 ## Step 0 — Empty folder guard
 
-If the folder has no package manifest (`package.json`, `pyproject.toml`, `requirements.txt`, `go.mod`, `Cargo.toml`, `pom.xml`, `build.gradle`) and no source files, stop without writing anything and reply:
+If the folder has no package manifest (`package.json`, `pyproject.toml`, `requirements.txt`, `go.mod`, `Cargo.toml`, `pom.xml`, `build.gradle`) and no source files, there is no code to scan.
+
+When the doc set written by `/kickoff` (plan, if installed) exists (`docs/kickoff.md`) and there is no `CLAUDE.md`, write a minimal one, so the sessions that build the scaffold start with the project's intent instead of none: the project name and one-line purpose, the chosen stack from `docs/stack.md`, a table linking the doc set (`docs/kickoff.md`, `docs/requirements.md`, `docs/stack.md`, `docs/erd.md`, `docs/adr/`), and the line `No code yet — run /project-init after the scaffold's first commit.` Under 40 lines; no commands or conventions, since none exist yet. Write nothing else, then reply as below.
+
+Otherwise stop without writing anything and reply:
 
 > Nothing to scan yet. Start from your documents: `/kickoff` (plan, if installed) collects the requirements, prerequisites, stack, ERD and ADR you already have and grills only the gaps. It then hands off to `/brainstorming` → `/writing-plans` (wave 1 = scaffold), or to `/agent-architect greenfield` for an AI assistant (agent, if installed). Run `/project-init` after the first commit.
 
@@ -273,7 +277,9 @@ Add more skills if the project's workflow warrants it:
 
 ## Step 8 — Finalize `CLAUDE.md`
 
-`init.sh` wrote a base `CLAUDE.md`. Now make it project-specific.
+`init.sh` wrote a base `CLAUDE.md`, or kept the existing one untouched (its output says which). Now make it project-specific; an existing `CLAUDE.md` keeps its own sections and gets only what is missing or wrong.
+
+**`AGENTS.md`.** If the repo already has one, it is the shared source: move the facts below into it, and make `CLAUDE.md` start with `@AGENTS.md` plus only what is Claude-specific (skills, hooks, the Agent Context block). If there is none, ask once whether the team also uses another coding agent (Codex, Cursor, Copilot, Gemini); yes → create `AGENTS.md` with the same split, no → `CLAUDE.md` only. Never keep the same fact in both files.
 
 **If the Agent Context block is missing**, add it:
 

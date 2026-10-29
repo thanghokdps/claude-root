@@ -306,7 +306,14 @@ fi
 
 # ─── Generate project CLAUDE.md ──────────────────────────────────────────────
 
-echo "📝  Generating CLAUDE.md..."
+# A re-run must not wipe a CLAUDE.md that /project-init or the team already finalized.
+CLAUDE_OUT="$PROJECT_DIR/CLAUDE.md"
+if [ -f "$CLAUDE_OUT" ]; then
+  echo "📝  CLAUDE.md exists — kept untouched (/project-init Step 8 updates it in place)"
+  CLAUDE_OUT=/dev/null
+else
+  echo "📝  Generating CLAUDE.md..."
+fi
 if [ ${#SIGNALS[@]} -gt 0 ]; then
   STACK_LIST=$(printf '%s, ' "${SIGNALS[@]}" | sed 's/, $//')
 else
@@ -434,7 +441,7 @@ has_signal "python"     && CONSTRAINTS="${CONSTRAINTS}- Always activate virtuale
 [ -z "$CONSTRAINTS" ] && CONSTRAINTS="<!-- Add project-specific constraints here -->
 "
 
-cat > "$PROJECT_DIR/CLAUDE.md" << CLAUDEMD
+cat > "$CLAUDE_OUT" << CLAUDEMD
 # ${PROJECT_NAME}
 
 Coordination (lanes, hard gates, review flow) comes from the global \`~/.claude/CLAUDE.md\` and the kit plugins. This file holds only what is specific to this repo.
