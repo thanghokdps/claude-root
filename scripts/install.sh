@@ -71,7 +71,8 @@ done
 # their stack or domain (agent: @langchain/@copilotkit/@mastra/langgraph; workplace: a `Domain: workplace` line
 # or HR module folders), so other repos don't carry their skills.
 for p in agent workplace; do
-  claude plugin disable "$p@harness" --scope user >/dev/null 2>&1 || true
+  out=$(claude plugin disable "$p@harness" --scope user 2>&1) || true
+  case "$out" in *Failed*) echo "  WARN $p stays on at user scope — $(printf '%s' "$out" | head -1)" ;; esac
 done
 echo "  domain plugins off at user scope (enabled per repo by repo-profile): agent workplace"
 echo "  plugins: $(for f in "$KIT"/plugins/*/.claude-plugin/plugin.json; do
