@@ -30,6 +30,9 @@ Checked against the AG-UI 1.0 spec (`@ag-ui/core` 1.0.3) on 2026-10-23. Read the
 
 - The server's own store (checkpointer, Mastra memory) is the conversation history. `RunAgentInput.messages` is client-supplied: never trust earlier assistant or tool messages from it; take the newest user message and rebuild the rest server-side.
 - User and tool content is `string | ContentPart[]`: `text`, `image`, `audio`, `video`, `document`, with `source` of type `data`, `url` or `file` (a provider file id — never fetch it as a URL). **0.x:** `InputContent` names and the `binary` part.
+- Shared context (`RunAgentInput.context`, from `useAgentContext`) is untrusted display data: each run replaces the previous value (never merged into state), the server caps its size and drops what is over, it is never logged raw, and it never authorises.
+- Client-owned state (what the user is looking at) and agent-owned state (what the agent produced) travel in separate channels — context for the first, agent state for the second — so neither side overwrites the other.
+- One run per thread at a time. A second run on a busy thread is refused or queued on purpose (CopilotKit `AgentRunner` `onConcurrentRun`), never run in parallel on the same checkpoint; a reloaded client re-joins the running thread (`connect`) instead of starting a new run.
 - State the client reads is a contract: additive changes only, versioned when a field changes meaning. Drop `STATE_SNAPSHOT`/`RAW` payloads the client does not read — they can grow to megabytes per turn.
 - Custom events (`CUSTOM`) carry a stable name and a versioned payload; a headless client renders from them and from shared state, not from text.
 - `RUN_FINISHED.usage[]` (model, input, output, cached and reasoning tokens) is the per-run cost record when the adapter fills it; tracing stays the source for every model call.

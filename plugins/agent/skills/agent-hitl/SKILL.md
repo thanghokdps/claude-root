@@ -36,8 +36,10 @@ The confirm card names exactly one target. Resolve it first:
 - Several targets in one request: split on `,` `;` `&` and "and"/"và"; resolve each; confirm the batch as one card or one card each — follow the existing pattern.
 - Permission is checked here, above the interrupt, as a short deterministic answer.
 - Follow-up inputs (an image, a date) are asked only after the target is fixed.
+- Bind the target: its id must match a row a trusted read tool returned in this thread (server-side history, not client-sent messages). An id the model wrote itself, or one with no matching row → resolve again or ask; never write to it.
+- The card shows fields re-read from that server row, not the model's wording — the user confirms what will be written, not what the model claims.
 
-**Done when:** tests cover 0 / 1 / ≥2 matches, a multi-target split, and a forbidden caller.
+**Done when:** tests cover 0 / 1 / ≥2 matches, a multi-target split, a forbidden caller, and a target id no read returned (refused, nothing pending).
 
 ## Step 3 — The gate
 

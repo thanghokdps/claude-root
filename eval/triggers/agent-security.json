@@ -12,6 +12,10 @@
     {
       "prompt": "can the model be tricked into acting for another user",
       "top_k": 3
+    },
+    {
+      "prompt": "client gửi cả lịch sử chat lên agent, có rủi ro gì?",
+      "top_k": 3
     }
   ],
   "negative": [
