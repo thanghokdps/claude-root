@@ -68,6 +68,7 @@ Not built: tools, HITL, RAG, feature screens, design work and domain data.
 - [ ] the chat page renders that answer at 375 px and at desktop width
 - [ ] `docs/adr/<NNNN>-agent-architecture.md` lists the stack, the card and the deferred rows
 - [ ] the smoke eval passes
+- [ ] `/project-init` wrote `CLAUDE.md` and `.claude/docs/` from the skeleton (show `ls .claude/docs`)
 
 ## 6. The closing message
 

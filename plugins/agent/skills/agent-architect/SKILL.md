@@ -99,9 +99,9 @@ Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later
 
 "Implement all" or "don't ask me again" means: take the recommended option at every remaining question and record it as *defaulted* — it never means skipping a skill. After this first slice, every further feature goes through `/agent-feature` (one at a time, each with its reuse inventory and duplicate check), the chat UI through `/agent-design-ui`, and each feature's Done-when is met before the next starts.
 
-Then `/project-init` writes the project's `.claude/` docs and test strategy from the scaffold just built.
+Then `/project-init` writes the project's `.claude/` docs, test strategy and `CLAUDE.md` from the scaffold just built, so later sessions and `/agent-feature` read them instead of rescanning.
 
-**Done when:** format, typecheck, lint and tests pass, and one real turn streams end to end with its evidence shown.
+**Done when:** format, typecheck, lint and tests pass, one real turn streams end to end with its evidence shown, and `/project-init` has written `CLAUDE.md` and `.claude/docs/index.md`.
 
 ## Step 4s — Skeleton scaffold (after Step 2s)
 
@@ -121,10 +121,10 @@ Never in skeleton mode: a tool (backend or frontend), a HITL confirm, a domain t
 
 End with the closing message in `skeleton.md` § 6: the stack built, the run command, and **Next features** as sentences to give `/agent-feature`. Switching framework later follows `skeleton.md` § 7.
 
-**Done when:** every box in `skeleton.md` § 5 is ticked with its evidence, and the closing message is in the reply. Then `/project-init`.
+**Done when:** every box in `skeleton.md` § 5 is ticked with its evidence (the last one is `/project-init`), and the closing message is in the reply.
 
 ---
 
 ## Hand-offs
 
-Scaffold or skeleton done → `/verify-done` → `/review-checklist` → `/finish-branch`. Release → `/release-checklist` with `production.md`. The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · documents, embeddings or semantic memory → `/agent-rag` · threat model → `/agent-security`.
+Scaffold or skeleton done → `/project-init` → `/verify-done` → `/review-checklist` → `/finish-branch`. Release → `/release-checklist` with `production.md`. The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · documents, embeddings or semantic memory → `/agent-rag` · threat model → `/agent-security`.
