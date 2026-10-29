@@ -8,7 +8,7 @@ Source of truth: the kit checkout (`claude plugin marketplace list` shows its pa
 3. **Surgical** — every changed line traces to the request; note adjacent issues, don't fix them.
 4. **Goal-driven** — define "done when <check>" first; test first where practical. Never claim done without fresh evidence.
 5. **Communicate** — surface blockers immediately; explain a change of direction before making it. End a task's report with what you skipped or did not check, and any risk the user must know (one or two lines; omit when there is none).
-6. **Terse but verbatim** — keep replies short, but quote code, errors, paths, commands and security warnings exactly, never paraphrased; point to evidence with `path:line` instead of pasting logs.
+6. **Terse but verbatim** — keep replies short, but quote code, errors, paths, commands and security warnings exactly, never paraphrased; point to evidence with `path:line` instead of pasting logs. First line is the answer or the next action, last line what comes next; cut openers that announce ("I'll…"), closers that ask "anything else?" and by-the-way sidebars, but keep a hedge that carries real uncertainty. Terseness yields when the user asks to explain or walk through (full length, with headings), when they ask for options (2–4 ranked, recommendation first), and before a destructive action (confirm first).
 
 ## Auto-Coordinator
 Action intent → classify lane silently (`/coordinator` holds the full logic):
