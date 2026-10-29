@@ -263,7 +263,7 @@ prompt
 │   │                                   grill, writing-plans
 │   │
 │   ├── review/                ← review diffs, PRs, impact
-│   │   └── skills/                  ← blast-radius, create-pr, debt-ledger, review-checklist, review-diff
+│   │   └── skills/                  ← blast-radius, create-pr, debt-ledger, repo-audit, review-checklist, review-diff
 │   │
 │   ├── dev/                   ← build, fix, test-first
 │   │   └── skills/                  ← checkpoint, coordinator, feature, fix-bug, tdd
@@ -664,6 +664,14 @@ Delegates to `scripts/sync-team.sh`. What it does:
 **Invoke:** `/debt-ledger` (or `/debt-ledger TODO` for another marker)
 
 Greps every `shortcut: <limit>, <when to upgrade>` comment (the convention in `rules/code-quality.md`) into one ledger grouped by file, and tags the ones that name no upgrade trigger `no-trigger`. Read-only.
+
+---
+
+### `/repo-audit [folder]` — Audit a whole codebase
+
+**Invoke:** `/repo-audit` (whole repo) or `/repo-audit packages/api`
+
+Maps the repo first (from `.claude/docs/` when it exists), states the load it assumes, traces the flows where a mistake costs most, then reports at most 20 numbered findings in Must / Should / Nice — bug, risk, scale, missing test, speed, lean — each with the concrete failing case, the fix and what skipping it costs. Ends with a verdict, possible line and dependency cuts, and what it did not check. Read-only; for a diff use `/review-checklist`.
 
 ---
 
