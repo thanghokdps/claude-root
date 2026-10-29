@@ -34,8 +34,8 @@ Speak only the chosen framework from here on (`shapes.md`).
 
 - **The request names a stack** (any framework, or a frontend with an agent framework): ask nothing. Build on it, and default every piece it leaves open.
 - **The request names no stack at all** ("init chatbot empty features"): ask the stack once, in at most two `AskUserQuestion` turns, the recommended option first:
-  1. Framework (Q-F): *LangChain `createAgent` (Recommended)* / *Mastra* / *custom LangGraph graph*.
-  2. Frontend and database in one question: *Next.js, no database (Recommended)* / *Next.js + Postgres + Drizzle* / *another stack (type it)*.
+  1. Framework (Q-F), as *How should the assistant work?*: *Chat that calls a few tools (Recommended)* (→ LangChain `createAgent`) / *A fixed step-by-step process* (→ custom LangGraph graph) / *All-in-one TypeScript with workflows and memory built in* (→ Mastra).
+  2. Frontend and database in one question, as *Does it remember conversations between visits?*: *No (Recommended)* (→ Next.js, no database) / *Yes* (→ Next.js + Postgres + Drizzle) / *Another stack (type it)*.
 - Never ask P1–P4, Q4, Q-D, auth, host, clients or layout, and never ask the user to accept the card. P1 is "A general chat assistant".
 
 Show the card below in the reply as information, then build. The user changes a row later by saying so.

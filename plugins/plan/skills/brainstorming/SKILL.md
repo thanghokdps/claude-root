@@ -25,6 +25,8 @@ Read relevant files to understand:
 
 Ask clarifying questions **one at a time**, as choices: `AskUserQuestion` with 2–4 options, your recommended answer first with `(Recommended)` and a description of what each changes (numbered options with one marked *recommended* when the tool is absent). Do not ask the next question until the user answers the current one.
 
+Ask needs, not tools: "large enterprise or quick and lean?", not "Angular or React?" — the option says the need, its description the tech it maps to (`${CLAUDE_PLUGIN_ROOT}/references/need-questions.md`). Ask at tech level only when the user did.
+
 Stop asking when you have enough to propose concrete approaches.
 
 ### Step 3 — Propose multiple approaches
@@ -36,7 +38,7 @@ Approach A — <name>
   Summary: <what it does>
   Pros: <advantages>
   Cons: <disadvantages>
-  Best when: <conditions>
+  Best when: <the user's need, in their words — "you ship in weeks with one team">
 ```
 
 Ask the user to pick one or describe a hybrid.
