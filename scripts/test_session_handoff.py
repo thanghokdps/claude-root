@@ -29,7 +29,8 @@ def spec(r, slug, status=None):
 
 
 def handoff(r, **event):
-    subprocess.run([HOOK], input=json.dumps({"cwd": r, **event}), capture_output=True, text=True, check=True)
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": r}
+    subprocess.run([HOOK], input=json.dumps({"cwd": r, **event}), capture_output=True, text=True, check=True, env=env)
     return open(os.path.join(r, "specs", "HANDOFF.md")).read()
 
 

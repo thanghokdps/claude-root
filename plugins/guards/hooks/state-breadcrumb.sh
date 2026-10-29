@@ -13,11 +13,11 @@ if command -v jq &>/dev/null; then
   INPUT="$(cat /dev/stdin 2>/dev/null || echo '{}')"
   SESSION_ID="$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || echo "")"
   TURN_COUNT="$(echo "$INPUT" | jq -r '.num_turns // empty' 2>/dev/null || echo "")"
-  # The event's cwd is the session's folder; in a worktree session CLAUDE_PROJECT_DIR is the main checkout.
   PROJECT_DIR="$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || echo "")"
 fi
 
-PROJECT_DIR="${PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-$(pwd)}}"
+. "$(dirname "$0")/lib/project-dir.sh"
+PROJECT_DIR=$(project_dir "$PROJECT_DIR")
 CLAUDE_DIR="$PROJECT_DIR/.claude"
 MEMORY_DIR="$CLAUDE_DIR/memory"
 

@@ -14,9 +14,8 @@ REASONS=()
 # below exits 0 on its own if nothing is staged, so the gate errs toward running.
 
 HOOK_INPUT=$(cat 2>/dev/null || echo "")
-# The event's cwd is where the command runs; in a worktree session CLAUDE_PROJECT_DIR is the main checkout.
-PROJECT_DIR=$(printf '%s' "$HOOK_INPUT" | jq -r '.cwd // empty' 2>/dev/null)
-PROJECT_DIR="${PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-$(pwd)}}"
+. "$(dirname "$0")/lib/project-dir.sh"
+PROJECT_DIR=$(project_dir "$(printf '%s' "$HOOK_INPUT" | jq -r '.cwd // empty' 2>/dev/null)")
 TOOL_COMMAND=$(printf '%s' "$HOOK_INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
 [ -z "$TOOL_COMMAND" ] && TOOL_COMMAND=$(printf '%s' "$HOOK_INPUT" \
   | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
