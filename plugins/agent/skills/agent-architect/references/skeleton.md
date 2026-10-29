@@ -23,6 +23,10 @@ A request that describes what the assistant helps with ("…hỗ trợ khách tr
 - **Database / ORM:** use the named one (Postgres + Drizzle, Prisma, SQLAlchemy, SQLite). None named → no database. Add one only when Q6 keeps durable chat history, and say so on the card.
 - **Auth:** use the named one (Better Auth, Clerk, NextAuth, the company SSO). None named → not asked: a fixed dev user behind a flag (`DEV_USER_ID`, refused when `NODE_ENV=production`), read through the same trusted-context reader a real login will fill. Shown on the card; real auth comes later as a feature.
 - **Package manager, host, layout:** use the named ones. Otherwise use the defaults from `layouts.md` and Q1, shown on the card.
+- **Tracing:** a named provider ("tracing with Langfuse", LangSmith) is wired behind the `TRACING_PROVIDER` switch with masking on, still `none` by default so the app runs without its keys. Wire it the chosen framework's way, verified on the installed packages:
+  - shape A/B: the provider's LangChain callback handler, built per turn in the `langgraph.json` graph factory (`rules/langgraph.md` § Run context); for Langfuse, `@langfuse/langchain` `CallbackHandler` + `@langfuse/otel` `LangfuseSpanProcessor` with `mask`.
+  - shape M: `observability: new Observability({ configs })` on `new Mastra`, with the provider's exporter and `SensitiveDataFilter` kept in `spanOutputProcessors` (`production.md` row 7).
+- **Model provider:** the one whose key the user has (preflight shows which is set, or the user names it), with the `model-choice.md` tiers for that provider; `.env.example` lists the other provider commented out.
 
 Speak only the chosen framework from here on (`shapes.md`).
 
@@ -54,7 +58,10 @@ Show the card below in the reply as information, then build. The user changes a 
 
 `SKILL.md` Step 4s, with these readings:
 
-- **Step 2, identity.** There are no tools yet, so the test proves the agent's trusted context carries the caller's id. It calls the runtime with a signed-in user and asserts that the context reader returns that id. The first tool's test will reuse that reader.
+- **Step 2, identity.** There are no tools yet, so the test proves the agent's trusted context carries the caller's id. It calls the runtime with a signed-in user and asserts that the context reader returns that id. The first tool's test will reuse that reader. On shape A served by `langgraphjs dev` the caller rides `assistantConfig.configurable`, not `contextSchema`, and the route strips `forwardedProps.config` (`${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` § Run context); a typecheck alone does not catch this, only the real turn below does.
+- **Step 5, tracing.** The provider is chosen by one env switch; its per-turn handler is bound in the `langgraph.json` graph factory (same section).
+- **Pins.** Read the peers before pinning: `@copilotkit/sdk-js` 1.83.0 peers `zod ^3` and `typescript ^5`, so the latest majors of those two do not install cleanly.
+- **`.env`.** The kit's secret guard blocks any read, copy or write of `.env`. Write `.env.example` with every value that is not a secret filled, and ask the user to run `! cp .env.example .env` and fill the keys. Never ask for a key in chat.
 - **Step 3, agent.** One agent registered under `assistant`. Its prompt holds P1, one line saying it has no tools yet and answers from general knowledge, and the refusal line "I can't do that yet" for anything that needs data or actions.
 - **Database.** Only the connection, the migration tooling and, when Q6 keeps history, the conversation tables. No ERD and no domain tables.
 
@@ -62,13 +69,14 @@ Not built: tools, HITL, RAG, feature screens, design work and domain data.
 
 ## 5. Done when (show each with its evidence)
 
-- [ ] `format:check`, typecheck, lint and tests pass (paste the command output)
+- [ ] `format:check`, typecheck, lint and tests pass (paste the command output). Tests or evals the user defers are marked deferred on the ADR; the other boxes still apply
+- [ ] a model key is in `.env` (the user ran `! cp .env.example .env` and filled it); without one the skeleton is not done, say so and stop before the real turn
 - [ ] the app boots with `.env` filled from `.env.example`, and fails with a clear message when a required var is missing
-- [ ] `/agent-verify-turn` with "hello" streams a real answer end to end (AG-UI events shown)
+- [ ] `/agent-verify-turn` with "hello" streams a real answer end to end through the web route (AG-UI events shown, ending `RUN_FINISHED` with no `RUN_ERROR`). Thread and run ids are UUIDs; the LangGraph server answers 400 to any other id
 - [ ] the chat page renders that answer at 375 px and at desktop width
 - [ ] `docs/adr/<NNNN>-agent-architecture.md` lists the stack, the card and the deferred rows
 - [ ] the smoke eval passes
-- [ ] `/project-init` wrote `CLAUDE.md` and `.claude/docs/` from the skeleton (show `ls .claude/docs`)
+- [ ] `/project-init` wrote `CLAUDE.md` (and `AGENTS.md` when the team uses another coding agent) and `.claude/docs/` from the skeleton (show `ls .claude/docs`). It runs in the same turn as the scaffold, never as a "next step" in the closing message
 
 ## 6. The closing message
 

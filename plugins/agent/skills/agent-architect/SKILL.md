@@ -22,7 +22,7 @@ Rules that apply throughout: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md` 
 Run `bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh .` and show its table. It checks git, Node ≥ 20, a package manager, a model key (presence only) and a git repo, with the install command for this OS.
 
 - Anything `MISSING` → list it with the printed command, say what it blocks, and go straight on to the interview: the turn ends on the P1 question (skeleton: on the scaffold, or on Q-F when no framework is named), never on a setup question. A missing model key or git repo blocks only scaffolding and Step 4's real turn. Ask about installs once the interview is done; never run one without a yes, since installing system software is the user's call.
-- Never ask for the key's value in chat; it goes in `.env`, which stays gitignored.
+- Never ask for the key's value in chat; it goes in `.env`, which stays gitignored. The secret guard blocks you from creating or reading `.env`: ask the user to run `! cp .env.example .env` and fill the key before the real turn.
 
 **Done when:** `missing: 0`, or each missing item is accepted with what it blocks.
 
@@ -87,7 +87,7 @@ Build the smallest working slice of the chosen shape, test first where practical
 
 0. Skeleton mirrored from the official reference row for the card (`${CLAUDE_SKILL_DIR}/references/reference-repos.md`): resolve its SHA now, mirror the **core** only, and add a satellite only when the ADR answer it names asks for it. Place it in the chosen layout (`layouts.md` L1 or L2) with the app tree from `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`: `git init`, package manager, TypeScript strict, test runner with its `include` set to the Q-T test location, ESLint, Prettier + `format:check`, path alias, `styles/tokens.css`, `.env.example`. Resolve every version at scaffold time and pin it exactly.
 1. Env schema that fails at boot on missing or inconsistent config. If the app stores data and there is no ERD (or the user asks for one from the design), write `docs/erd.md` first per `${CLAUDE_SKILL_DIR}/references/data-model.md`, then the DB schema, first migration and owner-scoped repositories from it through `/db-change`.
-2. Identity: verify the token at the edge → server-injected claims → a trusted-context reader for tools (`contextSchema` → `runtime.context`, or Mastra `requestContext` with `MASTRA_RESOURCE_ID_KEY`), with a test that a tool sees the caller's id through the AG-UI adapter; token in request scope only.
+2. Identity: verify the token at the edge → server-injected claims → a trusted-context reader for tools (`contextSchema` → `runtime.context`; a `createAgent` graph on `langgraphjs dev` gets an empty context, so `configurable` per `${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` § Run context; or Mastra `requestContext` with `MASTRA_RESOURCE_ID_KEY`), with a test that a tool sees the caller's id through the AG-UI adapter; token in request scope only.
 3. One agent registered under one agent id (backend registry or the Mastra `agents` map, `langgraph.json` if used, client `agent` prop), its prompt opening with P1.
 4. Model factory with three roles, `MODEL_PRIMARY`, `MODEL_FALLBACK` and `MODEL_CHEAP`, named per `${CLAUDE_SKILL_DIR}/references/model-choice.md`: the tier follows the hardest P2 task, volume and budget; exact names are resolved from the provider at setup and written with a cost line into `.env.example` and ADR Q7.
 5. Tracing switch with masking on (`${CLAUDE_PLUGIN_ROOT}/rules/agent-tracing-privacy.md`).

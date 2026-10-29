@@ -34,17 +34,61 @@ Claude picks the right skill from that sentence (here `agent-architect`) and **a
 2. **The choices that are costly to change:** host, clients, single app or monorepo. Everything else is defaulted and shown on one card for you to confirm. Design is never asked: give a Figma link or mockup in your request if you have one; without one the chat is CopilotKit's stock `CopilotChat` with theme tokens.
 3. **Then it builds:** checks Node, the package manager, the model key and git; writes the architecture record (`docs/adr/`); scaffolds the smallest slice; and proves it with one real streamed turn.
 
-**Just the frame, no features yet?** Say *dựng* or *init* and name the stack, without saying what the chatbot does:
+**Just the frame, no features yet?** One sentence in an empty folder is enough: say *init* or *dựng*, name whatever parts of the stack you care about, and do not say what the chatbot does.
 
 ```text
-Dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + Mastra, chưa cần feature gì
+init chatbot <empty | no features> [with <framework>] [+ <frontend>] [+ <database>] [+ <auth>] [, tracing with <provider>]
 ```
 
-or *"init chatbot với Next.js và LangGraph"*. Only when you describe what the assistant helps with does Claude run the full interview and plan above.
+For example:
 
-`agent-architect` switches to **skeleton** mode and asks nothing when you named a stack. It takes the stack you named as given and decides everything else itself (host, layout, models, tracing, design), listing those defaults in one table you can change later. Then it builds the app shell from the vendor's reference repo with exact pins, the env schema, identity, one agent with no tools, the model factory, masked tracing and the stock chat UI with your theme tokens, and proves it with one real streamed "hello" turn. No tools, no confirm cards and no domain tables (a database you named gets its connection and migrations only). It ends by listing the features still to build, each as the sentence to give `agent-feature`.
+- *"init chatbot empty features, dùng Mastra, tracing bằng Langfuse"*
+- *"Dựng skeleton chatbot rỗng bằng Next.js + CopilotKit + LangGraph + Postgres, chưa cần feature gì"*
+- *"init codebase chatbot assistant empty feature, langchain framework, tracing with langsmith"*
 
-Any supported framework works the same way: swap "Mastra" for "LangChain" or "LangGraph" (both build a `createAgent` agent), or say "custom LangGraph graph" for your own `StateGraph`. With no stack named at all (*"init chatbot empty features"*), Claude asks only the framework and the frontend and database. Changing the framework while the skeleton has no features rebuilds the skeleton; once features exist, it is a planned migration. Full rules: [`skeleton.md`](plugins/agent/skills/agent-architect/references/skeleton.md).
+Each named piece is taken as given; anything you leave out is defaulted, never asked:
+
+| You say | It builds | Default when not said |
+|---------|-----------|-----------------------|
+| Framework: *LangChain* / *LangGraph* | shape A, `createAgent` on the LangGraph runtime | asked once: the only question (with the frontend and database) |
+| Framework: *Mastra* | shape M, one `new Mastra({ agents, … })` | |
+| Framework: *custom LangGraph graph* / *StateGraph* | shape B, your own graph + AG-UI emitter | |
+| Frontend: *Next.js*, *Vite*, *React Router* | that app with the CopilotKit runtime | Next.js App Router |
+| Database: *Postgres + Drizzle*, *Prisma*, *SQLite* … | connection + migrations only | none (in-memory threads, dev only) |
+| Auth: *Better Auth*, *Clerk*, *NextAuth*, SSO | that login feeding the agent's trusted context | a dev user, refused in production |
+| Tracing: *Langfuse*, *LangSmith* … | that provider behind one switch, content masked | the switch with `none` |
+| Model provider | the provider whose key you have | the one preflight finds |
+
+Only when you describe what the assistant helps with does Claude run the full interview and plan above.
+
+`agent-architect` switches to **skeleton** mode, shows those defaults in one table you can change later, and in the same turn:
+
+1. **Preflight:** git, Node, the package manager, a model key (name only) and a git repo; it runs `git init` itself.
+2. **Scaffold** from the vendor's reference repo at a resolved SHA, with exact pins: the env schema that fails at boot, the caller's identity, one agent with no tools, the model factory (primary, fallback, cheap), the tracing switch with masking on, and the stock chat UI with your theme tokens. No tools, no confirm cards and no domain tables (a database you named gets its connection and migrations only).
+3. **Your one step:** the secret guard never lets Claude create or read `.env`, so it asks you to run `! cp .env.example .env` and fill the model key. Every value that is not a secret is already filled in `.env.example`.
+4. **Proof:** `pnpm dev`, then one real streamed "hello" turn through the web route (`RUN_STARTED → TEXT_MESSAGE_* → RUN_FINISHED`).
+5. **Docs:** `/project-init` writes `CLAUDE.md`, `AGENTS.md` (when another coding agent is used) and `.claude/docs/`, and the ADR records the stack, the defaults card and what was deferred.
+
+The repo it leaves (single-app layout; a monorepo you name moves the same parts under `apps/` and `packages/`). Only the agent folder changes with the framework, following that vendor's reference repo:
+
+```
+.env.example                 # every name; non-secrets filled
+src/app/page.tsx             # stock CopilotChat bound to the agent id
+src/app/api/copilotkit/…     # CopilotRuntime route: 401 guard, verified caller → agent
+src/server/                  # env schema, identity (your auth, or the dev user)
+src/styles/tokens.css        # design tokens + CopilotKit theme
+<agent folder>               # one agent "assistant", no tools, + ids · env · identity · models · tracing
+docs/adr/0001-agent-architecture.md
+AGENTS.md · CLAUDE.md · .claude/docs/
+```
+
+| Framework | `<agent folder>` |
+|-----------|------------------|
+| LangChain / LangGraph (A) | `agent/` package: `langgraph.json`, `src/<agent>/` (`createAgent`, prompt, per-turn factory), served by `langgraphjs dev` |
+| Custom LangGraph graph (B) | `agent/` package: `src/<graph>/{graph,state,prompts}.ts` + the AG-UI emitter |
+| Mastra (M) | `src/mastra/`: `index.ts` (`new Mastra`), `agents/assistant.ts`, `observability` for tracing |
+
+It ends by listing the features still to build, each as the sentence to give `agent-feature`. Tests and evals are part of the skeleton; say *"chưa cần test"* and they are skipped and recorded as deferred on the ADR. Changing the framework while the skeleton has no features rebuilds the skeleton; once features exist, it is a planned migration. Full rules: [`skeleton.md`](plugins/agent/skills/agent-architect/references/skeleton.md).
 
 After that, ask for each feature the same way, e.g. *"Thêm tính năng cho khách đổi địa chỉ giao hàng"*. `agent-feature` checks it against the architecture record, asks what is unclear, reuses what exists, and builds it layer by layer.
 

@@ -251,8 +251,13 @@ if os.environ.get("STANDALONE") == "1":
     rendered = open(tpl).read().replace("__STACK_HOOKS__", stack)
 else:  # lean: the plugin registers the shared hooks; only stack hooks are project-specific
     rendered = json.dumps({"hooks": {"PostToolUse": json.loads("[" + stack.lstrip(",") + "]")}} if stack.strip() else {}, indent=2)
-json.loads(rendered)          # fail loudly on malformed JSON rather than writing it
-open(out, "w").write(rendered)
+merged = json.loads(rendered)  # fail loudly on malformed JSON rather than writing it
+# Keep what the project already set (enabledPlugins, permissions, env); only `hooks` is ours to write.
+if os.path.exists(out):
+    existing = json.load(open(out))
+    existing.pop("hooks", None)
+    merged = {**existing, **merged}
+open(out, "w").write(json.dumps(merged, indent=2) + "\n")
 RENDER
 
 # ─── Drift guard: every registered hook must exist and be executable ──────────
