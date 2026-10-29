@@ -61,4 +61,4 @@ Call the endpoint on the running dev server with a real session, once on your ow
 
 ---
 
-Hand-offs: new table or query → `/db-change` · the frontend that calls it → `/api-client` then `/ui-feature` · auth or permission model changes → high-risk lane (`/coordinator`) · done → `/verify-done` → `/review-checklist`.
+Hand-offs: new table or query → `/db-change` · the frontend that calls it → `/api-client` then `/ui-feature` · auth or permission model changes → high-risk lane (`/coordinator`) · done → `/verify-done` → `/review-checklist` → `/docs-sync` so the route lands in `entry-points.md` (skip when `/feature` called this skill; it syncs once for the whole feature).
