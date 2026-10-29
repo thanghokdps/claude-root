@@ -21,6 +21,15 @@ def test_allows_generic_text():
         assert not lint_kit.denylist_hits(text), text
 
 
+def test_inline_python_must_run_isolated():
+    for text in ["HOOK_INPUT=x python3 - <<'PY'", "  python3 - \"$F\"", "python3 -c 'print(1)'", "python -"]:
+        assert lint_kit.unisolated_python(text) == [1], text
+    for text in ["python3 -I - <<'PY'", "python3 -I -c 'x'", "python3 scripts/gen.py", "command -v python3 >/dev/null",
+                 "r\"(?:python3?|node)\\s+-[ce]\"", "cat jq python python3 node ruby",
+                 "# a comment about python -c \"git push\""]:
+        assert lint_kit.unisolated_python(text) == [], text
+
+
 def test_scope_covers_agent_plugin():
     assert lint_kit.in_denylist_scope("plugins/agent/skills/agent-tool/SKILL.md")
     assert lint_kit.in_denylist_scope("plugins/agent/skills/agent-architect/references/stock-map.md")

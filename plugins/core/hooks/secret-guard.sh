@@ -12,7 +12,7 @@ command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
 LIST="$(dirname "$0")/secret-paths.txt"
 
-HOOK_INPUT="$INPUT" LIST="$LIST" python3 - <<'PY'
+HOOK_INPUT="$INPUT" LIST="$LIST" python3 -I - <<'PY'
 import fnmatch, glob, json, os, re, shlex, subprocess, sys
 
 try:

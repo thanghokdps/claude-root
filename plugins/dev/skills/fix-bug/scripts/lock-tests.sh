@@ -25,7 +25,7 @@ GIT_DIR_ABS="$(git rev-parse --absolute-git-dir 2>/dev/null)" || { echo "lock-te
 TOP="$(git rev-parse --show-toplevel)"
 LOCK="$GIT_DIR_ABS/claude-fix-lock.json"
 
-LOCK_FILE="$LOCK" LOCK_TOP="$TOP" LOCK_ACTION="$ACTION" python3 - "$@" <<'PY'
+LOCK_FILE="$LOCK" LOCK_TOP="$TOP" LOCK_ACTION="$ACTION" python3 -I - "$@" <<'PY'
 import hashlib, json, os, sys, datetime
 
 lock, top, action = os.environ["LOCK_FILE"], os.environ["LOCK_TOP"], os.environ["LOCK_ACTION"]

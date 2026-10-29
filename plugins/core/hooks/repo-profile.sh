@@ -11,7 +11,8 @@
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
 
-HOOK_INPUT="$INPUT" python3 - <<'PY'
+# -I: the cwd is an untrusted repo, so its json.py or PYTHON* env must never load into this hook.
+HOOK_INPUT="$INPUT" python3 -I - <<'PY'
 import glob, json, os, re, subprocess, sys
 
 try:
@@ -97,6 +98,19 @@ def enabled_at(path):
     return None
 
 
+def write_inside(path, text, append=False):
+    """Write only a regular file whose folder resolves to where it claims; a cloned repo can plant symlinks."""
+    folder = os.path.dirname(path)
+    if os.path.islink(folder) or os.path.islink(path):
+        raise OSError("symlink")
+    os.makedirs(folder, exist_ok=True)
+    if os.path.realpath(folder) != os.path.join(os.path.realpath(os.path.dirname(folder)), os.path.basename(folder)):
+        raise OSError("folder resolves elsewhere")
+    flags = os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW | (os.O_APPEND if append else os.O_TRUNC)
+    with os.fdopen(os.open(path, flags, 0o600), "w") as f:
+        f.write(text)
+
+
 local_path = at(".claude", "settings.local.json")
 cfg = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
 agent_note = ""
@@ -104,23 +118,25 @@ if ai:
     local, project = enabled_at(local_path), enabled_at(at(".claude", "settings.json"))
     explicit = local if local is not None else project
     if explicit is None and enabled_at(os.path.join(cfg, "settings.json")) is not True:
-        settings = {} if not os.path.exists(local_path) else load_json(local_path)
+        claude_dir = at(".claude")
+        if os.path.islink(claude_dir) or os.path.islink(local_path):
+            settings = None
+        else:
+            settings = {} if not os.path.exists(local_path) else load_json(local_path)
         if isinstance(settings, dict):
             try:
                 settings.setdefault("enabledPlugins", {})["agent@harness"] = True
-                os.makedirs(os.path.dirname(local_path), exist_ok=True)
-                with open(local_path, "w") as f:
-                    json.dump(settings, f, indent=2)
-                    f.write("\n")
+                write_inside(local_path, json.dumps(settings, indent=2) + "\n")
                 rel = ".claude/settings.local.json"
                 if subprocess.run(["git", "-C", top, "check-ignore", "-q", rel]).returncode != 0:
                     ex = subprocess.run(["git", "-C", top, "rev-parse", "--git-path", "info/exclude"],
                                         capture_output=True, text=True).stdout.strip()
                     if ex:
                         ex = ex if os.path.isabs(ex) else os.path.join(top, ex)
-                        os.makedirs(os.path.dirname(ex), exist_ok=True)
-                        with open(ex, "a") as f:
-                            f.write(rel + "\n")
+                        try:
+                            write_inside(ex, rel + "\n", append=True)
+                        except OSError:
+                            pass
                 agent_note = ("Enabled agent@harness for this repo in .claude/settings.local.json — the /agent-* "
                               "skills load from the next session; say so if the user asks for agent work now.")
             except OSError:

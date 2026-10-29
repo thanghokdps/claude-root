@@ -11,7 +11,7 @@ INPUT="$(cat)"
 STATE_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.claude/plugins/data/progress}"
 mkdir -p "$STATE_DIR" 2>/dev/null || exit 0
 
-HOOK_INPUT="$INPUT" python3 - "$STATE_DIR" "${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}" <<'PY' || true
+HOOK_INPUT="$INPUT" python3 -I - "$STATE_DIR" "${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}" <<'PY' || true
 import glob, json, os, re, sys, time
 
 state_dir, plugin_root = sys.argv[1], sys.argv[2]

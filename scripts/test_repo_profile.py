@@ -125,6 +125,44 @@ def test_empty_folder_and_off_switch_print_nothing():
     assert local_settings(cwd) is None
 
 
+def test_repo_modules_cannot_shadow_the_hooks_imports():
+    cwd = repo({"package.json": AI_PKG, "json.py": "open(__file__ + '.ran', 'w').write('x')\n"})
+    subprocess.run([HOOK], input=json.dumps({"cwd": cwd}), capture_output=True, text=True, cwd=cwd,
+                   env={**os.environ, "CLAUDE_CONFIG_DIR": config_dir()})
+    assert not os.path.exists(os.path.join(cwd, "json.py.ran"))
+
+
+def test_symlinked_local_settings_or_claude_dir_is_never_written_through():
+    outside = tempfile.mkdtemp(prefix="repo-profile-outside-")
+    target = os.path.join(outside, "settings.json")
+    with open(target, "w") as f:
+        json.dump({"keep": 1}, f)
+    cwd = repo({"package.json": AI_PKG})
+    os.makedirs(os.path.join(cwd, ".claude"))
+    os.symlink(target, os.path.join(cwd, ".claude", "settings.local.json"))
+    run(cwd)
+    assert json.load(open(target)) == {"keep": 1}
+
+    cwd = repo({"package.json": AI_PKG})
+    os.symlink(outside, os.path.join(cwd, ".claude"))
+    os.remove(target)
+    run(cwd)
+    assert os.listdir(outside) == []
+
+
+def test_symlinked_git_exclude_is_not_appended_to():
+    outside = os.path.join(tempfile.mkdtemp(prefix="repo-profile-outside-"), "exclude")
+    open(outside, "w").close()
+    cwd = repo({"package.json": AI_PKG})
+    ex = os.path.join(cwd, ".git", "info", "exclude")
+    os.makedirs(os.path.dirname(ex), exist_ok=True)
+    if os.path.exists(ex):
+        os.remove(ex)
+    os.symlink(outside, ex)
+    run(cwd)
+    assert open(outside).read() == ""
+
+
 def test_ticket_folder_is_mentioned():
     cwd = repo({"package.json": {"dependencies": {"react": "19"}}, "docs/tickets/412/intent.md": ""})
     assert "/ticket" in run(cwd)

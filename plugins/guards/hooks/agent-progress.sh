@@ -36,7 +36,7 @@ print_wave_board() {
 
   log "${BOLD_BLU}┌─ 🌊 WAVE BOARD ── ${ISSUE} ${SLUG} ──────────────────────────${RST}"
 
-  python3 - "$STATE_FILE" 2>/dev/null >> "$LOG" <<'PYEOF'
+  python3 -I - "$STATE_FILE" 2>/dev/null >> "$LOG" <<'PYEOF'
 import json, sys
 
 COLORS = {

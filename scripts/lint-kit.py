@@ -3,7 +3,7 @@
 
 Errors: SKILL.md frontmatter parses as YAML; no private names in agent (denylist); name == directory, kebab-case,
 unique across plugins; description present, <=1024 chars, says when to use; only documented frontmatter keys; description + when_to_use
-<=1536; ${CLAUDE_PLUGIN_ROOT}/ paths exist in the skill's own plugin and ${CLAUDE_SKILL_DIR}/ paths in its directory; hooks pass `bash -n` and are executable; plugin/marketplace/hooks JSON parse; every plugin
+<=1536; ${CLAUDE_PLUGIN_ROOT}/ paths exist in the skill's own plugin and ${CLAUDE_SKILL_DIR}/ paths in its directory; hooks pass `bash -n` and are executable; inline python3 in a plugin .sh runs with -I; plugin/marketplace/hooks JSON parse; every plugin
 is listed in the marketplace, dependencies exist and are acyclic; a SKILL.md body that names another plugin's skill
 names a declared dependency or says "if (<plugin> is) installed"; every eval case loads its plugin and all its dependencies; same-named references/ files are identical across plugins; every file init.sh copies exists.
 Warnings: SKILL.md over 500 lines; no trigger case under eval/triggers/.
@@ -120,6 +120,24 @@ def check_hooks():
                 r = subprocess.run(["bash", "-n", p], capture_output=True, text=True)
                 if r.returncode:
                     errors.append(f"{rel}: bash -n failed — {r.stderr.strip().splitlines()[0]}")
+
+
+UNISOLATED_PYTHON = re.compile(r"\bpython3?\s+-c?(?=\s|$)")
+
+
+def unisolated_python(text):
+    """Line numbers running inline python without -I: its cwd is the user's repo, whose json.py would load first."""
+    return [n for n, line in enumerate(text.splitlines(), 1)
+            if not line.lstrip().startswith("#") and UNISOLATED_PYTHON.search(line)]
+
+
+def check_python_isolation():
+    for dirpath, _, files in os.walk(PLUGINS_DIR):
+        for f in files:
+            if f.endswith(".sh"):
+                p = os.path.join(dirpath, f)
+                for n in unisolated_python(open(p).read()):
+                    errors.append(f"{os.path.relpath(p, ROOT)}:{n}: inline python3 without -I")
 
 
 def load_json(rel):
@@ -298,6 +316,7 @@ def check_denylist():
 if __name__ == "__main__":
     check_skills()
     check_hooks()
+    check_python_isolation()
     check_json()
     check_plugins()
     check_shared_references()

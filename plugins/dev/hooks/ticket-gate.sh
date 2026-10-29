@@ -16,7 +16,7 @@
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
 
-HOOK_INPUT="$INPUT" python3 - <<'PY'
+HOOK_INPUT="$INPUT" python3 -I - <<'PY'
 import json, os, re, subprocess, sys
 
 try:
