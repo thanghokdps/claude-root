@@ -4,7 +4,7 @@ effort: high
 name: design-ui
 description: Turns a design — a Figma link, exported frames or a screenshot — into web UI that matches it. Exports the frames, inventories every screen state, maps design variables onto tokens, classifies the design's components against the repo's UI library and builds them once as primitives, builds each state from a fixture, and compares screenshots against the design at the frame size and at narrow widths. Use when a page or screen of a web app must match its Figma or mockup.
 when_to_use: Figma link for a page or screen, "làm UI theo figma", "code theo design", "giống design", mockup or screenshot to implement, page does not match the design, build the component library or tokens from Figma, Figma MCP rate-limited or failing ("figma mcp bị limit", "đọc figma qua chrome")
-allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/compare-shots.py *)
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/compare-shots.py *) Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/check-ui.py *)
 ---
 
 # design-ui
@@ -73,6 +73,12 @@ It writes a side-by-side + diff image per state and a PASS/FAIL table (default 3
 Then the widths no frame covers: shoot every state at the smallest supported width and one middle width (e.g. 390 and 768) to `design/actual/<state>@<width>.png`, and assert per shot `document.documentElement.scrollWidth <= window.innerWidth`, the primary action visible, and any drawer opening and closing. There is no frame to diff these against — check them against the Narrow width row, and show the narrow shots in the reply.
 
 **Done when:** every state passes compare-shots (and check-text-styles when it has dynamic text), or its remaining difference is listed in the map and accepted by the user; and every state at each supported narrow width has no horizontal overflow and its primary action visible (unless the map marks narrow width *skip* by the user's decision).
+
+## Step 6 — Quality floor and taste
+
+Matching the design is not the same as good UI: a frame can carry low contrast or a cramped target. Follow `${CLAUDE_PLUGIN_ROOT}/references/taste.md`: create `DESIGN.md` / `PRODUCT.md` if missing, run `dump-ui-styles.js` per state and `python3 ${CLAUDE_SKILL_DIR}/scripts/check-ui.py`, then dispatch the taste reviewer with only the screenshots and those two files. A detector hit the frame itself carries (the designer's grey text) is shown to the user as a choice — match the frame or meet the floor — never silently changed.
+
+**Done when:** `check-ui.py` exits 0 or each remaining hit is a listed false positive or a user decision, no P0/P1 taste finding is open without the user's acceptance, and both lists are in `ui-map.md` and the reply.
 
 ---
 

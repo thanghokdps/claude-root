@@ -15,6 +15,7 @@ python3 scripts/test_weakened_check.py
 python3 scripts/test_release_gate.py
 python3 scripts/test_compare_shots.py
 python3 scripts/test_text_styles.py
+python3 scripts/test_check_ui.py
 python3 scripts/test_sync_remote.py
 python3 scripts/test_run_evidence.py
 python3 scripts/test_thunderkds_hooks.py
