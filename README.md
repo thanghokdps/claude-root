@@ -20,6 +20,24 @@ Then, whichever source you added:
 /reload-plugins
 ```
 
+`agent` only works with its dependency chain enabled: `agent` → `progress`, `dev`, `ship`; `dev` → `core`, `plan`, `review`. Check with `claude plugin list` that these **seven** are `✔ enabled` in the project: `progress core plan review ship dev agent` (all `@harness`). `lead`, `guards` and the `harness` bundle are not needed. If one is missing or disabled (an older install, or a plugin turned off at another scope), pin the set in the project's `.claude/settings.json`:
+
+```json
+{
+  "enabledPlugins": {
+    "progress@harness": true,
+    "core@harness": true,
+    "plan@harness": true,
+    "review@harness": true,
+    "ship@harness": true,
+    "dev@harness": true,
+    "agent@harness": true
+  }
+}
+```
+
+MCP servers the skills use when present (`claude mcp list`): **Playwright** (`claude mcp add playwright -- npx -y @playwright/mcp@latest`) so the skeleton check and `/agent-frontend` render the chat in a real browser at desktop and 375 px; **Figma** only for `/agent-design-ui` from a Figma link.
+
 Update later with `/plugin marketplace update harness`. It pulls from the source you added. If git asks for a password or times out on GitLab, check the VPN and your SSH key, or use GitHub.
 
 Then open Claude Code in an empty folder and **say what you want to build, in your own words**. No command to remember:
