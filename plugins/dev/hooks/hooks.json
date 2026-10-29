@@ -12,6 +12,10 @@
         "hooks": [{ "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/test-lock.sh" }]
       },
       {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/weakened-check.sh" }]
+      },
+      {
         "matcher": "Bash|mcp__github__create_pull_request",
         "hooks": [{ "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/ticket-gate.sh" }]
       }
