@@ -12,3 +12,6 @@ plugins/*/evals/results/
 
 .playwright-mcp
 __pycache__/
+
+# screenshots taken while checking docs/skill-map.html
+docs/.skill-map-check/

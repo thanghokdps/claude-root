@@ -54,7 +54,7 @@ work starts
 work happens
   ↓
 git commit
-  ↓ save-commit-memory.sh → .claude/memory/commits/YYYY-MM-DD.md
+  ↓ save-commit-memory.sh → .claude/memory/commits/YYYY-MM-DD.md   (standalone init only)
   ↓
 session ends
   ↓ state-breadcrumb.sh → .claude/memory/sessions/YYYY-MM-DD.md
