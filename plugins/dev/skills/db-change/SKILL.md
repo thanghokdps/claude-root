@@ -50,4 +50,4 @@ Run the migration on the local dev database with the repo's script. Show the app
 
 ---
 
-Hand-offs: the endpoint that uses it → `/api-endpoint` · a data migration on existing rows → `/write-migration` (ship, if installed) · done → `/verify-done` → `/review-checklist`.
+Hand-offs: the endpoint that uses it → `/api-endpoint` · a data migration on existing rows → `/write-migration` (ship, if installed) · done → `/verify-done` → `/review-checklist` → `/docs-sync` so the new table or query is in `.claude/docs/` (skip when `/feature` called this skill; it syncs once for the whole feature).
