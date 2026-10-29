@@ -50,6 +50,7 @@ Order: ⛔ conflicts first (they block the most), then ❌ and ⚠️ rows in do
 
 - One question per turn, as `AskUserQuestion` with 2–4 options; the recommended option first with `(Recommended)`, drafted from what the docs already say. Numbered options when the tool is absent.
 - Facts you look up, decisions you ask. Never ask about a ✅ row.
+- Rows 3, 5, 8 and 9 (stack, architecture, non-functional, delivery) are asked as needs, never as tools, per `${CLAUDE_PLUGIN_ROOT}/references/need-questions.md`; the canonical file records the tech with the need it came from.
 - A weak answer ("later", "should be fine") gets one hard push, then is recorded as a decision with its risk.
 - "Use your recommendation" for the rest → take the recommended option at each remaining row, list them in one message, and mark them *defaulted* in the matrix.
 - After each answer, update the canonical file and the matrix row.

@@ -17,7 +17,7 @@ The assistant is built from these answers: every task in P2 must end up owned by
 
 | # | Question | Forks |
 |---|----------|-------|
-| F | **Framework** — Mastra, LangChain `createAgent`, or a custom LangGraph graph? Ask first. Skip it when the request or the repo names the stack | `shapes.md` § Framework: A · M · B/hybrid. Picks the reference row in `reference-repos.md`, and with it the agent tree and which branch every later skill takes |
+| F | **Framework**, asked as how the assistant works: *chat that calls a few tools* (LangChain `createAgent`) · *a fixed step-by-step process* (custom LangGraph graph) · *all-in-one TypeScript with workflows and memory built in* (Mastra)? Ask first. Skip it when the request or the repo names the stack | `shapes.md` § Framework: A · M · B/hybrid. Picks the reference row in `reference-repos.md`, and with it the agent tree and which branch every later skill takes |
 | 1 | **Host** — Node server/container, or Workers/edge? | Node → shape A possible (CopilotRuntime). Edge → shape B (own AG-UI emitter), edge-safe imports only |
 | 2 | **Clients** — web React, mobile (React Native or native), chat channel (Slack/Teams/…), API only? | Web → CopilotKit v2 hooks. React Native → `@copilotkit/react-native`, same hooks. Native or other headless → the AG-UI contract (`${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md`): shared state, standard interrupt outcome, `resume[]`. Channel → CopilotKit Channels packages + a confirm card (`/agent-hitl` Step 4) |
 | 2v | **Viewports** (web) — smallest supported width, and which of phone (360–430) / tablet (768–1024) / desktop (≥1280)? A design's frame size describes the drawing, not a viewport decision — ask | Breakpoints, the narrow-width state in `/agent-design-ui`, the screenshot widths it checks |
@@ -63,6 +63,7 @@ Ask through `AskUserQuestion` when the tool is available, so the user picks inst
 
 - `question`: `Q<n> — <one-line question>` plus *why this matters* (what forks downstream) in one sentence.
 - 2–4 `options`, the recommended one **first** with `(Recommended)` in its label; each `description` says what that choice changes later (layout, cost, a skill it triggers), citing repo facts. "Other" is added by the tool — never add it yourself.
+- A label names what the user gets, never a tool: "remembers conversations between visits", not "Postgres + Drizzle". The tech goes in the `description`, in one parenthesis. Ask in tool names only when the user used them.
 - Open questions (P1 purpose, P2 example messages) have no fixed options: offer 2–3 drafted answers inferred from the request or the design, and let "Other" carry the user's own words.
 
 Without the tool, write the same as numbered options — `1) <option> (recommended) — <what it changes>` — so a one-character reply works.

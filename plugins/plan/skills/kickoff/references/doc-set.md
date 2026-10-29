@@ -14,7 +14,7 @@ Read by `/kickoff`, and by the skills that start from it (`/agent-architect`, `/
 | 8 | Non-functional | performance targets · security and compliance · privacy and retention · availability | `docs/requirements.md` § NFR | should |
 | 9 | Delivery | environments · CI · deploy target · release cadence · who approves | `docs/stack.md` § Delivery | should |
 
-An existing repo's facts (its `package.json`, schema, CI files) fill rows 3, 4 and 9 by reading, not asking.
+An existing repo's facts (its `package.json`, schema, CI files) fill rows 3, 4 and 9 by reading, not asking. A gap in rows 3, 5, 8 or 9 is asked as a need (`${CLAUDE_PLUGIN_ROOT}/references/need-questions.md`), and its row records the tech with that need: `Postgres — from "thousands of users daily"`.
 
 ## How sources map
 
