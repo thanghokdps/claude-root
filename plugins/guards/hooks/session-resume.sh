@@ -2,7 +2,8 @@
 # session-resume.sh — SessionStart: inject specs/HANDOFF.md (written by session-handoff.sh) so a new
 # session resumes without being told to. Silent when there is nothing to resume. Never blocks.
 
-DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+. "$(dirname "$0")/lib/project-dir.sh"
+DIR=$(project_dir "$(jq -r '.cwd // empty' 2>/dev/null)")
 HANDOFF="$DIR/specs/HANDOFF.md"
 [ -f "$HANDOFF" ] || exit 0
 

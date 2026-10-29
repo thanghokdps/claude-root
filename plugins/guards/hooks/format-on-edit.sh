@@ -2,10 +2,12 @@
 # format-on-edit.sh — PostToolUse(Edit|Write): format the edited file with the project's own formatter.
 # Only runs a formatter the project already has (no downloads: npx --no-install). Never blocks.
 
-FILE=$(jq -r '.tool_input.file_path // empty' 2>/dev/null)
+INPUT=$(cat 2>/dev/null)
+FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 [ -n "$FILE" ] && [ -f "$FILE" ] || exit 0
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+. "$(dirname "$0")/lib/project-dir.sh"
+PROJECT_DIR=$(project_dir "$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)")
 cd "$PROJECT_DIR" || exit 0
 
 case "$FILE" in

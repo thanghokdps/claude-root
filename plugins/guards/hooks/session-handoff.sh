@@ -3,6 +3,9 @@
 # Stop hook: write a comprehensive HANDOFF.md at session end.
 # Next session reads this automatically via CLAUDE.md — no manual update needed.
 
+INPUT=$(cat 2>/dev/null)
+. "$(dirname "$0")/lib/project-dir.sh"
+cd "$(project_dir "$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)")" 2>/dev/null || exit 0
 REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null)"
 [ -z "$REPO_DIR" ] && exit 0
 
@@ -17,12 +20,23 @@ STAGED=$(git diff --cached --name-only 2>/dev/null)
 UNSTAGED=$(git diff --name-only 2>/dev/null)
 UNTRACKED=$(git ls-files --others --exclude-standard 2>/dev/null | head -10)
 
-# Collect open specs
+# Collect open specs: a PLAN.md marked **Status:** complete (plan-format.md) is done.
 OPEN_SPECS=$(ls "$REPO_DIR/specs"/*/SUMMARY.md 2>/dev/null | while read f; do
   slug=$(basename "$(dirname "$f")")
   lane=$(grep -iE '^Lane:' "$f" 2>/dev/null | head -1 | sed 's/Lane: *//')
-  echo "  - $slug ($lane)"
+  status=$(grep -m1 -iE '^\*\*Status:\*\*' "$(dirname "$f")/PLAN.md" 2>/dev/null | sed -E 's/^\*\*Status:\*\* *//I')
+  [[ "$status" =~ ^[Cc]omplete ]] && continue
+  echo "  - $slug ($lane, ${status:-no status})"
 done)
+
+# The last reply says where the work stands; the Stop event carries it, older versions only the transcript.
+LAST_REPLY=$(printf '%s' "$INPUT" | jq -r '.last_assistant_message // empty' 2>/dev/null)
+TRANSCRIPT=$(printf '%s' "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
+if [ -z "$LAST_REPLY" ] && [ -f "$TRANSCRIPT" ]; then
+  LAST_REPLY=$(jq -rs 'map(select(.type == "assistant") | [.message.content[]? | select(.type == "text") | .text]
+    | join("\n") | select(. != "")) | last // empty' "$TRANSCRIPT" 2>/dev/null)
+fi
+LAST_REPLY=$(printf '%s\n' "$LAST_REPLY" | tail -n 25 | sed 's/^/> /')
 
 # Collect unresolved escalations
 ESCALATIONS=$(grep -rl "decision: pending" "$REPO_DIR/specs" 2>/dev/null | sed 's|.*/specs/||;s|/.*||' | sort -u | sed 's/^/  - /')
@@ -65,9 +79,8 @@ ${OPEN_SPECS:-  none}
 ## Unresolved escalations (BLOCK until decided)
 ${ESCALATIONS:-  none}
 
-## What to do next
-<!-- Agent: fill this in by reading the last few messages of the session -->
-_See specs/STATE.md for session breadcrumbs_
+## Where it stood (end of the last reply)
+${LAST_REPLY:-  unknown}
 
 ## Context to reload
 - Project docs: \`.claude/docs/index.md\`

@@ -216,6 +216,8 @@ if [ "$STANDALONE" = 1 ]; then
   for hook in "$HARNESS_DIR"/hooks/*.sh "$GUARDS_DIR"/hooks/*.sh; do
     [ -f "$hook" ] && cp "$hook" "$CLAUDE_DIR/hooks/"
   done
+  # guards hooks source lib/project-dir.sh next to themselves
+  [ -d "$GUARDS_DIR/hooks/lib" ] && cp -R "$GUARDS_DIR/hooks/lib" "$CLAUDE_DIR/hooks/"
 fi
 
 # Python: add ruff hook
