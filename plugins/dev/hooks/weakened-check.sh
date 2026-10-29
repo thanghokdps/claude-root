@@ -30,13 +30,14 @@ commit_all = re.search(r"\s(?:--all\b|-[A-Za-z]*a)", m.group(2))
 
 
 def git(*args):
-    r = subprocess.run(["git", "-C", cwd, *args], capture_output=True, text=True)
+    # Runs before the user approves, so a repo's own config must not get to run a command (fsmonitor, textconv).
+    r = subprocess.run(["git", "-C", cwd, "-c", "core.fsmonitor=false", *args], capture_output=True, text=True)
     return r.stdout if r.returncode == 0 else None
 
 
 if not git("rev-parse", "--show-toplevel"):
     sys.exit(0)
-diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff")
+diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv")
 if not diff:
     sys.exit(0)
 
