@@ -78,6 +78,7 @@ Clean checks get no entry; a clean diff is `Looks good — approve.` plus one li
 ## Rules
 
 - **No concrete case, no finding.** Every finding names the input or state that makes it fail. If you can't, verify it (Grep/Read/run) or drop it — an unverified worry costs the author time to disprove. Never pad the list to look thorough.
+- A finding that rests on how a framework or library behaves cites the installed source or the official doc page. Without that citation it is `needs_validation`.
 - "Actionable" means the author can act without asking you a question. "Consider improving this" is not actionable.
 - Propose the smallest fix that works; prefer one that deletes code.
 - Verify by running (tests, the repro) where possible. A finding that still turns on a fact you cannot see is `needs_validation`, not a numbered finding.
