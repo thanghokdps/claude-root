@@ -35,6 +35,7 @@ Walk the nine items of `doc-set.md` in order (requirements → prerequisites →
 - Quote the user's sentences verbatim; link the original, which stays where it was. Never paraphrase a requirement into new words.
 - A large PRD or ticket set can go through `business-analyst:analyze-specs` (business-analyst, if installed) for acceptance criteria.
 - Facts that code or config can answer (an existing `package.json`, a schema file) are read, not asked.
+- Name the business domain from the requirements and write `Domain: <name>` into `docs/requirements.md`. Internal HR or workplace tools (time off, approvals, room or meal booking, maintenance requests) are `workplace`; nothing that fits is `general`. Unsure → it is a row to grill, asked as a need ("Is this a tool your own staff use for requests and bookings?").
 
 **Done when:** each item has its canonical file, or is marked absent.
 
@@ -70,6 +71,7 @@ Ready when every mandatory row is ✅, *defaulted*, or deferred with what it blo
 
 No code is written here.
 
+- `Domain: workplace` → the workplace pack turns on in this repo from the next session (core's repo-profile hook); its `/workplace-review` (workplace, if installed) and its domain questions apply from then on. Say so in the closing summary.
 - AI assistant or chatbot → `/agent-architect greenfield` (agent, if installed). It reads this doc set and asks only what is still open.
 - Other app with an open approach → `/brainstorming`. Approach already decided → `/writing-plans`, wave 1 = scaffold.
 - Code already exists → `/project-init` (core, if installed), which reads this doc set into `.claude/docs/`.

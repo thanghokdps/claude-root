@@ -68,11 +68,12 @@ for p in $PLUGINS; do
   out=$(claude plugin install "$p@harness" 2>&1) || echo "  $p: install failed — $(printf '%s' "$out" | tail -1)"
 done
 # Domain plugins stay off at user scope: core's repo-profile hook enables them per repo when it detects
-# their stack (agent: @langchain/@copilotkit/@mastra/langgraph), so other repos don't carry their skills.
-for p in agent; do
+# their stack or domain (agent: @langchain/@copilotkit/@mastra/langgraph; workplace: a `Domain: workplace` line
+# or HR module folders), so other repos don't carry their skills.
+for p in agent workplace; do
   claude plugin disable "$p@harness" --scope user >/dev/null 2>&1 || true
 done
-echo "  domain plugins off at user scope (enabled per repo by repo-profile): agent"
+echo "  domain plugins off at user scope (enabled per repo by repo-profile): agent workplace"
 echo "  plugins: $(for f in "$KIT"/plugins/*/.claude-plugin/plugin.json; do
   python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(f\"{d['name']} {d['version']}\", end=' ')" "$f"; done)"
 

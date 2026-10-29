@@ -4,8 +4,11 @@
 # Trigger: SessionStart (startup|resume|clear|compact). Reads manifests and marker folders only — no model call:
 # root, apps/*, packages/* package.json; pyproject.toml / requirements*.txt; go.mod, Cargo.toml; prisma/, drizzle/,
 # alembic/, eas.json, .claude/docs/, docs/tickets/. Prints nothing for a folder with no manifest.
-# An AI-assistant repo whose agent@harness is not on gets it enabled in .claude/settings.local.json (personal,
-# excluded from git), effective next session. An explicit false in the project or local settings is never
+# A domain plugin the repo needs and that is not on gets enabled in .claude/settings.local.json (personal,
+# excluded from git), effective next session: agent@harness for an AI assistant, workplace@harness for a
+# `Domain: workplace` line in docs/requirements.md or .claude/docs/index.md, or two or more HR/workplace module
+# folders (time off, booking, reservation, approval, maintenance, meal, lunch, attendance) under apps/,
+# src/{modules,features}/ or apps/*/src/{api,modules}/. An explicit false in the project or local settings is never
 # overridden. CLAUDE_REPO_PROFILE=0 turns the hook off. Never blocks: any failure exits 0.
 [ "${CLAUDE_REPO_PROFILE:-1}" = "0" ] && exit 0
 command -v python3 >/dev/null 2>&1 || exit 0
@@ -91,10 +94,29 @@ db = [label for cond, label in ((has_dep("prisma", "@prisma/client") or os.path.
 has_docs = os.path.exists(at(".claude", "docs", "index.md"))
 
 
-def enabled_at(path):
+def domain_marked(name):
+    for path in (at("docs", "requirements.md"), at(".claude", "docs", "index.md")):
+        try:
+            if re.search(rf"(?im)^[\s*>-]*Domain\**\s*:\**\s*`?{name}\b", open(path).read()):
+                return True
+        except OSError:
+            pass
+    return False
+
+
+modules = [os.path.basename(p).lower() for parent in ("apps", "src/modules", "src/features", "apps/*/src/api",
+                                                     "apps/*/src/modules")
+           for p in glob.glob(at(parent, "*"))[:200] if os.path.isdir(p)]
+workplace = domain_marked("workplace") or sum(1 for m in modules if re.search(
+    r"time-?off|leave|booking|reservation|approval|maintenance|meal|lunch|attendance", m)) >= 2
+# Domain plugins stay off at user scope (install.sh) and are turned on here for the repos that need them.
+packs = [p for p, on in (("agent@harness", ai), ("workplace@harness", workplace)) if on]
+
+
+def enabled_at(path, plugin):
     s = load_json(path)
     if isinstance(s, dict) and isinstance(s.get("enabledPlugins"), dict):
-        return s["enabledPlugins"].get("agent@harness")
+        return s["enabledPlugins"].get(plugin)
     return None
 
 
@@ -113,34 +135,38 @@ def write_inside(path, text, append=False):
 
 local_path = at(".claude", "settings.local.json")
 cfg = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
-agent_note = ""
-if ai:
-    local, project = enabled_at(local_path), enabled_at(at(".claude", "settings.json"))
+to_enable = []
+for plugin in packs:
+    local, project = enabled_at(local_path, plugin), enabled_at(at(".claude", "settings.json"), plugin)
     explicit = local if local is not None else project
-    if explicit is None and enabled_at(os.path.join(cfg, "settings.json")) is not True:
-        claude_dir = at(".claude")
-        if os.path.islink(claude_dir) or os.path.islink(local_path):
-            settings = None
-        else:
-            settings = {} if not os.path.exists(local_path) else load_json(local_path)
-        if isinstance(settings, dict):
-            try:
-                settings.setdefault("enabledPlugins", {})["agent@harness"] = True
-                write_inside(local_path, json.dumps(settings, indent=2) + "\n")
-                rel = ".claude/settings.local.json"
-                if subprocess.run(["git", "-C", top, "check-ignore", "-q", rel]).returncode != 0:
-                    ex = subprocess.run(["git", "-C", top, "rev-parse", "--git-path", "info/exclude"],
-                                        capture_output=True, text=True).stdout.strip()
-                    if ex:
-                        ex = ex if os.path.isabs(ex) else os.path.join(top, ex)
-                        try:
-                            write_inside(ex, rel + "\n", append=True)
-                        except OSError:
-                            pass
-                agent_note = ("Enabled agent@harness for this repo in .claude/settings.local.json — the /agent-* "
-                              "skills load from the next session; say so if the user asks for agent work now.")
-            except OSError:
-                agent_note = ""
+    if explicit is None and enabled_at(os.path.join(cfg, "settings.json"), plugin) is not True:
+        to_enable.append(plugin)
+enable_note = ""
+if to_enable:
+    claude_dir = at(".claude")
+    if os.path.islink(claude_dir) or os.path.islink(local_path):
+        settings = None
+    else:
+        settings = {} if not os.path.exists(local_path) else load_json(local_path)
+    if isinstance(settings, dict):
+        try:
+            for plugin in to_enable:
+                settings.setdefault("enabledPlugins", {})[plugin] = True
+            write_inside(local_path, json.dumps(settings, indent=2) + "\n")
+            rel = ".claude/settings.local.json"
+            if subprocess.run(["git", "-C", top, "check-ignore", "-q", rel]).returncode != 0:
+                ex = subprocess.run(["git", "-C", top, "rev-parse", "--git-path", "info/exclude"],
+                                    capture_output=True, text=True).stdout.strip()
+                if ex:
+                    ex = ex if os.path.isabs(ex) else os.path.join(top, ex)
+                    try:
+                        write_inside(ex, rel + "\n", append=True)
+                    except OSError:
+                        pass
+            enable_note = (f"Enabled {', '.join(to_enable)} for this repo in .claude/settings.local.json — their "
+                           "skills load from the next session; say so if the user asks for that work now.")
+        except OSError:
+            enable_note = ""
 
 prefer = []
 if ai:
@@ -162,8 +188,10 @@ if prefer:
     lines.append("Prefer: " + "; ".join(prefer) + " (CLAUDE.md and team plugins that cover this repo win).")
 lines.append("Read .claude/docs/index.md before scanning source; /docs-sync before the PR." if has_docs
              else "No .claude/docs yet — /project-init builds it once, so later sessions skip the rescan.")
-if agent_note:
-    lines.append(agent_note)
+if workplace:
+    lines.append("Domain: workplace — requests, approvals, balances or bookings → /workplace-review before the PR.")
+if enable_note:
+    lines.append(enable_note)
 print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "\n".join(lines)}}))
 PY
 exit 0

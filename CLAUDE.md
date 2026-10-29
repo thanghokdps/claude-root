@@ -19,10 +19,10 @@ A **source library** and the `harness` marketplace of role plugins (local direct
 
 ```
 <repo>/
-  .claude-plugin/marketplace.json  ← lists the 10 plugins below
+  .claude-plugin/marketplace.json  ← lists the 11 plugins below
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
-    core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile hooks (always on; repo-profile enables agent per repo) — plus scripts/init.sh and
+    core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile hooks (always on; repo-profile enables agent and workplace per repo) — plus scripts/init.sh and
                 everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/ → progress
     plan        kickoff brainstorming grill domain-model writing-plans codebase-design → progress
     review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger → progress
@@ -32,9 +32,11 @@ A **source library** and the `harness` marketplace of role plugins (local direct
     ship        finish-branch ci-triage release-checklist write-migration incident sync-remote → core
                 + release-gate hook (repos with eas.json: production releases need an approved release/<version>)
     agent       agent-* + rules/ the skills read on demand                            → progress, dev, ship
+    workplace   domain pack (HR / workplace apps): workplace-review + references/    → progress
+                a domain pack = a plugin folder + its detect condition in core's repo-profile.sh + install.sh's off list
     lead        retro diagnose-session writing-skills                                 → core
     guards      hooks/hooks.json + hook scripts (opt-in)                              → dev
-    harness     bundle, depends on all nine
+    harness     bundle, depends on all ten
   global/CLAUDE.md    ← installed to ~/.claude/CLAUDE.md
   eval/triggers/      ← one routing case per skill
   scripts/            ← install.sh, check.sh, lint-kit.py, eval-triggers.py (kit tooling, not shipped)

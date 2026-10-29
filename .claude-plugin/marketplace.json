@@ -41,6 +41,11 @@
       "description": "CopilotKit / AG-UI assistants on Mastra, LangChainJS or LangGraph: architecture scaffolded from official reference repos, tools, HITL, graph, frontend, evals, security, turn verification — with their rules."
     },
     {
+      "name": "workplace",
+      "source": "./plugins/workplace",
+      "description": "Domain pack for internal workplace / HR apps (time off, approvals, balances, room and meal bookings, maintenance requests): domain rules, starter model, kickoff questions and a domain review. Enabled per repo by core's repo-profile hook."
+    },
+    {
       "name": "lead",
       "source": "./plugins/lead",
       "description": "Improve the process: weekly retro, session diagnosis, authoring skills."

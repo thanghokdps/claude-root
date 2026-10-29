@@ -163,6 +163,48 @@ def test_symlinked_git_exclude_is_not_appended_to():
     assert open(outside).read() == ""
 
 
+WORKPLACE_APPS = {"package.json": {"private": True},
+                  "apps/timeOff/package.json": {"dependencies": {"react-native": "0.76"}},
+                  "apps/roomBooking/package.json": {"dependencies": {"react-native": "0.76"}}}
+
+
+def test_two_workplace_modules_enable_the_workplace_pack():
+    cwd = repo(WORKPLACE_APPS)
+    ctx = run(cwd)
+    assert "Domain: workplace" in ctx and "/workplace-review" in ctx and "workplace@harness" in ctx, ctx
+    assert local_settings(cwd)["enabledPlugins"] == {"workplace@harness": True}
+
+
+def test_domain_marker_line_enables_the_workplace_pack():
+    cwd = repo({"package.json": {"dependencies": {"express": "4"}},
+                "docs/requirements.md": "# Req\n\nDomain: workplace\n"})
+    assert "Domain: workplace" in run(cwd)
+    assert local_settings(cwd)["enabledPlugins"]["workplace@harness"] is True
+
+
+def test_backend_modules_one_level_down_count():
+    cwd = repo({"package.json": {"private": True}, "apps/api/package.json": {"dependencies": {"hono": "4"}},
+                "apps/api/src/api/meal-reservations/index.ts": "", "apps/api/src/api/meeting-rooms/index.ts": "",
+                "apps/api/src/modules/lunch-plans/index.ts": ""})
+    assert "Domain: workplace" in run(cwd)
+
+
+def test_one_matching_module_is_not_a_domain():
+    cwd = repo({"package.json": {"private": True}, "src/modules/booking/index.ts": "",
+                "src/modules/users/index.ts": ""})
+    assert "Domain:" not in run(cwd)
+    assert local_settings(cwd) is None
+
+
+def test_workplace_opt_out_is_respected_and_agent_still_enabled():
+    files = {**WORKPLACE_APPS, "apps/chatbot/package.json": {"dependencies": {"@copilotkit/react-core": "1"}},
+             ".claude/settings.json": {"enabledPlugins": {"workplace@harness": False}}}
+    cwd = repo(files)
+    ctx = run(cwd)
+    assert "Domain: workplace" in ctx and "AI assistant" in ctx, ctx
+    assert local_settings(cwd)["enabledPlugins"] == {"agent@harness": True}
+
+
 def test_ticket_folder_is_mentioned():
     cwd = repo({"package.json": {"dependencies": {"react": "19"}}, "docs/tickets/412/intent.md": ""})
     assert "/ticket" in run(cwd)

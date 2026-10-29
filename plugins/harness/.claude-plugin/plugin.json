@@ -6,7 +6,7 @@
   },
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
-  "description": "Everything: installs all nine role plugins.",
+  "description": "Everything: installs all ten role and domain plugins.",
   "keywords": [
     "bundle"
   ],
@@ -17,6 +17,7 @@
     "dev",
     "ship",
     "agent",
+    "workplace",
     "lead",
     "guards",
     "progress"
