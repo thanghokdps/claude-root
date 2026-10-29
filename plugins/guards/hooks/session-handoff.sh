@@ -3,6 +3,9 @@
 # Stop hook: write a comprehensive HANDOFF.md at session end.
 # Next session reads this automatically via CLAUDE.md — no manual update needed.
 
+# The event's cwd is the session's folder; in a worktree session the hook starts in the main checkout.
+CWD=$(jq -r '.cwd // empty' 2>/dev/null)
+[ -n "$CWD" ] && { cd "$CWD" 2>/dev/null || exit 0; }
 REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null)"
 [ -z "$REPO_DIR" ] && exit 0
 
