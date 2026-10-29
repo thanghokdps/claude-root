@@ -132,7 +132,11 @@ cd "$TOP" || exit 0
 # No tools for the child: in dontAsk mode Claude Code refuses its writes under .git/, even with an allow rule.
 (
   trap '' HUP
+  # A short system prompt and no MCP servers or skills cut the input from ~76k to ~14k tokens. Settings
+  # still load: they may carry the auth or proxy env the child needs (why not --setting-sources "" or --bare).
   HARNESS_LEARN_CHILD=1 claude -p --model haiku --no-session-persistence --tools "" \
+    --system-prompt "You extract durable lessons from a session digest. Reply with only the JSON array asked for." \
+    --strict-mcp-config --disable-slash-commands \
     <"$STATE/digests/$RUN.prompt" >"$STATE/digests/$RUN.reply"
   STATE="$STATE" RUN="$RUN" python3 -I - <<'PY'
 import json, os
