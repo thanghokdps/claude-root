@@ -27,7 +27,7 @@ Every question put to the user costs a round trip, and a guess costs a wrong bui
 
 ## Step 2 — Cite
 
-Search (`Grep`, `Glob`, `git log -S`) and open the file. Found → answer with the citation and go to Step 6.
+Search (`Grep`, `Glob`, `git log -S`) and open the file. Found → answer with the citation and go to Step 6. A fact about how a dependency behaves is answered from its installed source (`node_modules/`, site-packages) at the pinned version, or from the official doc page fetched now, not from memory.
 
 **Done when:** each fact has a citation, or goes to Step 3.
 
