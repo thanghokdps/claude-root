@@ -10,7 +10,7 @@ when_to_use: CopilotKit provider, useAgent, useAgentContext, useFrontendTool, us
 
 **Invoke:** `/agent-frontend <the client change or symptom>`
 
-Scope: React web on `@copilotkit/react-core/v2`. How the chat looks — a Figma design, theme, slots — is `/agent-design-ui`; this skill wires it. Mobile/headless clients follow the client contract in `/agent-hitl` and `${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md`.
+Scope: React web on `@copilotkit/react-core/v2`. How the chat looks — a Figma design, theme, slots — is `/agent-design-ui`; this skill wires it. Mobile/headless clients follow the client contract in `/agent-hitl` and `${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md`; chat channels (Slack, Teams, Discord, WhatsApp) follow `${CLAUDE_SKILL_DIR}/references/chat-channels.md`.
 
 ---
 

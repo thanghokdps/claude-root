@@ -40,6 +40,11 @@ await store.query({ indexName, queryVector, topK, filter, minScore })
 - Retrieval tool: `tool(async ({ query }, runtime) => store.similaritySearchWithScore(query, k, { ...filter, tenantId: runtime.context.tenantId }), { name, description, schema })`, with `tenantId` in the agent's `contextSchema`, set by the server (older: `config.configurable`). Filter syntax is store-specific; read the store's docs.
 - Semantic memory: a LangGraph Store with `index: { embeddings, dims, fields }`, then `store.put(namespace, key, value)` and `store.search(namespace, { query, limit })`. On LangSmith deployments, configure `store.index` in `langgraph.json` instead of in code.
 
+## Hybrid retrieval
+
+- Vector search misses exact terms (codes, names, SKUs); keyword search misses paraphrase. Run both with the same tenant filter and merge with reciprocal rank fusion: `score = Σ 1 / (k + rank)` per list, `k` ≈ 60, then rerank if a reranker is in place.
+- Adopt it, and any later retrieval change, only when the retrieval eval (recall@k, context precision) beats the current baseline; a result below the baseline fails the gate.
+
 ## Metadata every chunk carries
 
 `tenantId` (or the ACL key) · `sourceId` · `chunkIndex` · `title` · `url` · `updatedAt` · `embeddingModel` · `dims` · `chunkerVersion`. The id is `<sourceId>#<chunkIndex>`.

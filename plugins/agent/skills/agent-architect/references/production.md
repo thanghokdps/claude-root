@@ -17,12 +17,13 @@ Each row is ✅ with evidence, ❌, or n/a with the reason. Evidence comes from 
 | 7 | **Tracing on, masked** | Provider switch set for prod; masking per `${CLAUDE_PLUGIN_ROOT}/rules/agent-tracing-privacy.md` | `observability: new Observability({ configs })` from `@mastra/observability`, with `SensitiveDataFilter` in `spanOutputProcessors` (keep it in any custom config); `sampling` chosen on purpose | The smoke turn's trace exists, with model, provider, tokens and tool status; message text and tool args masked, user id hashed, no token |
 | 8 | **Rollback of prompt and model** | Prompt version and model id come from config or a versioned file, and both appear in the trace. Rolling back is an env change or redeploying the previous tag, not a code revert. State the new version writes stays readable by the old one (state schema changes go through `/write-migration`) | same; Memory and storage schema included | The exact rollback command is written down and was run once in staging; a thread started on the new version continues after the rollback |
 | 9 | **One run per thread** | Runtime `AgentRunner` decides a second run on a busy thread (`onConcurrentRun`: refuse or queue); several instances use sticky routing by thread or a durable runner, since `InMemoryAgentRunner` is per process | same runner in front of the Mastra agent; or a per-thread lock in the agent server | Two sends on one thread through the deployed URL: one run, the second refused or queued; a reload mid-turn re-joins it (`connect`) |
+| 10 | **Alerts** | Alerts on the signals tracing already records: error-turn rate, p95 turn latency, fallback-provider share, cost per day (all model calls), refused-tool and kill-switch hits. Thresholds and who is paged are a product decision, written next to the alert | same | Each alert fired once in staging (forced error, invalidated primary key) and reached its channel |
 
 ## When to run it
 
 - **Scaffold** (`/agent-architect` Step 4): rows 1, 4, 5, 6, 7 and 9 are built in, not added later. Row 1 can stay on dev storage until Q6 asks for durable threads, recorded as a risk on the card.
 - **Feature** (`/agent-feature` Step 8): re-check the rows the diff touches — a new tool needs its kill switch (6), a new env var reaches the agent server (5), a prompt or model change has its rollback (8), a slower tool fits the time limits (3), a new client or entry point keeps one run per thread (9).
-- **Release** (`/release-checklist`): all nine rows on the target environment, with row 8's command as the release's rollback.
+- **Release** (`/release-checklist`): all ten rows on the target environment, with row 8's command as the release's rollback.
 
 ## Common failures
 
@@ -33,4 +34,5 @@ Each row is ✅ with evidence, ❌, or n/a with the reason. Evidence comes from 
 | Threads gone after deploy; "snapshot not found" on resume | 1 | in-memory checkpointer or storage in prod |
 | Works locally, tool says unauthenticated in prod | 5 | auth header not forwarded by the runtime, or env set only on the web app |
 | Provider outage takes the assistant down | 6 | no fallback in the target env |
+| Users report failures before anyone on the team notices | 10 | no alerts, or alerts on raw errors without thresholds |
 | Duplicated or interleaved answers after a double send or a reload mid-turn | 9 | two runs on one thread, or in-memory runner behind several instances |
