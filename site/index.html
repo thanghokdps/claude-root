@@ -393,8 +393,9 @@ function resolve(base, href) {
 function slug(text) { return text.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-"); }
 
 async function openDoc(path) {
-  const res = await fetch(path);
-  const md = res.ok ? await res.text() : `# Not found\n\n\`${path}\` is not published on this site.`;
+  // Only fetch listed docs: the hash is attacker-controlled (#/doc//evil.example/x.md).
+  const res = site.docs.includes(path) ? await fetch(path) : null;
+  const md = res?.ok ? await res.text() : "# Not found\n\nThis document is not published on this site.";
   article.innerHTML = DOMPurify.sanitize(marked.parse(md));
   article.querySelectorAll("h1,h2,h3,h4").forEach(h => { h.id = slug(h.textContent); });
   article.querySelectorAll("a[href]").forEach(a => {
