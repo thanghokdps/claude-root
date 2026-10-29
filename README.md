@@ -783,6 +783,10 @@ Applies on a branch `<type>/<id>-<slug>` with `docs/tickets/<id>/plan.md`. The l
 | Edit or shell write (`>`, `tee`, `sed -i`, `cp`/`mv` onto it) of a path in `sensitive-paths.txt` or the repo's `.claude/sensitive-paths.txt`: secrets, CI/deploy, Claude settings | ASK the user |
 | The path is named in the ticket's `plan.md` or a `specs/*/PLAN.md` | allowed |
 
+### `repo-profile.sh` (core, always on)
+
+**Trigger:** `SessionStart`. Reads `package.json` (root, `apps/*`, `packages/*`), `pyproject.toml`, `requirements*.txt`, `go.mod`, `Cargo.toml` and marker folders (`prisma/`, `drizzle/`, `alembic/`, `eas.json`, `.claude/docs/`, `docs/tickets/`), then injects a short profile: `REPO PROFILE: Next.js, TypeScript, AI assistant, Prisma.` plus the skills to prefer (`/agent-feature` over `/feature`, `/db-change`, `/docs-sync` before the PR). Domain plugins are off at user scope (`install.sh`); an AI-assistant repo gets `agent@harness` enabled in its `.claude/settings.local.json`, from the next session, unless the repo set it `false`. No manifest → prints nothing. `CLAUDE_REPO_PROFILE=0` turns it off.
+
 ### `compact-advisor.sh` (core, always on)
 
 **Trigger:** `Stop`. Context past 200k tokens (`CLAUDE_COMPACT_ADVISE_TOKENS`) → one line to the user suggesting `/compact`, repeated every 100k more. Never blocks; no tokens.

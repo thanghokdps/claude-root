@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+"""Tests for plugins/core/hooks/repo-profile.sh.
+Run: python3 scripts/test_repo_profile.py"""
+import json
+import os
+import subprocess
+import tempfile
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HOOK = os.path.join(ROOT, "plugins", "core", "hooks", "repo-profile.sh")
+
+
+def repo(files=None):
+    path = tempfile.mkdtemp(prefix="repo-profile-")
+    subprocess.run(["git", "-C", path, "init", "-q"], check=True)
+    for rel, content in (files or {}).items():
+        full = os.path.join(path, rel)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "w") as f:
+            f.write(content if isinstance(content, str) else json.dumps(content))
+    return path
+
+
+def config_dir(enabled=None):
+    path = tempfile.mkdtemp(prefix="repo-profile-cfg-")
+    if enabled is not None:
+        with open(os.path.join(path, "settings.json"), "w") as f:
+            json.dump({"enabledPlugins": enabled}, f)
+    return path
+
+
+def run(cwd, cfg=None, env=None):
+    payload = json.dumps({"hook_event_name": "SessionStart", "source": "startup", "cwd": cwd})
+    # A machine-wide gitignore would hide whether the hook excludes settings.local.json itself.
+    e = {**os.environ, "CLAUDE_CONFIG_DIR": cfg or config_dir(), "GIT_CONFIG_GLOBAL": os.devnull,
+         "XDG_CONFIG_HOME": tempfile.mkdtemp(prefix="repo-profile-xdg-"), **(env or {})}
+    r = subprocess.run([HOOK], input=payload, capture_output=True, text=True, env=e)
+    assert r.returncode == 0, r.stderr
+    if not r.stdout.strip():
+        return ""
+    return json.loads(r.stdout)["hookSpecificOutput"]["additionalContext"]
+
+
+def local_settings(cwd):
+    p = os.path.join(cwd, ".claude", "settings.local.json")
+    return json.load(open(p)) if os.path.exists(p) else None
+
+
+AI_PKG = {"dependencies": {"next": "15", "@langchain/langgraph": "1", "@copilotkit/react-core": "1",
+                           "@prisma/client": "6"}, "devDependencies": {"typescript": "5"}}
+
+
+def test_ai_web_repo_gets_profile_and_agent_enabled_locally():
+    cwd = repo({"package.json": AI_PKG, "prisma/schema.prisma": "", ".claude/docs/index.md": "# x"})
+    ctx = run(cwd, config_dir({"agent@harness": False}))
+    for want in ["Next.js", "AI assistant", "Prisma", "/agent-feature", "/db-change", ".claude/docs/index.md",
+                 "/docs-sync", "agent@harness"]:
+        assert want in ctx, (want, ctx)
+    assert local_settings(cwd)["enabledPlugins"]["agent@harness"] is True
+    exclude = open(os.path.join(cwd, ".git", "info", "exclude")).read()
+    assert ".claude/settings.local.json" in exclude
+
+
+def test_existing_local_settings_are_merged_not_replaced():
+    cwd = repo({"package.json": AI_PKG, ".claude/settings.local.json": {"permissions": {"allow": ["Bash(ls)"]}}})
+    run(cwd)
+    s = local_settings(cwd)
+    assert s["permissions"] == {"allow": ["Bash(ls)"]}
+    assert s["enabledPlugins"]["agent@harness"] is True
+
+
+def test_plain_backend_repo_without_docs():
+    cwd = repo({"package.json": {"dependencies": {"express": "4"}}})
+    ctx = run(cwd)
+    assert "Express" in ctx and "/api-endpoint" in ctx and "/project-init" in ctx, ctx
+    assert "AI assistant" not in ctx
+    assert local_settings(cwd) is None
+
+
+def test_python_ai_repo_with_alembic():
+    cwd = repo({"pyproject.toml": '[project]\ndependencies = ["fastapi", "langgraph", "sqlalchemy"]\n',
+                "alembic/env.py": ""})
+    ctx = run(cwd)
+    for want in ["Python", "FastAPI", "AI assistant", "Alembic", "/db-change"]:
+        assert want in ctx, (want, ctx)
+
+
+def test_monorepo_workspace_manifests_are_read():
+    cwd = repo({"package.json": {"private": True}, "apps/web/package.json": {"dependencies": {"next": "15"}},
+                "apps/agent/package.json": {"dependencies": {"@mastra/core": "1"}}})
+    ctx = run(cwd)
+    assert "Next.js" in ctx and "AI assistant" in ctx, ctx
+
+
+def test_mobile_repo():
+    cwd = repo({"package.json": {"dependencies": {"expo": "52", "react-native": "0.76"}}, "eas.json": {}})
+    ctx = run(cwd)
+    assert "React Native" in ctx and "/release-checklist" in ctx, ctx
+
+
+def test_explicit_opt_out_is_respected():
+    cwd = repo({"package.json": AI_PKG, ".claude/settings.json": {"enabledPlugins": {"agent@harness": False}}})
+    ctx = run(cwd)
+    assert "AI assistant" in ctx
+    assert local_settings(cwd) is None
+
+
+def test_already_enabled_at_user_scope_writes_nothing():
+    cwd = repo({"package.json": AI_PKG})
+    ctx = run(cwd, config_dir({"agent@harness": True}))
+    assert "AI assistant" in ctx and "settings.local.json" not in ctx
+    assert local_settings(cwd) is None
+
+
+def test_malformed_local_settings_is_left_alone():
+    cwd = repo({"package.json": AI_PKG, ".claude/settings.local.json": "{not json"})
+    run(cwd)
+    assert open(os.path.join(cwd, ".claude", "settings.local.json")).read() == "{not json"
+
+
+def test_empty_folder_and_off_switch_print_nothing():
+    assert run(repo()) == ""
+    cwd = repo({"package.json": AI_PKG})
+    assert run(cwd, env={"CLAUDE_REPO_PROFILE": "0"}) == ""
+    assert local_settings(cwd) is None
+
+
+def test_ticket_folder_is_mentioned():
+    cwd = repo({"package.json": {"dependencies": {"react": "19"}}, "docs/tickets/412/intent.md": ""})
+    assert "/ticket" in run(cwd)
+
+
+if __name__ == "__main__":
+    tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
+    for t in tests:
+        t()
+    print(f"test_repo_profile: {len(tests)} passed")
