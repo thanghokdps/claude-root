@@ -29,14 +29,25 @@ for d in re.findall(r"-C\s+(\S+)", m.group(1)):
 commit_all = re.search(r"\s(?:--all\b|-[A-Za-z]*a)", m.group(2))
 
 
-def git(*args):
-    r = subprocess.run(["git", "-C", cwd, *args], capture_output=True, text=True)
+def git(*args, env=None):
+    # Runs before the user approves, so a repo's own config must not get to run a command (fsmonitor, textconv).
+    r = subprocess.run(["git", "-C", cwd, "-c", "core.fsmonitor=false", *args], capture_output=True, text=True, env=env)
     return r.stdout if r.returncode == 0 else None
 
 
 if not git("rev-parse", "--show-toplevel"):
     sys.exit(0)
-diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff")
+# Diffing the work tree (commit -a) runs each file's clean filter, so every configured driver is blanked first.
+# --null keeps a value from reading as part of the name; GIT_CONFIG_KEY_n keeps a name holding `=` from
+# turning a `-c name=value` override into a command of its own.
+keys = [e.split("\n", 1)[0] for e in (git("config", "--null", "--get-regexp", r"^filter\.") or "").split("\0") if e]
+drivers = sorted({k[len("filter."):k.rindex(".")] for k in keys if k.count(".") >= 2})
+blank = [(f"filter.{d}.{k}", v) for d in drivers for k, v in (("clean", ""), ("smudge", ""), ("process", ""), ("required", "false"))]
+env = {**os.environ, "GIT_CONFIG_COUNT": str(len(blank))}
+for i, (k, v) in enumerate(blank):
+    env[f"GIT_CONFIG_KEY_{i}"], env[f"GIT_CONFIG_VALUE_{i}"] = k, v
+diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv",
+           "--ignore-submodules=all", "--submodule=short", env=env)  # a submodule's diff would read its own config
 if not diff:
     sys.exit(0)
 

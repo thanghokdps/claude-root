@@ -136,6 +136,53 @@ def test_commit_all_reads_unstaged_tracked_changes():
     assert "suppression" in reason(hook(os.path.dirname(r), f"git -C {r} commit -a -m x"))
 
 
+def test_repo_config_cannot_run_commands_before_approval():
+    r = repo()
+    pwned = os.path.join(r, "PWNED")
+    git(r, "config", "core.fsmonitor", f"touch {pwned}; false")
+    for name in ("evil", "a.b"):
+        for key in ("clean", "process", "smudge"):
+            git(r, "config", f"filter.{name}.{key}", f"touch {pwned}")
+        git(r, "config", f"filter.{name}.required", "true")
+    write(r, ".gitattributes", "*.ts filter=evil\n*.py filter=a.b\n")
+    write(r, "src/app.ts", BASE["src/app.ts"] + "// @ts-ignore\n")
+    write(r, "tests/test_app.py", BASE["tests/test_app.py"] + "x = 1  # noqa\n")
+    text = reason(hook(r, "git commit -am x"))
+    assert not os.path.exists(pwned)
+    assert "src/app.ts:2" in text and "tests/test_app.py:3" in text
+
+
+def test_crafted_filter_driver_names_cannot_inject_an_override():
+    r = repo()
+    pwned = os.path.join(r, "PWNED")
+    # `=` in the name: a `-c filter.<name>.clean=` override would set filter.inj.clean to a command.
+    git(r, "config", f"filter.inj.clean=touch {pwned} #.clean", "x")
+    # `.clean ` in the value: a plain --get-regexp line would read part of it as the name.
+    git(r, "config", "filter.v.clean", f"touch {pwned} .clean x")
+    write(r, ".gitattributes", "*.json filter=inj\n*.toml filter=v\n")
+    write(r, "package.json", BASE["package.json"].replace("5", "20"))
+    write(r, "pyproject.toml", BASE["pyproject.toml"].replace("90", "70"))
+    hook(r, "git commit -am x")
+    assert not os.path.exists(pwned)
+
+
+def test_submodules_are_not_diffed_inside():
+    sub = repo()
+    write(sub, ".gitattributes", "*.ts filter=s\n")
+    git(sub, "add", ".gitattributes")
+    git(sub, "commit", "-qm", "attrs")
+    r = repo()
+    git(r, "-c", "protocol.file.allow=always", "submodule", "add", "-q", sub, "vendor/sub")
+    git(r, "commit", "-qm", "sub")
+    pwned = os.path.join(r, "PWNED")
+    git(os.path.join(r, "vendor/sub"), "config", "filter.s.clean", f"touch {pwned}")
+    git(r, "config", "diff.submodule", "diff")
+    write(os.path.join(r, "vendor/sub"), "src/app.ts", BASE["src/app.ts"] + "// @ts-ignore\n")
+    write(r, "src/app.ts", BASE["src/app.ts"] + "// @ts-ignore\n")
+    assert "src/app.ts:2" in reason(hook(r, "git commit -am x"))
+    assert not os.path.exists(pwned)
+
+
 def test_non_commit_commands_are_ignored():
     r = repo()
     staged(r, "src/app.ts", BASE["src/app.ts"] + "// @ts-ignore\n")
