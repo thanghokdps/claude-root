@@ -1,0 +1,7 @@
+{
+  "name": "orders-api",
+  "private": true,
+  "scripts": { "dev": "tsx src/server.ts", "test": "vitest run" },
+  "dependencies": { "express": "5.1.0" },
+  "devDependencies": { "typescript": "5.9.3", "vitest": "3.2.4", "tsx": "4.20.6" }
+}
