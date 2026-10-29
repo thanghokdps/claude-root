@@ -188,6 +188,8 @@ def test_docs_that_mention_a_pattern_are_silent():
     staged(r, "docs/guide.md", "Never add `// @ts-ignore` or `test.skip(` to get green.\n")
     staged(r, "notes.txt", "# noqa is banned here\n")
     assert hook(r) == ""
+    staged(r, "docs/page.mdx", "{/* eslint-disable */}\n")  # MDX is code: its JSX runs
+    assert "docs/page.mdx:1" in reason(hook(r))
 
 
 def test_multi_line_coverage_thresholds_are_paired_by_key():

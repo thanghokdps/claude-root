@@ -101,8 +101,8 @@ THRESHOLDS = [(re.compile(r"coverageThreshold\b.*?(\d+(?:\.\d+)?)"), "floor"),
               (re.compile(r"--cov-fail-under\D*?(\d+(?:\.\d+)?)"), "floor"),
               (re.compile(r"max-warnings\D*?(\d+)"), "ceiling")]
 
-# Prose only mentions a suppression or skip; it cannot apply one.
-DOCS = re.compile(r"\.(?:md|mdx|txt|rst|adoc)$")
+# Prose only mentions a suppression or skip; it cannot apply one. Not .mdx: its JSX runs.
+DOCS = re.compile(r"\.(?:md|txt|rst|adoc)$")
 # Jest/vitest/nyc/c8 write each coverage metric on its own key, often lines below `coverageThreshold`.
 COVERAGE_FILE = re.compile(r"(?:^|/)(?:(?:jest|vitest|vite)\.config\.[cm]?[jt]s|package\.json|\.nycrc(?:\.json)?|\.c8rc(?:\.json)?)$")
 METRIC = re.compile(r"\"?\b(branches|functions|lines|statements)\"?\s*:\s*(\d+(?:\.\d+)?)")
