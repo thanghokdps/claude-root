@@ -22,7 +22,7 @@ A **source library** and the `harness` marketplace of role plugins (local direct
   .claude-plugin/marketplace.json  ← lists the 11 plugins below
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
-    core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile hooks (always on; repo-profile enables agent and workplace per repo) — plus scripts/init.sh and
+    core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile, learn-capture hooks (always on; repo-profile enables agent and workplace per repo) — plus scripts/init.sh and
                 everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/ → progress
     plan        kickoff brainstorming grill domain-model writing-plans codebase-design → progress
     review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger repo-audit → progress
