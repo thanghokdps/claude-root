@@ -11,6 +11,7 @@ python3 scripts/test_ticket_gate.py
 python3 scripts/test_secret_guard.py
 python3 scripts/test_repo_profile.py
 python3 scripts/test_test_lock.py
+python3 scripts/test_weakened_check.py
 python3 scripts/test_release_gate.py
 python3 scripts/test_compare_shots.py
 python3 scripts/test_text_styles.py

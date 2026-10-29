@@ -28,7 +28,7 @@ A **source library** and the `harness` marketplace of role plugins (local direct
     review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger repo-audit → progress
       dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint design-ui → core, plan, review
                 api-endpoint db-change ui-feature api-client (BE · DB · FE · API integration)
-                + ticket-ledger, ticket-gate, test-lock, auto-decisions hooks (always on: a ticket's commit/PR waits for its plan's skills)
+                + ticket-ledger, ticket-gate, test-lock, weakened-check, auto-decisions hooks (always on: a ticket's commit/PR waits for its plan's skills)
     ship        finish-branch ci-triage release-checklist write-migration incident sync-remote → core
                 + release-gate hook (repos with eas.json: production releases need an approved release/<version>)
     agent       agent-* + rules/ the skills read on demand                            → progress, dev, ship
