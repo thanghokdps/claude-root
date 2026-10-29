@@ -93,13 +93,18 @@ def bump(path):
 
 
 def index_entries(index_path):
-    """(slug, linked file, summary) per INDEX line."""
+    """(slug, linked file or None, summary) per INDEX line."""
+    folder = os.path.realpath(os.path.dirname(index_path))
     out = []
     for line in read(index_path).splitlines():
         m = INDEX_LINK.match(line)
         if m:
             summary = m.group(3).strip(" —-").split(" — ")[0]
-            out.append((m.group(1), os.path.join(os.path.dirname(index_path), m.group(2)), summary))
+            linked = os.path.join(folder, m.group(2))
+            # The INDEX is repo content: only a plain file directly in its folder may be bumped, never ../ or a symlink.
+            if os.path.islink(linked) or os.path.dirname(os.path.realpath(linked)) != folder:
+                linked = None
+            out.append((m.group(1), linked, summary))
     return out
 
 
@@ -151,7 +156,8 @@ def check(p, digests, indexes, patterns):
     for index_path in indexes:
         for slug, linked, summary in index_entries(index_path):
             if slug == p["slug"] or squash(summary).rstrip(".") == squash(p["title"]).rstrip("."):
-                bump(linked)
+                if linked:
+                    bump(linked)
                 return f"duplicate of INDEX line [{slug}] in {index_path}"
     return None
 

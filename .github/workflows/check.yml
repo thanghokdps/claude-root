@@ -12,9 +12,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pyyaml pillow
-      - run: python3 scripts/test_lint_kit.py
-      - run: python3 scripts/test_skill_progress.py
-      - run: python3 scripts/test_compare_shots.py
-      - run: python3 scripts/lint-kit.py
-      - run: python3 scripts/eval-triggers.py
+      - run: pip install pyyaml pillow -r eval/requirements.txt
+      # Same checks as before a commit; `claude plugin validate` skips itself when the CLI is absent.
+      - run: bash scripts/check.sh
