@@ -35,7 +35,8 @@ Search (`Grep`, `Glob`, `git log -S`) and open the file. Found → answer with t
 
 Dispatch 2 `Explore` agents in one message, `model: "haiku"` (`~/.claude/rules/model-cost.md`), each starting in a different area (for example: source code / tests and fixtures, or docs and ADRs / git history), each told to return a citation or "not found". Same prompt twice errs twice, so the starting areas must differ.
 
-- Both cite the same thing → answered.
+- An agent's citation is a candidate. Open the cited lines yourself; a citation that does not say what the agent claims is dropped.
+- Both cite the same thing and the lines say it → answered.
 - They disagree, or one says not found → open both citations yourself and pick the one the code actually runs; still unclear → it becomes a choice.
 - Both not found → the repo does not decide it: it is a choice.
 
