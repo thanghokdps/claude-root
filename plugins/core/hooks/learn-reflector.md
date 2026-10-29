@@ -17,9 +17,9 @@ Read the existing lessons index below before proposing. A lesson it already cove
 
 The body is the durable rule, stated for the class of work, not a retelling of this session. Open with the directive in one line; a reader who stops there already has the lesson. Add the reason and, if needed, a short example. At most 15 lines.
 
-## Output: one JSON file per lesson
+## Output: a JSON array, nothing else
 
-Use the Write tool to create `{{QUEUE}}/<slug>.json` per lesson, and write nowhere else. Each file is one JSON object with exactly these keys:
+You have no tools. Reply with only a JSON array, one object per lesson, and no other text; reply `[]` when the stretch taught nothing. Each object has exactly these keys:
 
 - `slug`: kebab-case, 2-64 characters, names the class of work (`piped-test-exit-codes`, not `fix-tail-in-ci-run-3`).
 - `title`: one line.
@@ -28,7 +28,7 @@ Use the Write tool to create `{{QUEUE}}/<slug>.json` per lesson, and write nowhe
 - `confidence`: `low`, `med` or `high` — how sure you are that the lesson is durable and correct.
 - `evidence`: a verbatim quote of at least 20 characters copied from the digest below (one line of it, exactly as written). Never invent or paraphrase it: the promoter rejects a quote it cannot find.
 
-Never put a secret, key, token or password in any field. After writing, reply with the slugs you proposed and nothing else; you cannot know whether they will land.
+Never put a secret, key, token or password in any field.
 
 ## Existing lessons index
 

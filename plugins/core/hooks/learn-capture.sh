@@ -5,8 +5,9 @@
 # Stop: at >= 50 calls it resets the count, writes a digest of the transcript since the last run (user and
 #   assistant text plus tool names; never tool input or output; secret-patterns.txt scrubbed; last ~20 KB)
 #   to claude-learn/digests/, and starts `claude -p --model haiku` in the background with learn-reflector.md
-#   filled in. The child may only Write proposal JSON into claude-learn/queue/; learn-promote.py validates
-#   and lands them at the next SessionStart. Parallel tool calls can race the count; it is a cadence, not a meter.
+#   filled in. The child has no tools and replies with a JSON array; the hook writes each lesson to
+#   claude-learn/queue/ (an unparsable reply is queued raw, so it shows up in queue/rejected/).
+#   learn-promote.py validates and lands them at the next SessionStart. Parallel tool calls can race the count; it is a cadence, not a meter.
 # HARNESS_LEARN=0 turns it off; HARNESS_LEARN_CHILD=1 (set on the child) stops it reflecting on itself.
 # Never blocks: any failure exits 0.
 [ "${HARNESS_LEARN:-1}" = "0" ] && exit 0
@@ -114,14 +115,13 @@ for idx in (os.path.join(env["TOP"], ".claude", "docs", "solutions", "INDEX.md")
 digests = os.path.join(state, "digests")
 open(os.path.join(digests, run + ".txt"), "w").write(text + "\n")
 prompt = open(os.path.join(here, "learn-reflector.md"), encoding="utf-8").read()
-prompt = (prompt.replace("{{QUEUE}}", os.path.join(state, "queue"))
-          .replace("{{INDEX}}", "\n".join(index) or "(no lessons yet)")
+prompt = (prompt.replace("{{INDEX}}", "\n".join(index) or "(no lessons yet)")
           .replace("{{DIGEST}}", text))
 open(os.path.join(digests, run + ".prompt"), "w").write(prompt)
 # Keep the last 20 runs: learn-promote.py checks evidence quotes against these digests.
 runs = sorted(glob.glob(os.path.join(digests, "*.txt")), key=os.path.getmtime)
 for old in runs[:-20]:
-    for f in (old, old[:-4] + ".prompt"):
+    for f in (old, old[:-4] + ".prompt", old[:-4] + ".reply"):
         try:
             os.remove(f)
         except OSError:
@@ -129,8 +129,27 @@ for old in runs[:-20]:
 PY
 
 cd "$TOP" || exit 0
-# The leading / makes the rule absolute: Write(//abs/path/**).
-HARNESS_LEARN_CHILD=1 nohup claude -p --model haiku --no-session-persistence --tools Write \
-  --allowedTools "Write(/$STATE/queue/**)" --permission-mode dontAsk \
-  <"$STATE/digests/$RUN.prompt" >/dev/null 2>&1 &
+# No tools for the child: in dontAsk mode Claude Code refuses its writes under .git/, even with an allow rule.
+(
+  trap '' HUP
+  HARNESS_LEARN_CHILD=1 claude -p --model haiku --no-session-persistence --tools "" \
+    <"$STATE/digests/$RUN.prompt" >"$STATE/digests/$RUN.reply"
+  STATE="$STATE" RUN="$RUN" python3 -I - <<'PY'
+import json, os
+
+state, run = os.environ["STATE"], os.environ["RUN"]
+reply = open(os.path.join(state, "digests", run + ".reply"), encoding="utf-8", errors="replace").read()
+try:
+    lessons = json.loads(reply[reply.index("["):reply.rindex("]") + 1])
+    if not isinstance(lessons, list):
+        raise ValueError
+    files = [(f"{run}-{i}.json", json.dumps(lesson, indent=1)) for i, lesson in enumerate(lessons)]
+except ValueError:
+    files = [(run + ".json", reply.strip())]
+# Names never come from the reply; learn-promote.py takes the slug from the JSON.
+for name, text in files:
+    with open(os.path.join(state, "queue", name), "w", encoding="utf-8") as f:
+        f.write(text + "\n")
+PY
+) </dev/null >/dev/null 2>&1 &
 exit 0
