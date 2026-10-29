@@ -13,6 +13,8 @@ when_to_use: all tasks in the plan are done, "wrap this up", "ship this branch",
 
 Run `/verify-done`. If anything fails, stop here and report — a branch is not finished while its proof fails.
 
+Then, when the repo has `.claude/docs/`, run `/docs-sync` unless it already ran on this branch: a branch that lands without its doc updates leaves the next session reading stale docs.
+
 ## Step 2 — Show the state
 
 ```bash

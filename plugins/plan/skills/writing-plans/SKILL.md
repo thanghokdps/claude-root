@@ -47,6 +47,8 @@ Follow the TDD pattern:
 3. Implement minimal code
 4. Verify tests pass
 
+The plan's last task keeps the project's knowledge base current: on a repo that had no source when planning began (a scaffold), it runs `/project-init` (core, if installed), verified by `ls CLAUDE.md .claude/docs/index.md`; otherwise it runs `/docs-sync` (core, if installed) on the branch.
+
 ### Step 4 — Write PLAN.md
 
 Save to `specs/<slug>/PLAN.md` following the format in `${CLAUDE_PLUGIN_ROOT}/references/plan-format.md`:

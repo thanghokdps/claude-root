@@ -1,6 +1,6 @@
 # core
 
-Session and project basics every role uses: verify-done evidence gate, project-init bootstrap, compact/compound memory, sync-memory, btw — and the always-on `branch-guard` hook.
+Session and project basics every role uses: verify-done evidence gate, project-init bootstrap, docs-sync after each feature, compact/compound memory, sync-memory, btw — and the always-on `branch-guard` hook.
 
 ## Hook (always on)
 
@@ -32,6 +32,7 @@ Also installs: `progress`.
 | `/btw` | Answer a quick question or do a quick lookup without interrupting the current task or losing context |
 | `/compact` | Compact the current conversation — summarize what's been done, merge into persistent memory and HANDOFF.md, so the next session resumes with full context |
 | `/compound` | Crystallize learnings from the current session into persistent docs/solutions/ files |
+| `/docs-sync` | Brings .claude/docs/ and CLAUDE.md up to date with a branch's diff — maps each change to the doc it makes stale, edits only those sections, and commits them with the code |
 | `/project-init` | One-time project scan that bootstraps the full .claude/ workspace — docs, agents, hooks, rules, skills, templates, memory, and CLAUDE.md — all tailored to this specific project; TypeScript repos also get the anti-slop Oxlint rules vendored at a pinned SHA; a repo with a GitHub/GitLab remote is offered server rules that block direct pushes to the default branch and dev/stag/prod |
 | `/sync-memory` | Pulls the latest commits and rebuilds memory from your own, updating .claude/memory/commits/ and last-sync.txt |
 | `/verify-done` | Evidence gate before claiming work is finished — re-runs the checks that prove the task's "done when" condition, in this session, and reports output instead of assurances |

@@ -116,6 +116,8 @@ Self-review before committing:
 
 For high-risk: spawn a reviewer sub-agent with: "Review this diff for correctness bugs only. Focus on: [specific concern from plan]."
 
+Then `/docs-sync`: the routes, layers, commands and conventions this feature added go into `.claude/docs/` and `CLAUDE.md` in the same branch, so the next session does not rescan for them.
+
 ## Stage 5 — Commit
 
 ```bash
