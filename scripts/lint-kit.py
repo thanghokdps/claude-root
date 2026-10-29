@@ -289,9 +289,10 @@ def check_shared_references():
                 errors.append(f"{os.path.relpath(other, ROOT)}: differs from {os.path.relpath(paths[0], ROOT)}")
 
 
-# The kit repo is public, and agent skills/rules are distilled from private company code.
-DENYLIST = re.compile(r"granbull|asoft-python|flash-agent|space-agent|on-behalf|space-v2|space-langchain", re.I)
-DENYLIST_SCOPE = re.compile(r"^plugins/agent/")
+# The kit repo is public, and agent and workplace skills/rules are distilled from private company code.
+DENYLIST = re.compile(r"granbull|asoft-python|flash-agent|space-agent|on-behalf|space-v2|space-langchain"
+                      r"|flash-mobile|space-api|space-chatbot", re.I)
+DENYLIST_SCOPE = re.compile(r"^plugins/(agent|workplace)/")
 
 
 def denylist_hits(text):

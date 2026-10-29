@@ -4,7 +4,7 @@ Read by `/kickoff`, and by the skills that start from it (`/agent-architect`, `/
 
 | # | Item | Sub-items (each is a matrix row) | Canonical file | Mandatory |
 |---|------|----------------------------------|----------------|-----------|
-| 1 | Requirements | users and the problem (one sentence) · top 3–5 tasks, each with one real example · out of scope · acceptance criteria / what "good" means | `docs/requirements.md` | yes |
+| 1 | Requirements | users and the problem (one sentence) · business domain (`Domain: <name>` line, e.g. `workplace`; `general` when none fits) · top 3–5 tasks, each with one real example · out of scope · acceptance criteria / what "good" means | `docs/requirements.md` | yes |
 | 2 | Prerequisites | accounts and access (repo, cloud, third parties) · keys and secrets (**names only**) · machine tools and versions · environments that must exist | `docs/prerequisites.md` | yes |
 | 3 | Tech stack | language and runtime · frameworks · database · hosting · constraints the team imposes (approved libraries, licences) | `docs/stack.md` | yes |
 | 4 | Data model | entities and relations · each traced to a requirement task · ownership / tenant key | `docs/erd.md` (Mermaid `erDiagram`) | when the app stores data |
