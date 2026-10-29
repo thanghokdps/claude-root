@@ -14,7 +14,7 @@ Session and project basics every role uses: verify-done evidence gate, project-i
 
 `hooks/compact-advisor.sh` runs on Stop. Past `CLAUDE_COMPACT_ADVISE_TOKENS` (200k) of context it shows the user one line suggesting `/compact`, again every 100k more. The model never sees it, so it costs nothing.
 
-`hooks/repo-profile.sh` runs on SessionStart. From the manifests and marker folders alone (no model call) it tells the session what the repo is — stack, AI assistant, DB tool, whether `.claude/docs/` exists — and which kit skills to prefer, in 3–4 lines. In an AI-assistant repo it enables `agent@harness` in `.claude/settings.local.json` (excluded from git, effective next session) unless the project or local settings say `false`. `CLAUDE_REPO_PROFILE=0` turns it off.
+`hooks/repo-profile.sh` runs on SessionStart, and on SubagentStart so subagents get the same profile (they never write settings). From the manifests and marker folders alone (no model call) it tells the session what the repo is — stack, AI assistant, DB tool, whether `.claude/docs/` exists — and which kit skills to prefer, in 3–4 lines. In an AI-assistant repo it enables `agent@harness` in `.claude/settings.local.json` (excluded from git, effective next session) unless the project or local settings say `false`. `CLAUDE_REPO_PROFILE=0` turns it off.
 
 ## Install
 

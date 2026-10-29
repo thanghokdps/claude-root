@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # repo-profile.sh — tells the session what this repo is before the first prompt, so the model picks the
 # kit's matching skills instead of rescanning the code to find out.
-# Trigger: SessionStart (startup|resume|clear|compact). Reads manifests and marker folders only — no model call:
+# Trigger: SessionStart (startup|resume|clear|compact), and SubagentStart so subagents get the same profile (they
+# never write settings). Reads manifests and marker folders only — no model call:
 # root, apps/*, packages/* package.json; pyproject.toml / requirements*.txt; go.mod, Cargo.toml; prisma/, drizzle/,
 # alembic/, eas.json, .claude/docs/, docs/tickets/. Prints nothing for a folder with no manifest.
 # A domain plugin the repo needs and that is not on gets enabled in .claude/settings.local.json (personal,
@@ -20,6 +21,8 @@ import glob, json, os, re, subprocess, sys
 
 try:
     ev = json.loads(os.environ.get("HOOK_INPUT") or "{}")
+    # SessionStart context never reaches a subagent, so SubagentStart repeats the profile; it never writes settings.
+    event = "SubagentStart" if ev.get("hook_event_name") == "SubagentStart" else "SessionStart"
     cwd = ev.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
     r = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"], capture_output=True, text=True)
     top = r.stdout.strip() if r.returncode == 0 else cwd
@@ -77,15 +80,24 @@ def has_py(*names):
 
 stack = []
 mobile = has_dep("react-native", "expo") or os.path.exists(at("eas.json"))
-web = has_dep("next") or (has_dep("react") and not mobile)
-for cond, label in ((has_dep("next"), "Next.js"), (mobile, "React Native"), (web and not has_dep("next"), "React"),
-                    (has_dep("@nestjs/core"), "NestJS"), (has_dep("express"), "Express"),
-                    (has_dep("fastify"), "Fastify"), ("python" in manifests, "Python"),
-                    (has_py("fastapi"), "FastAPI"), (has_py("django"), "Django"), (has_py("flask"), "Flask"),
-                    ("go" in manifests, "Go"), ("rust" in manifests, "Rust"), (has_dep("typescript"), "TypeScript")):
+react = has_dep("react") and not mobile and not has_dep("next")
+web_labels = [label for cond, label in ((has_dep("next"), "Next.js"), (react, "React"), (has_dep("nuxt"), "Nuxt"),
+                                        (has_dep("vue") and not has_dep("nuxt"), "Vue"),
+                                        (has_dep("@sveltejs/kit"), "SvelteKit"), (has_dep("astro"), "Astro")) if cond]
+web = bool(web_labels)
+backends = [label for cond, label in ((has_dep("@nestjs/core"), "NestJS"), (has_dep("express"), "Express"),
+                                      (has_dep("fastify"), "Fastify"), (has_dep("hono"), "Hono"),
+                                      (has_dep("koa"), "Koa"), (has_dep("elysia"), "Elysia"),
+                                      (has_py("fastapi"), "FastAPI"), (has_py("django"), "Django"),
+                                      (has_py("flask"), "Flask")) if cond]
+for cond, label in ((True, web_labels), (mobile, ["React Native"]), ("python" in manifests, ["Python"]),
+                    (True, backends), (has_dep("wrangler") or os.path.exists(at("wrangler.toml")),
+                                       ["Cloudflare Workers"]),
+                    ("go" in manifests, ["Go"]), ("rust" in manifests, ["Rust"]),
+                    (has_dep("typescript"), ["TypeScript"])):
     if cond:
-        stack.append(label)
-backend = any(s in stack for s in ("NestJS", "Express", "Fastify", "FastAPI", "Django", "Flask")) or has_dep("next")
+        stack.extend(label)
+backend = bool(backends) or has_dep("next")
 ai = (has_prefix("@langchain/", "@copilotkit/", "@mastra/", "@ag-ui/")
       or has_py("langgraph", "langchain", "langchain-core", "copilotkit"))
 db = [label for cond, label in ((has_dep("prisma", "@prisma/client") or os.path.isdir(at("prisma")), "Prisma"),
@@ -142,7 +154,7 @@ for plugin in packs:
     if explicit is None and enabled_at(os.path.join(cfg, "settings.json"), plugin) is not True:
         to_enable.append(plugin)
 enable_note = ""
-if to_enable:
+if to_enable and event == "SessionStart":
     claude_dir = at(".claude")
     if os.path.islink(claude_dir) or os.path.islink(local_path):
         settings = None
@@ -192,6 +204,6 @@ if workplace:
     lines.append("Domain: workplace — requests, approvals, balances or bookings → /workplace-review before the PR.")
 if enable_note:
     lines.append(enable_note)
-print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "\n".join(lines)}}))
+print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": "\n".join(lines)}}))
 PY
 exit 0

@@ -29,8 +29,8 @@ def config_dir(enabled=None):
     return path
 
 
-def run(cwd, cfg=None, env=None):
-    payload = json.dumps({"hook_event_name": "SessionStart", "source": "startup", "cwd": cwd})
+def run(cwd, cfg=None, env=None, event="SessionStart"):
+    payload = json.dumps({"hook_event_name": event, "source": "startup", "cwd": cwd})
     # A machine-wide gitignore would hide whether the hook excludes settings.local.json itself.
     e = {**os.environ, "CLAUDE_CONFIG_DIR": cfg or config_dir(), "GIT_CONFIG_GLOBAL": os.devnull,
          "XDG_CONFIG_HOME": tempfile.mkdtemp(prefix="repo-profile-xdg-"), **(env or {})}
@@ -48,6 +48,44 @@ def local_settings(cwd):
 
 AI_PKG = {"dependencies": {"next": "15", "@langchain/langgraph": "1", "@copilotkit/react-core": "1",
                            "@prisma/client": "6"}, "devDependencies": {"typescript": "5"}}
+
+
+def test_hono_on_cloudflare_workers_monorepo():
+    cwd = repo({"package.json": {"private": True},
+                "apps/space/package.json": {"dependencies": {"hono": "4", "@langchain/core": "1"},
+                                            "devDependencies": {"wrangler": "4", "typescript": "5"}}})
+    ctx = run(cwd)
+    for want in ["Hono", "Cloudflare Workers", "AI assistant"]:
+        assert want in ctx, (want, ctx)
+
+
+def test_vue_and_svelte_count_as_web_ui():
+    for deps, label in (({"nuxt": "3"}, "Nuxt"), ({"vue": "3"}, "Vue"), ({"@sveltejs/kit": "2"}, "SvelteKit")):
+        ctx = run(repo({"package.json": {"dependencies": deps}}))
+        assert label in ctx and "/ui-feature" in ctx, (label, ctx)
+
+
+def test_koa_and_elysia_are_backends():
+    for dep, label in (("koa", "Koa"), ("elysia", "Elysia"), ("hono", "Hono")):
+        ctx = run(repo({"package.json": {"dependencies": {dep: "1"}}}))
+        assert label in ctx and "/api-endpoint" in ctx, (label, ctx)
+
+
+def subagent_output(cwd, cfg=None):
+    payload = json.dumps({"hook_event_name": "SubagentStart", "agent_type": "Explore", "cwd": cwd})
+    e = {**os.environ, "CLAUDE_CONFIG_DIR": cfg or config_dir()}
+    r = subprocess.run([HOOK], input=payload, capture_output=True, text=True, env=e)
+    assert r.returncode == 0, r.stderr
+    return json.loads(r.stdout)["hookSpecificOutput"]
+
+
+def test_subagents_get_the_profile_but_never_write_settings():
+    cwd = repo({"package.json": AI_PKG})
+    out = subagent_output(cwd, config_dir({"agent@harness": False}))
+    assert out["hookEventName"] == "SubagentStart"
+    assert "AI assistant" in out["additionalContext"]
+    assert "settings.local.json" not in out["additionalContext"]
+    assert local_settings(cwd) is None
 
 
 def test_ai_web_repo_gets_profile_and_agent_enabled_locally():
