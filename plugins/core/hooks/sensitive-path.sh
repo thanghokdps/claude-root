@@ -13,7 +13,7 @@ LIST="$(dirname "$0")/sensitive-paths.txt"
 
 SECRETS="$(dirname "$0")/secret-paths.txt"
 
-HOOK_INPUT="$INPUT" LIST="$LIST" SECRETS="$SECRETS" python3 - <<'PY'
+HOOK_INPUT="$INPUT" LIST="$LIST" SECRETS="$SECRETS" python3 -I - <<'PY'
 import fnmatch, glob, json, os, re, subprocess, sys
 
 try:

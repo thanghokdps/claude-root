@@ -243,7 +243,7 @@ has_signal "python"     && STACK_HOOKS="$STACK_HOOKS,
 has_signal "typescript" && STACK_HOOKS="$STACK_HOOKS,
       { \"matcher\": \"Edit|Write\", \"hooks\": [{ \"type\": \"command\", \"command\": \"\$CLAUDE_PROJECT_DIR/.claude/hooks/eslint-on-edit.sh\" }] }" || true
 
-STANDALONE="$STANDALONE" python3 - "$SETTINGS_TEMPLATE" "$CLAUDE_DIR/settings.json" "$STACK_HOOKS" <<'RENDER'
+STANDALONE="$STANDALONE" python3 -I - "$SETTINGS_TEMPLATE" "$CLAUDE_DIR/settings.json" "$STACK_HOOKS" <<'RENDER'
 import json, sys
 tpl, out, stack = sys.argv[1], sys.argv[2], sys.argv[3]
 import os
@@ -328,7 +328,7 @@ fi
 # ── Extract scripts from package.json ────────────────────────────────────────
 PKG_SCRIPTS=""
 if [ -f "$PROJECT_DIR/package.json" ] && command -v python3 &>/dev/null; then
-  PKG_SCRIPTS=$(python3 - "$PROJECT_DIR/package.json" <<'PYEOF'
+  PKG_SCRIPTS=$(python3 -I - "$PROJECT_DIR/package.json" <<'PYEOF'
 import json, sys
 try:
   pkg = json.load(open(sys.argv[1]))
