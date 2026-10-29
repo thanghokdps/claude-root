@@ -37,7 +37,11 @@ def git(*args):
 
 if not git("rev-parse", "--show-toplevel"):
     sys.exit(0)
-diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv")
+# Diffing the work tree (commit -a) runs each file's clean filter, so every configured driver is blanked first.
+drivers = re.findall(r"^filter\.(.+)\.(?:clean|smudge|process|required) ", git("config", "--get-regexp", r"^filter\.") or "", re.M)
+blank = [a for d in sorted(set(drivers)) for k in ("clean=", "smudge=", "process=", "required=false")
+         for a in ("-c", f"filter.{d}.{k}")]
+diff = git(*blank, "diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv")
 if not diff:
     sys.exit(0)
 

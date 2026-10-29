@@ -136,6 +136,22 @@ def test_commit_all_reads_unstaged_tracked_changes():
     assert "suppression" in reason(hook(os.path.dirname(r), f"git -C {r} commit -a -m x"))
 
 
+def test_repo_config_cannot_run_commands_before_approval():
+    r = repo()
+    pwned = os.path.join(r, "PWNED")
+    git(r, "config", "core.fsmonitor", f"touch {pwned}; false")
+    for name in ("evil", "a.b"):
+        for key in ("clean", "process", "smudge"):
+            git(r, "config", f"filter.{name}.{key}", f"touch {pwned}")
+        git(r, "config", f"filter.{name}.required", "true")
+    write(r, ".gitattributes", "*.ts filter=evil\n*.py filter=a.b\n")
+    write(r, "src/app.ts", BASE["src/app.ts"] + "// @ts-ignore\n")
+    write(r, "tests/test_app.py", BASE["tests/test_app.py"] + "x = 1  # noqa\n")
+    text = reason(hook(r, "git commit -am x"))
+    assert not os.path.exists(pwned)
+    assert "src/app.ts:2" in text and "tests/test_app.py:3" in text
+
+
 def test_non_commit_commands_are_ignored():
     r = repo()
     staged(r, "src/app.ts", BASE["src/app.ts"] + "// @ts-ignore\n")
