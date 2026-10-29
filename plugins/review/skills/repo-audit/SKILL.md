@@ -42,7 +42,9 @@ A comment `shortcut: <limit>, <when to upgrade>` is a decision, not a finding ‚Ä
 - Propose the smallest fix that works; prefer one that deletes code. Never propose a layer, framework or config the problem does not need.
 - No style taste, no "consider", no vague worries.
 
-**Done when:** every finding has its case, and each "unused" claim has the grep that proves it.
+Then send every candidate through `${CLAUDE_PLUGIN_ROOT}/references/refute.md`. The Must / Should / Nice groups hold only `confirmed` findings. List `needs_validation` findings under **Needs validation** (the missing fact and who answers it, no group) and count the `rejected` ones on a `Rejected:` line.
+
+**Done when:** every finding has its case and a verdict, and each "unused" claim has the grep that proves it.
 
 ## Output
 
@@ -61,6 +63,9 @@ What this repo does: <two or three sentences>. Load assumed: <one line>.
 
 ### Should fix (risky code without a test, real slowness, duplication, code that should not exist)
 ### Nice to have (small speed-ups, shorter forms)
+### Needs validation (the missing fact and who answers it)
+
+Rejected: <N, each with its refuting path:line>
 
 Verdict: <healthy | fix 1 and 3 first>
 Lean: -<N> lines, -<M> dependencies possible   ‚Üê only when lean findings exist

@@ -39,6 +39,10 @@ Do not skip ahead: a correctness bug outranks every readability note.
 
 A shortcut marked `shortcut: <limit>, <when to upgrade>` is a decision, not a finding — unless the expected load already crosses its limit. An unmarked shortcut with a real limit is a finding.
 
+## Step 2b — Refute
+
+Before you report, send every candidate finding through `${CLAUDE_PLUGIN_ROOT}/references/refute.md`. The numbered list holds only `confirmed` findings. `needs_validation` findings get their own list with no severity. `rejected` findings go on the `Rejected:` line.
+
 ## Step 3 — PR description check
 
 Answer: *could someone review or reimplement this from the description alone?* It needs what / why / how tested (/ screenshots for UI). Name what is missing.
@@ -57,6 +61,11 @@ What this change does: <two or three sentences>. Load assumed: <one line>.
    - **If skipped:** late orders show the wrong date and accounting fixes them by hand.
 2. **[Tests] ...**
 
+### Needs validation
+- **Retry may double-charge** (`payments/retry.py:22`). Missing fact: whether the provider dedupes on `idempotency_key`. Who answers: the provider's API docs or the payments owner.
+
+Rejected: 1 (`api/orders.py:88` null order: `load_order` at `api/orders.py:61` already returns 404)
+
 ### Description
 <self-contained? what's missing>
 
@@ -71,5 +80,5 @@ Clean checks get no entry; a clean diff is `Looks good — approve.` plus one li
 - **No concrete case, no finding.** Every finding names the input or state that makes it fail. If you can't, verify it (Grep/Read/run) or drop it — an unverified worry costs the author time to disprove. Never pad the list to look thorough.
 - "Actionable" means the author can act without asking you a question. "Consider improving this" is not actionable.
 - Propose the smallest fix that works; prefer one that deletes code.
-- Verify by running (tests, the repro) where possible; mark unverified findings as such.
+- Verify by running (tests, the repro) where possible. A finding that still turns on a fact you cannot see is `needs_validation`, not a numbered finding.
 - No style nits unless they hide a bug — the formatter owns style.
