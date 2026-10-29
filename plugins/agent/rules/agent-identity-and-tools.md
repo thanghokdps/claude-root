@@ -10,7 +10,7 @@ paths:
 - Who the caller is comes from the verified request (token → server-side claims), injected by the server into the run. A tool reads it from that trusted context.
 - A tool schema never has `userId`, `actingAs`, `tenantId`, `role` or any field that selects whose data or whose authority — that is an authorisation hole the model can be talked into filling.
 - Targets the user names ("update Alex's leave") are resolved server-side and checked against the caller's permission on that specific resource.
-- The trusted channel is the framework's run context: LangGraph/LangChain `contextSchema` → `runtime.context` (older: `config.configurable`), Mastra `requestContext`. The server fills it after verifying the token.
+- The trusted channel is the framework's run context: LangGraph/LangChain `contextSchema` → `runtime.context` (older: `config.configurable`), Mastra `requestContext`. The server fills it after verifying the token. A `createAgent` graph served by the LangGraph server gets an empty `context` and uses `configurable` instead (`langgraph.md` § Run context).
 - Strip client-supplied identity keys from the run input, context and forwarded headers before injecting verified ones; `x-*` headers forwarded by an adapter are client-controlled. Keep access tokens out of context, `configurable` and state (they reach checkpoints and traces); use request scope (`AsyncLocalStorage`) instead.
 - Shared context from the frontend (`useAgentContext`) is untrusted display context: fine for greetings and phrasing, never for authorisation.
 - Missing or partial claims → refuse (fail closed), except an explicit dev-only fallback that cannot ship.

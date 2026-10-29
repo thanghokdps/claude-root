@@ -29,7 +29,7 @@ Open Claude Code in an empty folder and say what you want to build, e.g. *"Tôi 
 4. **Grill** — every task gets an owner agent and tool, every write a confirm path, every vague answer a recorded risk.
 5. **ADR + scaffold** — `docs/adr/<NNNN>-agent-architecture.md`, then the smallest working slice of your layout, ending on one real streamed turn with your first task's example message.
 
-Only want the frame? Say *dựng* or *init* and name the stack without saying what it does, e.g. *"init chatbot với Next.js và LangGraph"*. It asks nothing when a stack is named (with none, only the framework, frontend and database), defaults the rest, builds the shell with one agent and no tools, and stops at one real streamed "hello" turn.
+Only want the frame? Say *dựng* or *init* and name the stack without saying what it does, e.g. *"init chatbot empty features, dùng Mastra, tracing bằng Langfuse"* or *"init chatbot với Next.js và LangGraph"*. Any framework (LangChain, LangGraph, Mastra, a custom graph), frontend, database, auth or tracing provider you name is used as given; it asks nothing when a stack is named (with none, only the framework, frontend and database), defaults the rest, builds the shell with one agent and no tools, asks you to run `! cp .env.example .env` and fill the model key (the secret guard keeps Claude out of `.env`), proves it with one real streamed "hello" turn, and runs `/project-init` for `CLAUDE.md`, `AGENTS.md` and `.claude/docs/`. The resulting tree is in the [root README](../../README.md).
 
 If the designer has a Figma file or mockups, put the link in your request: `agent-design-ui` turns it into the chat UI after the scaffold. Without one, Claude does not ask; the chat is CopilotKit's stock `CopilotChat` with theme tokens.
 
