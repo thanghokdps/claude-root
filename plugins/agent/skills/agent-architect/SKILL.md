@@ -21,8 +21,8 @@ Rules that apply throughout: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md` 
 
 Run `bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh .` and show its table. It checks git, Node ≥ 20, a package manager, a model key (presence only) and a git repo, with the install command for this OS.
 
-- Anything `MISSING` → list it with the printed command, say what it blocks, and go straight on to the interview: the turn ends on the P1 question (skeleton: on the scaffold, or on Q-F when no framework is named), never on a setup question. A missing model key or git repo blocks only scaffolding and Step 4's real turn. Ask about installs once the interview is done; never run one without a yes, since installing system software is the user's call.
-- Never ask for the key's value in chat; it goes in `.env`, which stays gitignored. The secret guard blocks you from creating or reading `.env`: ask the user to run `! cp .env.example .env` and fill the key before the real turn.
+- Anything `MISSING` → show it in the table with what it blocks, and go straight on to the interview: the turn ends on the P1 question (skeleton: on the scaffold, or on Q-F when no framework is named), never on a setup question. A turn that ends on a question carries no setup notice: no install command, no `.env` step, no key warning, since the user's answer would be read as answering it. A missing model key or git repo blocks only scaffolding and Step 4's real turn. Give the install commands and ask about installs once the interview is done; never run one without a yes, since installing system software is the user's call.
+- Never ask for the key's value in chat; it goes in `.env`, which stays gitignored. The secret guard blocks you from creating or reading `.env`: before the real turn, ask the user to run `! cp .env.example .env` and fill the key.
 
 **Done when:** `missing: 0`, or each missing item is accepted with what it blocks.
 
@@ -37,7 +37,7 @@ Run the detection in `${CLAUDE_SKILL_DIR}/references/shapes.md`. Read `docs/adr/
 - Agent code exists → **audit** (Step 3).
 - An ADR exists and the user did not ask to revisit → report the recorded card and stop.
 
-**Done when:** the `Shape: … · host: … · transport: …` line is written, from grep evidence.
+**Done when:** the `Shape: … · host: … · transport: …` line is written, from grep evidence. With no agent code it reads `Shape: none · host: none · transport: none`, even when the request names a stack: greenfield quotes the named stack in the user's words, with no shape letter, runtime or adapter, and sets shape, host and transport on the defaults card after the problem questions; skeleton maps it at Step 2s.
 
 ## Step 2 — Greenfield interview
 
