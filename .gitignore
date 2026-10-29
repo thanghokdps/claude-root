@@ -13,5 +13,9 @@ plugins/*/evals/results/
 .playwright-mcp
 __pycache__/
 
+# docs site build output (scripts/build-site.py)
+dist/
+.vercel
+
 # screenshots taken while checking docs/skill-map.html
 docs/.skill-map-check/
