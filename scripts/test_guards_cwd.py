@@ -88,6 +88,18 @@ def test_state_breadcrumb_writes_into_the_worktree():
     assert "feat/x" in open(os.path.join(wt, ".claude", "memory", "sessions", f"{today}.md")).read()
 
 
+def test_save_commit_memory_logs_the_worktree_commit():
+    root, wt = project_with_worktree()
+    subprocess.run(["git", "-C", wt, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty",
+                    "-m", "worktree commit"], check=True)
+    for r in (root, wt):
+        os.makedirs(os.path.join(r, ".claude", "memory"), exist_ok=True)
+    run("save-commit-memory.sh", root, wt, {"tool_name": "Bash", "tool_input": {"command": "git commit -m x"}})
+    log = os.path.join(wt, ".claude", "memory", "commits", f"{datetime.date.today().isoformat()}.md")
+    assert "worktree commit" in open(log).read()
+    assert not os.path.exists(os.path.join(root, ".claude", "memory", "commits"))
+
+
 def test_a_folder_outside_the_project_is_not_trusted():
     root, other = repo("main"), repo("feat/x")  # e.g. a repo the shell cloned and cd'd into
     write(root, "specs/HANDOFF.md", "ROOT-HANDOFF\n")

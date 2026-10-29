@@ -3,7 +3,8 @@
 # Trigger: PostToolUse(Bash) when command contained "git commit"
 # NEVER blocks — all errors exit 0 silently
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+. "$(dirname "$0")/lib/project-dir.sh"
+PROJECT_DIR=$(project_dir "$(jq -r '.cwd // empty' 2>/dev/null)")
 CLAUDE_DIR="$PROJECT_DIR/.claude"
 MEMORY_DIR="$CLAUDE_DIR/memory"
 
