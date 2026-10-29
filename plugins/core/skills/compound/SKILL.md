@@ -16,6 +16,8 @@ Extract what was learned in this session and write it to `docs/solutions/` so fu
 - A discussion produced a clear best-practice decision
 - ≥ 5 files were changed in a session (commit hook will remind you)
 
+It also drains the lessons the background reflector queued: run `python3 -I "${CLAUDE_PLUGIN_ROOT}"/scripts/learn-promote.py --now` first and skip any learning it just added.
+
 ---
 
 ## Step 1 — Review the session
