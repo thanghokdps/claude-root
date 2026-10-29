@@ -12,7 +12,7 @@ Read by `/workplace-review`, and by planning skills when the repo profile says `
 
 ## 2. Who may act — record level, every time
 
-- **Every decision endpoint checks that the caller is an approver of this record.** Visibility checks in the list or detail view do not protect the outcome endpoint. *Seen:* approver membership checked for display, not on the decision path.
+- **Every decision endpoint checks that the caller is an approver of this record.** Visibility checks in the list or detail view do not protect the outcome endpoint. A placeholder such as "not assigned yet" never counts as a match. *Seen:* an unassigned maintenance ticket could be closed by any signed-in user, because the unassigned value passed the same check as "assigned to you".
 - Only the requester (or the person who filed it for them) cancels; an approver rejects instead.
 - Identity comparisons normalise once (lower-cased email or a stable user id) everywhere. *Seen:* approver check case-sensitive while list filters lower-cased.
 - A request filed for someone else records both people; both see it, only the filer edits it.
@@ -37,7 +37,7 @@ Read by `/workplace-review`, and by planning skills when the repo profile says `
 
 ## 5. Time and cutoffs
 
-- One business time zone per office, from config; dates computed in it on the server. Client device time is display only. *Seen:* a client computed cutoffs on the device clock while the server used its own zone.
+- One business time zone per office, from config; dates computed in it on the server. Client device time is display only. *Seen:* a client told users when a change takes effect from the device clock, while the server applied it in the business time zone.
 - Date-only values (holidays) and instants (slot start) are different types; never parse a date-only value as UTC midnight and compare it with a local instant.
 - Every cutoff (order meals by, cancel by, book up to N days ahead) is a named server constant with a test at the boundary minute. A rule only in the picker is not a rule.
 
