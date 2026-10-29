@@ -35,7 +35,7 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 
 ## Step 3 — Change it
 
-- **Router**: `temperature: 0`, structured output, `nostream`; scope rules as data (ordered rules with a `why`), so order is the contract. Ambiguous → a clarifying question, not a guess.
+- **Router**: `temperature: 0`, structured output, `nostream`; scope rules as data (ordered rules with a `why`), so order is the contract. Ambiguous → a clarifying question, not a guess. The router text and each agent's description (Mastra subagent `description` included) are generated from one routing profile per agent, never edited apart.
 - **Handoff**: bounded (one handoff, then decline) to avoid ping-pong.
 - **Decline**: one short line saying what the assistant can do instead.
 - **Prompts**: bullets; keep the user's sentences verbatim; derive tool/scope lists from constants; describe only tools that exist.
@@ -44,7 +44,7 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 - **Limits**: recursion limit (shape M: `maxSteps`) and timeout land as a readable turn.
 - **Workflow**: shape M → `createWorkflow` + `createStep`, each step with `inputSchema` / `outputSchema` (Zod), `.then()` / `.branch()` / `.parallel()`, `.commit()` once at module level, registered in `new Mastra({ workflows })` (`${CLAUDE_PLUGIN_ROOT}/rules/mastra.md` § Workflows). Shapes A/B → a `StateGraph` with fixed edges and a typed state, compiled once (`${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` § Fixed workflows). A step that writes waits for a human through the gate `/agent-hitl` owns (`suspend()` / `interrupt()`), with code before it idempotent. The agent reaches the workflow through one tool or the agent's `workflows` map, named in its prompt like any tool; identity comes from the run context, never a step input.
 
-**Done when:** unit tests cover the new routing rule (one prompt per rule plus one out-of-scope), each new workflow has a test per step plus one end-to-end run (including the suspended and the declined path when a step waits for a human), and typecheck and lint pass.
+**Done when:** unit tests cover the new routing rule (one prompt per rule plus one out-of-scope), the prompt ↔ tool parity and prompt budget tests (`agent-prompts.md`) pass, each new workflow has a test per step plus one end-to-end run (including the suspended and the declined path when a step waits for a human), and typecheck and lint pass.
 
 ## Step 4 — Prove routing
 

@@ -11,4 +11,5 @@ paths:
 - Secrets, tokens and caller-supplied API keys never reach traces, logs, checkpoints or eval reports.
 - Build the trace handler per turn with the turn's ids (thread, run, agent); never share a mutable handler across requests.
 - Record per turn: model, provider that answered (after fallback), token usage, latency to first token, tool calls and their status — the inputs for triage and cost.
+- Token usage (input, output, cached) is recorded for every model call, not only the answering agent: router, summariser, memory extraction, suggestions and title generation each run their own call and are often the unseen half of the cost.
 - Eval reports and CI artifacts pass a privacy scan before they are published.

@@ -64,6 +64,6 @@ Resume:
 - Web (CopilotKit v2): `useInterrupt({ agentId, render, enabled })` renders the card from the interrupt (`message`, `metadata`) and calls `resolve(payload)` or `cancel()`; it renders inside `CopilotChat` by default (`renderInChat: false` to place it yourself). Wiring stays in `/agent-frontend`.
 - React Native: the same hook from `@copilotkit/react-native`.
 - Other headless clients: read `RUN_FINISHED.outcome`, render from `message` / `metadata`, send the next run with `resume[]`. Unknown `reason` values render from `message`, never fail.
-- Chat channels (Slack, Teams…): check what the installed channel package listens for — some renderers still expect the 0.x `CUSTOM` interrupt event while `@ag-ui/mastra` ≥ 2 no longer emits it. Only the user who asked can decide, and the buttons are guarded against double clicks.
+- Chat channels (Slack, Teams…): follow `${CLAUDE_PLUGIN_ROOT}/skills/agent-frontend/references/chat-channels.md` — check which interrupt event the installed renderer expects, only the user who asked can decide, buttons guarded against double clicks, resume built server-side.
 
 **Done when:** `/agent-verify-turn` shows the interrupt outcome on one turn and the completed outcome after the resume run.

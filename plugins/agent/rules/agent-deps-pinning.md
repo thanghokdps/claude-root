@@ -9,6 +9,8 @@ paths:
 
 - Pin `@copilotkit/*`, `@ag-ui/*`, `@mastra/*` and `@langchain/langgraph-api` exactly (no `^`/`~`): their wire formats change in patch releases.
 - Force a single installed copy of `@langchain/core`, `@langchain/langgraph` and `langchain` (or `@mastra/core` in shape M) (pnpm `overrides` / npm `overrides`). Two copies break `instanceof` checks and channel identity at runtime, not at compile time.
+- In a pnpm monorepo, declare these versions once in the workspace catalog (`catalog:` in each `package.json`, a named catalog per stack when apps move at different speeds) instead of repeating them per package.
+- Scope an override to the parent that needs it (`"parent>child": "x.y.z"`) when only one dependency pulls the wrong copy; a global override changes every consumer.
 - Bump these packages together, in one change, with the evidence: typecheck, unit tests, and a real streamed turn (and the eval suite where one exists) on the new versions.
 - A `patches/` entry names the upstream issue and the version it targets; re-check it on every bump and delete it when upstream fixes it.
 - Check zod major compatibility (3 vs 4) against the LangGraph or Mastra version before bumping either.

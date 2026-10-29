@@ -1,0 +1,17 @@
+{
+  "@ag-ui/core": ["plugins/agent/rules/agui-transport.md"],
+  "@ag-ui/mastra": ["plugins/agent/rules/mastra.md"],
+  "@mastra/core": [
+    "plugins/agent/rules/mastra.md",
+    "plugins/agent/skills/agent-architect/references/stock-map.md",
+    "plugins/agent/skills/agent-architect/references/production.md",
+    "plugins/agent/skills/agent-architect/references/optimisation.md",
+    "plugins/agent/skills/agent-rag/references/rag-pipeline.md"
+  ],
+  "@langchain/langgraph": [
+    "plugins/agent/skills/agent-rag/references/rag-pipeline.md",
+    "plugins/agent/skills/agent-tool/references/api-to-tools.md"
+  ],
+  "@copilotkit/runtime": ["plugins/agent/skills/agent-tool/references/api-to-tools.md"],
+  "@copilotkit/channels": ["plugins/agent/skills/agent-frontend/references/chat-channels.md"]
+}
