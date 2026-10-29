@@ -17,7 +17,10 @@ mkdir -p "$FAKE_CLAUDE_LOG"
 cat > "$FAKE_CLAUDE_LOG/$$.stdin"
 printf '%s\\n' "$@" > "$FAKE_CLAUDE_LOG/$$.argv"
 printf '%s' "${HARNESS_LEARN_CHILD:-}" > "$FAKE_CLAUDE_LOG/$$.env"
+printf '%s' "${FAKE_CLAUDE_REPLY:-}"
 """
+LESSON = {"slug": "piped-test-exit-codes", "title": "Never pipe test output", "body": "Run tests unpiped.",
+          "level": "global", "confidence": "high", "evidence": "Stop piping test output through tail."}
 
 
 def setup():
@@ -81,6 +84,16 @@ def spawns(s, expect, wait=5.0):
         time.sleep(0.1)
 
 
+def queued(s, expect, wait=5.0):
+    """Queue files once `expect` have appeared (or `wait` seconds passed)."""
+    deadline = time.time() + wait
+    while True:
+        found = sorted(glob.glob(os.path.join(s["state"], "queue", "*.json")))
+        if len(found) >= expect or time.time() > deadline:
+            return found
+        time.sleep(0.1)
+
+
 def read(path):
     with open(path) as f:
         return f.read()
@@ -100,7 +113,34 @@ def test_exactly_one_spawn_after_50_calls():
     assert len(found) == 1, found
     argv = read(found[0].replace(".env", ".argv")).split("\n")
     assert "-p" in argv and argv[argv.index("--model") + 1] == "haiku"
+    # No tools: Claude Code refuses the child's writes under .git/, so the hook writes the queue itself.
+    assert argv[argv.index("--tools") + 1] == ""
+    assert "Write" not in argv and "--allowedTools" not in argv
     assert read(found[0]) == "1"  # the child runs with HARNESS_LEARN_CHILD=1
+
+
+def test_reply_array_becomes_one_queue_file_per_lesson():
+    s = setup()
+    other = {**LESSON, "slug": "second-lesson"}
+    reply = "Here they are:\n```json\n" + json.dumps([LESSON, other]) + "\n```"
+    calls(s, 50)
+    hook(s, "Stop", {"FAKE_CLAUDE_REPLY": reply})
+    found = queued(s, 2)
+    assert sorted(json.loads(read(f))["slug"] for f in found) == ["piped-test-exit-codes", "second-lesson"]
+    assert all("/" not in os.path.basename(f)[:-5] for f in found)  # names never come from the reply
+
+
+def test_empty_array_queues_nothing_and_garbage_is_queued_raw():
+    s = setup()
+    calls(s, 50)
+    hook(s, "Stop", {"FAKE_CLAUDE_REPLY": "[]"})
+    spawns(s, 1)
+    assert queued(s, 1, wait=1.0) == []
+    write_transcript(s["transcript"], filler=1)  # new text, so the next Stop reflects again
+    calls(s, 50)
+    hook(s, "Stop", {"FAKE_CLAUDE_REPLY": "I could not find any lessons."})
+    found = queued(s, 1)
+    assert len(found) == 1 and read(found[0]).strip() == "I could not find any lessons."
 
 
 def test_recursion_guard_and_off_switch():
@@ -126,7 +166,6 @@ def test_digest_has_text_and_tool_names_but_no_tool_output():
         assert TOOL_OUTPUT not in text
         assert "pytest -q" not in text  # tool input is left out too
         assert "private reasoning" not in text
-    assert os.path.join(s["state"], "queue") in prompt
 
 
 def test_planted_key_is_scrubbed():
