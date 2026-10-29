@@ -26,6 +26,11 @@ python3 scripts/test_learn_capture.py
 python3 scripts/test_learn_promote.py
 python3 scripts/lint-kit.py
 python3 scripts/eval-triggers.py
+if python3 -c "import pytest, yaml" 2>/dev/null; then
+  (cd eval && python3 -m pytest -q tests)
+else
+  echo "eval/tests skipped: pip install -r eval/requirements.txt" >&2
+fi
 if command -v claude >/dev/null 2>&1; then
   claude plugin validate .
   for p in plugins/*/; do claude plugin validate "$p" >/dev/null || { claude plugin validate "$p"; exit 1; }; done
