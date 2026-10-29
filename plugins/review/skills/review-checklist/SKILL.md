@@ -35,7 +35,7 @@ Do not skip ahead: a correctness bug outranks every readability note.
 | 3 | **Scale** | Fine for one user, wrong at the expected load: check-then-write races, a query per item, memory or lists that only grow, the same work done by every process, per-process state that must be shared. |
 | 4 | **Readability** | Would the next person understand it without the author? Misleading names, deep nesting, dead code, comments that restate code. Did it re-implement something the shared layer already provides? |
 | 5 | **Security basics** | Unvalidated input at a boundary, secrets, injection, authz on mutating paths, logging PII. |
-| 6 | **Scope** | Every changed line traces to the ticket? Unrelated refactors, drive-by fixes, missing pieces of the ask. |
+| 6 | **Scope** | Every changed line traces to the ticket? Unrelated refactors, drive-by fixes, missing pieces of the ask. Over-engineering: a new function, class, module, dependency or option nobody asked for, or new code where the codebase, stdlib or an installed dependency already does it — the finding names what to reuse or delete. |
 
 A shortcut marked `shortcut: <limit>, <when to upgrade>` is a decision, not a finding — unless the expected load already crosses its limit. An unmarked shortcut with a real limit is a finding.
 

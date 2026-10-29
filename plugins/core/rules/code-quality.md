@@ -5,6 +5,8 @@
 - No N+1 queries or I/O inside loops; profile before optimizing.
 - Take the first option that fully works: skip it if nobody asked → reuse what the codebase has → stdlib or platform → an installed dependency → one readable line → the minimum new code. Never add a dependency for a few lines.
 - Be lean in the solution, never in its reach: update every caller, test and fixture the change breaks.
+- Deletion beats addition. No wrapper, option, config, type conversion or "for later" code nobody asked for; keep values in the form the platform gives and the structure the codebase already has. Between options of equal size, take the one correct on edge cases.
+- Bug fix: grep every caller of the function first, then fix the root cause once in the shared code. Code you move or merge keeps its error handling and validation.
 
 ## Shortcuts
 - A deliberate shortcut with a known limit gets one comment: `shortcut: <the limit>, <when to upgrade>` (e.g. `// shortcut: in-memory, fine for one process; move to Redis when we scale out`). `/debt-ledger` lists them.
