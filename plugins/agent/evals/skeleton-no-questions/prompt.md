@@ -1,6 +1,6 @@
 ---
 plugins: ["../..", "../../../progress", "../../../core", "../../../plan", "../../../review", "../../../dev", "../../../ship"]
-max_turns: 8
+max_turns: 16
 allowed_tools: [Read, Glob, Grep, Skill, Bash, AskUserQuestion]
 tags: [skeleton]
 ---
