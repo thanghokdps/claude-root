@@ -6,7 +6,7 @@
   },
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
-  "description": "Review a diff or PR: review-checklist, review-diff, blast-radius impact analysis, create-pr description, debt-ledger of shortcut comments.",
+  "description": "Review a diff or PR: review-checklist, review-diff, blast-radius impact analysis, create-pr description, debt-ledger of shortcut comments; repo-audit for a whole codebase.",
   "keywords": [
     "review"
   ],

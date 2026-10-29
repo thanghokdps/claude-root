@@ -29,6 +29,7 @@ Each skill is a Markdown prompt program invoked via `/skill-name` (or `/<plugin>
 | [fix-bug](dev/skills/fix-bug/SKILL.md) | `dev` | `/fix-bug <symptom>` | Tight red loop → minimise → hypothesise → fix → regression test | tiny/normal |
 | [review-checklist](review/skills/review-checklist/SKILL.md) | `review` | `/review-checklist [PR]` | correctness → tests → scale → readability → security → scope; numbered findings, each with a failing case | n/a |
 | [debt-ledger](review/skills/debt-ledger/SKILL.md) | `review` | `/debt-ledger [marker]` | Every `shortcut:` comment → limit + upgrade trigger; flags `no-trigger` | n/a |
+| [repo-audit](review/skills/repo-audit/SKILL.md) | `review` | `/repo-audit [folder]` | Whole repo: map → bug, risk, scale, missing test, speed, lean; ≤20 numbered Must / Should / Nice findings | n/a |
 | [ci-triage](ship/skills/ci-triage/SKILL.md) | `ship` | `/ci-triage [run]` | Red build → regression / flaky / environment + one-sentence root cause | n/a |
 | [release-checklist](ship/skills/release-checklist/SKILL.md) | `ship` | `/release-checklist <version>` | Scope → gates → migrations → notes → tag → deploy → smoke → rollback | high |
 | [write-migration](ship/skills/write-migration/SKILL.md) | `ship` | `/write-migration <change>` | Expand/contract, reversible, batched backfill, tested down path | high |

@@ -25,7 +25,7 @@ A **source library** and the `harness` marketplace of role plugins (local direct
     core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile hooks (always on; repo-profile enables agent per repo) — plus scripts/init.sh and
                 everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/ → progress
     plan        kickoff brainstorming grill domain-model writing-plans codebase-design → progress
-    review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger → progress
+    review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger repo-audit → progress
       dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint design-ui → core, plan, review
                 api-endpoint db-change ui-feature api-client (BE · DB · FE · API integration)
                 + ticket-ledger, ticket-gate, test-lock, auto-decisions hooks (always on: a ticket's commit/PR waits for its plan's skills)
