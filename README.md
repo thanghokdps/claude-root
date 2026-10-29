@@ -221,7 +221,7 @@ prompt
   → Implementer / Debugger  (build)
   → Verifier / Reviewer     (prove)
   → commit-quality-gate.sh  (block bad commits)
-  → save-commit-memory.sh   (persist to memory)
+  → save-commit-memory.sh   (persist to memory; standalone init only)
   → session-handoff.sh      (write HANDOFF.md on session end)
 ```
 
@@ -290,12 +290,12 @@ prompt
 │   │       ├── blast-radius-check.sh ← warn on edits outside plan scope
 │   │       ├── format-on-edit.sh    ← run formatter after editing files
 │   │       ├── headroom-compress.sh ← auto context compression on large outputs
-│   │       ├── save-commit-memory.sh ← persist commit info to memory
+│   │       ├── save-commit-memory.sh ← persist commit info to memory (standalone init only)
 │   │       ├── session-handoff.sh   ← write HANDOFF.md on session end
 │   │       ├── session-resume.sh    ← load HANDOFF.md on session start
 │   │       ├── state-breadcrumb.sh  ← append session breadcrumb to memory
 │   │       ├── notify-on-finish.sh  ← notification on session end
-│   │       └── agent-progress.sh    ← colorized live agent/wave progress
+│   │       └── agent-progress.sh    ← colorized live agent/wave progress (standalone init only)
 │   │
 │   └── harness/                   ← bundle (depends on all nine above)
 │
@@ -531,7 +531,7 @@ Specs dir: specs/add-dark-mode/
 | 2 — Plan | Step-by-step plan with exact commands; save to `specs/<slug>/PLAN.md` (high-risk only) |
 | 3 — Build | Follow the plan; run quality gates after each chunk |
 | 4 — Review | Self-review: security, type errors, debug artifacts; spawn reviewer sub-agent (high-risk) |
-| 5 — Commit | `git add <specific files>` + commit; `save-commit-memory.sh` auto-fires |
+| 5 — Commit | `git add <specific files>` + commit; `save-commit-memory.sh` fires when a project was set up with `STANDALONE=1 init.sh` |
 
 **Escalation triggers:** confidence drops below medium, hard gate discovered mid-task, scope creep detected, conflicting teammate commit found in memory.
 
@@ -863,7 +863,7 @@ Cross-checks the staged diff against the Lane declared in `specs/*/SUMMARY.md`.
 
 ### `save-commit-memory.sh`
 
-**Trigger:** `PostToolUse(Bash)` after `git commit`
+**Trigger:** `PostToolUse(Bash)` after `git commit` — registered only by `templates/settings.json.template`, so it runs in projects set up with `STANDALONE=1 init.sh`, not for the `guards` plugin
 
 **Input:** None (reads from git directly)
 
@@ -922,7 +922,7 @@ The next session reads and deletes this file automatically.
 
 ### `agent-progress.sh`
 
-**Trigger:** `PostToolUse(Agent|Edit|Write|Bash)` and `PreToolUse(Agent)`
+**Trigger:** `PostToolUse(Agent|Edit|Write|Bash)` and `PreToolUse(Agent)` — registered only by `templates/settings.json.template`, so it runs in projects set up with `STANDALONE=1 init.sh`, not for the `guards` plugin
 
 Prints colorized live progress to the terminal via `stderr` — shows which agent is running, which wave, and which tool calls are being made.
 
@@ -1419,7 +1419,7 @@ session starts
 work happens
   ↓
 git commit
-  ↓ save-commit-memory.sh → .claude/memory/commits/YYYY-MM-DD.md
+  ↓ save-commit-memory.sh → .claude/memory/commits/YYYY-MM-DD.md   (standalone init only)
   ↓
 session ends
   ↓ state-breadcrumb.sh → .claude/memory/sessions/YYYY-MM-DD.md
@@ -1501,7 +1501,7 @@ User: "add CSV export to the reports page"
 7. Commit: git commit
    → commit-quality-gate.sh: no secrets, no debug artifacts → ALLOW
    → risk-corroboration.sh: Lane=normal, no hard-gate signals → ALLOW
-   → save-commit-memory.sh: writes to memory/commits/ → ALLOW
+   → save-commit-memory.sh: writes to memory/commits/ → ALLOW   (standalone init only)
 
 8. Wave 3: Verifier (sonnet)
    → runs every command in SUMMARY.md Verify table
