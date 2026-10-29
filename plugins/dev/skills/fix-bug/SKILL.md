@@ -2,8 +2,8 @@
 model: opus
 effort: high
 name: fix-bug
-description: Diagnosis loop for bugs and performance regressions — build a tight red loop first, then minimise, hypothesise, instrument, fix, and lock it down with a regression test. Use when the user reports something broken, throwing, failing, or slow.
-when_to_use: a bug report, a failing test nobody understands, a performance regression, "debug this", "why is this happening", or a symptom with no known cause
+description: Diagnosis loop for bugs and performance regressions — build a tight red loop first, then minimise, hypothesise, instrument, fix, and lock it down with a regression test. Use when the user reports something broken, throwing, failing, or slow — including a bug that earlier fixes did not change.
+when_to_use: a bug report, a failing test nobody understands, a performance regression, "debug this", "why is this happening", a symptom with no known cause, a test still red after several fixes, "tried three fixes and it still fails", "fix it again", "vẫn đỏ", "vẫn lỗi", "sửa mãi không được", "sửa mấy lần rồi vẫn không chạy", "lỗi này do đâu"
 ---
 
 # fix-bug

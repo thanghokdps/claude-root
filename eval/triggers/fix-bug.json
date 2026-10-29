@@ -12,6 +12,18 @@
     {
       "prompt": "performance regression on the dashboard, find the cause",
       "top_k": 3
+    },
+    {
+      "prompt": "test_parse_date_iso vẫn đỏ: expected 2026-01-05, got None. Tôi đã sửa src/parse.py 3 lần rồi mà kết quả vẫn y nguyên. Sửa tiếp giúp tôi.",
+      "top_k": 3
+    },
+    {
+      "prompt": "I've tried three fixes already and the test still fails with the same error, keep going",
+      "top_k": 3
+    },
+    {
+      "prompt": "sửa mãi không được, vẫn lỗi y như cũ",
+      "top_k": 3
     }
   ],
   "negative": [
