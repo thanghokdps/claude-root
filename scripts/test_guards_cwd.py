@@ -52,18 +52,28 @@ def test_commit_quality_gate_reads_the_worktree_index():
     assert out.returncode == 2 and ".env" in out.stderr, out.stderr
 
 
-def test_commit_quality_gate_scans_a_repo_outside_the_project_without_running_its_config():
+def test_commit_quality_gate_asks_for_a_repo_outside_the_project_without_running_its_config():
     root, other = repo("main"), repo("feat/x")
-    pwned = os.path.join(other, "PWNED")
-    subprocess.run(["git", "-C", other, "config", "diff.t.textconv", f"touch {pwned}; cat"], check=True)
-    subprocess.run(["git", "-C", other, "config", "diff.external", f"touch {pwned}"], check=True)
-    write(other, ".gitattributes", "*.js diff=t\n")
-    write(other, "a.js", "console.log(1)\n")
     write(other, ".env", "KEY=1\n")
-    subprocess.run(["git", "-C", other, "add", "-f", ".gitattributes", "a.js", ".env"], check=True)
+    subprocess.run(["git", "-C", other, "add", "-f", ".env"], check=True)
+    pwned = os.path.join(other, "PWNED")
+    for key, value in (("core.fsmonitor", f"touch {pwned}; false"), ("diff.external", f"touch {pwned}"),
+                       ("core.sshCommand", f"touch {pwned}")):
+        subprocess.run(["git", "-C", other, "config", key, value], check=True)
     out = run("commit-quality-gate.sh", root, other, {"tool_name": "Bash", "tool_input": {"command": "git commit -m x"}})
-    assert out.returncode == 2 and ".env" in out.stderr, out.stderr
+    assert out.returncode == 0 and json.loads(out.stdout)["hookSpecificOutput"]["permissionDecision"] == "ask"
     assert not os.path.exists(pwned)
+
+
+def test_commit_quality_gate_in_a_worktree_runs_none_of_its_textconv():
+    root, wt = project_with_worktree()
+    pwned = os.path.join(wt, "PWNED")
+    subprocess.run(["git", "-C", root, "config", "diff.t.textconv", f"touch {pwned}; cat"], check=True)
+    write(wt, ".gitattributes", "*.js diff=t\n")
+    write(wt, "a.js", "console.log(1)\n")
+    subprocess.run(["git", "-C", wt, "add", ".gitattributes", "a.js"], check=True)
+    out = run("commit-quality-gate.sh", root, wt, {"tool_name": "Bash", "tool_input": {"command": "git commit -m x"}})
+    assert "console.log" in out.stderr and not os.path.exists(pwned), out.stderr
 
 
 def test_format_on_edit_runs_in_the_worktree():

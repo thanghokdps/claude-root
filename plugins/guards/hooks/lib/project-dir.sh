@@ -14,3 +14,11 @@ project_dir() {
   fi
   printf '%s\n' "$root"
 }
+
+# outside_project <event cwd>: true when the cwd is in a git repo that is neither the project nor one of its worktrees.
+outside_project() {
+  local cwd=$1 root="${CLAUDE_PROJECT_DIR:-$(pwd)}" theirs
+  [ -n "$cwd" ] || return 1
+  theirs=$(git -C "$cwd" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || return 1
+  [ "$theirs" != "$(git -C "$root" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ]
+}
