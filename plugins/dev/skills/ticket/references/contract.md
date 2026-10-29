@@ -55,13 +55,14 @@ Ticket: <link> · Opened by: <reporter> · Read: <YYYY-MM-DD>
 | C1 | design ↔ API | blocking | backend | <question to paste as-is>. Recommended: <answer> | |
 
 ## Decisions
-- <YYYY-MM-DD> <question> → <answer> (<who>)
+- <YYYY-MM-DD> <question> → <answer> (user)
+- <YYYY-MM-DD> <question> → <answer> (agent) · why: <fact or rule, with citation> · revert: <what to change to undo it>
 
 ## Changes
 - none
 ```
 
-Severity: `blocking` (cannot build without an answer), `decide` (buildable on the recommended answer, kept as an assumption), `note` (FYI). Decision stays empty until answered, then `<YYYY-MM-DD> <answer> (<who>)`, and is copied to § Decisions. `ticket-gate.sh` blocks a code commit while a `blocking` row has no Decision.
+Severity: `blocking` (cannot build without an answer), `decide` (buildable on the recommended answer, kept as an assumption), `note` (FYI). Decision stays empty until answered, then `<YYYY-MM-DD> <answer> (<who>)`, and is copied to § Decisions. A `decide` concern built on the recommended answer gets an `(agent)` entry there, with `why:` and `revert:`. `ticket-gate.sh` blocks a code commit while a `blocking` row has no Decision or an `(agent)` entry lacks `why:` or `revert:`.
 
 Status: `planned` · `in_progress` · `implemented` (evidence required: test path or command) · `changed` · `retired`.
 
