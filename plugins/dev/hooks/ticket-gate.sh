@@ -9,7 +9,8 @@
 #   - plan.md has no Skills: line or no Risk: line
 #   - a listed skill never ran; /agent-verify-turn never ran though an /agent-* skill is listed
 #   - no subagent ran with model sonnet or haiku (the code is written by a cheaper model)
-#   - commit only: spec.md § Concerns has a `blocking` row with an empty Decision (waive: `skip concerns: <reason>`)
+#   - commit only: spec.md § Concerns has a `blocking` row with an empty Decision, or § Decisions has an `(agent)`
+#     entry without `why:` and `revert:` (waive both: `skip concerns: <reason>`)
 #   - PR only: /verify-done or /review-checklist never ran; Risk: high and /security-review or /code-review never ran
 # A line `skip /<skill>: <reason>` (or `skip subagents: <reason>`) in plan.md waives one check, with the reason on record.
 command -v python3 >/dev/null 2>&1 || exit 0
@@ -118,6 +119,16 @@ if action == "commit" and "concerns" not in waived and os.path.exists(spec_path)
             continue
         if re.sub(r"[*`\s]", "", cells[-1]) in ("", "—", "-", "–"):
             problems.append(f"{cells[0] or 'a concern'} is blocking and has no decision (spec.md § Concerns)")
+    in_decisions = False
+    for line in open(spec_path, encoding="utf-8").read().splitlines():
+        if re.match(r"^#{1,6}\s", line):
+            in_decisions = bool(re.match(r"^#{1,6}\s+Decisions\b", line, re.I))
+            continue
+        entry = re.match(r"^\s*[-*]\s+(.+)$", line)
+        if not in_decisions or not entry or not re.search(r"\(agent\)", entry.group(1), re.I):
+            continue
+        if not (re.search(r"\bwhy\s*:", line, re.I) and re.search(r"\brevert\s*:", line, re.I)):
+            problems.append(f"decision by agent has no why:/revert: “{entry.group(1)[:60]}” (spec.md § Decisions)")
 
 if problems:
     what = "commit" if action == "commit" else "open the PR"

@@ -128,14 +128,15 @@ def test_ledger_entries_from_another_branch_do_not_count():
 
 
 SPEC = ("# 7 — Spec\n\n## Concerns\n| C# | Between | Severity | Owner | Question | Decision |\n"
-        "|----|---------|----------|-------|----------|----------|\n{rows}\n\n## Decisions\n- none\n")
+        "|----|---------|----------|-------|----------|----------|\n{rows}\n\n## Decisions\n{decisions}\n\n## Changes\n"
+        "- (agent) not a decision\n")
 
 
-def ready_repo(rows, **kw):
+def ready_repo(rows, decisions="- none", **kw):
     path = repo(**kw)
     full_build(path)
     with open(os.path.join(path, "docs", "tickets", "7", "spec.md"), "w") as f:
-        f.write(SPEC.format(rows=rows))
+        f.write(SPEC.format(rows=rows, decisions=decisions))
     return path
 
 
@@ -157,6 +158,21 @@ def test_decide_and_note_concerns_do_not_block():
     path = ready_repo("| C1 | design ↔ app | decide | dev | Reuse Card? Recommended: yes | |\n"
                       "| C2 | ticket ↔ design | note | design | Icon differs. Recommended: keep | |")
     assert gate(path)[0] == 0
+
+
+def test_agent_decision_without_why_or_revert_blocks_a_code_commit():
+    path = ready_repo("", decisions="- 2026-01-02 Reuse Card? → yes (agent) · why: Card.tsx:4 fits\n"
+                                    "- 2026-01-02 Sort order? → newest first (agent)")
+    code, err = gate(path)
+    assert code == 2 and err.count("has no why:/revert:") == 2 and "Reuse Card?" in err, err
+
+
+def test_agent_decision_with_note_and_user_decision_pass():
+    notes = ("- 2026-01-02 Reuse Card? → yes (agent) · why: Card.tsx:4 fits · revert: inline the markup\n"
+             "- 2026-01-02 Which field? → id (user)")
+    assert gate(ready_repo("", decisions=notes))[0] == 0
+    bare = "- 2026-01-02 Sort order? → newest first (agent)"
+    assert gate(ready_repo("", decisions=bare, waivers="- skip concerns: spike branch\n"))[0] == 0
 
 
 def test_docs_only_commit_ignores_an_open_blocking_concern():
