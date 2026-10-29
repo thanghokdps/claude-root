@@ -9,7 +9,7 @@ paths:
 
 - Who the caller is comes from the verified request (token → server-side claims), injected by the server into the run. A tool reads it from that trusted context.
 - A tool schema never has `userId`, `actingAs`, `tenantId`, `role` or any field that selects whose data or whose authority — that is an authorisation hole the model can be talked into filling.
-- Targets the user names ("update Alex's leave") are resolved server-side and checked against the caller's permission on that specific resource.
+- Targets the user names ("update Alex's leave") are resolved server-side and checked against the caller's permission on that specific resource. A write target's id must match a row a trusted read tool returned in this thread; an id from model text or client-sent history is refused.
 - The trusted channel is the framework's run context: LangGraph/LangChain `contextSchema` → `runtime.context` (older: `config.configurable`), Mastra `requestContext`. The server fills it after verifying the token. A `createAgent` graph served by the LangGraph server gets an empty `context` and uses `configurable` instead (`langgraph.md` § Run context).
 - Strip client-supplied identity keys from the run input, context and forwarded headers before injecting verified ones; `x-*` headers forwarded by an adapter are client-controlled. Keep access tokens out of context, `configurable` and state (they reach checkpoints and traces); use request scope (`AsyncLocalStorage`) instead.
 - Shared context from the frontend (`useAgentContext`) is untrusted display context: fine for greetings and phrasing, never for authorisation.
@@ -30,6 +30,7 @@ paths:
 - A frontend tool never writes server data and never decides authorisation: anything it can do, the user could do by clicking.
 - Agent writes vs user writes: when the agent's tool performs the write, gate it with `/agent-hitl` (backend interrupt). When the agent only proposes and the user's click sends the write through a route the UI already uses (same auth, same ownership check), that is a user write: no interrupt, no pending-action record. The tool stays read-only; it never calls the write route itself.
 - Register a frontend tool only for the agent that may call it, and name it in that agent's prompt like any other tool.
+- Frontend tools arrive with the run input (`RunAgentInput.tools`); unfiltered, they reach every agent and subagent of the graph. Filter them server-side per agent against that agent's bound tool set; a supervisor or subagent never sees a browser tool it was not given.
 - Tool name constants are shared (`shared/` package or module) so the backend registry, prompts and frontend renderers cannot drift.
 
 ## Tools
