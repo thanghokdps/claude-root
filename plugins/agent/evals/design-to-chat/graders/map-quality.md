@@ -1,9 +1,11 @@
 ---
 type: llm
-focus: trace
+focus:
+  source: file
+  path: docs/design/ui-map.md
 ---
 
-Judge the content of docs/design/ui-map.md as written in the run (Write/Edit tool input).
+Judge the content of docs/design/ui-map.md.
 
 PASS if all hold:
 - It has a states table covering the states beyond the one frame (at least streaming, tool running, tool failed, error) each marked as a decision such as "use default", not invented designs.
