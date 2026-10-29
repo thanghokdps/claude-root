@@ -46,7 +46,8 @@ blank = [(f"filter.{d}.{k}", v) for d in drivers for k, v in (("clean", ""), ("s
 env = {**os.environ, "GIT_CONFIG_COUNT": str(len(blank))}
 for i, (k, v) in enumerate(blank):
     env[f"GIT_CONFIG_KEY_{i}"], env[f"GIT_CONFIG_VALUE_{i}"] = k, v
-diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv", env=env)
+diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv",
+           "--ignore-submodules=all", "--submodule=short", env=env)  # a submodule's diff would read its own config
 if not diff:
     sys.exit(0)
 

@@ -166,6 +166,23 @@ def test_crafted_filter_driver_names_cannot_inject_an_override():
     assert not os.path.exists(pwned)
 
 
+def test_submodules_are_not_diffed_inside():
+    sub = repo()
+    write(sub, ".gitattributes", "*.ts filter=s\n")
+    git(sub, "add", ".gitattributes")
+    git(sub, "commit", "-qm", "attrs")
+    r = repo()
+    git(r, "-c", "protocol.file.allow=always", "submodule", "add", "-q", sub, "vendor/sub")
+    git(r, "commit", "-qm", "sub")
+    pwned = os.path.join(r, "PWNED")
+    git(os.path.join(r, "vendor/sub"), "config", "filter.s.clean", f"touch {pwned}")
+    git(r, "config", "diff.submodule", "diff")
+    write(os.path.join(r, "vendor/sub"), "src/app.ts", BASE["src/app.ts"] + "// @ts-ignore\n")
+    write(r, "src/app.ts", BASE["src/app.ts"] + "// @ts-ignore\n")
+    assert "src/app.ts:2" in reason(hook(r, "git commit -am x"))
+    assert not os.path.exists(pwned)
+
+
 def test_non_commit_commands_are_ignored():
     r = repo()
     staged(r, "src/app.ts", BASE["src/app.ts"] + "// @ts-ignore\n")
