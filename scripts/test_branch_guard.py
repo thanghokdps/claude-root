@@ -229,6 +229,16 @@ def test_commits_on_main_or_an_environment_branch_are_blocked():
     assert exit_code('echo "never git commit on main"', branch="main") == 0
 
 
+def test_the_branch_is_read_where_the_command_runs_not_the_project_root():
+    # A worktree session: CLAUDE_PROJECT_DIR is the main checkout, the event's cwd is the worktree.
+    def run(project_branch, cwd_branch):
+        env = {**os.environ, "CLAUDE_PROJECT_DIR": repo_on(project_branch)}
+        payload = json.dumps({"tool_name": "Bash", "cwd": repo_on(cwd_branch), "tool_input": {"command": "git commit -m x"}})
+        return subprocess.run([HOOK], input=payload, capture_output=True, text=True, env=env).returncode
+    assert run("main", "fix/x") == 0
+    assert run("fix/x", "main") == 2
+
+
 def test_the_first_commit_of_an_empty_repo_is_allowed():
     path = tempfile.mkdtemp(prefix="branch-guard-")
     subprocess.run(["git", "init", "-q", "-b", "main", path], check=True)
