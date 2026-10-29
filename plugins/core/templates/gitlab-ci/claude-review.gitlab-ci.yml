@@ -29,8 +29,8 @@ claude-review:
     - git diff --stat "$BASE"...HEAD
     - >
       claude -p "${AI_FLOW_INPUT:-Review the changes in git diff $BASE...HEAD for MR !$CI_MERGE_REQUEST_IID: $CI_MERGE_REQUEST_TITLE.
-      Walk this order and do not skip ahead: 1 correctness, 2 tests (is there a test that fails without the change?), 3 readability, 4 security basics (input validation, secrets, injection, authz), 5 scope (every line traces to the MR title/description).
-      Give at least 3 actionable comments, each with file:line and a concrete fix, or say per section that it is clean. Follow CLAUDE.md if present. Output Markdown only.}"
+      Walk this order and do not skip ahead: 1 correctness, 2 tests (is there a test that fails without the change?), 3 scale (races, a query per item, unbounded growth at the expected load), 4 readability, 5 security basics (input validation, secrets, injection, authz), 6 scope (every line traces to the MR title/description).
+      Number the findings. Each names file:line, the concrete input or state that fails, the fix, and what skipping it costs; no concrete case, no finding, so never pad the list. A comment shortcut: <limit>, <when to upgrade> is a decision, not a finding. A clean MR is Looks good plus one line on what you checked. End with Verdict and Not checked. Follow CLAUDE.md if present. Output Markdown only.}"
       --allowedTools "Read" "Grep" "Glob" "Bash(git diff:*)" "Bash(git log:*)" "Bash(git show:*)"
       --max-turns 25
       > review.md
