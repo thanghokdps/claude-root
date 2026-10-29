@@ -120,6 +120,18 @@ def test_duplicate_of_index_line_is_rejected_and_bumps_seen():
     assert len(rejected(r)) == 2  # same title under another slug is still a duplicate
 
 
+def test_index_link_outside_its_folder_is_never_modified():
+    r = repo(home())
+    outside = os.path.join(r["path"], "victim.md")
+    original = "---\ntitle: x\nttl_days: 90\nseen: 1\nlast_used: 2020-01-01\n---\n"
+    write(outside, original)
+    write(os.path.join(r["solutions"], "INDEX.md"), "- [piped-exit-codes](../../../victim.md) — x\n")
+    queue(r, proposal())
+    run(r, "--now")
+    assert "duplicate" in rejected(r)[0]["reject_reason"]
+    assert read(outside) == original
+
+
 def test_past_ttl_and_unused_is_archived_never_deleted():
     r = repo(home())
     old = (TODAY - datetime.timedelta(days=91)).isoformat()
