@@ -116,6 +116,8 @@ def test_exactly_one_spawn_after_50_calls():
     # No tools: Claude Code refuses the child's writes under .git/, so the hook writes the queue itself.
     assert argv[argv.index("--tools") + 1] == ""
     assert "Write" not in argv and "--allowedTools" not in argv
+    # The default system prompt, MCP servers and skill listing were ~80% of the child's input tokens.
+    assert "--system-prompt" in argv and "--strict-mcp-config" in argv and "--disable-slash-commands" in argv
     assert read(found[0]) == "1"  # the child runs with HARNESS_LEARN_CHILD=1
 
 
