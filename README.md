@@ -63,6 +63,9 @@ Two axes that never mix. The **process** (how work is done) is the same for ever
 Every request, whatever the role, moves through the same stages:
 
 ```text
+a requirement
+  → intake     /breakdown: analysed against the code, split into tasks with criteria and estimates, created on GitLab / Jira / GitHub
+  → ticket     /ticket <id>: the task's intent, spec and plan written into docs/tickets/<id>/, then built as below
 your sentence
   → routing    the skill whose description matches fires (tested on every kit change, no model call)
   → lane       tiny: just do it · normal: plan mode → build → verify · high-risk: spec → confirm → build → review
@@ -116,7 +119,7 @@ One marketplace, `harness`, one plugin per role. Installing a role pulls in what
 | Plugin | Who installs it | Brings | Depends on |
 |---|---|---|---|
 | [`core`](plugins/core/README.md) | everyone, through any role | `/verify-done`, `/project-init`, `/docs-sync`, `/compact`, `/compound`, `/sync-memory`, `/btw`; the always-on safety hooks | progress |
-| [`plan`](plugins/plan/README.md) | architects, tech leads | `/kickoff`, `/brainstorming`, `/grill`, `/domain-model`, `/codebase-design`, `/writing-plans` | progress |
+| [`plan`](plugins/plan/README.md) | everyone who receives requirements; architects, tech leads | `/breakdown` (requirement → estimated tasks on the tracker), `/kickoff`, `/brainstorming`, `/grill`, `/domain-model`, `/codebase-design`, `/writing-plans` | progress |
 | [`review`](plugins/review/README.md) | reviewers | `/review-checklist`, `/review-diff`, `/blast-radius`, `/create-pr`, `/resolve-pr-feedback`, `/debt-ledger`, `/repo-audit` | progress |
 | [`dev`](plugins/dev/README.md) | every developer | `/feature` (dispatches slices to the role packs' engineers), `/ticket`, `/fix-bug`, `/tdd`, `/resolve-question`, `/checkpoint`, `/coordinator`; the ticket and test-lock hooks | core, plan, review |
 | [`frontend`](plugins/frontend/README.md) | web UI repos, turned on per repo | the `frontend-engineer` agent, `/ui-feature`, `/design-ui`; React and Next.js rules | progress, dev |

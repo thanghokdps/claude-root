@@ -129,6 +129,18 @@ cd my-project && claude
 
 Start: `claude` in the project. If the last session ended with `/compact`, `specs/HANDOFF.md` is read and Claude knows where to continue. On a team project, `/sync-memory` first.
 
+An engineer's day maps onto the skills like this; each step is optional and each hands its file to the next:
+
+| Step | Say or type | Leaves behind |
+|---|---|---|
+| Analyse a requirement, split it, estimate it, put it on the tracker | `/breakdown <text, link or file>` | issues on GitLab / Jira / GitHub with criteria, role, dependency order and an estimate range |
+| Pick up one task | `/ticket <id>` | `docs/tickets/<id>/{intent,spec,plan}.md` on a branch |
+| Design first when the task is not obvious | `/brainstorming` → `/grill` → `/writing-plans` | `specs/<slug>/design.md`, `PLAN.md` |
+| Implement | `/feature` (dispatches slices to the role engineers) · `/tdd` · `/fix-bug` | code with its tests, a commit per slice |
+| Test and review | `/verify-done` · `/review-checklist` · `/blast-radius` | the evidence block, numbered findings |
+| Deliver | `/finish-branch` → PR/MR · `/ci-triage` when red · `/release-checklist <version>` | a merged branch, a tagged release |
+| Close the loop | `/compact` · `/compound` · `/retro` | handoff, lessons, estimate vs actual |
+
 Work: describe what you want. The Auto-Coordinator classifies it (tiny, normal, high-risk), routes it to the skill, and for anything above tiny shows `Intent · Lane · Routing` and a task list. A vague request gets questions first, one per turn with a recommendation, never a guessed build. The slash commands below force a skill when you want a specific one.
 
 Finish: `/verify-done` before saying done, `/review-checklist` before the PR, `/finish-branch` to land it, `/compact` to hand off.
@@ -137,6 +149,7 @@ Finish: `/verify-done` before saying done, `/review-checklist` before the PR, `/
 
 | Task | Say or type | What happens |
 |---|---|---|
+| A requirement, an epic, "how long?" | `/breakdown <text or link>` | analysed against the code, split into tasks with Given/When/Then criteria and a range estimate each; created on the tracker after you confirm the list |
 | New feature | *"add dark mode to the settings page"* or `/feature …` | risk intake → lane → plan → build → self-review → commit. A hard gate (auth, payment, migration) asks you to confirm the spec first |
 | A ticket by id | `/ticket 412` · `/ticket 412 413 414` | the ticket's intent, spec and plan are written into `docs/tickets/<id>/`, built through `/feature`, one worktree and one PR per ticket; the commit waits for the plan's skills |
 | A bug | `/fix-bug uploads over 10 MB crash` | reproduce in a red loop → minimise → hypothesis → fix → regression test. The reproducing test is locked while the fix is written |
