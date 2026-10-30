@@ -91,5 +91,5 @@ A PLAN.md task's `<verify>` field is already a completion criterion. TDD is how 
 
 - **Red before green**, every cycle. A test that has never failed has never been shown to test anything.
 - **One slice at a time** — one seam, one test, one minimal implementation.
-- **An unconfirmed seam gets no test.** Ask first.
+- **An unconfirmed seam gets no test.** Confirm seams with the user before the first cycle; one found mid-build goes through `/resolve-question` (debated and recorded, not asked).
 - **Behaviour, not implementation.** If the test needs to reach past the interface, the module is the wrong shape — see `/codebase-design`.

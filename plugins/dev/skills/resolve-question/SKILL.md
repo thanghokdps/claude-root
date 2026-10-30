@@ -52,11 +52,13 @@ Dispatch 2 `Explore` agents in one message, `model: "haiku"` (`~/.claude/rules/m
 
 ## Step 5 — Ask the ask-tier choices
 
-One question per turn, as 2–4 options with the one you recommend first and why, plus what each option changes. Facts found in Steps 2–3 go in the context line, so the user is never asked something the repo answered.
+**Before building** (no file edited yet except plans and specs): ask every ask-tier choice now, as many rounds as it takes — `AskUserQuestion` with up to 4 questions per call, each 2–4 options with the one you recommend first and why, plus what each option changes. Facts found in Steps 2–3 go in the context line, so the user is never asked something the repo answered.
 
-A decide-tier choice is never asked: take the recommended option and record it in Step 6. In auto mode ("implement all, don't ask") an ask-tier choice also takes the recommended option and is recorded the same way; on a `Risk: high` ticket it is challenged first (`${CLAUDE_PLUGIN_ROOT}/references/auto-decisions.md`).
+**Once building has started**, or in auto mode ("implement all, don't ask"): never ask. Settle each ask-tier choice by the debate in `${CLAUDE_PLUGIN_ROOT}/references/auto-decisions.md` (one advocate subagent per option, you judge, a red team on hard gates) and record it with `challenged:` and `revert:`. An action no rollback undoes (push, merge, deploy, delete) still waits for the user's yes.
 
-**Done when:** every ask-tier choice is answered by the user, or taken in auto mode.
+A decide-tier choice is never asked or debated: take the recommended option and record it in Step 6.
+
+**Done when:** every ask-tier choice is answered by the user before the build, or debated and recorded during it.
 
 ## Step 6 — Record
 
@@ -76,6 +78,6 @@ A fact keeps its citation. An `(agent)` line without `why:` and `revert:` is not
 ## Rules
 
 - Never answer a fact from memory: open the file.
-- Never send a fact to the user; never decide an ask-tier choice yourself outside auto mode; never decide without a note.
+- Never send a fact to the user; never decide an ask-tier choice before the build without asking, or during it without a debate; never decide without a note.
 - A subagent cannot ask the user: it reports `Blocked: <question>` and the main session runs this skill.
-- The same question twice in one task → straight to the user; no second scan.
+- The same question twice in one task → straight to the user before the build, straight to the debate during it; no second scan.

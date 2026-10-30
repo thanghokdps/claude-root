@@ -40,7 +40,7 @@ Read one existing endpoint and its test end to end, and copy its shape.
    - 401 without a session
    - 404 for another user's resource. Seed two users, and test every method on the path.
    - 403 for a role that may not, 409/422/429 when the endpoint has those rules
-3. A breaking change to an existing contract (rename, remove, retype) → stop and ask. Prefer an additive field or a new endpoint.
+3. A breaking change to an existing contract (rename, remove, retype) → prefer an additive field or a new endpoint. Breaking is unavoidable → ask before the first edit; found mid-build → `/resolve-question` (dev) debates it with a red team and records it.
 
 **Done when:** the tests exist and fail for the right reason (missing route or behaviour, not a typo).
 

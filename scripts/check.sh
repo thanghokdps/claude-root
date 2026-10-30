@@ -12,6 +12,7 @@ python3 scripts/test_secret_guard.py
 python3 scripts/test_repo_profile.py
 python3 scripts/test_test_lock.py
 python3 scripts/test_weakened_check.py
+python3 scripts/test_ask_once.py
 python3 scripts/test_guards_cwd.py
 python3 scripts/test_session_handoff.py
 python3 scripts/test_init_standalone.py
