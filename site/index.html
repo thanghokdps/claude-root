@@ -117,6 +117,31 @@ h2 { font-size: clamp(26px, 3.5vw, 38px); letter-spacing: -.02em; margin: 0 0 8p
 .chip { font: 12px "JetBrains Mono", monospace; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
 .chip.dep { background: transparent; border: 1px dashed var(--line); }
 .card.featured { grid-column: span 2; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--surface)), var(--surface)); }
+.card h3 code, .card p code { font: 13px "JetBrains Mono", monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+/* who it is for + before / after */
+.who .card { cursor: default; } .who .card:hover { transform: none; }
+.before { margin-top: 24px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; font-size: 14px; }
+.before > div { display: grid; grid-template-columns: 1.1fr 1.6fr .8fr; gap: 16px; padding: 12px 20px; border-top: 1px solid var(--line); }
+.before > div:first-child { border-top: 0; background: var(--surface-2); font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.before > div > span:first-child { color: var(--muted); } .before > div > span:last-child { font: 12.5px "JetBrains Mono", monospace; color: var(--muted); }
+@media (max-width: 860px) { .before > div { grid-template-columns: 1fr; gap: 4px; } .before > div:first-child { display: none; } }
+
+/* start in three steps */
+.steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.steps3 .card { cursor: default; display: flex; flex-direction: column; }
+.steps3 .card:hover { transform: none; }
+.steps3 .num { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+.steps3 pre { margin: auto 0 0; padding: 12px 14px; border-radius: 10px; background: var(--term-bg, #0f1117); color: var(--term-text, #e6e6e6); font: 12.5px/1.6 "JetBrains Mono", monospace; white-space: pre-wrap; }
+.steps3 pre.out { color: var(--muted); background: var(--surface-2); }
+.detect { margin-top: 20px; padding: 20px 24px; border: 1px dashed var(--line); border-radius: 16px; }
+.detect b { display: block; margin-bottom: 12px; }
+.detect-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px 24px; }
+.detect-grid div { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.detect-grid i { color: var(--muted); font-style: normal; }
+.detect p { margin: 14px 0 0; color: var(--muted); font-size: 14px; }
+@media (max-width: 860px) { .steps3 { grid-template-columns: 1fr; } }
+h3.group { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 32px 0 12px; }
+h3.group:first-of-type { margin-top: 0; }
 
 .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
 .reveal.in { opacity: 1; transform: none; }
@@ -173,8 +198,10 @@ article img { max-width: 100%; }
   <div class="wrap">
     <a class="brand" href="#"><span class="brand-dot"></span>Claude Harness</a>
     <div class="links">
-      <a class="opt" href="#flow">Flow</a>
-      <a href="#plugins">Plugins</a>
+      <a class="opt" href="#start">Start</a>
+      <a class="opt" href="#flow">Pipeline</a>
+      <a class="opt" href="#engineers">Engineers</a>
+      <a href="#plugins">Packs</a>
       <a href="#docs">Docs</a>
       <a class="opt" href="https://github.com/thanghokdps/claude-root">GitHub</a>
       <button id="theme" type="button" aria-label="Toggle colour theme">◐</button>
@@ -187,10 +214,10 @@ article img { max-width: 100%; }
   <div class="wrap hero-inner">
     <div>
       <span class="eyebrow">⚡ Claude Code plugin marketplace</span>
-      <h1>Build one AI assistant <span class="shimmer">end to end.</span></h1>
-      <p class="lede">Architecture interview → scaffold → tools → chat UI → evals → security, on CopilotKit v2 · AG-UI with Mastra, LangChainJS or LangGraph. Plus role plugins for the everyday plan, build, review and ship loop.</p>
+      <h1>One process. <span class="shimmer">Five engineers.</span></h1>
+      <p class="lede">Claude Code that follows your team's process: plan → build → verify → review → ship, the same for every role, with hooks that block the shortcut. Frontend, backend, mobile, devops and AI are role packs, turned on by what your repo contains, and <code>/feature</code> hands each slice to the right engineer.</p>
       <div class="cta">
-        <a class="btn primary" href="#/doc/README.md">Get started →</a>
+        <a class="btn primary" href="#start">Start in 3 steps →</a>
         <a class="btn ghost" href="docs/skill-map.html">Explore the skill map</a>
       </div>
     </div>
@@ -205,27 +232,105 @@ article img { max-width: 100%; }
   <div class="stats">
     <div class="stat reveal"><b data-count="plugins">0</b><span>plugins</span></div>
     <div class="stat reveal"><b data-count="skills">0</b><span>skills</span></div>
-    <div class="stat reveal"><b data-count="docs">0</b><span>docs</span></div>
+    <div class="stat reveal"><b data-count="packs">0</b><span>role packs</span></div>
     <div class="stat reveal"><b data-count="ddr">0</b><span>design decisions</span></div>
   </div>
 
+  <section id="why">
+    <h2 class="reveal">What changes for a team</h2>
+    <p class="sub reveal">Claude Code writes code fast. Left alone it also skips the plan, commits to <code>main</code>, says "tests pass" without running them, and forgets everything when the session ends. The kit gives Claude the process a senior engineer follows and makes the non-negotiable steps impossible to skip.</p>
+    <div class="cards who">
+      <div class="card reveal"><h3>👔 If you manage the team</h3><p>AI-written code becomes safer to accept. Every shortcut shows up as a blocked step with a reason, not as a surprise in production. One install command gives every machine the same process.</p></div>
+      <div class="card reveal"><h3>🧑‍💻 If you are a senior engineer</h3><p>A marketplace of plugins with declared dependencies, routing tests that run free on every change, hooks that exit 0 or 2, and every design decision written down. Opus plans and reviews; cheaper models type.</p></div>
+      <div class="card reveal"><h3>📋 If you are a PM or QA</h3><p>Describe the feature or the bug in plain words, in any language. The plan, the slices, the evidence and the PR description come back in a shape you can read and challenge.</p></div>
+      <div class="card reveal"><h3>🤖 If you build AI assistants</h3><p>The <code>ai</code> pack takes a chatbot from one sentence to a scaffolded, traced and evaluated CopilotKit + LangGraph / Mastra app, asking the product questions before any technology.</p></div>
+    </div>
+    <div class="before reveal">
+      <div><span>Before</span><span>With the kit</span><span>Enforced by</span></div>
+      <div><span>"Done" means Claude said so</span><span><code>/verify-done</code> re-runs the checks and reports their output</span><span>core</span></div>
+      <div><span>Code lands on <code>main</code> from a session</span><span>Blocked; work goes through a branch and a PR</span><span>branch-guard</span></div>
+      <div><span>A fix "passes" by editing the test</span><span>The reproducing test is locked while the fix is written</span><span>test-lock</span></div>
+      <div><span>A secret file is read into the context</span><span><code>.env*</code> and keys are never read; Claude asks you</span><span>secret-guard</span></div>
+      <div><span>Production applied from a chat</span><span>A production release or <code>terraform apply</code> is a person's</span><span>release-gate · infra-gate</span></div>
+      <div><span>Every step on the most expensive model</span><span>Opus decides; Sonnet writes; Haiku does mechanical work</span><span>model-cost rule</span></div>
+      <div><span>Each session starts from zero</span><span><code>/compact</code> writes a handoff the next session reads</span><span>core</span></div>
+    </div>
+  </section>
+
+  <section id="start">
+    <h2 class="reveal">Start in three steps</h2>
+    <p class="sub reveal">No configuration. Install once, open your repo, say what you want. The kit reads the repo and turns on the packs it needs.</p>
+    <div class="steps3">
+      <div class="card reveal"><span class="num">1</span><h3>Install</h3><p>Inside Claude Code, add the marketplace and install the process kit. Reload.</p><pre>/plugin marketplace add thanghokdps/claude-root
+/plugin install harness@harness
+/reload-plugins</pre></div>
+      <div class="card reveal"><span class="num">2</span><h3>Open your repo</h3><p>On the first session the <code>repo-profile</code> hook reads your manifests and prints the roles it turned on. They load from the next session.</p><pre class="out">REPO PROFILE: Next.js, Prisma.
+Roles: frontend, backend, devops.
+Prefer: features across roles → /feature …</pre></div>
+      <div class="card reveal"><span class="num">3</span><h3>Say what you want</h3><p>In your own words, any language. The matching skill fires, the lane is chosen from risk, slices go to the engineers.</p><pre>add CSV export to the reports page
+the upload crashes on files over 10 MB
+/ticket 412
+Tôi muốn làm một chatbot tra cứu đơn hàng</pre></div>
+    </div>
+    <div class="detect reveal">
+      <b>Which packs turn on for my repo?</b>
+      <div class="detect-grid">
+        <div><span class="chip">React · Next.js · Vue · Svelte</span><i>→</i><strong>frontend</strong></div>
+        <div><span class="chip">FastAPI · Nest · Express · Prisma · Go · Rust</span><i>→</i><strong>backend</strong></div>
+        <div><span class="chip">React Native · Expo · eas.json</span><i>→</i><strong>mobile</strong></div>
+        <div><span class="chip">Dockerfile · CI workflows · *.tf · k8s/ · Helm</span><i>→</i><strong>devops</strong></div>
+        <div><span class="chip">CopilotKit · LangGraph · LangChain · Mastra</span><i>→</i><strong>ai</strong></div>
+      </div>
+      <p>Nothing detected (a static site, a script)? The process plugins still work; force a pack with <code>/plugin install frontend@harness</code>.</p>
+    </div>
+  </section>
+
   <section id="flow">
-    <h2 class="reveal">From idea to a shipped assistant</h2>
-    <p class="sub reveal">The <code>ai</code> role pack walks one assistant through every stage. Each stage is a skill you can call on its own.</p>
+    <h2 class="reveal">Pipeline</h2>
+    <p class="sub reveal">Every request, whatever the role, moves through the same stages. Say what you want in your own words; the skill fires from the sentence.</p>
     <div class="pipe reveal">
       <div class="pulse"></div>
-      <div class="step"><div class="n">🧭</div><b>Architect</b><small>interview</small></div>
-      <div class="step"><div class="n">🏗️</div><b>Scaffold</b><small>project skeleton</small></div>
-      <div class="step"><div class="n">🛠️</div><b>Tools</b><small>features &amp; HITL</small></div>
-      <div class="step"><div class="n">💬</div><b>Chat UI</b><small>CopilotKit</small></div>
-      <div class="step"><div class="n">📊</div><b>Evals</b><small>and tracing</small></div>
-      <div class="step"><div class="n">🛡️</div><b>Security</b><small>hardening</small></div>
+      <div class="step"><div class="n">🧭</div><b>Route</b><small>skill from your sentence</small></div>
+      <div class="step"><div class="n">⚖️</div><b>Lane</b><small>tiny · normal · high-risk</small></div>
+      <div class="step"><div class="n">📐</div><b>Plan</b><small>Opus splits into slices</small></div>
+      <div class="step"><div class="n">🛠️</div><b>Build</b><small>one engineer per slice</small></div>
+      <div class="step"><div class="n">🔍</div><b>Evidence</b><small>verify-done · review</small></div>
+      <div class="step"><div class="n">🧠</div><b>Memory</b><small>handoff · lessons · docs</small></div>
+    </div>
+  </section>
+
+  <section id="engineers">
+    <h2 class="reveal">Engineers</h2>
+    <p class="sub reveal"><code>/feature</code> is the supervisor: it writes the plan, then dispatches each slice to the engineer of the pack that owns it, on the cheaper model. You never call a role by hand. A slice belongs to the pack of the <em>contract</em> it implements, not the language it is written in.</p>
+    <div class="cards">
+      <a class="card reveal" href="#/doc/plugins/backend/README.md"><h3>backend-engineer<em>backend</em></h3><p>Tables, queries, contract, endpoint, third-party API. Owner-scoped queries, a route matrix of 200 · 400 · 401 · 404.</p><div class="chips"><span class="chip">/db-change</span><span class="chip">/api-endpoint</span><span class="chip">/api-client</span></div></a>
+      <a class="card reveal" href="#/doc/plugins/frontend/README.md"><h3>frontend-engineer<em>frontend</em></h3><p>A web screen from a fixture: every state, primitives built once, Testing Library, checked in the browser at each viewport.</p><div class="chips"><span class="chip">/ui-feature</span><span class="chip">/design-ui</span></div></a>
+      <a class="card reveal" href="#/doc/plugins/mobile/README.md"><h3>mobile-engineer<em>mobile</em></h3><p>A React Native / Expo screen: navigation, per-platform state, verified on the iOS Simulator or Android emulator.</p><div class="chips"><span class="chip">/mobile-feature</span></div></a>
+      <a class="card reveal" href="#/doc/plugins/devops/README.md"><h3>devops-engineer<em>devops</em></h3><p>One CI, container or infrastructure change: plan → review → apply when you agree → verify, rollback ready. Production applies stay a person's.</p><div class="chips"><span class="chip">/pipeline</span><span class="chip">/container</span><span class="chip">/infra-change</span></div></a>
+      <a class="card reveal" href="#/doc/plugins/ai/README.md"><h3>ai-engineer<em>ai</em></h3><p>Tool, graph, HITL, prompt and the chat surface on CopilotKit · AG-UI with Mastra, LangChainJS or LangGraph, traced and evaluated.</p><div class="chips"><span class="chip">/agent-architect</span><span class="chip">/agent-tool</span><span class="chip">/agent-frontend</span><span class="chip">+9</span></div></a>
+      <a class="card reveal" href="#/doc/plugins/dev/README.md"><h3>supervisor<em>dev · Opus</em></h3><p>Plans, chooses the lane, briefs each engineer so nothing is left to decide, reviews every diff before it is integrated, then opens the PR.</p><div class="chips"><span class="chip">/feature</span><span class="chip">/ticket</span><span class="chip">/fix-bug</span></div></a>
+    </div>
+  </section>
+
+  <section id="hooks">
+    <h2 class="reveal">Hooks</h2>
+    <p class="sub reveal">The checks that must happen, not just be remembered. Gates live in the process plugins, never in a pack, so they hold before a pack is enabled. Hooks exit 0 or 2 and never crash the session.</p>
+    <div class="cards">
+      <div class="card reveal"><h3>branch-guard<em>core</em></h3><p>No commit or push to <code>main</code> or an environment branch from a session; work goes through a branch and a PR.</p></div>
+      <div class="card reveal"><h3>secret-guard<em>core</em></h3><p><code>.env*</code>, keys and service-account files are never read, printed or edited; Claude asks you for the value.</p></div>
+      <div class="card reveal"><h3>test-lock<em>dev</em></h3><p>The test that reproduces a bug is locked while the fix is written; a fix cannot "pass" by editing the test.</p></div>
+      <div class="card reveal"><h3>ticket-gate<em>dev</em></h3><p>A ticket's commit waits for the skills its plan names; its PR waits for <code>/verify-done</code> and <code>/review-checklist</code>.</p></div>
+      <div class="card reveal"><h3>release-gate<em>ship</em></h3><p>A production <code>eas build</code> / <code>submit</code> / <code>update</code> ships only the exact commit of a <code>release/&lt;version&gt;</code> PR approved by someone else.</p></div>
+      <div class="card reveal"><h3>infra-gate<em>ship</em></h3><p>A production <code>terraform apply</code>, <code>kubectl apply</code> or <code>helm upgrade</code> is run by a person, never from a session; non-production asks first.</p></div>
     </div>
   </section>
 
   <section id="plugins">
-    <h2 class="reveal">Role plugins</h2>
-    <p class="sub reveal">Install one role and its dependencies come with it. Click a plugin to read its README.</p>
+    <h2 class="reveal">Packs</h2>
+    <p class="sub reveal">Process plugins are always on and stack-free. Role packs share one shape, one <code>&lt;role&gt;-engineer</code> agent, deliverable-named skills, stack rules read on demand, no hooks, and are turned on per repo by <code>core</code>'s <code>repo-profile</code> hook from what the repo contains. Click a plugin to read its README.</p>
+    <h3 class="group reveal">Role packs · turned on per repo</h3>
+    <div class="cards" id="pack-cards"></div>
+    <h3 class="group reveal">Process plugins · always on</h3>
     <div class="cards" id="plugin-cards"></div>
   </section>
 
@@ -236,16 +341,16 @@ article img { max-width: 100%; }
         <p class="sub">An interactive diagram with zoom, search and a focus panel for each node.</p>
         <a class="btn primary" href="docs/skill-map.html">Open the skill map →</a>
       </div>
-      <svg viewBox="0 0 420 240" role="img" aria-label="Plugin dependency sketch">
-        <path class="edge" d="M210 120 L80 50"/><path class="edge" d="M210 120 L340 50"/><path class="edge" d="M210 120 L70 190"/>
-        <path class="edge" d="M210 120 L350 190"/><path class="edge" d="M210 120 L210 30"/><path class="edge" d="M210 120 L210 215"/>
-        <circle class="node hub" cx="210" cy="120" r="34"/><text class="on-hub" x="210" y="120">ai</text>
-        <circle class="node" cx="80" cy="50" r="24"/><text x="80" y="50">dev</text>
-        <circle class="node" cx="340" cy="50" r="24"/><text x="340" y="50">ship</text>
-        <circle class="node" cx="70" cy="190" r="24"/><text x="70" y="190">plan</text>
-        <circle class="node" cx="350" cy="190" r="24"/><text x="350" y="190">review</text>
+      <svg viewBox="0 0 420 240" role="img" aria-label="The /feature supervisor dispatching to the five role packs">
+        <path class="edge" d="M210 120 L70 50"/><path class="edge" d="M210 120 L350 50"/><path class="edge" d="M210 120 L60 190"/>
+        <path class="edge" d="M210 120 L360 190"/><path class="edge" d="M210 120 L210 215"/><path class="edge" d="M210 120 L210 30"/>
+        <circle class="node hub" cx="210" cy="120" r="34"/><text class="on-hub" x="210" y="120">/feature</text>
+        <circle class="node" cx="70" cy="50" r="28"/><text x="70" y="50">frontend</text>
+        <circle class="node" cx="350" cy="50" r="28"/><text x="350" y="50">backend</text>
+        <circle class="node" cx="60" cy="190" r="26"/><text x="60" y="190">mobile</text>
+        <circle class="node" cx="360" cy="190" r="26"/><text x="360" y="190">devops</text>
+        <circle class="node" cx="210" cy="215" r="22"/><text x="210" y="215">ai</text>
         <circle class="node" cx="210" cy="30" r="22"/><text x="210" y="30">core</text>
-        <circle class="node" cx="210" cy="215" r="22"/><text x="210" y="215">progress</text>
       </svg>
     </div>
   </section>
@@ -271,7 +376,7 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const DOC_LABELS = {
   "README.md": ["📘", "README", "Quickstart, install and every plugin"],
   "docs/USAGE.md": ["🧪", "Usage", "Day-to-day workflows step by step"],
-  "DESIGN.md": ["🧩", "Design", "Why role plugins and how the layers fit"],
+  "DESIGN.md": ["🧩", "Design", "Two axes: process plugins and role packs, and why"],
   "HARNESS.md": ["⚙️", "Harness", "The global CLAUDE.md and rules"],
   "plugins/README.md": ["📦", "Plugins", "How the marketplace is laid out"],
   "docs/ddr/README.md": ["📜", "Design decisions", "The DDR log"],
@@ -292,11 +397,12 @@ const SCRIPT = [
   ["c", "# inside Claude Code"],
   ["p", "/plugin marketplace add thanghokdps/claude-root"],
   ["ok", "✔ marketplace harness added"],
-  ["p", "/plugin install ai@harness"],
-  ["ok", "✔ ai + progress core plan review dev"],
-  ["p", "/reload-plugins"],
-  ["p", "/agent-architect"],
-  ["c", "→ Let's design your assistant…"],
+  ["p", "/plugin install harness@harness"],
+  ["ok", "✔ core plan review dev ship lead guards progress"],
+  ["c", "# next session, in your repo"],
+  ["ok", "Roles: frontend, backend  (Next.js · Prisma)"],
+  ["p", "add CSV export to the reports page"],
+  ["c", "→ /feature · db-change → backend-engineer · ui-feature → frontend-engineer"],
 ];
 async function typeTerminal() {
   const el = document.getElementById("typed");
@@ -348,17 +454,28 @@ function spotlight(card) {
   });
 }
 
+// A pack depends on exactly progress and dev and is enabled per repo; everything else is a process plugin.
+const isPack = p => p.dependencies.length === 2 && p.dependencies.includes("progress") && p.dependencies.includes("dev");
+const PACK_ORDER = ["frontend", "backend", "mobile", "devops", "ai", "workplace"];
+const PROCESS_ORDER = ["dev", "core", "plan", "review", "ship", "guards", "lead", "progress", "harness"];
+const byOrder = order => (a, b) => (order.indexOf(a.name) + 99) % 99 - (order.indexOf(b.name) + 99) % 99;
+
+function pluginCard(p) {
+  const skills = p.skills.slice(0, 6).map(s => `<span class="chip">/${esc(s)}</span>`).join("");
+  const more = p.skills.length > 6 ? `<span class="chip">+${p.skills.length - 6}</span>` : "";
+  const deps = p.dependencies.map(d => `<span class="chip dep">→ ${esc(d)}</span>`).join("");
+  const href = p.readme ? `#/doc/${p.readme}` : REPO + "plugins/" + p.name;
+  const count = p.skills.length ? `${p.skills.length} skills` : "hooks only";
+  return `<a class="card reveal${p.name === "dev" ? " featured" : ""}" href="${esc(href)}">
+    <h3>${esc(p.name)}<em>${count}</em></h3><p>${esc(p.description)}</p>
+    <div class="chips">${skills}${more}${deps}</div></a>`;
+}
+
 function renderCards() {
-  const pc = document.getElementById("plugin-cards");
-  pc.innerHTML = site.plugins.map(p => {
-    const skills = p.skills.slice(0, 6).map(s => `<span class="chip">/${esc(s)}</span>`).join("");
-    const more = p.skills.length > 6 ? `<span class="chip">+${p.skills.length - 6}</span>` : "";
-    const deps = p.dependencies.map(d => `<span class="chip dep">→ ${esc(d)}</span>`).join("");
-    const href = p.readme ? `#/doc/${p.readme}` : REPO + "plugins/" + p.name;
-    return `<a class="card reveal${p.name === "ai" ? " featured" : ""}" href="${esc(href)}">
-      <h3>${esc(p.name)}<em>${p.skills.length} skills</em></h3><p>${esc(p.description)}</p>
-      <div class="chips">${skills}${more}${deps}</div></a>`;
-  }).join("");
+  const packs = site.plugins.filter(p => isPack(p) || p.name === "workplace").sort(byOrder(PACK_ORDER));
+  const process = site.plugins.filter(p => !packs.includes(p)).sort(byOrder(PROCESS_ORDER));
+  document.getElementById("pack-cards").innerHTML = packs.map(pluginCard).join("");
+  document.getElementById("plugin-cards").innerHTML = process.map(pluginCard).join("");
   const docs = Object.keys(DOC_LABELS).filter(d => site.docs.includes(d));
   document.getElementById("doc-cards").innerHTML = docs.map(d => {
     const [icon, title, blurb] = DOC_LABELS[d];
@@ -369,7 +486,7 @@ function renderCards() {
   const counts = {
     plugins: site.plugins.length,
     skills: site.plugins.reduce((n, p) => n + p.skills.length, 0),
-    docs: site.docs.length,
+    packs: site.plugins.filter(isPack).length,
     ddr: site.docs.filter(d => /^docs\/ddr\/\d+/.test(d)).length,
   };
   document.querySelectorAll("[data-count]").forEach(el => {
