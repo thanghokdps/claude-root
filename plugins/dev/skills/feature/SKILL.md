@@ -14,7 +14,7 @@ when_to_use: a new capability is requested, or /coordinator classifies the inten
 
 Work that has a tracker id goes through `/ticket` instead: it writes the contract to `docs/tickets/<id>/` (committed, unlike `specs/`) and then runs this skill with that plan.
 
-In an AI-assistant repo (a `docs/adr/*agent-architecture*` file exists, or the code imports `@copilotkit/*`, `@mastra/core` or `@langchain/langgraph`) and a feature the assistant takes part in, hand over to `/agent-feature` (agent, if installed) before Stage 0 and stop here: it checks the feature against the ADR and decides per slice whether a tool runs in the agent or the browser. Features the chat never touches stay here.
+This skill is the supervisor: it plans, splits the feature into slices, dispatches each slice to the role pack's engineer (Stage 3), reviews and integrates. It writes no slice itself when a pack is enabled.
 
 ---
 
@@ -73,17 +73,22 @@ For high-risk: save plan to `specs/<slug>/PLAN.md` and show user before building
 
 Follow the plan step by step.
 
-A feature that crosses layers is built as slices, in this order and one slice green before the next. Each slice goes through its skill:
+A feature is built as slices, in this order and one slice green before the next. Each slice belongs to one role pack and is dispatched to that pack's engineer with `Agent` (`subagent_type` from the table, `model: sonnet`) and a brief the engineer has nothing left to decide from: the contract (types, error codes), the files, the test to make pass, the done check (`model-cost.md`). The engineer runs the pack's skill; this session reviews its diff.
 
-| Slice | Skill | Green when |
-|-------|-------|------------|
-| contract: request/response schema shared by BE and FE | (part of `/api-endpoint` Step 2) | schema exported, types imported by the client |
-| tables, columns, queries | `/db-change` | migration applies, repository tests pass on the real engine |
-| endpoint | `/api-endpoint` | route matrix passes (200 · 400 · 401 · 404 other user's) |
-| external API, or the frontend fetchers | `/api-client` | tests pass with no network |
-| screen and states | `/ui-feature` (`/design-ui` first when there is a design) | Testing Library tests pass, browser check at every viewport |
+| Slice | Engineer | Runs | Green when |
+|-------|----------|------|------------|
+| tables, columns, queries | `backend:backend-engineer` | `/db-change` (backend, if installed) | migration applies, repository tests pass on the real engine |
+| contract + endpoint | `backend:backend-engineer` | `/api-endpoint` (backend, if installed) | schema exported, route matrix passes (200 · 400 · 401 · 404 other user's) |
+| third-party API the server calls | `backend:backend-engineer` | `/api-client` (backend, if installed) | tests pass with no network |
+| web screen and states | `frontend:frontend-engineer` | `/ui-feature`, `/design-ui` first when there is a design (frontend, if installed) | Testing Library tests pass, browser check at every viewport |
+| mobile screen | `mobile:mobile-engineer` | `/mobile-feature` (mobile, if installed) | tests pass, simulator check |
+| agent tool, graph, HITL, prompt | `ai:ai-engineer` | `/agent-feature` (ai, if installed) | `/agent-verify-turn` on a real turn |
+| chat surface: CopilotKit / AG-UI client, tool render, HITL card | `ai:ai-engineer` | `/agent-frontend`, `/agent-design-ui` (ai, if installed) | e2e on a recorded AG-UI stream |
+| CI, container, infra | `devops:devops-engineer` | `/pipeline`, `/container`, `/infra-change` (devops, if installed) | plan reviewed, applied with approval, rollback named |
 
-Skip a slice the feature does not need, and say so in the plan.
+**Which pack owns a slice that touches two roles:** the pack of the *contract* the slice implements, not the language it is written in — whoever is paged when it breaks. A CopilotKit chat component is React but implements AG-UI, so it is `ai`'s; a settings page in the same Next app is `frontend`'s. A Prisma migration under a Next API route is `backend`'s. An EAS build is a store release (`ship`'s `release-gate`), not `devops`'s.
+
+Skip a slice the feature does not need, and say so in the plan. The repo profile (`REPO PROFILE:` at session start) lists the packs enabled here; a slice whose pack is not enabled is built in this session with the table's "Green when" as its check, and the plan says so.
 
 If the plan has 3 or more tasks/waves, print a status table before starting and update it after each task completes:
 

@@ -69,8 +69,15 @@ def test_listing_text_over_cap_is_flagged():
 
 
 def test_init_sh_missing_copy_source_is_flagged():
-    script = 'cp "$HARNESS_DIR/rules/stacks/nope.md" x\ncp "$HARNESS_DIR/rules/stacks/python.md" y\nfor r in "$HARNESS_DIR"/rules/*.md; do :; done'
+    script = 'cp "$HARNESS_DIR/rules/stacks/nope.md" x\ncp "$HARNESS_DIR/rules/stacks/typescript.md" y\nfor r in "$HARNESS_DIR"/rules/*.md; do :; done'
     assert lint_kit.missing_init_sources(script, "plugins/core") == ["rules/stacks/nope.md"]
+
+
+def test_role_pack_shape():
+    ok = {"dependencies": ["progress", "dev"]}
+    assert lint_kit.role_pack_errors("frontend", ["frontend-engineer.md"], ok, False) == []
+    bad = lint_kit.role_pack_errors("frontend", ["ui-dev.md", "frontend-engineer.md"], {"dependencies": ["dev"]}, True)
+    assert len(bad) == 3 and "agents/frontend-engineer.md" in bad[0] and "dependencies" in bad[1] and "hooks" in bad[2], bad
 
 
 def test_eval_case_missing_dependency_is_flagged():

@@ -91,10 +91,11 @@ def test_subagents_get_the_profile_but_never_write_settings():
 def test_ai_web_repo_gets_profile_and_agent_enabled_locally():
     cwd = repo({"package.json": AI_PKG, "prisma/schema.prisma": "", ".claude/docs/index.md": "# x"})
     ctx = run(cwd, config_dir({"agent@harness": False}))
-    for want in ["Next.js", "AI assistant", "Prisma", "/agent-feature", "/db-change", ".claude/docs/index.md",
-                 "/docs-sync", "agent@harness"]:
+    for want in ["Next.js", "AI assistant", "Prisma", "Roles: frontend, backend, ai", "/feature", "/agent-tool",
+                 "/db-change", ".claude/docs/index.md", "/docs-sync", "agent@harness"]:
         assert want in ctx, (want, ctx)
-    assert local_settings(cwd)["enabledPlugins"]["agent@harness"] is True
+    enabled = local_settings(cwd)["enabledPlugins"]
+    assert enabled == {"frontend@harness": True, "backend@harness": True, "agent@harness": True}, enabled
     exclude = open(os.path.join(cwd, ".git", "info", "exclude")).read()
     assert ".claude/settings.local.json" in exclude
 
@@ -111,8 +112,28 @@ def test_plain_backend_repo_without_docs():
     cwd = repo({"package.json": {"dependencies": {"express": "4"}}})
     ctx = run(cwd)
     assert "Express" in ctx and "/api-endpoint" in ctx and "/project-init" in ctx, ctx
-    assert "AI assistant" not in ctx
-    assert local_settings(cwd) is None
+    assert "AI assistant" not in ctx and "Roles: backend." in ctx, ctx
+    assert local_settings(cwd)["enabledPlugins"] == {"backend@harness": True}
+
+
+def test_role_packs_follow_the_stack():
+    cases = (({"package.json": {"dependencies": {"next": "15"}}}, {"frontend", "backend"}),
+             ({"package.json": {"dependencies": {"react": "19", "vite": "6"}}}, {"frontend"}),
+             ({"pyproject.toml": '[project]\ndependencies = ["fastapi"]\n'}, {"backend"}),
+             ({"go.mod": "module x\n"}, {"backend"}),
+             ({"package.json": {"dependencies": {"expo": "52", "react-native": "0.76", "react": "19"}}}, set()),
+             ({"package.json": {"dependencies": {"typescript": "5"}}}, set()))
+    for files, want in cases:
+        cwd = repo(files)
+        run(cwd)
+        got = {k.split("@")[0] for k in (local_settings(cwd) or {}).get("enabledPlugins", {})}
+        assert got == want, (files, got)
+
+
+def test_rn_alone_is_mobile_not_frontend():
+    cwd = repo({"package.json": {"dependencies": {"expo": "52", "react-native": "0.76", "react": "19"}}})
+    ctx = run(cwd)
+    assert "Roles: mobile." in ctx and "/ui-feature" not in ctx, ctx
 
 
 def test_python_ai_repo_with_alembic():
@@ -140,12 +161,12 @@ def test_explicit_opt_out_is_respected():
     cwd = repo({"package.json": AI_PKG, ".claude/settings.json": {"enabledPlugins": {"agent@harness": False}}})
     ctx = run(cwd)
     assert "AI assistant" in ctx
-    assert local_settings(cwd) is None
+    assert "agent@harness" not in local_settings(cwd)["enabledPlugins"]
 
 
 def test_already_enabled_at_user_scope_writes_nothing():
     cwd = repo({"package.json": AI_PKG})
-    ctx = run(cwd, config_dir({"agent@harness": True}))
+    ctx = run(cwd, config_dir({"agent@harness": True, "frontend@harness": True, "backend@harness": True}))
     assert "AI assistant" in ctx and "settings.local.json" not in ctx
     assert local_settings(cwd) is None
 
@@ -240,7 +261,7 @@ def test_workplace_opt_out_is_respected_and_agent_still_enabled():
     cwd = repo(files)
     ctx = run(cwd)
     assert "Domain: workplace" in ctx and "AI assistant" in ctx, ctx
-    assert local_settings(cwd)["enabledPlugins"] == {"agent@harness": True}
+    assert local_settings(cwd)["enabledPlugins"] == {"agent@harness": True}  # RN apps: mobile, no frontend pack yet
 
 
 def test_ticket_folder_is_mentioned():

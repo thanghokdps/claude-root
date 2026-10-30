@@ -7,7 +7,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCRIPT = os.path.join(ROOT, "plugins", "dev", "skills", "design-ui", "scripts", "check-ui.py")
+SCRIPT = os.path.join(ROOT, "plugins", "frontend", "skills", "design-ui", "scripts", "check-ui.py")
 
 
 def el(selector, **kw):

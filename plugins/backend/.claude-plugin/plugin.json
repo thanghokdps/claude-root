@@ -1,0 +1,21 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "Backend role pack: the backend-engineer agent /feature dispatches endpoints, schema and integrations to, api-endpoint (route matrix), db-change (migration, owner-scoped queries), api-client (third-party APIs), Python, FastAPI and Prisma rules. Enabled per repo by core's repo-profile hook.",
+  "keywords": [
+    "backend",
+    "api",
+    "database",
+    "fastapi",
+    "prisma"
+  ],
+  "dependencies": [
+    "progress",
+    "dev"
+  ]
+}

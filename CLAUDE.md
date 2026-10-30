@@ -19,16 +19,20 @@ A **source library** and the `harness` marketplace of role plugins (local direct
 
 ```
 <repo>/
-  .claude-plugin/marketplace.json  ← lists the 11 plugins below
+  .claude-plugin/marketplace.json  ← lists the 13 plugins below
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
-    core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile, learn-capture hooks (always on; repo-profile enables agent and workplace per repo) — plus scripts/init.sh and
-                everything it copies: templates/ stacks/ memory/ rules/ (rules/*.md → ~/.claude/rules/) hooks/stacks/ → progress
+    core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile, learn-capture hooks (always on; repo-profile enables the role packs frontend, backend, agent and the domain pack workplace per repo) — plus scripts/init.sh and
+                everything it copies: templates/ memory/ rules/ (rules/*.md → ~/.claude/rules/; rules/stacks/ holds only typescript, javascript, jest) hooks/stacks/ → progress
     plan        kickoff brainstorming grill domain-model writing-plans codebase-design → progress
     review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger repo-audit → progress
-      dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint design-ui → core, plan, review
-                api-endpoint db-change ui-feature api-client (BE · DB · FE · API integration)
+      dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint → core, plan, review
+                feature is the supervisor: one slice table, each slice dispatched to a role pack's <role>-engineer (sonnet)
                 + ticket-ledger, ticket-gate, test-lock, weakened-check, auto-decisions hooks (always on: a ticket's commit/PR waits for its plan's skills)
+    frontend    role pack: agents/frontend-engineer.md + ui-feature design-ui + rules/ (react, nextjs) + references/ → progress, dev
+    backend     role pack: agents/backend-engineer.md + api-endpoint db-change api-client + rules/ (python, fastapi, prisma) → progress, dev
+                a role pack = one agents/<role>-engineer.md, deliverable-named skills, on-demand rules, deps exactly [progress, dev],
+                no hooks (gates live in core/dev/ship so they run before the pack is enabled); lint-kit checks the shape
     ship        finish-branch ci-triage release-checklist write-migration incident sync-remote → core
                 + release-gate hook (repos with eas.json: production releases need an approved release/<version>)
     agent       agent-* + rules/ the skills read on demand                            → progress, dev, ship

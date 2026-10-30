@@ -1,6 +1,6 @@
 {
   "name": "harness",
-  "description": "Role plugins for Claude Code — plan, dev, review, ship, AI-agent (CopilotKit/LangGraph), lead, guards — and the harness bundle that installs them all.",
+  "description": "Claude Code plugins in two layers — the process every role shares (plan, dev, review, ship, lead, guards, bundled as harness) and role packs enabled per repo (frontend, backend, agent for AI assistants, workplace domain).",
   "owner": {
     "name": "Thang Ho Quang"
   },
@@ -28,7 +28,17 @@
     {
       "name": "dev",
       "source": "./plugins/dev",
-      "description": "Build and fix: coordinator lane router, feature, fix-bug red loop, tdd, checkpoint gates."
+      "description": "Build and fix, for every role: coordinator lane router, feature (dispatches slices to the role packs' engineers), ticket, fix-bug red loop, tdd, checkpoint gates."
+    },
+    {
+      "name": "frontend",
+      "source": "./plugins/frontend",
+      "description": "Frontend role pack: the frontend-engineer agent, ui-feature, design-ui (Figma to UI), React and Next.js rules. Enabled per repo by core's repo-profile hook."
+    },
+    {
+      "name": "backend",
+      "source": "./plugins/backend",
+      "description": "Backend role pack: the backend-engineer agent, api-endpoint, db-change, api-client (third-party APIs), Python, FastAPI and Prisma rules. Enabled per repo by core's repo-profile hook."
     },
     {
       "name": "ship",

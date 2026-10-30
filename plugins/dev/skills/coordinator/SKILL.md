@@ -97,7 +97,7 @@ Map the request to exactly one **Intent Category** and one **Lane**:
 
 If the intent is ambiguous between two categories, pick the one with **higher risk** and note the ambiguity.
 
-Single-layer work goes straight to its skill, in the lane the table below assigns: a new or changed endpoint → `/api-endpoint` · a table, column, migration or query → `/db-change` · a page, form or frontend state → `/ui-feature` (a design to match → `/design-ui`) · calling an external API, or wiring the frontend to the backend → `/api-client`. A `new-feature` across layers → `/feature`, which slices it through these.
+Single-role work goes to that role pack's skill, in the lane the table below assigns: a new or changed endpoint → `/api-endpoint` · a table, column, migration or query → `/db-change` · a third-party API the server calls → `/api-client` (backend, if installed) · a page, form or frontend state → `/ui-feature`, a design to match → `/design-ui` (frontend, if installed) · a React Native screen → `/mobile-feature` (mobile, if installed) · an agent tool, HITL or chat surface → `/agent-feature` (ai, if installed) · CI, container or infra → `/pipeline`, `/container`, `/infra-change` (devops, if installed). A `new-feature` across roles → `/feature`, which slices it and dispatches each slice to the pack's engineer.
 
 ### Lane Assignment
 

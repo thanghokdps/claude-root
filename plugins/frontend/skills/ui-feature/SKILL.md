@@ -10,7 +10,7 @@ when_to_use: build a page, "làm màn hình", "làm giao diện bằng React", f
 
 **Invoke:** `/ui-feature <what the user should see and do>`
 
-Rules: `app-structure.md` and `testing.md` from core, plus the stack rules `react.md` / `nextjs.md` if installed. A design to match (Figma, frames, screenshot) → `/design-ui` builds the primitives and screens from it. This skill builds behaviour on top.
+Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT}/rules/react.md` and, on Next.js, `${CLAUDE_PLUGIN_ROOT}/rules/nextjs.md`. A design to match (Figma, frames, screenshot) → `/design-ui` builds the primitives and screens from it. This skill builds behaviour on top.
 
 ---
 
@@ -41,7 +41,7 @@ Write Testing Library tests for the states and interactions in Step 1, with the 
 
 - Place it per `app-structure.md`: the page in `app/` renders the feature, the logic lives in `features/<f>/`, and other features import it only through `index.ts`.
 - Use the primitives from `components/ui/`. No raw `<button>`/`<input>` outside them, no raw hex or one-off px (tokens only), and icons from the one set at its sizes. A missing primitive or variant is added there once (with its own test), not inlined.
-- Data: typed fetchers in `api.ts`, with types imported from the backend schema, never re-declared (`/api-client`). In a server-rendering framework, fetch on the server when the data does not depend on client state.
+- Data: typed fetchers in `api.ts`, with types imported from the backend schema, never re-declared (`${CLAUDE_PLUGIN_ROOT}/references/fetchers.md`). In a server-rendering framework, fetch on the server when the data does not depend on client state.
 - Every state is real UI: a skeleton or spinner, an empty state with the next action, an error with retry, and disabled controls while saving. Optimistic updates keep the previous value and roll back on failure.
 - Accessible names on controls, labels tied to inputs, errors announced (`aria-live` or `role="alert"`), contrast through tokens.
 - Mobile first: base classes are the narrowest viewport, and `md:`/`lg:` add the wider layout.
@@ -62,4 +62,4 @@ Follow `${CLAUDE_PLUGIN_ROOT}/references/taste.md`: create `DESIGN.md` / `PRODUC
 
 ---
 
-Hand-offs: a design to match → `/design-ui` · the endpoint behind it → `/api-endpoint` · fetchers and error mapping → `/api-client` · done → `/verify-done` → `/review-checklist`.
+Hand-offs: a design to match → `/design-ui` · the endpoint behind it → `/api-endpoint` (backend, if installed) · a chat surface on CopilotKit → `/agent-frontend` (ai, if installed) · done → `/verify-done` → `/review-checklist`.

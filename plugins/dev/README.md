@@ -1,8 +1,8 @@
 # dev
 
-Build and fix the way the repo already does it: a lane router that decides how much ceremony a request needs, a feature loop, a bug loop that reproduces before it fixes, test-first, and one skill per fullstack layer (endpoint, database, React feature, API client, design to UI).
+Build and fix the way the repo already does it, whatever your role: a lane router that decides how much ceremony a request needs, a feature loop that splits the work into slices and dispatches each to the role pack's engineer (`frontend`, `backend`, `agent`), a bug loop that reproduces before it fixes, and test-first. The stack-specific skills live in the role packs, which core's `repo-profile` hook enables per repo.
 
-**For:** developers. Install this one role and the plan, review and core skills come with it.
+**For:** every developer. Install this one plugin and the plan, review and core skills come with it.
 
 ## Skills
 
@@ -13,11 +13,6 @@ Build and fix the way the repo already does it: a lane router that decides how m
 | `/ticket` | A tracker ticket by id (GitHub, GitLab, Jira). Writes the contract into `docs/tickets/<id>/` (intent, spec, plan), builds through `/feature`, ships contract and code in one PR. Several ids run in parallel, one worktree each | `/ticket 412` · "làm song song ticket 412 413" |
 | `/fix-bug` | Something is broken, failing or slow, including after earlier fixes did nothing. Builds a tight red loop first, then minimises, hypothesises, instruments, fixes and locks it with a regression test | "sửa mấy lần rồi vẫn lỗi" |
 | `/tdd` | Building test-first, or a `PLAN.md` task has a verify command. One seam, one failing test, one minimal implementation per cycle | "implement task 3 of the plan, TDD" |
-| `/api-endpoint` | A new or changed backend route (Next.js handler, Express/Hono, FastAPI): schema, session auth, permission on the specific resource, thin handler, stable error codes, the 200/400/401/404 test matrix | "thêm API endpoint tạo đơn hàng" |
-| `/db-change` | A new table, column, index or relation, or a slow or leaking query (Drizzle, Prisma, Alembic). ERD and schema first, reviewed migration, owner-scoped repository functions, tests on a real engine | "query trả dữ liệu của user khác" |
-| `/ui-feature` | A page, form, dialog or screen in React with no design to match: feature folder, typed fetchers, every state (loading, empty, error, optimistic rollback), accessibility, tokens, Testing Library tests, a browser check per viewport | "làm màn hình settings với form đổi mật khẩu" |
-| `/api-client` | The frontend must call the backend, or the backend must call a third party from its OpenAPI spec: typed client, credentials from env, timeouts, retries for idempotent reads only, mocks | "tích hợp API thanh toán từ swagger này" |
-| `/design-ui` | A page must match a Figma link, exported frames or a screenshot. Exports frames, maps variables to tokens, builds the design's components once as primitives, diffs screenshots at the frame size and narrow widths | "làm UI theo figma này" |
 | `/resolve-question` | A plan, ticket or subagent has an open question. Answers facts from the repo with a `file:line` citation; asks the user only the high-impact choices, as options | "decide the small stuff yourself, only ask me the risky choices" |
 | `/checkpoint` | Midway through a plan, or before a commit or PR. Progress against `PLAN.md` plus every quality gate (typecheck, lint, tests), pass or fail per gate | `/checkpoint` |
 

@@ -32,7 +32,7 @@ Uncommitted work counts too: add `git status --short`.
 | A dependency, runtime or tool version, a dev/test/build/deploy command, an env var | `stack.md`, and Common Commands in `CLAUDE.md` |
 | A naming or file-layout pattern the change sets for later code; an anti-pattern it removed | `conventions.md` |
 | A test location, fixture, marker, test command | `test-strategy.md` |
-| A table, column or relation | `docs/erd.md` when the repo keeps one (`/db-change` owns it — dev, if installed) |
+| A table, column or relation | `docs/erd.md` when the repo keeps one (`/db-change` owns it — backend, if installed) |
 | A constraint every agent must respect | `index.md` constraints, and Key Rules in `CLAUDE.md` |
 | A domain term | `glossary.md` via `/domain-model` (plan, if installed) |
 

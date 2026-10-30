@@ -10,7 +10,7 @@
       "top_k": 3
     },
     {
-      "prompt": "wire the frontend fetchers to the new settings endpoint with typed errors",
+      "prompt": "our backend needs a typed client for the shipping provider's REST API, with mocks so tests run offline",
       "top_k": 3
     }
   ],

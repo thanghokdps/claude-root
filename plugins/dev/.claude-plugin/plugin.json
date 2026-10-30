@@ -6,7 +6,7 @@
   },
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
-  "description": "Build and fix: coordinator lane router, feature, fix-bug red loop, tdd, design-ui from Figma, checkpoint gates.",
+  "description": "Build and fix, for every role: coordinator lane router, feature (the supervisor that dispatches slices to the role packs' engineers), ticket, fix-bug red loop, tdd, checkpoint gates.",
   "keywords": [
     "workflow",
     "tdd",

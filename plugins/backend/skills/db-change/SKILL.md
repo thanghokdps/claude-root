@@ -10,7 +10,7 @@ when_to_use: add a table, "thêm bảng", "thêm cột", add column, index, fore
 
 **Invoke:** `/db-change <what must be stored or queried>`
 
-Rules: `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`). A destructive or long-running change (drop, rename, type change, backfill on a large table) is a data migration: hand it to `/write-migration` (ship, if installed) and treat it as high-risk.
+Rules: `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`); with Prisma, `${CLAUDE_PLUGIN_ROOT}/rules/prisma.md`. A destructive or long-running change (drop, rename, type change, backfill on a large table) is a data migration: hand it to `/write-migration` (ship, if installed) and treat it as high-risk.
 
 ---
 
