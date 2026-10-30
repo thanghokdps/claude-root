@@ -26,8 +26,6 @@ ROLE = {
     "devops": "role pack: CI, containers, infra", "ai": "role pack: AI assistants",
     "lead": "retro, skill authoring", "guards": "opt-in hooks",
 }
-# Not a dependency, installed beside the pack: ai's land view ends at ship's /finish-branch.
-COMPANIONS = {"ai": ["ship"]}
 
 
 def read(path):
@@ -95,15 +93,12 @@ def closure(name):
 
 def main():
     only = sys.argv[sys.argv.index("--plugin") + 1] if "--plugin" in sys.argv else None
-    companions = COMPANIONS.get(only, [])
-    order = [p for p in ORDER if p in set(closure(only)) | set(companions)] if only else ORDER
+    order = [p for p in ORDER if p in set(closure(only))] if only else ORDER
     nodes, edges, views, skills, texts = [], [], [], {}, {}
     for p in order:
         meta = json.load(open(os.path.join(PLUGINS, p, ".claude-plugin", "plugin.json")))
-        when = (f"Installed separately: /plugin install {p}@harness." if p in companions
-                else f"/plugin install {p}@harness, or via the harness bundle.")
         nodes.append({"id": f"p-{p}", "label": p, "kind": "lane", "sublabel": ROLE[p],
-                      "what": meta["description"], "when": when,
+                      "what": meta["description"], "when": f"/plugin install {p}@harness, or via the harness bundle.",
                       "how": f"Version {meta['version']}. Depends on: {', '.join(meta.get('dependencies', [])) or 'nothing'}.",
                       "source": f"plugins/{p}/.claude-plugin/plugin.json"})
         for dep in meta.get("dependencies", []):
@@ -216,9 +211,7 @@ def emit_single(only, order, nodes, edges, views):
              "nodeIds": land, "mainSteps": True, "edges": chain(land, "then")},
         ]
     views.insert(0, {"id": "overview", "parent": None, "title": only,
-                     "caption": f"{only} and the plugins it installs with it"
-                                + "".join(f", plus {c} (installed separately)" for c in COMPANIONS.get(only, []))
-                                + ". Double-click a plugin to see its skills.",
+                     "caption": f"{only} and the plugins it installs with it. Double-click a plugin to see its skills.",
                      "nodeIds": [f"p-{p}" for p in order]})
     emit({"title": f"{only} — skill map", "root": "overview", "nodes": nodes, "edges": edges, "views": views,
           "browserOrder": [v["id"] for v in views if v["id"] in ("ai-assistant", "land")] + [f"p-{p}" for p in order]})

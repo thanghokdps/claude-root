@@ -18,14 +18,13 @@ def test_ai_map_keeps_the_land_view():
     model = skill_map("--plugin", "ai")
     views = [v["id"] for v in model["views"]]
     assert "ai-assistant" in views and "land" in views, views
-    ship = next(n for n in model["nodes"] if n["id"] == "p-ship")
-    assert "separately" in ship["when"], ship["when"]
     assert "p-ship" in model["views"][0]["nodeIds"]
 
 
-def test_other_pack_maps_stay_their_closure():
+def test_every_pack_map_includes_ship_through_dev():
     model = skill_map("--plugin", "frontend")
-    assert not any(n["id"] == "p-ship" for n in model["nodes"])
+    assert any(n["id"] == "p-ship" for n in model["nodes"])
+    assert not any(n["id"] == "p-lead" for n in model["nodes"])
     assert [v["id"] for v in model["views"] if v["id"] in ("ai-assistant", "land")] == []
 
 

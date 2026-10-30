@@ -28,7 +28,7 @@ Build and fix the way the repo already does it, whatever your role: a lane route
 
 ## Depends on
 
-`core`, `plan`, `review` (and through them `progress`).
+`core`, `plan`, `review`, `ship` (and through them `progress`). `ship` comes along so a built feature can land: `/finish-branch`, `/write-migration`, `/ci-triage`.
 
 ## Install
 

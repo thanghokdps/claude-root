@@ -22,7 +22,7 @@ Inside Claude Code, add the marketplace from **one** of the two sources. Both ho
 Install the role you are, then reload. A role brings its dependencies with it:
 
 ```text
-/plugin install dev@harness        # every developer: plan, build, fix, review (brings core, plan, review, progress)
+/plugin install dev@harness        # every developer: plan, build, fix, review (brings core, plan, review, ship, progress)
 /plugin install harness@harness    # the whole process kit: all eight general plugins
 # role packs (frontend, backend, mobile, devops, ai) and the workplace domain pack are turned on per repo by core's repo-profile hook;
 # to force one: /plugin install frontend@harness
@@ -121,7 +121,7 @@ One marketplace, `harness`, one plugin per role. Installing a role pulls in what
 | [`core`](plugins/core/README.md) | everyone, through any role | `/verify-done`, `/project-init`, `/docs-sync`, `/compact`, `/compound`, `/sync-memory`, `/btw`; the always-on safety hooks | progress |
 | [`plan`](plugins/plan/README.md) | everyone who receives requirements; architects, tech leads | `/breakdown` (requirement → estimated tasks on the tracker), `/kickoff`, `/brainstorming`, `/grill`, `/domain-model`, `/codebase-design`, `/writing-plans` | progress |
 | [`review`](plugins/review/README.md) | reviewers | `/review-checklist`, `/review-diff`, `/blast-radius`, `/create-pr`, `/resolve-pr-feedback`, `/debt-ledger`, `/repo-audit` | progress |
-| [`dev`](plugins/dev/README.md) | every developer | `/feature` (dispatches slices to the role packs' engineers), `/ticket`, `/fix-bug`, `/tdd`, `/resolve-question`, `/checkpoint`, `/coordinator`; the ticket and test-lock hooks | core, plan, review |
+| [`dev`](plugins/dev/README.md) | every developer | `/feature` (dispatches slices to the role packs' engineers), `/ticket`, `/fix-bug`, `/tdd`, `/resolve-question`, `/checkpoint`, `/coordinator`; the ticket and test-lock hooks | core, plan, review, ship |
 | [`frontend`](plugins/frontend/README.md) | web UI repos, turned on per repo | the `frontend-engineer` agent, `/ui-feature`, `/design-ui`; React and Next.js rules | progress, dev |
 | [`backend`](plugins/backend/README.md) | server repos, turned on per repo | the `backend-engineer` agent, `/api-endpoint`, `/db-change`, `/api-client`; Python, FastAPI and Prisma rules | progress, dev |
 | [`ship`](plugins/ship/README.md) | release and CI owners | `/finish-branch`, `/ci-triage`, `/release-checklist`, `/write-migration`, `/incident`, `/sync-remote`; the mobile release gate | core |

@@ -54,7 +54,7 @@ None of its own. The always-on gates come from `core` and `dev` (secret guard, b
 
 ## Depends on
 
-`progress`, `dev`, `ship`, and through them `core`, `plan`, `review`. That is the build loop the agent skills hand off to: `/project-init` after the scaffold, `/fix-bug` and `/tdd` for red loops, `/verify-done` before saying done, `/review-checklist` and `/blast-radius` on every feature's diff, `/write-migration` for schema changes, `/finish-branch` to open the PR. Not included: `lead` and the opt-in `guards`.
+`progress`, `dev`, and through `dev` `core`, `plan`, `review`, `ship`. That is the build loop the agent skills hand off to: `/project-init` after the scaffold, `/fix-bug` and `/tdd` for red loops, `/verify-done` before saying done, `/review-checklist` and `/blast-radius` on every feature's diff, `/write-migration` for schema changes, `/finish-branch` to open the PR. Not included: `lead` and the opt-in `guards`.
 
 ## Check the routing yourself
 
