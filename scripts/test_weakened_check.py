@@ -141,6 +141,12 @@ def test_loosened_constraints_file_asks():
     r = repo()
     staged(r, "CONSTRAINTS.md", c + "| W1 | no-explicit-any | src/legacy/** | rewrite | @t | 2026-12-01 |\n")
     assert "constraint-exception-added" in reason(hook(r))
+    r = repo()
+    git(r, "mv", "CONSTRAINTS.md", "OLD-CONSTRAINTS.md")
+    assert "constraint-removed" in reason(hook(r)) and "file deleted or renamed" in reason(hook(r))
+    r = repo()
+    git(r, "rm", "-q", "CONSTRAINTS.md")
+    assert "constraint-removed" in reason(hook(r))
 
 
 def test_tightened_or_reworded_constraints_are_silent():

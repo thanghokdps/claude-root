@@ -50,8 +50,8 @@ blank = [(f"filter.{d}.{k}", v) for d in drivers for k, v in (("clean", ""), ("s
 env = {**os.environ, "GIT_CONFIG_COUNT": str(len(blank))}
 for i, (k, v) in enumerate(blank):
     env[f"GIT_CONFIG_KEY_{i}"], env[f"GIT_CONFIG_VALUE_{i}"] = k, v
-diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv",
-           "--ignore-submodules=all", "--submodule=short", env=env)  # a submodule's diff would read its own config
+diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv", "--no-renames",
+           "--ignore-submodules=all", "--submodule=short", env=env)  # a submodule's diff would read its own config; a rename is a delete + add
 if not diff:
     sys.exit(0)
 
@@ -160,15 +160,25 @@ def section_of(f, n, lines):
     return ""
 
 
+def worktree_text(f):
+    # commit -a reads the work tree; only a regular file under 1 MB, never a symlink (O_NOFOLLOW), so the hook stays cheap
+    p = os.path.join(cwd, f)
+    try:
+        if not os.path.isfile(p) or os.path.islink(p) or os.lstat(p).st_size > 1_000_000:
+            return ""
+        fd = os.open(p, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+        with os.fdopen(fd, encoding="utf-8", errors="replace") as fh:
+            return fh.read()
+    except OSError:
+        return ""
+
+
 for f in {f for f, _, _ in removed + added if CONSTRAINTS.search(f)}:
+    if f in deleted:
+        flag("constraint-removed", f, 0, "file deleted or renamed")
+        continue
     old = (git("show", f"HEAD:{f}") or "").split("\n")
-    cur = (git("show", f":{f}", env=env) if not commit_all else None)
-    if cur is None:
-        try:
-            cur = open(os.path.join(cwd, f), encoding="utf-8").read()
-        except OSError:
-            cur = ""
-    cur = cur.split("\n")
+    cur = (worktree_text(f) if commit_all else git("show", f":{f}", env=env) or "").split("\n")
     new_lines = [(n, t) for g, n, t in added if g == f]
     new_rows = {ROW.match(t).group(1).lower(): ROW.match(t).group(2) for _, t in new_lines if ROW.match(t)}
     for g, n, text in removed:
