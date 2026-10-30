@@ -1,18 +1,29 @@
 # workplace
 
-Domain pack for internal workplace / HR apps: time off, approvals, leave balances, room and resource bookings, meal reservations, maintenance requests. Adds the domain's rules on top of the general kit; it never replaces a role plugin.
+Domain pack for internal workplace and HR apps: time off, approvals, leave balances, room and resource bookings, meal reservations, maintenance requests. It adds the domain's rules on top of the general kit and never replaces a role plugin.
 
-## How it turns on
+**For:** teams building or maintaining an internal HR / workplace app. Off by default; core's `repo-profile` hook turns it on in the repos that need it.
 
-Off at user scope after `bash scripts/install.sh`. Core's `repo-profile` hook enables it in a repo's `.claude/settings.local.json` (effective next session) when the repo has a `Domain: workplace` line in `docs/requirements.md` or `.claude/docs/index.md` (`/kickoff` writes it), or two or more HR module folders under `apps/`, `src/modules/` or `src/features/`. An explicit `false` in project or local settings wins.
+## Skills
 
-Also installs: `progress`.
+| Skill | Use it when | Example prompt |
+|---|---|---|
+| `/workplace-review` | Before the PR of any change to requests, approvals, balances or bookings. Checks the plan or diff against the domain invariants (state machine, approver check on every decision, balance math, server-side overlap and cutoffs, business time zone, idempotent notifications, audit, employee personal data) and returns numbered findings with the failing case, the fix and the cost of skipping it | "duyệt đơn nghỉ phép" · "đặt phòng họp bị trùng, check giúp logic" |
 
-## Contents
+The references the skills read: `references/invariants.md` (the rules, with failures seen in real code), `references/domain-model.md` (starter entities and ERD for `/domain-model` and `/db-change`), `references/domain-questions.md` (need questions for `/kickoff` and `/brainstorming`).
 
-| Part | Does |
-|------|------|
-| `/workplace-review` | Reviews a plan or diff touching requests, approvals, balances or bookings against the domain invariants; findings with the failing case, the fix and the cost of skipping it |
-| `references/invariants.md` | The rules: state machine, approver check on every decision, balances, server-side overlap and cutoffs, time zones, notifications, audit, personal data — with failures seen in real code |
-| `references/domain-model.md` | Starter entities and ERD for `/domain-model` and `/db-change` |
-| `references/domain-questions.md` | Domain need questions for `/kickoff` and `/brainstorming` |
+## Hooks
+
+None of its own. It is enabled per repo by core's `repo-profile` hook when the repo has a `Domain: workplace` line in `docs/requirements.md` or `.claude/docs/index.md` (`/kickoff` writes it), or two or more HR module folders under `apps/`, `src/modules/` or `src/features/`. The switch is written to `.claude/settings.local.json`, effective next session; an explicit `false` in project or local settings wins.
+
+## Depends on
+
+`progress`.
+
+## Install
+
+```text
+/plugin install workplace@harness
+```
+
+Usually not needed by hand: `scripts/install.sh` installs it off at user scope and `repo-profile` enables it per repo. The marketplace must be added first (GitLab or the GitHub mirror): see the [root README](../../README.md#quickstart). All plugins: [`../README.md`](../README.md).

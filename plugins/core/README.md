@@ -1,52 +1,47 @@
 # core
 
-Session and project basics every role uses: verify-done evidence gate, project-init bootstrap, docs-sync after each feature, compact/compound memory, sync-memory, btw — and the always-on `branch-guard` hook.
+Session and project basics every role uses: the evidence gate before "done", the project bootstrap, docs and memory that survive the session, and the always-on safety hooks.
 
-## Hook (always on)
-
-`hooks/branch-guard.sh` runs before every Bash call. It blocks any direct push to an environment branch (`dev develop stag stage staging prod production`; override with `HARNESS_ENV_BRANCHES`, empty turns it off) and force, delete or mirror pushes to protected branches, and fails closed on shell state it cannot follow. Every role plugin depends on `core`, so every install gets it, in any repo, with no project config.
-
-`hooks/secret-guard.sh` runs before Read, Grep, Glob, Edit, Write and Bash. Reading, printing, copying or editing a secret file (`.env*` but not its templates, keys, `.p8`, keystores, service-account JSON, SSH keys) is denied: Claude asks for the value instead. Patterns: `hooks/secret-paths.txt` plus the repo's `.claude/secret-paths.txt`; `CLAUDE_SECRET_GUARD=0` turns it off for a session.
-
-`hooks/sensitive-path.sh` runs before Edit, Write and Bash. An edit to a secret, CI/deploy config or `.claude/settings*.json` asks the user first, unless the ticket's `plan.md` names the path. Patterns: `hooks/sensitive-paths.txt` and `hooks/secret-paths.txt`, plus the repo's `.claude/sensitive-paths.txt`; `CLAUDE_SENSITIVE_PATHS=0` turns it off.
-
-`hooks/step-limit.sh` runs before every tool call. A subagent past `CLAUDE_STEP_LIMIT` (90) tool calls is stopped and must reply with what is done, what is stuck and the last error, so the main session can re-plan. The main session is not counted unless `CLAUDE_STEP_LIMIT_MAIN=1`. It costs no tokens.
-
-`hooks/compact-advisor.sh` runs on Stop. Past `CLAUDE_COMPACT_ADVISE_TOKENS` (200k) of context it shows the user one line suggesting `/compact`, again every 100k more. The model never sees it, so it costs nothing.
-
-`hooks/repo-profile.sh` runs on SessionStart, and on SubagentStart so subagents get the same profile (they never write settings). From the manifests and marker folders alone (no model call) it tells the session what the repo is — stack, AI assistant, DB tool, whether `.claude/docs/` exists — and which kit skills to prefer, in 3–4 lines. In an AI-assistant repo it enables `agent@harness` in `.claude/settings.local.json` (excluded from git, effective next session) unless the project or local settings say `false`. `CLAUDE_REPO_PROFILE=0` turns it off.
-
-## Install
-
-```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
-/plugin install core@harness
-```
-
-GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
-
-Also installs: `progress`.
+**For:** everyone. Every role plugin depends on `core`, so every install gets it, in any repo, with no project config.
 
 ## Skills
 
-| Skill | Does |
-|-------|------|
-| `/btw` | Answer a quick question or do a quick lookup without interrupting the current task or losing context |
-| `/compact` | Compact the current conversation — summarize what's been done, merge into persistent memory and HANDOFF.md, so the next session resumes with full context |
-| `/compound` | Crystallize learnings from the current session into persistent docs/solutions/ files |
-| `/docs-sync` | Brings .claude/docs/ and CLAUDE.md up to date with a branch's diff — maps each change to the doc it makes stale, edits only those sections, and commits them with the code |
-| `/project-init` | One-time project scan that bootstraps the full .claude/ workspace — docs, agents, hooks, rules, skills, templates, memory, and CLAUDE.md — all tailored to this specific project; TypeScript repos also get the anti-slop Oxlint rules vendored at a pinned SHA; a repo with a GitHub/GitLab remote is offered server rules that block direct pushes to the default branch and dev/stag/prod |
-| `/sync-memory` | Pulls the latest commits and rebuilds memory from your own, updating .claude/memory/commits/ and last-sync.txt |
-| `/verify-done` | Evidence gate before claiming work is finished — re-runs the checks that prove the task's "done when" condition, in this session, and reports output instead of assurances |
+| Skill | Use it when | Example prompt |
+|---|---|---|
+| `/verify-done` | You are about to say done, fixed, passing or ready, or before a commit, PR or handoff. Re-runs the checks that prove the "done when" condition and reports output, not assurances | "ready for review" (fires on its own) |
+| `/project-init` | Once per existing repo, and again after a big architecture change. Scans the code and writes `.claude/` (docs, rules, memory) and a project `CLAUDE.md` with real paths and commands | `/project-init` |
+| `/docs-sync` | A feature, scaffold or fix is about to land. Maps the branch's diff to the project docs it makes stale and edits only those sections | "update the docs before the PR" |
+| `/compact` | The conversation is getting long, or you are ending the session. Writes `specs/HANDOFF.md` and merges learnings into memory so the next session resumes | `/compact` |
+| `/compound` | A session found a hard bug, a mistake or a pattern worth keeping. Writes it to `docs/solutions/` | `/compound` |
+| `/sync-memory` | Starting a session on a shared repo, or after a teammate pushed. Pulls and rebuilds memory from your own commits | `/sync-memory` |
+| `/btw` | A quick question mid-task, with no tasks, specs or side effects | `/btw which file handles auth?` |
 
-## Base rules (installed to `~/.claude/rules/`, each loads only for matching files)
+## Hooks (always on)
 
-| Rule | Covers |
-|------|--------|
-| `app-structure.md` | Fullstack folder ownership, size and naming |
-| `api-contract.md` | Endpoint order, error codes, 404 for another user's resource, additive contracts, route test matrix |
-| `data-access.md` | Owner-scoped repositories, parameterised queries, no N+1, transactions, migrations, real-engine tests |
+| Hook | Event | Does |
+|---|---|---|
+| `branch-guard` | before Bash | Blocks a direct push to `main` or an environment branch (`dev develop stag stage staging prod production`) and force, delete or mirror pushes to protected branches. `HARNESS_ENV_BRANCHES` overrides the list |
+| `secret-guard` | before Read, Grep, Glob, Edit, Write, Bash | A secret file (`.env*` but not its templates, keys, keystores, service-account JSON, SSH keys) is never read, printed, copied or edited; Claude asks for the value. Patterns: `hooks/secret-paths.txt` plus the repo's `.claude/secret-paths.txt`. `CLAUDE_SECRET_GUARD=0` turns it off for a session |
+| `sensitive-path` | before Edit, Write, Bash | An edit to secrets, CI/deploy config or `.claude/settings*.json` asks the user first, unless the ticket's `plan.md` names the path. `CLAUDE_SENSITIVE_PATHS=0` turns it off |
+| `edit-guard` | before Bash | Repo files change through Edit/Write, never `sed -i`, heredocs or redirects, so the per-edit lint and format hooks run on every change. Scratch output outside the repo is fine |
+| `step-limit` | before every tool | A subagent past `CLAUDE_STEP_LIMIT` (90) tool calls stops and reports what is done, what is stuck and the last error, so the main session can re-plan |
+| `repo-profile` | session and subagent start | From manifests and marker folders alone (no model call) tells the session what the repo is (stack, AI assistant, DB tool, docs present) and which skills to prefer. In an AI-assistant repo it enables `agent@harness` in `.claude/settings.local.json`; in a workplace repo, `workplace@harness`. `CLAUDE_REPO_PROFILE=0` turns it off |
+| `compact-advisor` | on stop | Past `CLAUDE_COMPACT_ADVISE_TOKENS` (200k) of context, shows the user one line suggesting `/compact`. The model never sees it |
+| `learn-capture` + `learn-promote` | every 50 tool calls; session start | Lessons capture themselves: a background Haiku reflector proposes them from a scrubbed digest of the session; at the next session start the valid ones land in `.claude/docs/solutions/` with an index line, stale ones retire, and one seen in two or more repos is copied to `~/.claude/docs/solutions/` |
 
-Also: `git.md`, `security.md`, `code-quality.md`, `testing.md`, `typescript.md`.
+## Also in this plugin
 
-All plugins: [`../README.md`](../README.md).
+- **Rules** installed to `~/.claude/rules/` by `scripts/install.sh`: `git`, `security`, `code-quality`, `model-cost` (always on); `typescript`, `testing`, `app-structure`, `api-contract`, `data-access` (only for matching files).
+- **Templates and stacks** that `/project-init` and `scripts/init.sh` copy into a project: `CLAUDE.md`, `settings.json`, spec templates, project agents and commands, and the `nextjs`, `python` and `react-native` stack bundles.
+
+## Depends on
+
+`progress`.
+
+## Install
+
+```text
+/plugin install core@harness
+```
+
+The marketplace must be added first (GitLab or the GitHub mirror): see the [root README](../../README.md#quickstart). All plugins: [`../README.md`](../README.md).

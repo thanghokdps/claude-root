@@ -1,28 +1,33 @@
 # review
 
-Review a diff or PR: review-checklist, review-diff, blast-radius impact analysis, create-pr description, resolve-pr-feedback.
+Review a diff, a PR or a whole repo and come back with numbered findings, each with the concrete case that fails, the fix and the cost of skipping it.
 
-## Install
-
-```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
-/plugin install review@harness
-```
-
-GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
-
-Also installs: `progress`.
+**For:** reviewers, and authors reviewing themselves before the PR. Read-only except `/resolve-pr-feedback`, which makes the fixes a review asked for.
 
 ## Skills
 
-| Skill | Does |
-|-------|------|
-| `/blast-radius` | Change-impact analysis before merge — traces every caller, consumer, contract, job, and migration a change touches, scores the risk, flags untested paths, and demands a rollback plan |
-| `/debt-ledger` | Lists every `shortcut:` comment in the repo as a debt ledger — the limit each names and the trigger to revisit it — and flags the ones with no trigger |
-| `/create-pr` | Generates a structured PR description from the current branch diff |
-| `/repo-audit` | Audits a whole repo or folder as its next owner would — bugs, risks, scale, untested risky code, slowness, code to delete or merge — in at most 20 numbered Must / Should / Nice findings, each with its failing case; read-only |
-| `/resolve-pr-feedback` | Works through a PR/MR's open review threads — fix, answer, decline with evidence, or ask the author — then one validated push and a reply on every thread |
-| `/review-checklist` | Reviews the current diff or a PR in a fixed order — correctness → tests → scale → readability → security → scope — and returns numbered findings, each with a concrete failing case, plus a PR-description check |
-| `/review-diff` | Generates a comprehensive Markdown review of the current git diff or a specified PR — including an architecture diagram (Mermaid), component flowchart, and code walkthrough with inline diff blocks |
+| Skill | Use it when | Example prompt |
+|---|---|---|
+| `/review-checklist` | Before opening a PR, or reviewing a teammate's. Fixed order: correctness → tests → scale → readability → security → scope, plus a PR-description check. Complements the built-in `/code-review` | "review this before I open the PR" |
+| `/blast-radius` | A diff touches shared code and you want to know what else it breaks: callers, consumers, contracts, jobs, migrations, untested paths, rollback plan, with `file:line` evidence | "safe to merge? what does this break?" |
+| `/review-diff` | Onboarding a reviewer to a large change. A Markdown walkthrough with a Mermaid architecture diagram, a component flowchart and inline diff blocks | `/review-diff` |
+| `/resolve-pr-feedback` | A PR or MR has open review threads. Sorts each into fix, answer, decline with a reason or the author's call, makes the fixes in one validated push, replies on every thread | "xử lý comment review trên PR 42" |
+| `/create-pr` | You want the PR description text only: title, summary (why, not how), tasks, file table. Does not push or open the PR | `/create-pr` |
+| `/debt-ledger` | Before a release, a scale-up or a cleanup sprint. Lists every `shortcut:` comment with its limit and the trigger to revisit it, and flags shortcuts that name no trigger | "what did we defer?" |
+| `/repo-audit` | Taking over a codebase or before a big change to it. At most 20 findings in Must / Should / Nice: bugs, security and data-loss risks, what breaks at load, risky code without a test, code to delete or merge | "rà soát toàn bộ repo này" |
 
-All plugins: [`../README.md`](../README.md).
+## Hooks
+
+None.
+
+## Depends on
+
+`progress`.
+
+## Install
+
+```text
+/plugin install review@harness
+```
+
+The marketplace must be added first (GitLab or the GitHub mirror): see the [root README](../../README.md#quickstart). All plugins: [`../README.md`](../README.md).

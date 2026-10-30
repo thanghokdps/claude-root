@@ -1,758 +1,215 @@
 # Claude Harness — Usage Guide
 
-From first install to running daily tasks.
+From the first install to daily work, with the detail the [README](../README.md) leaves out. What the kit is and why: [`DESIGN.md`](../DESIGN.md). The control model: [`HARNESS.md`](../HARNESS.md).
 
----
-
-## Table of Contents
-
-1. [Overview](#1-overview)
-2. [Prerequisites](#2-prerequisites)
-3. [Step 1 — Install the harness (once)](#3-step-1--install-the-harness-once)
-4. [Step 2 — Bootstrap a new project](#4-step-2--bootstrap-a-new-project)
-5. [Step 3 — Fill in project info after init](#5-step-3--fill-in-project-info-after-init)
-6. [Step 4 — First working session](#6-step-4--first-working-session)
-7. [Daily workflow](#7-daily-workflow)
-8. [Common tasks](#8-common-tasks)
-9. [Team workflow](#9-team-workflow)
-10. [Ending a session](#10-ending-a-session)
+1. [Prerequisites](#1-prerequisites)
+2. [Install the plugins](#2-install-the-plugins)
+3. [Install the global rules (optional)](#3-install-the-global-rules-optional)
+4. [Bootstrap a project](#4-bootstrap-a-project)
+5. [First session](#5-first-session)
+6. [Daily workflow](#6-daily-workflow)
+7. [Common tasks](#7-common-tasks)
+8. [Team workflow](#8-team-workflow)
+9. [Ending a session](#9-ending-a-session)
+10. [Updating](#10-updating)
 11. [Troubleshooting](#11-troubleshooting)
+12. [Cheat sheet](#12-cheat-sheet)
 
----
-
-## 1. Overview
-
-Claude Harness is a governance framework for Claude Code. It has two layers:
-
-```
-┌─────────────────────────────────────────────────────┐
-│  SKILLS (engine)                                    │
-│  /feature · /fix-bug · /code-review · /ticket ...  │
-│  → answers "how do I do this?"                      │
-├─────────────────────────────────────────────────────┤
-│  HARNESS (control)                                  │
-│  hooks · rules · memory                             │
-│  → answers "how careful? who must approve?"         │
-└─────────────────────────────────────────────────────┘
-```
-
-**Core principle:** Ceremony increases with risk. Human interruption increases with ambiguity.
-
-**General flow:**
-
-```
-user prompt
-  → scope-gate.sh        classify risk, check old memory
-  → /coordinator         analyze request, route to the right agent
-  → Explorer / Planner   understand code, build plan
-  → Implementer          write code
-  → Verifier / Reviewer  verify result
-  → commit hooks         block bad commits
-  → memory hooks         save history
-```
-
----
-
-## 2. Prerequisites
+## 1. Prerequisites
 
 | Item | Requirement |
-|------|-------------|
-| Claude Code | CLI or desktop app (https://claude.ai/code) |
-| Git | `git --version` must work |
-| `jq` | `brew install jq` (used by hooks) |
-| Python 3.12 | Only needed for **headroom** (context compression) |
-| Node.js / Python / Go | Depends on your project stack |
+|---|---|
+| Claude Code | CLI or desktop app |
+| Git | `git --version` works |
+| `jq` and `python3` | used by the hooks (`brew install jq`); without `python3` the progress hooks stay silent |
+| Python 3.12 | only for headroom (optional context compression) |
+| Node, Python, … | whatever your project needs |
 
----
+## 2. Install the plugins
 
-## 3. Step 1 — Install the harness (once)
+Inside Claude Code, add the marketplace from **one** source. Both hold the same commit:
 
-### Clone and run install
+| Source | Use it when | Command |
+|---|---|---|
+| GitLab (team) | on the company network or VPN, with Reporter access to `thang.hoquang/claude-kit` and an SSH key on GitLab | `/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git` |
+| GitHub (mirror) | outside the VPN, or without GitLab access | `/plugin marketplace add thanghokdps/claude-root` |
+
+Then install one role and reload:
+
+```text
+/plugin install dev@harness          # developer (brings core, plan, review, progress)
+/plugin install agent@harness        # AI-assistant builder (brings dev, ship and their dependencies)
+/plugin install harness@harness      # all eight general role plugins
+/reload-plugins
+```
+
+Check with `claude plugin list` that the role and its dependencies are `✔ enabled`. For `agent` that is seven plugins: `progress core plan review ship dev agent`. If one is missing or disabled (an older install, or a plugin turned off at another scope), pin the set in the project's `.claude/settings.json`:
+
+```json
+{
+  "enabledPlugins": {
+    "progress@harness": true,
+    "core@harness": true,
+    "plan@harness": true,
+    "review@harness": true,
+    "ship@harness": true,
+    "dev@harness": true,
+    "agent@harness": true
+  }
+}
+```
+
+**MCP servers** the skills use when present (`claude mcp list`): Playwright (`claude mcp add playwright -- npx -y @playwright/mcp@latest`) so `/design-ui`, `/ui-feature` and `/agent-frontend` can check the page in a real browser at desktop and narrow widths; Figma only for `/design-ui` and `/agent-design-ui` from a Figma link.
+
+**Domain plugins.** `agent` and `workplace` are not in the `harness` bundle. Installed by `scripts/install.sh` they stay off at user scope, and core's `repo-profile` hook enables one in a repo that needs it (an AI-assistant repo, or a `Domain: workplace` line in the project docs) by writing `.claude/settings.local.json`, effective next session. Installing `agent@harness` by hand enables it everywhere, which is fine on a machine used only for assistants.
+
+## 3. Install the global rules (optional)
+
+The plugins work on their own. The always-loaded `~/.claude/CLAUDE.md` (principles, lanes, the daily loop) and `~/.claude/rules/` (git, security, code quality, model cost; typescript, testing and the fullstack rules by path) come only from a clone:
 
 ```bash
-# Clone anywhere — install.sh finds the kit from its own location, so no fixed path is assumed
-# Clone from GitLab (VPN + SSH key on GitLab)…
-git clone git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git <kit-dir>
-# …or from the GitHub mirror (same commit):
-# git clone git@github.com:thanghokdps/claude-root.git <kit-dir>
+git clone git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git <kit-dir>   # or git@github.com:thanghokdps/claude-root.git
 bash <kit-dir>/scripts/install.sh
 ```
 
-No `.env` is needed: the installer uses your logged-in `claude` CLI. `.env.sample` lists the optional variables (eval judge, model keys and tracing for agent projects, Figma).
+The installer is idempotent and takes no arguments. It backs up `~/.claude/CLAUDE.md`, `rules/` and `settings.json` to `~/.claude/backups/harness-install-<timestamp>/`, copies `global/CLAUDE.md` and `plugins/core/rules/*.md` into `~/.claude/`, registers the clone as the local marketplace `harness` unless one is already registered from GitLab or GitHub (that one is kept), installs every plugin, and migrates an old copy-based install. No `.env` is needed; `.env.sample` lists the optional variables (eval judge, model keys and tracing for agent projects, Figma).
 
-The installer is idempotent and takes no arguments. It:
+**Headroom** (optional) compresses large tool output: `bash <kit-dir>/scripts/setup-headroom.sh`, needs Python 3.12. The `headroom-compress` hook (guards) then hints at it when output passes 8 KB.
 
-1. Backs up `~/.claude/CLAUDE.md`, `rules/` and `settings.json` to `~/.claude/backups/harness-install-<timestamp>/`
-2. Copies `global/CLAUDE.md` and `plugins/core/rules/*.md` into `~/.claude/`
-3. Registers `<kit-dir>` as the local marketplace `harness` and installs every plugin (loaded in place — kit edits are live in new sessions)
-4. Migrates an old copy-based install (moves duplicate skills to the backup, drops old hook registrations)
+## 4. Bootstrap a project
 
-Without cloning, inside Claude Code: add the marketplace from **one** source. Use GitLab on the company network or VPN, with an SSH key on GitLab; otherwise use the GitHub mirror.
+`/project-init` reads manifests and code and writes a `.claude/` workspace plus a project `CLAUDE.md` with real paths and commands. Run it once per project, and again after a big architecture change. In an empty folder there is nothing to read, so start from the row that matches:
 
-```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
-```
-
-```
-/plugin marketplace add thanghokdps/claude-root
-```
-
-Then:
-
-```
-/plugin install harness@harness
-```
-
-Open a new Claude Code session to load the changes.
-
-### (Optional) Install headroom — context compression
-
-Reduces token usage by 60–95% when the context window grows large:
-
-```bash
-bash <kit-dir>/scripts/setup-headroom.sh
-```
-
-**Requires:** Python 3.12 (`brew install python@3.12`).
-
-After install, the `headroom-compress.sh` hook triggers automatically when output exceeds 8KB.
-
----
-
-## 4. Step 2 — Bootstrap a new project
-
-Run **once** per project to create a dedicated `.claude/` workspace.
-
-`/project-init` reads manifests and code. In an empty folder there is nothing to read, so it stops and points you to the first path below. Start from the row that matches your folder:
-
-| Your folder | Path |
+| Your folder | Do this |
 |---|---|
-| Existing repo with code | Method A below |
-| Empty folder, regular app | Starting from an empty folder → general app |
-| Empty folder, AI assistant (CopilotKit + LangGraph) | Starting from an empty folder → AI assistant |
+| Existing repo with code | `cd my-project && claude`, then `/project-init` |
+| Empty folder, regular app | `git init`, then `/kickoff` with the documents you have (or `/brainstorming <idea>` when the approach is open) → `/writing-plans` → build wave 1 (the scaffold: manifest, test runner, lint, `.gitignore`, `.env.example`) → commit → `/project-init` |
+| Empty folder, AI assistant | `git init`, then describe the assistant in plain words, for example *"a chatbot that helps customers track and change their orders"*. `/agent-architect` interviews, writes the ADR, scaffolds and runs `/project-init` itself. For an empty skeleton on a named stack say *init* and the stack: *"init chatbot với Next.js + CopilotKit + LangGraph"* |
 
-### Starting from an empty folder
-
-```bash
-mkdir my-app && cd my-app
-git init
-claude
-```
-
-**General app.** Design first, then build the skeleton, then bootstrap:
-
-1. `/brainstorming <idea>` asks one question at a time, compares approaches including the stack, and writes `specs/<slug>/design.md`.
-2. `/writing-plans` turns the approved design into `specs/<slug>/PLAN.md`. Make wave 1 the scaffold: package manifest, language config, test runner, lint, `.gitignore`, `.env.example`.
-3. Build wave 1 (just ask, or `/tdd` for the first slice), then check typecheck, lint and tests pass and commit.
-4. `/project-init` now detects the stack and writes `.claude/` from real commands and paths.
-5. Continue with the daily loop: describe the next feature, `/review-checklist`, `/finish-branch`.
-
-**AI assistant (CopilotKit / AG-UI / LangGraph).** Instead of steps 1–3, say what the assistant should do in plain words (for example *"a chatbot that helps customers track and change their orders"*). `agent-architect` fires and runs these steps, asking before it builds:
-
-1. Preflight: checks Node, the package manager, a model key (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env`; see `.env.sample`) and git.
-2. Interview, one question at a time: users, clients (web/mobile/chat), tasks, systems, writes, observability. It writes an ADR to `docs/adr/`.
-3. Scaffold on request: pinned versions, env schema, identity, one agent, one read tool, a tracing switch and the first eval cases. It is done when one real turn streams end to end.
-4. `/project-init`, then add capabilities with `/agent-feature`. The chat UI comes from `/agent-frontend` or `/agent-design-ui <figma>`.
-
-For an empty skeleton with no features, say *set up* or *init* and name the stack (*"init a chatbot on Next.js + CopilotKit + LangGraph"*). `agent-architect` runs in skeleton mode: it asks nothing when a stack is named (with none, only the framework, frontend and database), defaults every other choice, builds the shell, identity, one agent with no tools, model factory, tracing, pins and the stock chat UI, and stops at one real streamed "hello" turn.
-
-### Method A — Via Claude Code (recommended)
+From a shell instead of Claude Code:
 
 ```bash
-cd ~/my-project
-
-# Open Claude Code and type:
-/project-init
+bash <kit-dir>/plugins/core/scripts/init.sh [project-dir]                 # lean: skills, rules and hooks come from the installed plugins
+STANDALONE=1 bash <kit-dir>/plugins/core/scripts/init.sh [project-dir]    # also copies rules, skills, commands, agents and hooks into .claude/
 ```
 
-Claude will:
-1. Scan `src/`, `package.json`, `requirements.txt`… to detect the stack
-2. Create the full `.claude/` workspace (docs, agents, hooks, rules, skills, templates)
-3. Generate a project-specific `CLAUDE.md` with real paths and commands
+Standalone is for a repo shared with people who do not have the plugins. It also copies the project commands (`/task`, `/auto`, `/workflow`), the project agents, and the stack bundle that matches (`react-native`: `/verify-feature`, `/gen-tests`, `/figma-to-screen`; `nextjs`; `python`). Stack signals it detects: `tsconfig.json` or `typescript` (TypeScript), `react`, `jest`, `next` (Next.js), `requirements.txt` or `pyproject.toml` (Python), `fastapi`, `langgraph`.
 
-### Method B — Via script
+What you get:
 
-```bash
-cd ~/my-project
-bash <kit-dir>/plugins/core/scripts/init.sh
-
-# Or standalone mode (copies all rules, skills, agents, commands into .claude/):
-STANDALONE=1 bash <kit-dir>/plugins/core/scripts/init.sh /path/to/my-project
-```
-
-### Method C — Use an existing stack bundle (React Native / Next.js / Python)
-
-If your project matches one of the bundles in `plugins/core/stacks/`:
-
-```bash
-# Example: React Native project
-cp -r <kit-dir>/plugins/core/stacks/react-native/ ~/my-rn-project/
-```
-
-Then edit the files to match your project's actual paths.
-
-### Auto-detected stack signals
-
-| Signal | When |
-|--------|------|
-| `typescript` | `tsconfig.json` or `"typescript"` in package.json |
-| `react` | `"react"` in package.json |
-| `jest` | `"jest"` in package.json |
-| `nextjs` | `"next"` in package.json |
-| `python` | `requirements.txt` or `pyproject.toml` |
-| `fastapi` | `fastapi` in requirements |
-| `langgraph` | `langgraph` in requirements |
-
-### Result after bootstrap
-
-```
+```text
 your-project/
-├── CLAUDE.md                  ← auto-generated (Auto-Coordinator + stack-specific rules)
+├── CLAUDE.md                  ← generated: Auto-Coordinator, session resume, key directories, commands, stack rules
 └── .claude/
     ├── settings.json          ← hooks registered
-    ├── docs/                  ← knowledge base (written by /project-init)
-    │   ├── index.md
-    │   ├── architecture.md
-    │   ├── conventions.md
-    │   ├── stack.md
-    │   ├── entry-points.md
-    │   └── test-strategy.md
-    ├── rules/                 ← universal + stack-specific rules
-    ├── skills/                ← slash commands for this project
-    ├── hooks/                 ← automation scripts
+    ├── docs/                  ← knowledge base: index, architecture, conventions, stack, entry points, test strategy
+    ├── rules/                 ← project and stack rules
+    ├── skills/ hooks/         ← only in standalone mode
     └── memory/
-        ├── MEMORY.md          ← index (auto-loaded every session)
-        ├── user.md            ← fill in your role & preferences
-        └── project/
-            └── context.md     ← fill in project goals & decisions
+        ├── MEMORY.md          ← index, loaded every session
+        ├── user.md            ← your role and preferences (gitignored: it carries your git name and email)
+        └── project/context.md ← goals, active decisions, constraints, team
 ```
 
-`CLAUDE.md` is fully generated by `init.sh` — it includes:
-- **Auto-Coordinator** with intent classification and lane tables
-- **Session Resume** commands
-- **Agent Context** with docs reference table
-- **Key directories** auto-detected from project structure
-- **Common Commands** extracted from `package.json` scripts
-- **Key Rules** generated from detected stack (pnpm, TypeScript strict, LangGraph, etc.)
+Then fill in three things once: scan the generated `CLAUDE.md` (Key Rules and Common Commands), write `memory/user.md` (role, preferences such as "TypeScript strict, never `any`"), and `memory/project/context.md` (goals with dates, decisions with why and how to apply, constraints, who is who).
 
----
-
-## 5. Step 3 — Fill in memory after init
-
-Claude works best when it knows who you are and what the project is trying to achieve.
-
-### 5.1 — Review `CLAUDE.md`
-
-`init.sh` auto-generates `CLAUDE.md` from the detected stack. Scan it once and adjust if anything is wrong — especially the **Key Rules** and **Common Commands** sections.
-
-### 5.2 — Fill in `.claude/memory/user.md`
-
-`init.sh` adds this file to `.gitignore`: it carries your git name and email, which a public repo would publish.
-
-```markdown
-## Role & Background
-Senior fullstack engineer. Comfortable with Next.js and PostgreSQL.
-Currently learning Server Components and React v19 patterns.
-
-## Preferences
-- Short, concise responses — no need to explain every obvious step
-- TypeScript strict — never use `any`
-- Commit messages in format: feat/fix/chore: short description
-```
-
-### 5.3 — Fill in `.claude/memory/project/context.md`
-
-```markdown
-## Goals
-MVP checkout flow for mobile app. Deadline: 2026-07-01.
-
-## Active decisions
-- Use Server Actions instead of a separate REST API — **Why:** reduces boilerplate,
-  type-safe end-to-end — **How to apply:** all mutations go through actions/
-
-## Constraints
-- Do not use Vercel AI SDK — currently using CopilotKit
-- Firebase config must not be committed (already gitignored)
-
-## Team
-- Thang: frontend + backend
-- Mai: designer, sends Figma links via Slack
-```
-
----
-
-## 6. Step 4 — First working session
-
-### Open Claude Code in the project
+## 5. First session
 
 ```bash
-cd ~/my-project
-claude          # CLI
-# or open the Claude Code desktop app and select the folder
+cd my-project && claude
 ```
 
-### Verify context loaded correctly
+- **Context loaded?** Ask *"what project are you working on?"*; the answer should name the stack and constraints from `CLAUDE.md` and `MEMORY.md`.
+- **Hooks working?** Try `git push origin main` from the session: `branch-guard` blocks it with the reason. Ask Claude to read `.env`: `secret-guard` refuses and asks you for the value.
+- **First push of `main`** to a new, empty remote is yours. Claude does not push to `main`; `/finish-branch` prints `git push -u origin main` for you to run, after which branches and PRs work as usual.
+- **CI secrets** (for example an evals job): `gh secret set <NAME> --repo <owner>/<repo>` before the first PR that needs them. `/finish-branch` names any the workflows read that the repo lacks.
+- **Remote Control** (driving Claude from claude.ai or your phone): questions arrive as plain text, since the option picker is not shown there, and Claude cannot open a new desktop session for you.
 
-Claude automatically reads `CLAUDE.md` and `MEMORY.md` each session. Quick check:
+## 6. Daily workflow
 
+Start: `claude` in the project. If the last session ended with `/compact`, `specs/HANDOFF.md` is read and Claude knows where to continue. On a team project, `/sync-memory` first.
+
+Work: describe what you want. The Auto-Coordinator classifies it (tiny, normal, high-risk), routes it to the skill, and for anything above tiny shows `Intent · Lane · Routing` and a task list. A vague request gets questions first, one per turn with a recommendation, never a guessed build. The slash commands below force a skill when you want a specific one.
+
+Finish: `/verify-done` before saying done, `/review-checklist` before the PR, `/finish-branch` to land it, `/compact` to hand off.
+
+## 7. Common tasks
+
+| Task | Say or type | What happens |
+|---|---|---|
+| New feature | *"add dark mode to the settings page"* or `/feature …` | risk intake → lane → plan → build → self-review → commit. A hard gate (auth, payment, migration) asks you to confirm the spec first |
+| A ticket by id | `/ticket 412` · `/ticket 412 413 414` | the ticket's intent, spec and plan are written into `docs/tickets/<id>/`, built through `/feature`, one worktree and one PR per ticket; the commit waits for the plan's skills |
+| A bug | `/fix-bug uploads over 10 MB crash` | reproduce in a red loop → minimise → hypothesis → fix → regression test. The reproducing test is locked while the fix is written |
+| An endpoint, a table, a screen, an API client | `/api-endpoint` · `/db-change` · `/ui-feature` · `/api-client` | built the way the repo already does it, with the layer's test matrix |
+| Match a Figma design | `/design-ui <link>` · `/agent-design-ui <link>` for a chat | frames exported, tokens mapped, primitives built once, screenshot diff at the frame size and narrow widths |
+| Design first | `/brainstorming <idea>` → `/grill` → `/writing-plans` | `specs/<slug>/design.md`, hardened, then `PLAN.md` with a verify command per task |
+| Review | `/review-checklist` · `/blast-radius` · the built-in `/code-review` | numbered findings with the failing case, the fix and the cost of skipping it |
+| Answer the review | `/resolve-pr-feedback` | every open thread: fix, answer or decline with a reason, one push, a reply on each |
+| PR text only | `/create-pr` | title, summary (why), tasks, file table; nothing is pushed |
+| Red build | `/ci-triage` | regression, flaky or environment, with a one-sentence root cause |
+| Release | `/release-checklist <version>` | stops on the first unmet item; a mobile production release also needs the approved `release/<version>` commit |
+| Schema change | `/write-migration` | expand/contract, backfill separated, down path tested; always high-risk |
+| Production incident | `/incident` | timeline, severity, mitigate first, then root cause, regression test and postmortem |
+| AI assistant | describe it → `/agent-feature <capability>` → `/agent-verify-turn` → `/agent-evals` → `/agent-security` | see [`plugins/agent/README.md`](../plugins/agent/README.md) |
+| Quick question | `/btw <question>` | answered without touching the task |
+
+## 8. Team workflow
+
+- `/sync-memory` at the start of a session: fetches and pulls, scans your commits since the last sync into `.claude/memory/commits/`, lists teammates' commits and flags files you both touched.
+- Everyone installs from the same marketplace, so a skill or hook change reaches the team on `/plugin marketplace update harness` (GitLab after `/sync-remote` has mirrored it).
+- Project rules and docs travel in the repo (`.claude/docs/`, `.claude/rules/`, `CLAUDE.md`), kept current by `/docs-sync` at the end of each feature.
+- `/retro` (lead) at the end of a week reads commits, PRs, reverts and CI failures and proposes what to standardise next.
+
+## 9. Ending a session
+
+- `/compact` when the conversation is long or you are leaving: summarises the work, writes `specs/HANDOFF.md` for the next session, merges learnings into memory. The `compact-advisor` hook suggests it past 200k tokens of context.
+- `/compound` after a session with a hard bug or a decision worth keeping: writes a lesson to `docs/solutions/`. Lessons are also captured on their own: `learn-capture` proposes them every 50 tool calls from a scrubbed digest, and `learn-promote` lands the valid ones at the next session start.
+
+## 10. Updating
+
+```text
+/plugin marketplace update harness      # plugins, from the source you added
 ```
-what project are you working on?
-```
-
-Claude should answer with the correct project name, stack, and constraints.
-
-### Verify hooks are working
 
 ```bash
-# Try committing a normal file — hooks will check it
-git add README.md
-git commit -m "test: verify hooks"
-# No issues → commit passes
-# Secret or console.log detected → commit blocked with a clear message
+git -C <kit-dir> pull && bash <kit-dir>/scripts/install.sh    # only when global/CLAUDE.md, rules/ or the plugin list changed
+bash <kit-dir>/plugins/core/scripts/init.sh /path/to/project   # refresh a project's .claude/; warns before overwriting settings.json
 ```
 
-### First push and Remote Control
-
-- **First push of `main` to a new, empty remote is yours.** Claude does not push to `main`; `/finish-branch` prints `git push -u origin main` for you to run, then branches and PRs work as usual.
-- **Before the first PR that runs CI with secrets** (for example an `evals` job), add them: `gh secret set <NAME> --repo <owner>/<repo>`. `/finish-branch` names any the workflows read that the repo lacks.
-- **Driving Claude over Remote Control** (from the claude.ai project or your phone): Claude cannot open a new desktop session for you and `AskUserQuestion` is not shown there, so its questions come as plain text. To run `/ticket <id>` as its own session, open the desktop app → Code → New session in the repo folder and type it there.
-
----
-
-## 7. Daily workflow
-
-### Start a session
-
-```bash
-cd ~/my-project
-claude
-```
-
-If you left work unfinished yesterday, `specs/HANDOFF.md` will auto-load and Claude will know where to continue.
-
-If working in a team — run sync first:
-
-```
-/sync-memory
-```
-
-### During the session
-
-**Auto-coordinator is always on** — you do not need to type `/coordinator`. Just describe what you want:
-
-```
-add CSV export to the reports page
-```
-
-Claude will automatically:
-1. Classify the task (lane: tiny / normal / high-risk)
-2. Create the task board
-3. Route to the right agent
-4. Execute in waves
-5. Verify the result
-
----
-
-## 8. Common tasks
-
-### Implement a new feature
-
-```
-add dark mode to the settings page
-```
-
-Or more explicitly:
-
-```
-/feature add dark mode to the settings page
-```
-
-**Flow:** risk intake → research → plan → build → self-review → commit
-
-For complex features (auth, payment, migration) — Claude will ask for confirmation before proceeding.
-
----
-
-### Fix a bug
-
-```
-/fix-bug app crashes when uploading files larger than 10MB
-```
-
-**Flow:** reproduce → root cause (no guessing, real trace) → minimal fix → verify → commit
-
-Commit message auto-generated: `fix: <what was wrong and what was fixed>`
-
----
-
-### Code review
-
-```bash
-# Review the full current branch
-/code-review
-
-# More thorough review
-/code-review high
-
-# Quick scan, critical issues only
-/code-review low
-```
-
-**Output:**
-```
-### 🔴 MUST FIX — SQL injection
-File: src/users/repo.ts:42
-Issue: user input concatenated directly into SQL string
-Fix: use parameterized query: db.query('...', [id])
-
-### 🟡 SHOULD FIX — missing error boundary
-...
-```
-
----
-
-### Implement from a ticket (5-agent pipeline)
-
-```
-/ticket #123 add swipe-to-dismiss on pending request cards
-```
-
-**Automated pipeline:**
-```
-PM Agent      → read ticket, find relevant code, identify risks
-    ↓
-Architect     → technical plan with wave-organized tasks
-    ↓
-Developer     → implement following the plan (parallel waves)
-    ↓
-Reviewer      → review diff, APPROVED or request changes
-    ↓
-QA/Verifier   → lint + types + tests + golden path + commit
-```
-
----
-
-### Write tests
-
-```
-/gen-tests src/services/payment-service.ts
-```
-
-Or ask directly:
-
-```
-write unit tests for the calculateDiscount function in src/utils/pricing.ts
-```
-
----
-
-### Create a component from Figma
-
-```
-/figma-to-screen [Figma URL]
-```
-
----
-
-### Small task, no ceremony needed
-
-```
-/task change primary button color from blue-600 to indigo-600
-```
-
-**Flow:** read conventions → implement → verify → commit. No plan needed.
-
----
-
-### Brainstorm before a complex feature
-
-```
-/brainstorming design a real-time notification system
-```
-
-**Flow:** asks one question at a time → proposes 2–3 approaches → designs → writes `specs/<slug>/design.md` → calls `/writing-plans`
-
----
-
-### Generate an implementation plan from a design
-
-```
-/writing-plans
-```
-
-Run after `/brainstorming`. Generates `specs/<slug>/PLAN.md` with wave-organized tasks.
-
----
-
-### Generate a PR description
-
-```
-/create-pr
-```
-
-Generates `PR_TEMPLATE.md` — pre-filled with title, summary (why not how), files changed, test plan.
-
----
-
-### Dynamic workflow — large-scale tasks
-
-When a task requires 10+ independent file changes, a codebase-wide audit, or a large migration → use a dynamic workflow instead of regular wave agents.
-
-**Trigger:**
-```
-ultracode: audit all API endpoints in src/routes/ for missing auth checks
-```
-
-Or use the harness `/workflow` command:
-```
-/workflow migrate all class components to functional
-```
-
-**Claude Code will:**
-1. Write a JavaScript orchestration script
-2. Execute the script in the background (session stays responsive)
-3. Spawn up to 16 agents in parallel, up to 1000 agents per run
-
-**Monitor:**
-```
-/workflows        list all running workflows
-p                 pause / resume
-x                 stop
-s                 save script as a reusable command
-```
-
-**Save for reuse:**
-- `.claude/workflows/<name>.js` — shared with team via git
-- `~/.claude/workflows/<name>.js` — personal, available in all projects
-
-Saved workflows become `/<name>` commands in autocomplete.
-
-**Built-in workflow:**
-```
-/deep-research your question here
-```
-
-Fan-out web searches → cross-check sources → adversarial vote on each claim → cited report.
-
-> **Cost note**: Dynamic workflows use significantly more tokens. Test on a small directory before running against the full codebase.
-
----
-
-## 9. Team workflow
-
-### At the start of each session
-
-```
-/sync-memory
-```
-
-This skill (part of `core`) syncs team commits and rebuilds local commit memory automatically.
-
-**What it does:**
-1. Stash uncommitted changes
-2. `git fetch --all --prune` + `git pull`
-3. Scan **your** commits since the last sync → save to memory
-4. List teammate commits → flag files that were touched
-5. Pop stash
-
-**View the result:**
-
-```bash
-cat .claude/memory/commits/$(date +%Y-%m-%d).md
-```
-
-You'll see your commits plus a list of team changes. If a file was touched by both you and a teammate, Claude will warn you.
-
----
-
-## 10. Ending a session
-
-### Before closing — compact the session
-
-```
-/compact
-```
-
-**What it does:**
-1. Summarizes what was done in the session
-2. Writes `specs/HANDOFF.md` (auto-read by the next session)
-3. Merges important learnings into `docs/solutions/`
-4. Updates memory if user preferences were learned
-
-**Next session:** Claude auto-reads `HANDOFF.md` → knows where to continue → deletes the file.
-
-### After a large session — compound learnings
-
-```
-/compound
-```
-
-Use after sessions with complex debugging, hard bugs, or architectural decisions. Saves to `docs/solutions/` so future sessions don't repeat the same mistakes.
-
----
+Hook and CI changes take effect in a new session, not the current one. Plugin versions stay at `1.0.0` until the kit is published, so after a merge the update step above is what brings the new copy.
 
 ## 11. Troubleshooting
 
-### Commit blocked by quality gate
+**Push or commit blocked.** The hook prints the reason. `branch-guard`: you are on `main` or an environment branch; branch first (`git switch -c feat/<slug>`). `ticket-gate`: a skill the ticket's `plan.md` names has not run; run it, or waive it in `plan.md` with `skip /<skill>: <reason>`. `weakened-check`: the commit deletes a test or loosens a check; confirm or restore it. `commit-quality-gate` (guards): a secret or debug artifact is staged; move the value to `.env` and read it from the environment.
 
-```
-🚫 COMMIT BLOCKED — quality gate failed:
-   ❌ OpenAI API key pattern detected in staged code
-```
+**Claude refuses to read `.env`.** That is `secret-guard`. Give it the value in chat, or run the copy yourself (`cp .env.example .env`). The repo's `.claude/secret-paths.txt` adds patterns to guard; `CLAUDE_SECRET_GUARD=0` turns the guard off for one session.
 
-**Fix:**
-```bash
-# Find the file with the issue
-git diff --cached | grep -n "sk-"
+**An edit through the shell was blocked.** `edit-guard`: change repo files with Edit/Write so the lint and format hooks run; scratch output goes outside the repo or to a gitignored path.
 
-# Remove the key, use an env var instead
-# .env file → gitignored → read from process.env
+**A skill did not fire, or the wrong one did.** Name it: `/fix-bug …`, or `/<plugin>:<skill>` when two plugins define the same name. From a clone, `bash scripts/check.sh` runs the routing eval; `/diagnose-session` (lead) reads the transcript and says why.
 
-# Re-stage and commit
-git add <file>
-git commit -m "..."
-```
+**`HANDOFF.md` not loading.** The project `CLAUDE.md` must contain the Session Resume line `cat specs/HANDOFF.md 2>/dev/null && rm -f specs/HANDOFF.md`, or `guards` must be installed (its `session-resume` hook injects it).
 
----
+**Claude forgot last session.** `/compact` was not run, or `MEMORY.md` is empty. Claude Code truncates `MEMORY.md` after 200 lines: delete stale entries and their files.
 
-### Hook triggering a false positive
+**GitLab asks for a password or times out.** Check the VPN and your SSH key, or add the GitHub mirror instead.
 
-Example: a test file with `"api_key": "test-value"` gets blocked.
+**A plugin is installed but its skills are missing.** Run `/reload-plugins` or open a new session; check `claude plugin list` for a dependency that is disabled and pin it as in section 2.
 
-**Short-term fix** — bypass for that commit (use with care):
-```bash
-SKIP_QUALITY_GATE=1 git commit -m "test: add fixture with api key pattern"
-```
+## 12. Cheat sheet
 
-**Long-term fix** — update the hook to skip the pattern:
-```bash
-# .claude/hooks/commit-quality-gate.sh
-# Add to the STAGED_APP section:
-':!*.fixture.*' ':!tests/fixtures/*'
-```
-
----
-
-### `specs/HANDOFF.md` not loading
-
-Check that `CLAUDE.md` contains this line:
-
-```bash
-cat specs/HANDOFF.md 2>/dev/null && rm -f specs/HANDOFF.md
-```
-
-If missing → add it to the "Session Resume" section in `CLAUDE.md`.
-
----
-
-### Claude doesn't remember context from the previous session
-
-1. Check `MEMORY.md` still has entries: `cat .claude/memory/MEMORY.md`
-2. Check `HANDOFF.md` was deleted (if it still exists → Claude hasn't read it yet)
-3. `/compact` was not run → nothing was saved
-
----
-
-### Memory index too long (> 200 lines)
-
-Claude Code truncates `MEMORY.md` after 200 lines:
-
-```bash
-# Count lines
-wc -l .claude/memory/MEMORY.md
-
-# Remove old entries (> 30 days, no longer applicable)
-# Delete the linked memory file first, then remove the line from MEMORY.md
-```
-
----
-
-### Update the harness after source changes
-
-```bash
-git -C <kit-dir> pull
-bash <kit-dir>/scripts/install.sh     # needed only when global/CLAUDE.md, rules/ or the plugin list changed
-```
-
-To update `.claude/` for a specific project:
-
-```bash
-cd ~/my-project
-bash <kit-dir>/plugins/core/scripts/init.sh
-# Script will warn before overwriting settings.json
-```
-
----
-
-## Full flow diagram
-
-```
-┌─ INSTALL (once) ────────────────────────────────────────────┐
-│                                                              │
-│  bash <kit-dir>/scripts/install.sh                          │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-                          ↓
-┌─ BOOTSTRAP PROJECT (once per project) ──────────────────────┐
-│                                                             │
-│  cd ~/my-project                                           │
-│  /project-init              ← Claude Code                  │
-│  # or: bash plugins/core/scripts/init.sh             │
-│                                                             │
-│  Fill in CLAUDE.md          ← run commands, architecture   │
-│  Fill in memory/user.md     ← role, preferences            │
-│  Fill in memory/project/*.md ← goals, decisions            │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-                          ↓
-┌─ EVERY SESSION ─────────────────────────────────────────────┐
-│                                                             │
-│  Start:                                                     │
-│    claude                   ← open Claude Code             │
-│    /sync-memory             ← if working in a team         │
-│    (reads HANDOFF.md automatically if present)             │
-│                                                             │
-│  Work:                                                      │
-│    "add feature X"          ← auto-coordinator handles it  │
-│    /fix-bug <symptom>       ← debug flow                   │
-│    /review-checklist        ← review before PR             │
-│    /ticket #123 <desc>      ← full pipeline (project cmd)  │
-│    /agent-feature <desc>    ← AI-assistant feature         │
-│                                                             │
-│  End:                                                       │
-│    /compact                 ← save session state           │
-│    /compound                ← after a session with big learnings │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-                          ↓
-                   Next day:
-                   New session auto-reads HANDOFF.md
-                   → continues from "Next steps"
-```
-
----
-
-## Cheat sheet — most-used commands
-
-| Command | When to use |
-|---------|-------------|
-| `/project-init` | First-time project setup |
-| `/sync-memory` | Start of session when working in a team |
-| `/feature <description>` | Implement a new feature |
-| `/fix-bug <symptom>` | Debug and fix a bug |
-| `/code-review` | Review before pushing a PR |
-| `/code-review high` | Thorough review for important PRs |
-| `/ticket #N <description>` | Full pipeline from a ticket (project command copied by `init.sh`) |
-| `/task <description>` | Small fix, no ceremony (project command copied by `init.sh`) |
-| `/review-checklist` | Self-review before `/code-review` |
-| `/finish-branch` | Verify, open the PR/MR, clean up |
-| `/agent-architect` | Start an AI assistant (CopilotKit + LangGraph) |
-| `/agent-feature <capability>` | Add a feature to an existing assistant |
-| `/agent-evals dataset\|suite\|observability` | Eval dataset, prompt evals, tracing |
-| `/brainstorming <idea>` | Design before building a complex feature |
-| `/writing-plans` | After brainstorming, generate PLAN.md |
-| `/create-pr` | Generate a PR description |
-| `/checkpoint` | Check progress mid-session |
-| `/compact` | End of session, save state |
-| `/compound` | After a large session, save learnings |
-| `/btw <question>` | Quick question without breaking the flow |
+| Command | When |
+|---|---|
+| `/project-init` | once per repo, and after a big architecture change |
+| `/sync-memory` | start of a session on a team project |
+| `/feature <desc>` · `/ticket <id>` | a new capability · a tracker ticket |
+| `/fix-bug <symptom>` | something broken, failing or slow |
+| `/tdd` | build test-first from a plan task |
+| `/brainstorming` → `/grill` → `/writing-plans` | design before a complex feature |
+| `/verify-done` · `/checkpoint` | before saying done · progress plus gates |
+| `/review-checklist` · `/blast-radius` | before the PR |
+| `/finish-branch` | land or park the branch |
+| `/ci-triage` · `/release-checklist` · `/incident` | red build · release · outage |
+| `/agent-architect` · `/agent-feature` · `/agent-verify-turn` | start · grow · prove an AI assistant |
+| `/compact` · `/compound` | end of session · a lesson worth keeping |
+| `/btw <question>` | a quick question without breaking the flow |

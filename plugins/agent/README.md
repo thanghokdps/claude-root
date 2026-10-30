@@ -1,98 +1,73 @@
 # agent
 
-Skills for building AI assistants on **CopilotKit · AG-UI** with **Mastra, LangChainJS or LangGraph**, each scaffolded from the vendor's official reference repo. Installing it also installs the plugins its skills hand off to:
+Build an AI assistant end to end on **CopilotKit · AG-UI** with **Mastra, LangChainJS or LangGraph**: from one plain-language sentence to an architecture record, a scaffold from the vendor's official reference repo, features built layer by layer, a chat UI from the design, evals and tracing, and a threat model. The product questions come before any technology.
 
-| Comes with `agent` | For |
-|---|---|
-| `dev` → `core`, `plan`, `review` | `/project-init` after the scaffold, `/fix-bug` and `/tdd` for red loops, `/verify-done` before saying done, `/review-checklist` and `/blast-radius` on every feature's diff |
-| `ship` | `/write-migration` for schema changes, `/finish-branch` to open the PR, `/ci-triage` for a red build |
-| `progress` | each skill's checklist and live ✅ progress (hooks only, never blocks) |
+**For:** teams building a chatbot or AI assistant, whether the person asking is a product owner describing it in their own words or an engineer who already chose the stack.
 
-Not included: `lead` (retro, skill authoring) and `guards` (commit-blocking hooks — opt in with `/plugin install guards@harness`). The always-loaded rules (`git`, `security`, `code-quality`, `testing`) come only from `bash scripts/install.sh` in a clone; the agent skills carry their own rules in `rules/`.
+## What it does for you
 
-## Install
-
-```
-/plugin marketplace add thanghokdps/claude-root
-/plugin install agent@harness
-```
-
-Inside the team, add the company GitLab copy instead (same commit; the URL is in the [root README](../../README.md#quickstart--ai-assistant)). Then `/reload-plugins` (or open a new session). Update later with `/plugin marketplace update harness`.
-
-## Start on a blank machine
-
-Open Claude Code in an empty folder and say what you want to build, e.g. *"Tôi muốn làm một chatbot hỗ trợ khách hàng tra cứu đơn hàng"*. `agent-architect` then:
-
-1. **Preflight** — checks git, Node ≥ 20, a package manager, a model key (name only, never the value) and prints the install command for each gap. It installs nothing without asking.
-2. **Problem first** — who uses it, the 3–5 tasks with a real example message each, the systems it reads or writes, what it must refuse. One question per turn, each with a recommendation.
-3. **Technology** — host, clients, then **single app or monorepo (pnpm + Turborepo)**: you choose; it recommends.
-4. **Grill** — every task gets an owner agent and tool, every write a confirm path, every vague answer a recorded risk.
-5. **ADR + scaffold** — `docs/adr/<NNNN>-agent-architecture.md`, then the smallest working slice of your layout, ending on one real streamed turn with your first task's example message.
-
-Only want the frame? Say *dựng* or *init* and name the stack without saying what it does, e.g. *"init chatbot empty features, dùng Mastra, tracing bằng Langfuse"* or *"init chatbot với Next.js và LangGraph"*. Any framework (LangChain, LangGraph, Mastra, a custom graph), frontend, database, auth or tracing provider you name is used as given; it asks nothing when a stack is named (with none, only the framework, frontend and database), defaults the rest, builds the shell with one agent and no tools, asks you to run `! cp .env.example .env` and fill the model key (the secret guard keeps Claude out of `.env`), proves it with one real streamed "hello" turn, and runs `/project-init` for `CLAUDE.md`, `AGENTS.md` and `.claude/docs/`. The resulting tree is in the [root README](../../README.md).
-
-If the designer has a Figma file or mockups, put the link in your request: `agent-design-ui` turns it into the chat UI after the scaffold. Without one, Claude does not ask; the chat is CopilotKit's stock `CopilotChat` with theme tokens.
-
-## Grow it, one feature at a time
-
-Ask for a feature in plain words, e.g. *"Thêm tính năng cho khách đổi địa chỉ giao hàng"*. `agent-feature` reads the ADR first and stops if the feature would change the architecture (a new agent, a write path, a system the ADR does not list), lists what already exists, decides **reuse / extend / new** per piece, builds each piece through the layer skill below, then checks the diff for duplicates.
+1. **Start from a sentence.** Open Claude Code in an empty folder and say what the assistant should do, for example *"Tôi muốn làm một chatbot hỗ trợ khách hàng tra cứu đơn hàng"*. `/agent-architect` checks the machine (git, Node ≥ 20, a package manager, a model key by name only), then asks one question per turn with a recommendation: who uses it, the 3–5 tasks with a real example message each, the systems it reads or writes, what it must refuse. Only then host, clients, single app or monorepo. Design is never asked: give a Figma link if you have one.
+2. **Get a record and a scaffold.** It writes `docs/adr/<NNNN>-agent-architecture.md`, scaffolds the smallest working slice from the vendor's reference repo at a pinned version (env schema that fails at boot, the caller's identity, one agent, the model factory, a tracing switch with masking on, the stock chat UI), and proves it with one real streamed turn. The secret guard keeps Claude out of `.env`, so your one manual step is `cp .env.example .env` and the model key.
+3. **Just the frame?** Say *init* or *dựng* and name the stack without saying what the chatbot does, for example *"init chatbot empty features, dùng Mastra, tracing bằng Langfuse"*. Skeleton mode asks nothing when a stack is named, defaults the rest on one card, and stops at a streamed "hello".
+4. **Grow it one feature at a time.** *"Thêm tính năng cho khách đổi địa chỉ giao hàng"* fires `/agent-feature`: it checks the feature against the ADR, inventories what exists, decides reuse / extend / new per piece, builds each piece through the layer skill below, and checks the diff for duplicates.
 
 ## Skills
 
-| Skill | Reach for it when |
-|-------|-------------------|
-| `/agent-architect [greenfield\|skeleton\|audit]` | Starting an assistant (just describe it; this fires and interviews you first), an empty skeleton on a stack you name with no features yet, or auditing one for custom code that stock middleware now covers |
-| `/agent-feature <capability>` | Adding a feature to an existing assistant — within its ADR, reusing what is there, then a duplicate check |
-| `/agent-design-ui <figma link \| folder>` | A design for the chat: runs `/design-ui` (dev) for frames, tokens, primitives and the screenshot diff, and adds the chat states, the `[data-copilotkit]` theme and stock vs custom per chat element |
-| `/agent-tool <tool>` | Adding, renaming or fixing an agent (backend) tool — schema, trusted identity, read vs mutation, its test. Given your API (OpenAPI, Postman, curl, docs or MCP), it first maps endpoints to tools and builds the typed client and mocks. Browser-only tools go to `/agent-frontend` |
-| `/agent-rag <corpus or memory>` | Answering from documents or remembering users by meaning — ingest (chunk, embed, index with model metadata), vector store choice, a retrieval tool with a server-side tenant filter and citations, semantic memory, retrieval evals |
-| `/agent-hitl <write>` | A tool creates, updates or deletes data and needs a confirm card — standard AG-UI interrupt, `useInterrupt`, `resume[]` |
-| `/agent-graph <scope>` | A request lands on the wrong agent; adding an agent, router or supervisor; defining a fixed workflow; rewriting a system prompt |
-| `/agent-frontend <change>` | CopilotKit v2 in React: provider + auth headers, `useAgentContext`, frontend tools (`useFrontendTool`), tool cards (`useRenderTool`), suggestions, file and image attachments, e2e with recorded streams |
-| `/agent-verify-turn [local\|prod-trace]` | Before saying an agent change works, or when a production answer was wrong |
-| `/agent-evals [unit\|dataset\|suite\|observability\|compare-models]` | Fake-model unit tests; an eval dataset (JSONL, example in `skills/agent-evals/references/dataset-example.jsonl`); judged eval suites with a CI gate; Langfuse/LangSmith tracing with masking; comparing models |
-| `/agent-security [scope]` | A new tool, data source or client; before shipping; compliance questions |
-| `/agent-prompt-review [path\|diff]` | A diff changes a system prompt, tool description or output schema — injection openings, capability drift, ambiguity, fragile output, tokens |
+| Skill | Use it when | Example prompt |
+|---|---|---|
+| `/agent-architect` | Starting an assistant (`greenfield`), an empty skeleton on a named stack (`skeleton`), or auditing an existing one for custom code that stock pieces now cover (`audit`). Also when choosing Mastra vs `createAgent` vs `StateGraph` | "build a chatbot for our support team" · "Mastra hay LangChain?" |
+| `/agent-feature` | Adding a capability to an assistant that already exists, within its ADR. A write behind a confirm step starts here and is handed to `/agent-hitl` | "thêm tính năng cho chatbot để khách hủy đơn hàng" |
+| `/agent-tool` | Adding, renaming or fixing a backend agent tool: Zod schema, identity from trusted context, read vs mutation, retry and audit, its test. Given your API (OpenAPI, Postman, curl, docs or an MCP server) it maps endpoints to tools and builds the typed client and mocks | "thêm tool cho agent tra cứu đơn hàng theo mã" · "tạo tools từ swagger này" |
+| `/agent-hitl` | A tool creates, updates or deletes data and needs a confirm card: the standard AG-UI interrupt and resume, a pending-action record, confirm / cancel / replay, the right target record | "agent xóa user qua chat, cần confirm trước khi lưu" |
+| `/agent-graph` | A request lands on the wrong agent, you add an agent, router or supervisor, define a fixed workflow, or rewrite a system prompt | "hỏi về hóa đơn mà agent support lại trả lời" |
+| `/agent-frontend` | CopilotKit v2 in React: provider and auth headers, shared context, frontend tools, rendering tool calls, suggestions, file and image attachments, e2e tests on recorded AG-UI streams | "tool card renders twice" · "gửi ảnh cho chatbot" |
+| `/agent-design-ui` | The design is for the chat itself: chat states, the `[data-copilotkit]` theme, stock slot vs custom component per element. Extends `/design-ui` | "làm UI chat theo design Figma này" |
+| `/agent-rag` | The assistant must answer from documents or remember users by meaning: ingest pipeline, vector store, a retrieval tool with a server-side tenant filter and citations, semantic recall, retrieval evals | "chatbot trả lời từ tài liệu nội bộ" |
+| `/agent-evals` | Adding tests, an eval dataset or tracing to an agent, or choosing a model: `unit` (fake models), `dataset` (JSONL), `suite` (judged, with a baseline gate for CI), `observability` (Langfuse / LangSmith with masking), `compare-models` | "test agent không cần gọi model thật" · "switch to a cheaper model" |
+| `/agent-verify-turn` | Before saying an agent change works (`local`: drive a real turn and read the event stream), or when a production answer was wrong (`prod-trace`: find the trace and classify the cause first) | "sửa rồi mà vẫn bị, chạy thử một turn thật" |
+| `/agent-security` | A new tool, data source or client; before shipping; a compliance question. Injection through tool results, context and memory; confused deputy; exfiltration through rendered output; PII in traces; SOC 2 mapping | "client gửi cả lịch sử chat, có an toàn không?" |
+| `/agent-prompt-review` | A diff touches a system prompt, tool description or output schema. Read as the model reads it: injection openings, promised capabilities that do not exist, ambiguity, fragile formats, token waste, with an eval per must-fix | "soát prompt trước khi mở PR" |
 
-Skills fire on their own from what you type — the slash command is optional.
+Skills fire on their own from what you type; the slash command is optional. When another installed plugin has a skill of the same name, name this one: `/agent:agent-tool`.
 
-## Demo prompts
+## Rules the skills follow
 
-1. "Thêm tool cho agent để tra cứu đơn hàng theo mã" → `agent-tool`
-2. "Agent xóa user qua chat, cần confirm trước khi lưu" → `agent-hitl`
-3. "Hỏi về hóa đơn mà agent support lại trả lời" → `agent-graph`
-4. "Sửa rồi mà vẫn bị, chạy thử một turn thật xem stream" → `agent-verify-turn`
-5. "Thêm tính năng cho chatbot để khách hủy đơn hàng, dựa trên kiến trúc đã có" → `agent-feature`
-6. "Làm UI chat theo design Figma này" → `agent-design-ui`
+They load only when a skill reads them, so they cost nothing in other repos.
+
+| Rule | Covers | Read by |
+|---|---|---|
+| [`agent-identity-and-tools.md`](rules/agent-identity-and-tools.md) | identity from trusted context only; where a tool lives (agent vs frontend); read vs mutation, retry, audit, errors, tests | `/agent-tool`, `/agent-feature`, `/agent-frontend`, `/agent-hitl` |
+| [`agent-prompts.md`](rules/agent-prompts.md) | system prompts, tool descriptions, scope rules | `/agent-graph`, `/agent-tool`, `/agent-prompt-review` |
+| [`agent-stock-first.md`](rules/agent-stock-first.md) | stock CopilotKit / Mastra / LangChain / LangGraph pieces before custom code | all |
+| [`agui-transport.md`](rules/agui-transport.md) | AG-UI events, interrupts and resume, untrusted client history, content parts, client contract | `/agent-frontend`, `/agent-hitl` |
+| [`langgraph.md`](rules/langgraph.md) | state, run context, short- and long-term memory, graph lifecycle, fixed workflows, interrupts | `/agent-graph`, `/agent-hitl` |
+| [`mastra.md`](rules/mastra.md) | registry, agents and supervisor, `createTool` with request context, approval and suspend, workflows, storage, transport | `/agent-tool`, `/agent-graph`, `/agent-hitl` |
+| [`agent-tracing-privacy.md`](rules/agent-tracing-privacy.md) | the tracing switch, masking, what each turn records | `/agent-evals observability`, `/agent-verify-turn`, `/agent-security` |
+| [`agent-deps-pinning.md`](rules/agent-deps-pinning.md) | exact version pins, one copy of the framework core | `/agent-architect` |
+| [`agent-code-structure.md`](rules/agent-code-structure.md) | what an assistant adds to the app structure (agent folder, theme, recorded streams, evals), tokens instead of raw values, mobile-first | `/agent-architect`, `/agent-design-ui`, `/agent-feature` |
+
+## Hooks
+
+None of its own. The always-on gates come from `core` and `dev` (secret guard, branch guard, ticket gate, test lock).
+
+## Depends on
+
+`progress`, `dev`, `ship`, and through them `core`, `plan`, `review`. That is the build loop the agent skills hand off to: `/project-init` after the scaffold, `/fix-bug` and `/tdd` for red loops, `/verify-done` before saying done, `/review-checklist` and `/blast-radius` on every feature's diff, `/write-migration` for schema changes, `/finish-branch` to open the PR. Not included: `lead` and the opt-in `guards`.
 
 ## Check the routing yourself
 
-`evals/` holds one case per routing demo prompt, one that must not fire, and behaviour cases: `greenfield-problem-first` (prerequisites checked, then the problem asked before any technology), `skeleton-no-questions` (an init with a named stack asks nothing and builds), `feature-conflicts-adr` (a feature the ADR rules out is stopped and raised, not built) `design-to-chat` (a frame + tokens mapped onto v2 tokens and a ui-map), `hitl-standard-interrupt` (the stock AG-UI 1.0 confirm path planned, no custom endpoint) and `verify-agui-1` (a captured stream checked against the 1.0 rules). From a clone of the repo:
+`evals/` holds one case per demo prompt plus behaviour cases, for example `greenfield-problem-first` (the problem is asked before any technology), `skeleton-no-questions` (a named stack asks nothing and builds), `feature-conflicts-adr` (a feature the ADR rules out is raised, not built), `hitl-standard-interrupt`, `rag-tenant-filter` and `security-forged-history`. From a clone of the kit, with a real model (paid):
 
 ```bash
 bash scripts/eval-plugin.sh agent
 ```
 
-About $3 for the nine cases. Add `--runs 3 --ablation with-without` for a with/without-plugin comparison. The script targets `plugins/` because each case also loads the dependencies (`progress`, `core`, `plan`, `review`, `dev`, `ship`): a plugin whose dependency is missing is dropped from the run without an error.
+Add `--runs 3 --ablation with-without` for a with/without-plugin comparison.
 
-## Rules
+## Install
 
-The invariants the skills read before they act. They load only when a skill needs them, not every session. Building a feature or a tool means following these:
+```text
+/plugin install agent@harness
+```
 
-| Rule | Covers | Read by |
-|---|---|---|
-| [`agent-identity-and-tools.md`](rules/agent-identity-and-tools.md) | identity from trusted context only; **where a tool lives (agent vs frontend)**; read vs mutation, retry, audit, errors, tests | `/agent-tool`, `/agent-feature`, `/agent-frontend`, `/agent-hitl` |
-| [`agent-prompts.md`](rules/agent-prompts.md) | system prompts, tool descriptions, scope rules | `/agent-graph`, `/agent-tool` |
-| [`agent-stock-first.md`](rules/agent-stock-first.md) | use stock CopilotKit / Mastra / LangChain / LangGraph pieces before custom code | all |
-| [`agui-transport.md`](rules/agui-transport.md) | AG-UI 1.0 events, interrupts and resume, untrusted client history, content parts, client contract (0.x lines marked) | `/agent-frontend`, `/agent-hitl` |
-| [`langgraph.md`](rules/langgraph.md) | state, run context (`contextSchema`), short- and long-term memory, graph lifecycle, fixed workflows, interrupts | `/agent-graph`, `/agent-hitl` |
-| [`mastra.md`](rules/mastra.md) | registry, agents and supervisor, `createTool` + request context, approval/suspend, workflows, storage, transport | `/agent-tool`, `/agent-graph`, `/agent-hitl` |
-| [`agent-tracing-privacy.md`](rules/agent-tracing-privacy.md) | tracing switch, masking, what each turn records | `/agent-evals observability`, `/agent-verify-turn` |
-| [`agent-deps-pinning.md`](rules/agent-deps-pinning.md) | exact version pins, one copy of the framework core | `/agent-architect` |
-| [`agent-code-structure.md`](rules/agent-code-structure.md) what an assistant adds to core's `app-structure.md` (agent folder, CopilotKit theme, recorded streams, evals), tokens instead of raw hex/px, primitives-only gates, mobile-first, Prettier | `/agent-architect`, `/agent-design-ui`, `/agent-feature` |
-
-New feature order (`/agent-feature`): check the ADR → reuse inventory → schema → tool → HITL → agent scope → frontend → evals, one slice green before the next.
-
-## Works alongside
-
-Other plugins with their own agent skills can be installed side by side. When both match a request, name the one you want: `/agent:agent-tool`.
+The marketplace must be added first (GitLab or the GitHub mirror): see the [root README](../../README.md#quickstart). In an AI-assistant repo, core's `repo-profile` hook enables this plugin on its own. Optional MCP servers the skills use when present: Playwright (`claude mcp add playwright -- npx -y @playwright/mcp@latest`) to render the chat in a real browser, Figma for `/agent-design-ui`. All plugins: [`../README.md`](../README.md).

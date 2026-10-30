@@ -1,27 +1,34 @@
 # plan
 
-Design before code: kickoff (docs-first project intake), brainstorming, grill, domain-model, codebase-design, writing-plans → PLAN.md.
+Design before code: take a project or feature from the documents and ideas you have to a design that survived hard questions and a plan Claude can build wave by wave.
 
-## Install
-
-```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
-/plugin install plan@harness
-```
-
-GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
-
-Also installs: `progress`.
+**For:** architects, tech leads, and anyone starting something non-trivial. Each skill ends in a file (`docs/kickoff.md`, `specs/<slug>/design.md`, `PLAN.md`, `.claude/docs/glossary.md`, ADRs) that the build skills read.
 
 ## Skills
 
-| Skill | Does |
-|-------|------|
-| `/kickoff` | Starts a new project from the documents the team already has — collects requirements, prerequisites, stack, ERD, ADR and the rest, shows a coverage matrix, then grills only the gaps |
-| `/brainstorming` | Design-first brainstorming session before any implementation |
-| `/codebase-design` | Shared vocabulary for designing deep modules — a lot of behaviour behind a small interface, placed at a clean seam |
-| `/domain-model` | Builds and sharpens the project's ubiquitous language — challenges fuzzy terms, cross-checks vocabulary against the code, and records resolved terms in .claude/docs/glossary.md and hard-to-reverse decisions as ADRs |
-| `/grill` | Relentless one-question-at-a-time interview that stress-tests a plan, design, or decision until every branch of the decision tree is resolved |
-| `/writing-plans` | Converts an approved design doc (specs/<slug>/design.md) into a detailed PLAN.md with wave-organized tasks, file maps, and verifiable acceptance criteria |
+| Skill | Use it when | Example prompt |
+|---|---|---|
+| `/kickoff` | Starting a new project from documents the team already has (PRD, ERD, ADR, stack, API specs). Reads them into one canonical doc set, shows a coverage matrix, then grills only the gaps | "Đây là PRD và ERD, bắt đầu dự án mới" |
+| `/brainstorming` | A feature idea with no design yet. Explores intent, proposes several approaches, asks one question at a time, writes `specs/<slug>/design.md` | "I want to build a real-time notification system" |
+| `/grill` | A design, plan or decision needs hardening before anyone builds it. A relentless one-question-at-a-time interview until every branch is resolved. Fires only by hand | `/grill specs/notifications/design.md` |
+| `/domain-model` | Terms keep shifting meaning, a design uses a word the code does not, or a decision deserves a written rationale. Records terms in `.claude/docs/glossary.md` and decisions as ADRs | "two people mean different things by 'order'" |
+| `/codebase-design` | Designing or improving a module's interface, deciding where a seam goes, making code testable. The deep-module vocabulary other skills borrow | "where should the seam between billing and invoicing go?" |
+| `/writing-plans` | An approved `design.md` exists. Turns it into `PLAN.md` with wave-organised tasks, file maps and a verify command per task | `/writing-plans` |
 
-All plugins: [`../README.md`](../README.md).
+The design chain: `/kickoff` or `/brainstorming` → `/grill` → `/writing-plans` → build (`/tdd` in `dev`, if installed).
+
+## Hooks
+
+None.
+
+## Depends on
+
+`progress`.
+
+## Install
+
+```text
+/plugin install plan@harness
+```
+
+The marketplace must be added first (GitLab or the GitHub mirror): see the [root README](../../README.md#quickstart). All plugins: [`../README.md`](../README.md).
