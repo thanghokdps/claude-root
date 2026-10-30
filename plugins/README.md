@@ -14,7 +14,9 @@ The kit is one marketplace, `harness`, with one plugin per role. Install the rol
 | [`core`](core/README.md) | Session and project basics every role uses | `verify-done` `project-init` `docs-sync` `compact` `compound` `sync-memory` `btw` | `branch-guard` `secret-guard` `sensitive-path` `edit-guard` `step-limit` `repo-profile` `compact-advisor` `learn-capture` | progress |
 | [`plan`](plan/README.md) | Design before code | `kickoff` `brainstorming` `grill` `domain-model` `codebase-design` `writing-plans` | — | progress |
 | [`review`](review/README.md) | Review a diff, a PR or a whole repo | `review-checklist` `review-diff` `blast-radius` `create-pr` `resolve-pr-feedback` `debt-ledger` `repo-audit` | — | progress |
-| [`dev`](dev/README.md) | Build and fix, one skill per fullstack layer | `coordinator` `feature` `ticket` `fix-bug` `tdd` `api-endpoint` `db-change` `ui-feature` `api-client` `design-ui` `resolve-question` `checkpoint` | `ticket-ledger` `ticket-gate` `test-lock` `weakened-check` `auto-decisions` | core, plan, review |
+| [`dev`](dev/README.md) | Build and fix for every role; `/feature` dispatches slices to the role packs | `coordinator` `feature` `ticket` `fix-bug` `tdd` `resolve-question` `checkpoint` | `ticket-ledger` `ticket-gate` `test-lock` `weakened-check` `auto-decisions` | core, plan, review |
+| [`frontend`](frontend/README.md) | Role pack: web UI, enabled per repo | `ui-feature` `design-ui` + agent `frontend-engineer` | — | progress, dev |
+| [`backend`](backend/README.md) | Role pack: server side, enabled per repo | `api-endpoint` `db-change` `api-client` + agent `backend-engineer` | — | progress, dev |
 | [`ship`](ship/README.md) | Land and release | `finish-branch` `ci-triage` `release-checklist` `write-migration` `incident` `sync-remote` | `release-gate` | core |
 | [`agent`](agent/README.md) | AI assistants on CopilotKit · AG-UI with Mastra, LangChainJS or LangGraph | `agent-architect` `agent-feature` `agent-tool` `agent-hitl` `agent-graph` `agent-frontend` `agent-design-ui` `agent-rag` `agent-evals` `agent-verify-turn` `agent-security` `agent-prompt-review` | — | progress, dev, ship |
 | [`workplace`](workplace/README.md) | Domain pack for HR / workplace apps, enabled per repo | `workplace-review` | — | progress |
@@ -32,8 +34,9 @@ Each skill is a Markdown prompt program in `plugins/<plugin>/skills/<name>/SKILL
 | Design a feature before building it | `/brainstorming` → `/grill` → `/writing-plans` | plan |
 | Build a feature, or work a ticket by id | just describe it · `/feature` · `/ticket <id>` | dev |
 | Fix a bug that keeps coming back | `/fix-bug` (locks the reproducing test) | dev |
-| Add an endpoint · a table · a React screen · an API client | `/api-endpoint` · `/db-change` · `/ui-feature` · `/api-client` | dev |
-| Match a Figma design | `/design-ui` (any page) · `/agent-design-ui` (the chat) | dev · agent |
+| Add an endpoint · a table · a third-party API client | `/api-endpoint` · `/db-change` · `/api-client` | backend |
+| Add a React screen | `/ui-feature` | frontend |
+| Match a Figma design | `/design-ui` (any page) · `/agent-design-ui` (the chat) | frontend · agent |
 | Prove the work is done | `/verify-done` · `/checkpoint` | core · dev |
 | Review before the PR, then answer the review | `/review-checklist` · `/blast-radius` · `/resolve-pr-feedback` | review |
 | Land the branch, read a red build, cut a release | `/finish-branch` · `/ci-triage` · `/release-checklist` | ship |
@@ -47,7 +50,7 @@ Each skill is a Markdown prompt program in `plugins/<plugin>/skills/<name>/SKILL
 
 ```text
 design   /kickoff or /brainstorming → design.md → /grill → /writing-plans → PLAN.md (a verify command per task)
-build    PLAN.md → /tdd or the layer skill (api-endpoint, db-change, ui-feature, api-client) → /checkpoint
+build    PLAN.md → /feature dispatches each slice to its pack's engineer (backend: api-endpoint, db-change, api-client · frontend: ui-feature, design-ui · agent: agent-*) → /checkpoint
 prove    /verify-done → /review-checklist (+ /blast-radius on shared code) → /docs-sync → /finish-branch
 agent    /agent-architect → ADR + scaffold → /agent-feature → agent-tool · agent-hitl · agent-graph · agent-frontend → /agent-verify-turn → /agent-evals → /agent-security
 end      /compact (handoff for the next session) · /compound (lessons to docs/solutions/)
