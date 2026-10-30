@@ -198,6 +198,23 @@ def test_quoted_substitution_restores_the_quote_and_unbalanced_quotes_ask():
     assert gate(path, "git add docs/terraform-apply.md")[0] == "allow"
 
 
+def test_inner_parens_cannot_close_the_substitution_early():
+    path = repo()
+    # the `)` of `(x)` must not restore the double quote and hide the apply behind inert `echo`
+    assert gate(path, 'echo "$(f (x); terraform apply -var-file=prod.tfvars)"')[0] == "deny"
+    assert gate(path, 'echo "$(echo $(true); kubectl apply -f k8s/ -n production)"')[0] == "deny"
+    # literal text inside the quote: never denied; the split quote may leave an unbalanced segment, which asks
+    assert gate(path, 'echo "$((1+2)); helm upgrade api charts/api -n production"')[0] != "deny"
+
+
+def test_git_unknown_global_options_are_not_inert():
+    path = repo()
+    assert gate(path, "git --odd-opt log 'terraform apply'")[0] == "ask"
+    assert gate(path, "git --attr-source=x log 'terraform apply'")[0] == "allow"  # known value option, inline form
+    assert gate(path, "git --no-pager log --grep 'kubectl apply'")[0] == "allow"
+    assert gate(path, "git --config=alias.a='!terraform apply' a")[0] == "ask"
+
+
 def test_config_defines_production_names():
     path = repo(config={"production": ["eu-live"]})
     assert gate(path, "kubectl apply -f k8s/ -n eu-live")[0] == "deny"

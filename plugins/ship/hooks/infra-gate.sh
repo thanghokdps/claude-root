@@ -95,22 +95,35 @@ INERT = {"echo", "printf", "cat", "grep", "rg", "ls", "head", "tail", "less", "m
 GIT_SAFE = {"status", "log", "diff", "show", "add", "commit", "push", "pull", "fetch", "branch", "checkout", "switch",
             "restore", "reset", "rev-parse", "remote", "tag", "stash", "blame", "grep", "rm", "mv", "describe",
             "ls-files", "cherry-pick", "revert", "merge", "worktree", "clone", "init"}
-GIT_EXEC = re.compile(r"(^|\s)(-c|--config-env\S*|alias\.\S*|!|config|--extcmd\S*|-x|--exec|-u|--upload-pack\S*"
-                      r"|--receive-pack\S*|--template\S*|--exec-path\S*)(\s|$|=)")
-# git's global options that take a value: skipped with their value before the subcommand is read.
-GIT_VALUE_FLAGS = {"-C", "--git-dir", "--work-tree", "--namespace", "--super-prefix"}
+# Tokens (exact, or the prefix before `=`) that make git run a program.
+GIT_EXEC = {"-c", "--config", "--config-env", "--extcmd", "-x", "--exec", "-u", "--upload-pack", "--receive-pack",
+            "--template", "--exec-path", "config"}
+# git's global options: the ones that take a value are skipped with it; any other option before the subcommand is
+# unknown to the gate and makes the line non-inert.
+GIT_VALUE_FLAGS = {"-C", "--git-dir", "--work-tree", "--namespace", "--super-prefix", "--attr-source", "--list-cmds"}
+GIT_BOOL_FLAGS = {"-p", "--paginate", "-P", "--no-pager", "--bare", "--literal-pathspecs", "--glob-pathspecs",
+                  "--noglob-pathspecs", "--icase-pathspecs", "--no-replace-objects", "--no-optional-locks",
+                  "--no-lazy-fetch", "--no-advice"}
+
+
+def git_exec_token(tok):
+    name = tok.split("=", 1)[0]
+    return name in GIT_EXEC or tok.startswith("alias.") or "!" in tok
 
 
 def git_inert(args, env):
     """True when a git command line can only read, write or move text; anything that may run a program asks."""
-    if any(k.startswith("GIT_") for k in env) or GIT_EXEC.search(" ".join(args)):
+    if any(k.startswith("GIT_") for k in env) or any(git_exec_token(a) for a in args):
         return False
     sub, skip = "", False
     for a in args:
         if skip:
             skip = False
         elif a.startswith("-"):
-            skip = a in GIT_VALUE_FLAGS
+            if a in GIT_VALUE_FLAGS:
+                skip = True
+            elif a.split("=", 1)[0] not in GIT_VALUE_FLAGS and a not in GIT_BOOL_FLAGS:
+                return False
         else:
             sub = a
             break
@@ -129,20 +142,27 @@ def ask(msg):
 def segments(text):
     """Split on shell operators outside quotes. Inside double quotes `$(` and backticks still start a new segment,
     parsed unquoted (`;`, `&&`, `|` split again inside) since the shell runs what they hold as a fresh command list;
-    the matching `)` or backtick restores the double quote. Only single quotes suppress everything."""
-    out, cur, quote, i, nest = [], "", None, 0, []
+    the matching `)` or backtick restores the double quote: every unquoted `(` opened inside the substitution is
+    pushed too, so an inner `)` cannot close it early. Only single quotes suppress everything."""
+    out, cur, quote, i, nest = [], "", None, 0, []  # nest: '"' = closes back into a double quote, '(' = inner paren
     while i < len(text):
         ch = text[i]
         if quote == '"' and (text.startswith("$(", i) or ch == "`"):
             out.append(cur)
-            nest.append(")" if text.startswith("$(", i) else "`")
+            nest.append(('"', ")" if text.startswith("$(", i) else "`"))
             cur, quote, i = "", None, i + (2 if text.startswith("$(", i) else 1)
             continue
-        if quote is None and nest and ch == nest[-1]:
-            out.append(cur)
-            nest.pop()
-            cur, quote, i = "", '"', i + 1
-            continue
+        if quote is None and nest:
+            if ch == nest[-1][1]:
+                out.append(cur)
+                kind, _ = nest.pop()
+                cur, quote, i = "", '"' if kind == '"' else None, i + 1
+                continue
+            if (ch == "(" or text.startswith("$(", i)) and nest[-1][1] == ")":
+                out.append(cur)
+                nest.append(("(", ")"))
+                cur, i = "", i + (2 if ch == "$" else 1)
+                continue
         if quote:
             quote = None if ch == quote else quote
             cur += ch
