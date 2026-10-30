@@ -32,8 +32,9 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 - Shape B: a real handler reading `runtime.context` (older: `config.configurable`), registered in the domain registry as `read` or `mutation`.
 - Shape M: `createTool({ id, description, inputSchema, outputSchema, execute })` in `src/mastra/tools/`, attached to the owning `Agent`'s `tools`. `execute(input, context)` reads identity from `context.requestContext` (server-set, `MASTRA_RESOURCE_ID_KEY` for the user), never from `input`. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md`.
 - The tool belongs to the agent whose scope it serves. If two agents could own it, ask which — that is a decision, not a fact.
+- Reuse the client, schemas and credential passing that sibling tools use. Where existing code breaks a rule (token in `configurable`, no shared name constants), the new tool follows the existing pattern and the reply flags the rule as a separate change, unless the user asked for it.
 
-**Done when:** the owning agent, the registry entry, and read-vs-mutation are stated with file paths.
+**Done when:** the owning agent, the registry entry, read-vs-mutation, and the existing client and schemas the tool reuses are stated with file paths.
 
 ## Step 2 — Contract first
 
