@@ -6,7 +6,8 @@
 # root, apps/*, packages/* package.json; pyproject.toml / requirements*.txt; go.mod, Cargo.toml; prisma/, drizzle/,
 # alembic/, eas.json, .claude/docs/, docs/tickets/. A folder with no manifest gets only the role packs still off and how to enable one.
 # Team setup: in a git repo (not $HOME) with no *@harness: false in its settings, SessionStart merges the kit
-# marketplace, dev@harness and the packs below into .claude/settings.json and leaves it uncommitted for the user.
+# marketplace, dev@harness and the packs below into .claude/settings.json, copies core's rules the repo and the
+# user config both lack into .claude/rules/ (a plugin cannot ship always-loaded rules), and leaves both uncommitted.
 # An opted-out repo gets the packs in .claude/settings.local.json (personal, excluded from git) instead.
 # Packs, effective after /reload-plugins or a new session: frontend@harness for a web UI framework (not React Native alone),
 # backend@harness for a server framework, an ORM, go or rust, mobile@harness for react-native / expo / eas.json,
@@ -21,7 +22,7 @@ command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
 
 # -I: the cwd is an untrusted repo, so its json.py or PYTHON* env must never load into this hook.
-HOOK_INPUT="$INPUT" python3 -I - <<'PY'
+HOOK_INPUT="$INPUT" RULES_DIR="$(dirname "${BASH_SOURCE[0]}")/../rules" python3 -I - <<'PY'
 import glob, json, os, re, subprocess, sys
 
 try:
@@ -121,13 +122,36 @@ def setup_repo(plugins):
             write_inside(shared_path, json.dumps(settings, indent=2) + "\n")
         except OSError:
             return None
+    copy_rules()
     return added
 
 
+copied_rules = []
+
+
+def copy_rules():
+    """Copy each core rule that neither .claude/rules/ nor the user config has; a same-named team rule wins.
+    shortcut: a copied rule never refreshes when the kit changes it; delete the file to get the new one."""
+    src = os.environ.get("RULES_DIR", "")
+    for path in sorted(glob.glob(os.path.join(src, "*.md"))):
+        name = os.path.basename(path)
+        dest = at(".claude", "rules", name)
+        if os.path.lexists(dest) or os.path.exists(os.path.join(cfg, "rules", name)):
+            continue
+        try:
+            write_inside(dest, open(path).read())
+        except OSError:
+            return
+        copied_rules.append(name)
+
+
 def setup_note(added):
-    return (f"Wrote .claude/settings.json ({', '.join(added)}), uncommitted: tell the user in your first reply that "
-            "committing it gives teammates the kit when they trust the folder, or that they can remove it; plugins "
-            "it turns on load after /reload-plugins.") if added else ""
+    wrote = ([f".claude/settings.json ({', '.join(added)})"] if added else []) + (
+        [f"{len(copied_rules)} core rule{'s' if len(copied_rules) > 1 else ''} into .claude/rules/"]
+        if copied_rules else [])
+    return (f"Wrote {' and '.join(wrote)}, uncommitted: tell the user in your first reply that committing them "
+            "gives teammates the kit and its rules when they trust the folder, or that they can remove them; "
+            "plugins it turns on load after /reload-plugins.") if wrote else ""
 
 
 deps, manifests = set(), []
@@ -165,7 +189,7 @@ if not manifests:
                      f"{enable}, and ask them to type /reload-plugins (or start a new session) so its skills "
                      "(e.g. /agent-architect) load.")
     if setup_note(added or []):
-        lines.append(setup_note(added))
+        lines.append(setup_note(added or []))
     if lines:
         print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": "\n".join(lines)}}))
     sys.exit(0)
