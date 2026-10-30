@@ -34,7 +34,7 @@ Then search the code for what the ticket asks (its route, the entity and verb in
 
 Create `docs/tickets/<id>/` on a branch `<type>/<id>-<slug>` (never on `main`/`dev`/`stag`/`prod`):
 
-1. `intent.md` — the ticket quoted verbatim, the link, the user and the outcome in one sentence each. No new words for what the ticket said.
+1. `intent.md` — the ticket quoted verbatim, the link, the user and the outcome in one sentence each, and `Estimate: <range>` when the ticket carries one (`/breakdown` (plan, if installed) writes it into the issue). No new words for what the ticket said.
 2. `spec.md` — acceptance criteria as Given/When/Then, the contract that changes (endpoint, schema, event, UI state), out of scope, and the test matrix row per criterion. A criterion the ticket does not state is an open question, not an invention.
 3. `plan.md` — opens with two lines the commit and PR hooks read: `Risk: high` or `Risk: normal` (high = auth, data writes, migrations, external providers), and `Skills: /<skill>, …` naming the layer skill of every slice (plus `/agent-verify-turn` in an AI-assistant repo). Then the slices (`/feature` Stage 3 order), each with its files and its green check; waves where tasks are independent (`${CLAUDE_PLUGIN_ROOT}/references/wave-parallelism.md`). In an AI-assistant repo (detection in Step 3), write it by running `/agent-feature` Steps 1–4 (ai, if installed): the ADR fit check, the inventory and the slice table with its Runs-in and layer-skill columns go into `plan.md`, so Step 3 starts at its Step 5 instead of deciding the slices twice.
 
@@ -64,8 +64,9 @@ The plugin's hooks enforce this. `ticket-ledger.sh` records every skill and suba
 1. Tick the matrix in `spec.md` (status and evidence per row).
 2. `/verify-done` (core), then `/review-checklist` (review). High-risk lane (auth, data writes, migrations, external providers): also `/security-review` and `/code-review`; their findings are fixed or listed in `plan.md` § Deviations. The ticket's folder replaces `specs/<slug>/` from the global rules.
 3. Commit `docs/tickets/<id>/` with the code, `<type>: <what> (#<id>)`.
-4. `/finish-branch` (ship, if installed) opens the PR; its description links the ticket and `docs/tickets/<id>/`.
-5. Wait for the PR's checks. Red → fix on the branch (`/ci-triage` (ship, if installed)). Never call the ticket done, or suggest merging, while a check is red.
+4. Record the actual: the hours between the branch's first commit and now (`git log --reverse --format=%cI <base>..HEAD | head -1`), rounded to the half hour, in the row for `<id>` of `docs/tickets/README.md` (`| id | title | estimate | actual | note |`; create the file and the row when missing). An actual outside the estimate's range gets a one-line note of why — that line is what `/retro` (lead, if installed) reads.
+5. `/finish-branch` (ship, if installed) opens the PR; its description links the ticket and `docs/tickets/<id>/`.
+6. Wait for the PR's checks. Red → fix on the branch (`/ci-triage` (ship, if installed)). Never call the ticket done, or suggest merging, while a check is red.
 
 **Done when:** the PR is open with the contract in its diff, and its checks are green, or each failure is named with its fix on the branch.
 
