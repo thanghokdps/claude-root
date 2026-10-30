@@ -101,6 +101,10 @@ def setup_repo(plugins):
         return None
     if os.path.realpath(top) == os.path.realpath(os.path.expanduser("~")):
         return None
+    # The kit is the harness marketplace itself: team setup here only leaves an untracked settings.json each session.
+    market = load_json(at(".claude-plugin", "marketplace.json"))
+    if isinstance(market, dict) and market.get("name") == "harness":
+        return None
     if os.path.islink(at(".claude")) or os.path.islink(shared_path):
         return None
     settings = load_json(shared_path) if os.path.exists(shared_path) else {}
