@@ -70,6 +70,45 @@ def test_reason_points_at_the_debate():
     assert "/resolve-question" in json.loads(out)["hookSpecificOutput"]["permissionDecisionReason"]
 
 
+def transcript(*texts):
+    path = os.path.join(TMP, uuid.uuid4().hex + ".jsonl")
+    with open(path, "w") as f:
+        f.write(json.dumps({"type": "user", "message": {"content": "build it"}}) + "\n")
+        for t in texts:
+            f.write(json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": t}]}}) + "\n")
+    return path
+
+
+def stop(sid, path, active=False):
+    out = subprocess.run([HOOK], input=json.dumps({"session_id": sid, "hook_event_name": "Stop",
+                                                   "transcript_path": path, "stop_hook_active": active}),
+                         capture_output=True, text=True, env={**os.environ, "TMPDIR": TMP})
+    assert out.returncode == 0, out.stderr
+    return json.loads(out.stdout)["decision"] if out.stdout.strip() else "allow"
+
+
+def test_reply_ending_in_a_question_after_a_code_edit_is_blocked_once():
+    sid = session()
+    edit(sid, "/r/src/app.ts")
+    path = transcript("Done: 3 tests pass.\n\nShould the error message be translated too?")
+    assert stop(sid, path) == "block"
+    assert stop(sid, path, active=True) == "allow"
+
+
+def test_bold_trailing_question_counts():
+    sid = session()
+    edit(sid, "/r/src/app.ts")
+    assert stop(sid, transcript("**Which rounding do you want?**")) == "block"
+
+
+def test_reply_without_a_question_or_before_the_build_ends():
+    sid = session()
+    assert stop(sid, transcript("Before I start: which layout?")) == "allow"
+    edit(sid, "/r/src/app.ts")
+    assert stop(sid, transcript("Is this right? Yes.\n\nAll 3 tests pass.")) == "allow"
+    assert stop(sid, os.path.join(TMP, "missing.jsonl")) == "allow"
+
+
 def test_bad_input_and_other_tools_exit_clean():
     out = subprocess.run([HOOK], input="not json", capture_output=True, text=True)
     assert out.returncode == 0 and not out.stdout
