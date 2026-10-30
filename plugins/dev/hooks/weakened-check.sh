@@ -5,6 +5,8 @@
 #   - a deleted test file, or a kept test file that loses more assertion lines than it gains
 #   - coverageThreshold / fail_under / --cov-fail-under lowered (also a branches|functions|lines|statements key
 #     in a jest/vitest/nyc/c8 config), max-warnings raised
+#   - CONSTRAINTS.md (written by /constraints): a numbered row loosened (≥ lowered, ≤ raised) or removed, a row added
+#     under ## Exceptions, a Floor bullet removed
 # Docs (.md, .txt, …) only mention patterns, so their added lines are not read for suppressions or skips.
 # Tightening is silent. Diff walk ported from addyosmani/agent-skills constraint-driven-development floor-guard.md.
 command -v python3 >/dev/null 2>&1 || exit 0
@@ -48,8 +50,8 @@ blank = [(f"filter.{d}.{k}", v) for d in drivers for k, v in (("clean", ""), ("s
 env = {**os.environ, "GIT_CONFIG_COUNT": str(len(blank))}
 for i, (k, v) in enumerate(blank):
     env[f"GIT_CONFIG_KEY_{i}"], env[f"GIT_CONFIG_VALUE_{i}"] = k, v
-diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv",
-           "--ignore-submodules=all", "--submodule=short", env=env)  # a submodule's diff would read its own config
+diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv", "--no-renames", "--text",
+           "--ignore-submodules=all", "--submodule=short", env=env)  # a submodule's diff would read its own config; a rename is a delete + add; --text so a `binary` attribute cannot hide a change
 if not diff:
     sys.exit(0)
 
@@ -142,6 +144,72 @@ for f, n, text in removed:
         now = next((v for g, _, t in added if g == f for k, v in METRIC.findall(t) if k == metric), None)
         if now is not None and float(now) < float(was):
             flag("threshold-loosened", f, n, f"{metric} {was} -> {now}: {text}")
+
+# CONSTRAINTS.md is the bar itself: loosening it is the cheapest road to green, so it asks like a config threshold.
+CONSTRAINTS = re.compile(r"(?:^|/)CONSTRAINTS\.md$")
+ROW = re.compile(r"^\s*\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|")  # first two cells: Dimension/Metric/ID, Rule/Today/Rule
+NUMBER = re.compile(r"(\d+(?:\.\d+)?)")
+
+
+def section_of(f, n, lines):
+    # the nearest ## heading above the line, read from the file as it was before the commit
+    for i in range(min(n, len(lines)) - 1, -1, -1):
+        h = re.match(r"^#{1,6}\s+(.+)", lines[i])
+        if h:
+            return h.group(1).strip().lower()
+    return ""
+
+
+def worktree_text(f):
+    # commit -a reads the work tree; only a regular file under 1 MB, never a symlink (O_NOFOLLOW), so the hook stays cheap
+    p = os.path.join(cwd, f)
+    try:
+        if not os.path.isfile(p) or os.path.islink(p) or os.lstat(p).st_size > 1_000_000:
+            return None
+        fd = os.open(p, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+        with os.fdopen(fd, encoding="utf-8", errors="replace") as fh:
+            return fh.read()
+    except OSError:
+        return None
+
+
+for f in {f for f, _, _ in removed + added if CONSTRAINTS.search(f)}:
+    if f in deleted:
+        flag("constraint-removed", f, 0, "file deleted or renamed")
+        continue
+    old = (git("show", f"HEAD:{f}") or "").split("\n")
+    cur = worktree_text(f) if commit_all else git("show", f":{f}", env=env)
+    if cur is None:  # unreadable is not clean: the bar cannot be checked, so the commit asks
+        flag("constraint-unreadable", f, 0, "could not read the new CONSTRAINTS.md (symlink, over 1 MB, or unreadable)")
+        continue
+    cur = cur.split("\n")
+    new_lines = [(n, t) for g, n, t in added if g == f]
+    new_rows = {ROW.match(t).group(1).lower(): ROW.match(t).group(2) for _, t in new_lines if ROW.match(t)}
+    for g, n, text in removed:
+        if g != f:
+            continue
+        sec = section_of(f, n, old)
+        row = ROW.match(text)
+        if row and "enforced" in sec:
+            key, rule = row.group(1).lower(), row.group(2)
+            if key not in new_rows:
+                flag("constraint-removed", f, n, text)
+                continue
+            was_n, now_n = NUMBER.search(rule), NUMBER.search(new_rows[key])
+            if was_n and now_n and was_n.group(1) != now_n.group(1):
+                a, b = float(was_n.group(1)), float(now_n.group(1))
+                floor = bool(re.search(r"≥|>=|\bmin\b|at least", rule))
+                ceiling = bool(re.search(r"≤|<=|\bmax\b|at most|\b0\b", rule))
+                if (floor and b < a) or (ceiling and not floor and b > a) or not (floor or ceiling):
+                    flag("constraint-loosened", f, n, f"{was_n.group(1)} -> {now_n.group(1)}: {text}")
+        elif "floor" in sec and re.match(r"^\s*[-*]\s+\S", text) and text.strip() not in {t.strip() for _, t in new_lines}:
+            flag("constraint-removed", f, n, text)
+    for n, text in new_lines:
+        row = ROW.match(text)
+        if not row or set(row.group(1)) <= set("-: ") or row.group(1).lower() in ("id", "dimension", "metric"):
+            continue
+        if "exception" in section_of(f, n, cur) and text.strip() not in {t.strip() for t in old}:
+            flag("constraint-exception-added", f, n, text)
 
 if findings:
     shown = findings[:10] + ([f"… and {len(findings) - 10} more"] if len(findings) > 10 else [])

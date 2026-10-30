@@ -1,0 +1,27 @@
+{
+  "skill": "constraints",
+  "positive": [
+    {
+      "prompt": "set a quality bar for this repo: coverage, lint, vulnerabilities, with numbers",
+      "top_k": 3
+    },
+    {
+      "prompt": "write a CONSTRAINTS.md so the agent knows what blocks a commit",
+      "top_k": 3
+    },
+    {
+      "prompt": "tiêu chuẩn chất lượng của repo này là gì, coverage phải bao nhiêu mới được merge",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "before you say it's done, prove the tests pass",
+      "owner": "verify-done"
+    },
+    {
+      "prompt": "check progress against the plan and run the quality gates",
+      "owner": "checkpoint"
+    }
+  ]
+}

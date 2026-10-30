@@ -69,7 +69,9 @@ pnpm eval:agent   # only if router/tools changed
 pnpm eval:rag     # only if RAG changed
 ```
 
-Report each gate: ✅ pass / ❌ fail (with error count).
+When `CONSTRAINTS.md` exists at the repo root (`/constraints` (core, if installed) writes it), it replaces this list: run the `Checked by` command of every **Enforced with numbers** row whose `Runs at` is `every edit` or `task end` (CI-only rows are reported as `⏭ CI`), and compare each **Measured** metric against its recorded value.
+
+Report each gate: ✅ pass / ❌ fail (with error count, or `<rule>: <measured> vs <required>` for a numbered row).
 
 ## Stage 4 — Blockers
 

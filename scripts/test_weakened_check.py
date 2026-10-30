@@ -15,6 +15,12 @@ BASE = {
     "jest.config.js": "module.exports = { coverageThreshold: { global: { lines: 80 } } };\n",
     "pyproject.toml": "[tool.coverage.report]\nfail_under = 90\n",
     "package.json": '{ "scripts": { "lint": "eslint . --max-warnings 5" } }\n',
+    "CONSTRAINTS.md": ("# Constraints\n\n## Floor (always enforced)\n\n- No new suppression\n- No secrets in source\n\n"
+                       "## Enforced with numbers\n\n| Dimension | Rule | Checked by | Runs at |\n|---|---|---|---|\n"
+                       "| Coverage | changed lines ≥ 80% | `pnpm test --coverage` | task end |\n"
+                       "| Lint | 0 errors | `pnpm lint` | every edit |\n"
+                       "| Bundle | main ≤ 184 kB | `size-limit` | CI |\n\n"
+                       "## Exceptions\n\n| ID | Rule | Path | Reason | Owner | Expires |\n|---|---|---|---|---|---|\n"),
 }
 
 
@@ -119,6 +125,44 @@ def test_raised_threshold_and_added_assertion_are_silent():
     r = repo()
     staged(r, "src/app.test.ts", BASE["src/app.test.ts"].replace("toBe(2)", "toBe(2);\n  expect(c).toBe(3)"))
     assert hook(r) == ""
+
+
+def test_loosened_constraints_file_asks():
+    c = BASE["CONSTRAINTS.md"]
+    for old, new, rule in [("≥ 80%", "≥ 60%", "constraint-loosened"),
+                           ("| Lint | 0 errors", "| Lint | 5 errors", "constraint-loosened"),
+                           ("≤ 184 kB", "≤ 250 kB", "constraint-loosened"),
+                           ("| Lint | 0 errors | `pnpm lint` | every edit |\n", "", "constraint-removed"),
+                           ("- No secrets in source\n", "", "constraint-removed")]:
+        r = repo()
+        staged(r, "CONSTRAINTS.md", c.replace(old, new))
+        text = reason(hook(r))
+        assert rule in text and "CONSTRAINTS.md" in text, (old, text)
+    r = repo()
+    staged(r, "CONSTRAINTS.md", c + "| W1 | no-explicit-any | src/legacy/** | rewrite | @t | 2026-12-01 |\n")
+    assert "constraint-exception-added" in reason(hook(r))
+    r = repo()
+    git(r, "mv", "CONSTRAINTS.md", "OLD-CONSTRAINTS.md")
+    assert "constraint-removed" in reason(hook(r)) and "file deleted or renamed" in reason(hook(r))
+    r = repo()
+    git(r, "rm", "-q", "CONSTRAINTS.md")
+    assert "constraint-removed" in reason(hook(r))
+    r = repo()  # commit -a reads the work tree: a file the hook refuses to read (over 1 MB) is not clean
+    write(r, "CONSTRAINTS.md", c + "x" * 1_100_000 + "\n")
+    assert "constraint-unreadable" in reason(hook(r, "git commit -am x"))
+    r = repo()  # a symlink in its place shows as delete + add
+    os.remove(os.path.join(r, "CONSTRAINTS.md"))
+    os.symlink("/dev/null", os.path.join(r, "CONSTRAINTS.md"))
+    assert "constraint-" in reason(hook(r, "git commit -am x"))
+
+
+def test_tightened_or_reworded_constraints_are_silent():
+    c = BASE["CONSTRAINTS.md"]
+    for old, new in [("≥ 80%", "≥ 90%"), ("≤ 184 kB", "≤ 150 kB"), ("`pnpm lint`", "`pnpm lint --max-warnings 0`"),
+                     ("# Constraints\n", "# Constraints\n\nLast reviewed: 2026-10-31\n")]:
+        r = repo()
+        staged(r, "CONSTRAINTS.md", c.replace(old, new))
+        assert hook(r) == "", old
 
 
 def test_clean_commit_gives_no_output():
