@@ -241,9 +241,9 @@ has_signal "python"     && STACK_HOOKS="$STACK_HOOKS,
 has_signal "typescript" && STACK_HOOKS="$STACK_HOOKS,
       { \"matcher\": \"Edit|Write\", \"hooks\": [{ \"type\": \"command\", \"command\": \"\$CLAUDE_PROJECT_DIR/.claude/hooks/eslint-on-edit.sh\" }] }" || true
 
-STANDALONE="$STANDALONE" python3 -I - "$SETTINGS_TEMPLATE" "$CLAUDE_DIR/settings.json" "$STACK_HOOKS" <<'RENDER'
+STANDALONE="$STANDALONE" python3 -I - "$SETTINGS_TEMPLATE" "$CLAUDE_DIR/settings.json" "$STACK_HOOKS" "$HARNESS_DIR/scripts/statusline.sh" <<'RENDER'
 import json, sys
-tpl, out, stack = sys.argv[1], sys.argv[2], sys.argv[3]
+tpl, out, stack, statusline = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 import os
 if os.environ.get("STANDALONE") == "1":
     rendered = open(tpl).read().replace("__STACK_HOOKS__", stack)
@@ -255,6 +255,10 @@ if os.path.exists(out):
     existing = json.load(open(out))
     existing.pop("hooks", None)
     merged = {**existing, **merged}
+if merged.get("statusLine"):
+    print("   statusLine: kept the one already in settings.json")
+else:  # ${CLAUDE_PLUGIN_ROOT} does not resolve in statusLine, so the path is the plugin's resolved location
+    merged["statusLine"] = {"type": "command", "command": f'bash "{statusline}"'}
 open(out, "w").write(json.dumps(merged, indent=2) + "\n")
 RENDER
 
