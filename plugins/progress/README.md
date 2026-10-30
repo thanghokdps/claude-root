@@ -1,34 +1,35 @@
 # progress
 
-Shows a skill's checklist when it starts and each checkpoint as it completes (✅ 3/6), then 🏁 when all are done. Never blocks.
+Shows a skill's checklist when it starts and each checkpoint as it completes (✅ 3/6), then 🏁 when all are done. Hooks only, never blocks.
 
-## Install
+**For:** everyone. Every other plugin depends on it, so it comes with any role. It is what lets a non-technical reader follow what Claude is doing step by step.
 
-```
-/plugin marketplace add git@gitlab.asoft-python.com:thang.hoquang/claude-kit.git
-/plugin install progress@harness
-```
+## Skills
 
-GitLab needs the VPN and an SSH key. Outside it, add the GitHub mirror instead: `/plugin marketplace add thanghokdps/claude-root`.
-
-No other plugin needed.
+None. This plugin is hooks only.
 
 ## Hooks
 
-| Event | Script |
-|-------|--------|
-| PostToolUse (Skill) | `skill-progress.sh` |
-| UserPromptExpansion | `skill-progress.sh` |
-| TaskCreated | `skill-progress.sh` |
-| TaskCompleted | `skill-progress.sh` |
-| Stop | `skill-progress.sh` |
+| Hook | Event | Does |
+|---|---|---|
+| `skill-progress` | after a Skill call; prompt expansion; task created; task completed; on stop | Reads the skill's `## Step` / `## Stage` / `## Phase` headings or `**Done when:**` lines and shows the checklist, each completed checkpoint, and a tally at the end of the turn |
 
-## What you see
+What you see:
 
 - A skill starts → `📋 /agent-tool — 4 checkpoints: Detect and place · Contract first · …`
 - Each checkpoint done → `✅ (2/4) Contract first`
-- End of turn → `⏳ 2/4 done — open: …`, `🏁 Checklist complete — 4/4`, or `⏹ Checklist closed — ✅ 1 done · ⏭ 3 skipped` (skipped is never reported as complete)
+- End of turn → `⏳ 2/4 done — open: …`, `🏁 Checklist complete — 4/4`, or `⏹ Checklist closed — ✅ 1 done · ⏭ 3 skipped`. Skipped is never reported as complete.
 
-Works for any skill with `## Step` / `## Stage` / `## Phase` headings or `**Done when:**` lines. With the task panel on (`/config` → todo / task tracking, or `CLAUDE_CODE_ENABLE_TASKS=1`) each checkpoint is a task and ✅ appears the moment it completes; without it, Claude writes `✅ <step>` / `⏭ <step>` lines and the tally appears at the end of the turn. Needs `python3`; without it the hooks stay silent. Never blocks anything.
+With the task panel on (`/config` → task tracking, or `CLAUDE_CODE_ENABLE_TASKS=1`) each checkpoint is a task and ✅ appears the moment it completes; without it, Claude writes `✅ <step>` / `⏭ <step>` lines and the tally appears at the end of the turn. Needs `python3`; without it the hooks stay silent.
 
-All plugins: [`../README.md`](../README.md).
+## Depends on
+
+Nothing.
+
+## Install
+
+```text
+/plugin install progress@harness
+```
+
+The marketplace must be added first (GitLab or the GitHub mirror): see the [root README](../../README.md#quickstart). All plugins: [`../README.md`](../README.md).
