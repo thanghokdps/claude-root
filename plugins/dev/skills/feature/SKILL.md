@@ -136,10 +136,12 @@ After commit: `save-commit-memory.sh` hook fires automatically and saves to memo
 
 ## Confidence escalation rules
 
-An open question mid-task goes through `/resolve-question` first, so the user is asked only what the repo cannot answer.
+Every question goes to the user before the first code edit. After that the user is not asked: an open question mid-task goes through `/resolve-question`, which answers facts from the repo and settles choices by a subagent debate (`${CLAUDE_PLUGIN_ROOT}/references/auto-decisions.md`), recorded in the plan's § Decisions and listed under **Decided for you** in the final report.
 
-Stop and ask the user if:
-- Confidence drops below medium at any stage
-- A hard gate is discovered mid-task
+Debate, never stop, when mid-task:
+- Confidence drops below medium
+- A hard gate is discovered (the debate adds an opus red team)
 - Scope needs to expand beyond the original plan
 - A teammate's recent commit conflicts with the planned approach (check `memory/commits/`)
+
+Only an action no rollback undoes (push, merge, deploy, delete data) waits for the user's yes.

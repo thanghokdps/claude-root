@@ -38,7 +38,7 @@ Check the feature against each line of the card and the ADR's out-of-scope list:
 | new system or credential | a system not in P3, a server key where the card says caller credentials |
 | new transport, host or client | a mobile client, an edge host |
 
-Any conflict → stop and ask: change the feature, or revisit the architecture with `/agent-architect` and a new ADR. Never widen the architecture inside a feature.
+Any conflict → ask now, before the first edit: change the feature, or revisit the architecture with `/agent-architect` and a new ADR. A conflict found mid-build is not asked: `/resolve-question` (dev) debates it and records the pick. Never widen the architecture inside a feature.
 
 **Done when:** the doc says "fits the ADR", or the user's decision on each conflict is recorded.
 

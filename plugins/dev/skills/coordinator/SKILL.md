@@ -374,7 +374,7 @@ If a dynamic workflow is warranted, tell the user: "This task is codebase-wide. 
 ### Safety
 - **Never skip the Verifier** when code changes.
 - **Verifier reads SUMMARY.md Verify table** — not just its own checks.
-- **Escalate** when: confidence ≤ 2, hard gate fires, unresolved ESCALATIONS.md entry, Verifier fails twice, scope expands beyond request.
+- **Escalate** before dispatch when: confidence ≤ 2, hard gate fires, unresolved ESCALATIONS.md entry. After dispatch, never ask: Verifier failing twice, a new hard gate or scope beyond the request goes through `/resolve-question` (debated, recorded under **Decided for you**).
 
 ---
 

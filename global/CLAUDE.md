@@ -3,7 +3,7 @@
 Source of truth: the kit checkout (`claude plugin marketplace list` shows its path; marketplace `harness`: role plugins `<role>` under `plugins/` + `scripts/install.sh` for this file and `rules/`). Edit the kit, not `~/.claude`.
 
 ## Principles (every task)
-1. **Think first** — state the interpretation; one clarifying question beats a wrong build.
+1. **Ask once, up front** — state the interpretation, then before the first edit ask every open question, as many rounds as it takes (`AskUserQuestion`, up to 4 per call), until nothing is unclear. Once building starts, never ask: settle a new choice with `/resolve-question` (subagents debate the options, you judge), record it with why and how to revert, and end the report with a **Decided for you** list the user reviews or rolls back. Still confirm actions no rollback undoes (push, merge, deploy, delete, force-push).
 2. **Simplicity** — nothing beyond the ask; no single-use abstractions.
 3. **Surgical** — every changed line traces to the request; note adjacent issues, don't fix them.
 4. **Goal-driven** — define "done when <check>" first; test first where practical. Never claim done without fresh evidence.
