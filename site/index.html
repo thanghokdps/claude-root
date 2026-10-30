@@ -141,6 +141,12 @@ h2 { font-size: clamp(26px, 3.5vw, 38px); letter-spacing: -.02em; margin: 0 0 8p
 .detect-grid i { color: var(--muted); font-style: normal; }
 .detect p { margin: 14px 0 0; color: var(--muted); font-size: 14px; }
 @media (max-width: 860px) { .steps3 { grid-template-columns: 1fr; } }
+/* faq */
+.faq details { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); margin-bottom: 10px; padding: 0 18px; }
+.faq summary { cursor: pointer; padding: 14px 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+.faq summary::after { content: "+"; color: var(--muted); font-weight: 400; } .faq details[open] summary::after { content: "–"; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq p { margin: 0 0 16px; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
 h3.group { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 32px 0 12px; }
 h3.group:first-of-type { margin-top: 0; }
 
@@ -203,6 +209,7 @@ article img { max-width: 100%; }
       <a class="opt" href="#flow">Pipeline</a>
       <a class="opt" href="#engineers">Engineers</a>
       <a href="#plugins">Packs</a>
+      <a class="opt" href="#faq">FAQ</a>
       <a href="#docs">Docs</a>
       <a class="opt" href="https://github.com/thanghokdps/claude-root">GitHub</a>
       <button id="theme" type="button" aria-label="Toggle colour theme">◐</button>
@@ -354,6 +361,19 @@ Tôi muốn làm một chatbot tra cứu đơn hàng</pre></div>
         <circle class="node" cx="210" cy="215" r="22"/><text x="210" y="215">ai</text>
         <circle class="node" cx="210" cy="30" r="22"/><text x="210" y="30">core</text>
       </svg>
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2 class="reveal">Questions people ask first</h2>
+    <div class="faq">
+      <details class="reveal"><summary>Do I have to learn the slash commands?</summary><p>No. Say what you want in your own words, in any language; the skill whose description matches fires. The commands exist for when you want a specific one, and every README lists them.</p></details>
+      <details class="reveal"><summary>Does it work with GitLab and Jira, or only GitHub?</summary><p>All three. <code>/breakdown</code> creates tasks with <code>glab</code>, <code>gh</code> or the Jira connector; <code>/ticket</code> reads an issue from any of them; <code>/finish-branch</code> opens a PR or an MR; <code>/sync-remote</code> keeps a GitHub mirror and a GitLab origin in step.</p></details>
+      <details class="reveal"><summary>What does an estimate from the kit mean?</summary><p>A range with a stated basis: the files and tests the task touches, calibrated on this repo's merged PRs of the same shape. When the task ships, <code>/ticket</code> records the actual next to it and <code>/retro</code> turns the drift into the calibration the next estimate uses. Nothing is a point number pulled from a title.</p></details>
+      <details class="reveal"><summary>What can it never do on its own?</summary><p>Commit or push to <code>main</code> or an environment branch, read a secret file, edit the test that reproduces a bug while fixing it, ship a production mobile release or apply production infrastructure. Each is a hook that blocks the command and says why; each has a written waiver so a skip is a recorded decision.</p></details>
+      <details class="reveal"><summary>We already have a CLAUDE.md and team plugins. Do they clash?</summary><p>Your project's <code>CLAUDE.md</code> and the plugins that cover your repo win; the kit says so in every skill that could overlap. The kit adds the process and the role engineers; it does not replace project conventions.</p></details>
+      <details class="reveal"><summary>How much does it cost to run?</summary><p>Less than running everything on the strongest model. Opus plans, decides and reviews; Sonnet writes code from an approved brief; Haiku does the mechanical work. Every skill pins its model and every dispatched agent gets one, so the split is enforced, not hoped for.</p></details>
+      <details class="reveal"><summary>I am a PM or QA, not a developer. Is there something for me?</summary><p>Yes: hand over the requirement and read what comes back. <code>/breakdown</code> gives you tasks with Given/When/Then criteria and estimates you can challenge; every PR carries the ticket's intent, spec and evidence in plain text next to the code.</p></details>
     </div>
   </section>
 
