@@ -149,6 +149,9 @@ def test_unknown_flag_cannot_smuggle_a_read_only_subcommand():
     assert gate(path, "kubectl --odd-flag get apply -f k8s/ -n production")[0] == "ask"  # fail closed, never 'get'
     assert gate(path, "helm --kube-as-user me upgrade api charts/api -n production")[0] == "deny"
     assert gate(path, "helm diff upgrade api charts/api -n production")[0] == "allow"
+    # `diff` behind an unknown flag may be that flag's value, with `upgrade` the real verb: never the read-only shortcut
+    assert gate(path, "helm --kube-token diff upgrade api charts/api -n production")[0] != "allow"
+    assert gate(path, "helm --odd diff upgrade api charts/api -n production")[0] != "allow"
 
 
 def test_substitution_inside_double_quotes_is_a_segment():
@@ -157,6 +160,9 @@ def test_substitution_inside_double_quotes_is_a_segment():
     assert gate(path, 'OUT="$(kubectl apply -f k8s/ -n production)"')[0] == "deny"
     assert gate(path, 'echo "`helm upgrade api charts/api -n production`"')[0] == "deny"
     assert gate(path, "echo '$(terraform apply -var-file=prod.tfvars)'")[0] == "allow"  # single quotes run nothing
+    # operators inside the substitution split again: the apply is not hidden behind an inert `echo a;`
+    assert gate(path, 'echo "$(echo a; terraform apply -var-file=prod.tfvars)"')[0] == "deny"
+    assert gate(path, 'echo "`true && kubectl apply -f k8s/ -n production`"')[0] == "deny"
 
 
 def test_programs_that_can_execute_are_not_inert():
@@ -166,6 +172,17 @@ def test_programs_that_can_execute_are_not_inert():
     assert gate(path, "awk 'BEGIN{system(\"terraform apply\")}'")[0] == "ask"
     assert gate(path, "git commit -m 'docs: terraform apply steps'")[0] == "allow"
     assert gate(path, "grep -rn 'kubectl apply' docs/")[0] == "allow"
+
+
+def test_git_is_inert_only_for_safe_subcommands():
+    path = repo()
+    for cmd in ("git rebase -x 'terraform apply -var-file=prod.tfvars' HEAD~2", "git bisect run kubectl apply -f k8s/ -n production",
+                "git submodule foreach 'helm upgrade api charts/api -n production'",
+                "git difftool --extcmd='terraform apply -var-file=prod.tfvars'",
+                "GIT_PAGER='terraform apply -var-file=prod.tfvars' git log", "GIT_SSH_COMMAND='kubectl apply -f k8s/ -n production' git fetch"):
+        assert gate(path, cmd)[0] == "ask", cmd
+    assert gate(path, "git log --grep 'terraform apply'")[0] == "allow"
+    assert gate(path, "git add docs/terraform-apply.md")[0] == "allow"
 
 
 def test_config_defines_production_names():

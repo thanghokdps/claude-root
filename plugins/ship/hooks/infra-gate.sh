@@ -86,12 +86,24 @@ VALUE_FLAGS = {"-n", "--namespace", "--context", "--kube-context", "--kubeconfig
 WRAPPERS = {"sudo", "command", "exec", "time", "nice", "nohup", "timeout", "stdbuf", "doas", "ionice", "caffeinate",
             "builtin", "npx", "bunx"}
 # Programs that only print, read or move text: a tool name in their arguments runs nothing. find (-exec), awk (system),
-# sed (e), gh/glab (aliases) and yq can run a command, so they are not here. git is inert unless it carries -c, an alias
-# or a `!` shell alias (GIT_EXEC below).
-INERT = {"echo", "printf", "cat", "grep", "rg", "git", "ls", "head", "tail", "less", "more", "wc", "sort", "uniq", "diff",
+# sed (e), gh/glab (aliases) and yq can run a command, so they are not here. git is inert only for GIT_SAFE subcommands
+# with no -c / alias / `!` / config argument (GIT_EXEC) and no GIT_* variable on the line: rebase -x, bisect run,
+# submodule foreach, difftool --extcmd and GIT_PAGER / GIT_SSH_COMMAND all run what they are given.
+INERT = {"echo", "printf", "cat", "grep", "rg", "ls", "head", "tail", "less", "more", "wc", "sort", "uniq", "diff",
          "cut", "tr", "tee", "touch", "mkdir", "cp", "mv", "ln", "test", "true", "false", "which", "type", "file", "stat",
          "date", "jq", "cd", "pwd"}
-GIT_EXEC = re.compile(r"(^|\s)(-c|--config-env\S*|alias\.\S*|!|config)(\s|$|=)")
+GIT_SAFE = {"status", "log", "diff", "show", "add", "commit", "push", "pull", "fetch", "branch", "checkout", "switch",
+            "restore", "reset", "rev-parse", "remote", "tag", "stash", "blame", "grep", "rm", "mv", "describe",
+            "ls-files", "cherry-pick", "revert", "merge", "worktree", "clone", "init"}
+GIT_EXEC = re.compile(r"(^|\s)(-c|--config-env\S*|alias\.\S*|!|config|--extcmd\S*|-x|--exec)(\s|$|=)")
+
+
+def git_inert(args, env):
+    """True when a git command line can only read, write or move text; anything that may run a program asks."""
+    if any(k.startswith("GIT_") for k in env) or GIT_EXEC.search(" ".join(args)):
+        return False
+    sub = next((a for a in args if not a.startswith("-")), "")
+    return sub in GIT_SAFE
 reasons, asks = [], []
 
 
@@ -104,14 +116,15 @@ def ask(msg):
 
 
 def segments(text):
-    """Split on shell operators outside quotes. Inside double quotes `$(` and backticks still start a new segment,
-    since the shell runs what they hold; only single quotes suppress everything."""
+    """Split on shell operators outside quotes. Inside double quotes `$(` and backticks still start a new segment
+    and the quote state is dropped, since the shell runs what they hold as a fresh command list (`;`, `&&`, `|` split
+    again inside); only single quotes suppress everything."""
     out, cur, quote, i = [], "", None, 0
     while i < len(text):
         ch = text[i]
         if quote == '"' and (text.startswith("$(", i) or ch == "`"):
             out.append(cur)
-            cur, i = "", i + (2 if text.startswith("$(", i) else 1)
+            cur, quote, i = "", None, i + (2 if text.startswith("$(", i) else 1)
             continue
         if quote:
             quote = None if ch == quote else quote
@@ -216,8 +229,10 @@ def gate(tool, args, env):
     if tool in ("terraform", "tofu") and sub == "plan" and any(a in ("-destroy", "--destroy") for a in args):
         ask(f"{tool} plan -destroy writes a plan whose later apply tears resources down; confirm it is wanted.")
         return
-    if tool == "helm" and sub == "diff":
-        return  # the helm-diff plugin: `helm diff upgrade …` renders, it never applies
+    if tool == "helm" and args[:1] == ["diff"]:
+        # The helm-diff plugin: `helm diff upgrade …` renders, it never applies. Only when `diff` is the very first
+        # argument: behind a flag the gate does not know, `diff` may be that flag's value and `upgrade` the real verb.
+        return
     if sub not in MUT and any(a in MUT for a in args):
         # A mutating verb sits somewhere the parser did not expect (an unknown flag swallowed the subcommand): fail
         # closed before any read-only shortcut, so `kubectl --odd get apply …` cannot ride on `get`.
@@ -283,7 +298,7 @@ for seg in segs:
     tool = os.path.basename(toks[0])
     if tool in TOOLS:
         gate(tool, toks[1:], env)
-    elif mentions_tool(seg) and (head not in INERT or (head == "git" and GIT_EXEC.search(" ".join(raw[1:])))):
+    elif mentions_tool(seg) and head not in INERT and not (head == "git" and git_inert(raw[1:], env)):
         # The tool name appears behind a program the gate does not know (an alias, a make target, a wrapper it did not
         # peel): fail closed rather than let an apply through unread.
         ask(f"{head} wraps a terraform/kubectl/helm command the gate cannot parse; run the tool directly.")
