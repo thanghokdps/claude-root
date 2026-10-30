@@ -57,14 +57,14 @@ Split the feature into slices per layer and give each one decision:
 | look up order | tool | agent | **reuse** | `tools/orders/get-order.ts` | — | — |
 | cancel order | tool + confirm | agent (backend interrupt) | **new** | — | no write tool exists for orders | `/agent-tool` → `/agent-hitl` |
 | cancel card | frontend | browser (`useInterrupt` card) | **extend** | `OrderCard` | — | `/agent-frontend` |
-| `cancelled_at` column | db | server | **new** | — | orders have no cancel state | `/db-change` (backend, if installed) |
-| order history page | screen | browser | **new** | — | no page lists past orders | `/ui-feature` (frontend, if installed) |
+| `cancelled_at` column | db | server | **new** | — | orders have no cancel state | `/feature` → backend engineer |
+| order history page | screen | browser | **new** | — | no page lists past orders | `/feature` → frontend engineer |
 
 - **Runs in** follows `agent-identity-and-tools.md` § Where a tool lives: server data, identity, secrets or audit → agent tool; browser-only effects (navigate, open a panel, fill a form) → frontend tool; fetch-then-show → two tools. A write is always confirmed by the backend interrupt (`/agent-hitl`), never by `useHumanInTheLoop`.
 - **reuse** when an existing piece already does it; **extend** when a parameter, a field or a variant covers it; **new** only with a reason the two above cannot meet.
 - A new piece that resembles an existing one (same upstream, same entity, same card shape) is an *extend* unless the reason says otherwise.
 - Layer owners, agent side: tool `/agent-tool` · agent scope, routing, prompt `/agent-graph` · write with confirm `/agent-hitl` · documents, embeddings, semantic memory `/agent-rag` · chat client wiring `/agent-frontend` · chat look from a design `/agent-design-ui` · tests and evals `/agent-evals`.
-- Layer owners, app side (backend and frontend packs, if installed): tables, columns, indexes, repository queries `/db-change` · an HTTP route the UI or another client calls `/api-endpoint` · a typed client for a third-party API `/api-client` · a screen or component outside the chat `/ui-feature` (`/design-ui` when it comes from a design). A slice the chat never touches still goes to its skill; it is never built directly.
+- Layer owners, app side: a table, column or query, an HTTP route, a third-party client, or a screen outside the chat is not built by this skill. Its row says `/feature → backend engineer` or `/feature → frontend engineer`: the supervisor dispatches it to that pack's engineer with the row as the brief (`/feature` Stage 3 table), so the app side is never built inline here.
 
 Each new or extended piece names its folder per `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md` (`features/<feature>/`, `components/ui/` only for a second consumer, `server/<aggregate>/`).
 
@@ -76,7 +76,7 @@ Show the table, then ask through `AskUserQuestion`: *build as planned (Recommend
 
 Run each slice through its layer skill in dependency order (contract schema → db → API client → endpoint → retrieval → tool → HITL → agent scope → chat frontend → screens → evals), one slice green before the next. Pass the slice row as the brief so the layer skill does not re-decide placement.
 
-- **Invoke the layer skill** (`/agent-tool`, `/agent-hitl`, `/agent-frontend`, `/agent-design-ui`, `/agent-evals`, and `/db-change`, `/api-endpoint` if installed …) with the Skill tool for every slice, even a small one. Never build a slice inline from memory of what the skill says: its checks (no identity in the schema, no write before confirm, states, tokens) are what the slice is reviewed against. A slice with no matching skill says so in its row.
+- **Invoke the layer skill** (`/agent-tool`, `/agent-hitl`, `/agent-frontend`, `/agent-design-ui`, `/agent-evals` …) with the Skill tool for every agent-side slice, even a small one; an app-side row goes back to `/feature` for its engineer. Never build a slice inline from memory of what the skill says: its checks (no identity in the schema, no write before confirm, states, tokens) are what the slice is reviewed against. A slice with no matching skill says so in its row.
 - **Code goes to a cheaper model.** Inside the layer skill, the main session decides; the code for the slice goes to one `sonnet` subagent (`model: "sonnet"`) whose brief is the slice row, the contract and the test to make pass, per `model-cost.md` (core). The main session reviews its diff before the next slice.
 - **Edit files with Edit or Write**, not shell heredocs, `sed` or scripts, so the repo's edit hooks (lint, format) run on every change.
 
@@ -113,4 +113,4 @@ A schema change was its own `/db-change` slice (backend, if installed) in Step 5
 
 ## Hand-offs
 
-Architecture change → `/agent-architect` · a layer on its own → its skill · security review of a new tool or data source → `/agent-security` · impact of the diff on callers → `/blast-radius` · a failing test or turn → `/fix-bug` · release → `/release-checklist` with `production.md`.
+Architecture change → `/agent-architect` · a layer on its own → its skill · security review of a new tool or data source → `/agent-security` · impact of the diff on callers → `/blast-radius` · a failing test or turn → `/fix-bug` · release → `/release-checklist` with `production.md` (ship, if installed).

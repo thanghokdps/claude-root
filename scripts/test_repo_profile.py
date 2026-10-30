@@ -81,7 +81,7 @@ def subagent_output(cwd, cfg=None):
 
 def test_subagents_get_the_profile_but_never_write_settings():
     cwd = repo({"package.json": AI_PKG})
-    out = subagent_output(cwd, config_dir({"agent@harness": False}))
+    out = subagent_output(cwd, config_dir({"ai@harness": False}))
     assert out["hookEventName"] == "SubagentStart"
     assert "AI assistant" in out["additionalContext"]
     assert "settings.local.json" not in out["additionalContext"]
@@ -90,12 +90,12 @@ def test_subagents_get_the_profile_but_never_write_settings():
 
 def test_ai_web_repo_gets_profile_and_agent_enabled_locally():
     cwd = repo({"package.json": AI_PKG, "prisma/schema.prisma": "", ".claude/docs/index.md": "# x"})
-    ctx = run(cwd, config_dir({"agent@harness": False}))
+    ctx = run(cwd, config_dir({"ai@harness": False}))
     for want in ["Next.js", "AI assistant", "Prisma", "Roles: frontend, backend, ai", "/feature", "/agent-tool",
-                 "/db-change", ".claude/docs/index.md", "/docs-sync", "agent@harness"]:
+                 "/db-change", ".claude/docs/index.md", "/docs-sync", "ai@harness"]:
         assert want in ctx, (want, ctx)
     enabled = local_settings(cwd)["enabledPlugins"]
-    assert enabled == {"frontend@harness": True, "backend@harness": True, "agent@harness": True}, enabled
+    assert enabled == {"frontend@harness": True, "backend@harness": True, "ai@harness": True}, enabled
     exclude = open(os.path.join(cwd, ".git", "info", "exclude")).read()
     assert ".claude/settings.local.json" in exclude
 
@@ -105,7 +105,7 @@ def test_existing_local_settings_are_merged_not_replaced():
     run(cwd)
     s = local_settings(cwd)
     assert s["permissions"] == {"allow": ["Bash(ls)"]}
-    assert s["enabledPlugins"]["agent@harness"] is True
+    assert s["enabledPlugins"]["ai@harness"] is True
 
 
 def test_plain_backend_repo_without_docs():
@@ -158,15 +158,21 @@ def test_mobile_repo():
 
 
 def test_explicit_opt_out_is_respected():
-    cwd = repo({"package.json": AI_PKG, ".claude/settings.json": {"enabledPlugins": {"agent@harness": False}}})
+    cwd = repo({"package.json": AI_PKG, ".claude/settings.json": {"enabledPlugins": {"ai@harness": False}}})
     ctx = run(cwd)
     assert "AI assistant" in ctx
-    assert "agent@harness" not in local_settings(cwd)["enabledPlugins"]
+    assert "ai@harness" not in local_settings(cwd)["enabledPlugins"]
+
+
+def test_legacy_agent_pack_is_renamed_to_ai():
+    cwd = repo({"package.json": AI_PKG, ".claude/settings.local.json": {"enabledPlugins": {"agent@harness": True}}})
+    run(cwd, config_dir({"frontend@harness": True, "backend@harness": True}))
+    assert local_settings(cwd)["enabledPlugins"] == {"ai@harness": True}
 
 
 def test_already_enabled_at_user_scope_writes_nothing():
     cwd = repo({"package.json": AI_PKG})
-    ctx = run(cwd, config_dir({"agent@harness": True, "frontend@harness": True, "backend@harness": True}))
+    ctx = run(cwd, config_dir({"ai@harness": True, "frontend@harness": True, "backend@harness": True}))
     assert "AI assistant" in ctx and "settings.local.json" not in ctx
     assert local_settings(cwd) is None
 
@@ -261,7 +267,7 @@ def test_workplace_opt_out_is_respected_and_agent_still_enabled():
     cwd = repo(files)
     ctx = run(cwd)
     assert "Domain: workplace" in ctx and "AI assistant" in ctx, ctx
-    assert local_settings(cwd)["enabledPlugins"] == {"agent@harness": True}  # RN apps: mobile, no frontend pack yet
+    assert local_settings(cwd)["enabledPlugins"] == {"ai@harness": True}  # RN apps: mobile, no frontend pack yet
 
 
 def test_ticket_folder_is_mentioned():

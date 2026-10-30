@@ -35,7 +35,7 @@ When the doc set written by `/kickoff` (plan, if installed) exists (`docs/kickof
 
 Otherwise stop without writing anything and reply:
 
-> Nothing to scan yet. Start from your documents: `/kickoff` (plan, if installed) collects the requirements, prerequisites, stack, ERD and ADR you already have and grills only the gaps. It then hands off to `/brainstorming` → `/writing-plans` (wave 1 = scaffold), or to `/agent-architect greenfield` for an AI assistant (agent, if installed). Run `/project-init` after the first commit.
+> Nothing to scan yet. Start from your documents: `/kickoff` (plan, if installed) collects the requirements, prerequisites, stack, ERD and ADR you already have and grills only the gaps. It then hands off to `/brainstorming` → `/writing-plans` (wave 1 = scaffold), or to `/agent-architect greenfield` for an AI assistant (ai, if installed). Run `/project-init` after the first commit.
 
 ## Step 1 — Run init.sh (automation layer)
 

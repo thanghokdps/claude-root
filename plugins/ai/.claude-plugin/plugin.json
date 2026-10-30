@@ -1,0 +1,21 @@
+{
+  "name": "ai",
+  "version": "1.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "AI role pack: the ai-engineer agent /feature dispatches agent-side and chat-surface slices to, and the agent-* skills — architecture scaffolded from official reference repos, tools, HITL, graph, CopilotKit frontend, RAG, evals, security, turn verification — with their rules. Enabled per repo by core's repo-profile hook.",
+  "keywords": [
+    "ai",
+    "agents",
+    "langgraph",
+    "copilotkit",
+    "mastra"
+  ],
+  "dependencies": [
+    "progress",
+    "dev"
+  ]
+}

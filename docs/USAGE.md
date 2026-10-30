@@ -38,7 +38,7 @@ Then install one role and reload:
 
 ```text
 /plugin install dev@harness          # developer (brings core, plan, review, progress)
-/plugin install agent@harness        # AI-assistant builder (brings dev, ship and their dependencies)
+/plugin install ai@harness           # AI role pack by hand (normally enabled per repo by repo-profile)
 /plugin install harness@harness      # all eight general role plugins
 /reload-plugins
 ```
@@ -54,14 +54,14 @@ Check with `claude plugin list` that the role and its dependencies are `✔ enab
     "review@harness": true,
     "ship@harness": true,
     "dev@harness": true,
-    "agent@harness": true
+    "ai@harness": true
   }
 }
 ```
 
 **MCP servers** the skills use when present (`claude mcp list`): Playwright (`claude mcp add playwright -- npx -y @playwright/mcp@latest`) so `/design-ui`, `/ui-feature` and `/agent-frontend` can check the page in a real browser at desktop and narrow widths; Figma only for `/design-ui` and `/agent-design-ui` from a Figma link.
 
-**Domain plugins.** `agent` and `workplace` are not in the `harness` bundle. Installed by `scripts/install.sh` they stay off at user scope, and core's `repo-profile` hook enables one in a repo that needs it (an AI-assistant repo, or a `Domain: workplace` line in the project docs) by writing `.claude/settings.local.json`, effective next session. Installing `agent@harness` by hand enables it everywhere, which is fine on a machine used only for assistants.
+**Packs.** The role packs `frontend`, `backend`, `ai` and the domain pack `workplace` are not in the `harness` bundle. Installed by `scripts/install.sh` they stay off at user scope, and core's `repo-profile` hook enables the ones a repo needs (from its manifests: a web framework, a server framework or ORM, `@copilotkit/*` / `langgraph`, or a `Domain: workplace` line in the project docs) by writing `.claude/settings.local.json`, effective next session. Installing a pack by hand enables it everywhere, which is fine on a machine used for one kind of work.
 
 ## 3. Install the global rules (optional)
 
@@ -150,7 +150,7 @@ Finish: `/verify-done` before saying done, `/review-checklist` before the PR, `/
 | Release | `/release-checklist <version>` | stops on the first unmet item; a mobile production release also needs the approved `release/<version>` commit |
 | Schema change | `/write-migration` | expand/contract, backfill separated, down path tested; always high-risk |
 | Production incident | `/incident` | timeline, severity, mitigate first, then root cause, regression test and postmortem |
-| AI assistant | describe it → `/agent-feature <capability>` → `/agent-verify-turn` → `/agent-evals` → `/agent-security` | see [`plugins/agent/README.md`](../plugins/agent/README.md) |
+| AI assistant | describe it → `/agent-feature <capability>` → `/agent-verify-turn` → `/agent-evals` → `/agent-security` | see [`plugins/ai/README.md`](../plugins/ai/README.md) |
 | Quick question | `/btw <question>` | answered without touching the task |
 
 ## 8. Team workflow

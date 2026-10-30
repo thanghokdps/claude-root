@@ -276,7 +276,7 @@ def check_init_sources():
 
 
 # Role packs share one shape so /feature can dispatch to any of them the same way; grows one pack per PR.
-ROLE_PACKS = ("frontend", "backend")
+ROLE_PACKS = ("frontend", "backend", "ai")
 ROLE_PACK_DEPS = ["progress", "dev"]
 
 
@@ -322,7 +322,7 @@ def check_shared_references():
 # The kit repo is public, and agent and workplace skills/rules are distilled from private company code.
 DENYLIST = re.compile(r"granbull|asoft-python|flash-agent|space-agent|on-behalf|space-v2|space-langchain"
                       r"|flash-mobile|space-api|space-chatbot", re.I)
-DENYLIST_SCOPE = re.compile(r"^plugins/(agent|workplace)/")
+DENYLIST_SCOPE = re.compile(r"^plugins/(ai|workplace)/")
 
 
 def denylist_hits(text):

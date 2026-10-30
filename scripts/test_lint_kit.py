@@ -31,10 +31,10 @@ def test_inline_python_must_run_isolated():
 
 
 def test_scope_covers_agent_plugin():
-    assert lint_kit.in_denylist_scope("plugins/agent/skills/agent-tool/SKILL.md")
-    assert lint_kit.in_denylist_scope("plugins/agent/skills/agent-architect/references/stock-map.md")
-    assert lint_kit.in_denylist_scope("plugins/agent/rules/agent-prompts.md")
-    assert lint_kit.in_denylist_scope("plugins/agent/README.md")
+    assert lint_kit.in_denylist_scope("plugins/ai/skills/agent-tool/SKILL.md")
+    assert lint_kit.in_denylist_scope("plugins/ai/skills/agent-architect/references/stock-map.md")
+    assert lint_kit.in_denylist_scope("plugins/ai/rules/agent-prompts.md")
+    assert lint_kit.in_denylist_scope("plugins/ai/README.md")
     assert not lint_kit.in_denylist_scope("plugins/dev/skills/fix-bug/SKILL.md")
 
 
@@ -81,9 +81,9 @@ def test_role_pack_shape():
 
 
 def test_eval_case_missing_dependency_is_flagged():
-    case = "/k/plugins/agent/evals/tool-add"
-    assert lint_kit.missing_eval_plugins(None, case, {"agent", "progress"}) == ["agent", "progress"]
-    assert lint_kit.missing_eval_plugins(["../..", "../../../progress"], case, {"agent", "progress"}) == []
+    case = "/k/plugins/ai/evals/tool-add"
+    assert lint_kit.missing_eval_plugins(None, case, {"ai", "progress"}) == ["ai", "progress"]
+    assert lint_kit.missing_eval_plugins(["../..", "../../../progress"], case, {"ai", "progress"}) == []
 
 
 if __name__ == "__main__":

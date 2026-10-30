@@ -211,7 +211,7 @@ article img { max-width: 100%; }
 
   <section id="flow">
     <h2 class="reveal">From idea to a shipped assistant</h2>
-    <p class="sub reveal">The <code>agent</code> plugin walks one assistant through every stage. Each stage is a skill you can call on its own.</p>
+    <p class="sub reveal">The <code>ai</code> role pack walks one assistant through every stage. Each stage is a skill you can call on its own.</p>
     <div class="pipe reveal">
       <div class="pulse"></div>
       <div class="step"><div class="n">🧭</div><b>Architect</b><small>interview</small></div>
@@ -239,7 +239,7 @@ article img { max-width: 100%; }
       <svg viewBox="0 0 420 240" role="img" aria-label="Plugin dependency sketch">
         <path class="edge" d="M210 120 L80 50"/><path class="edge" d="M210 120 L340 50"/><path class="edge" d="M210 120 L70 190"/>
         <path class="edge" d="M210 120 L350 190"/><path class="edge" d="M210 120 L210 30"/><path class="edge" d="M210 120 L210 215"/>
-        <circle class="node hub" cx="210" cy="120" r="34"/><text class="on-hub" x="210" y="120">agent</text>
+        <circle class="node hub" cx="210" cy="120" r="34"/><text class="on-hub" x="210" y="120">ai</text>
         <circle class="node" cx="80" cy="50" r="24"/><text x="80" y="50">dev</text>
         <circle class="node" cx="340" cy="50" r="24"/><text x="340" y="50">ship</text>
         <circle class="node" cx="70" cy="190" r="24"/><text x="70" y="190">plan</text>
@@ -292,8 +292,8 @@ const SCRIPT = [
   ["c", "# inside Claude Code"],
   ["p", "/plugin marketplace add thanghokdps/claude-root"],
   ["ok", "✔ marketplace harness added"],
-  ["p", "/plugin install agent@harness"],
-  ["ok", "✔ agent + progress core plan review dev ship"],
+  ["p", "/plugin install ai@harness"],
+  ["ok", "✔ ai + progress core plan review dev"],
   ["p", "/reload-plugins"],
   ["p", "/agent-architect"],
   ["c", "→ Let's design your assistant…"],
@@ -355,7 +355,7 @@ function renderCards() {
     const more = p.skills.length > 6 ? `<span class="chip">+${p.skills.length - 6}</span>` : "";
     const deps = p.dependencies.map(d => `<span class="chip dep">→ ${esc(d)}</span>`).join("");
     const href = p.readme ? `#/doc/${p.readme}` : REPO + "plugins/" + p.name;
-    return `<a class="card reveal${p.name === "agent" ? " featured" : ""}" href="${esc(href)}">
+    return `<a class="card reveal${p.name === "ai" ? " featured" : ""}" href="${esc(href)}">
       <h3>${esc(p.name)}<em>${p.skills.length} skills</em></h3><p>${esc(p.description)}</p>
       <div class="chips">${skills}${more}${deps}</div></a>`;
   }).join("");

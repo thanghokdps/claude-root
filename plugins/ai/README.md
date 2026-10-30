@@ -1,4 +1,6 @@
-# agent
+# ai
+
+Role pack for AI assistants: the `ai-engineer` agent that `/feature`, `/ticket` and `/fix-bug` dispatch agent-side and chat-surface slices to, and the `agent-*` skills it runs ("agent" there names what you build — the agent's tool, graph, HITL — not the pack). Off by default; core's `repo-profile` hook turns it on in a repo that depends on `@copilotkit/*`, `@langchain/*`, `@mastra/*`, `@ag-ui/*` or `langgraph`.
 
 Build an AI assistant end to end on **CopilotKit · AG-UI** with **Mastra, LangChainJS or LangGraph**: from one plain-language sentence to an architecture record, a scaffold from the vendor's official reference repo, features built layer by layer, a chat UI from the design, evals and tracing, and a threat model. The product questions come before any technology.
 
@@ -67,7 +69,7 @@ Add `--runs 3 --ablation with-without` for a with/without-plugin comparison.
 ## Install
 
 ```text
-/plugin install agent@harness
+/plugin install ai@harness
 ```
 
 The marketplace must be added first (GitLab or the GitHub mirror): see the [root README](../../README.md#quickstart). In an AI-assistant repo, core's `repo-profile` hook enables this plugin on its own. Optional MCP servers the skills use when present: Playwright (`claude mcp add playwright -- npx -y @playwright/mcp@latest`) to render the chat in a real browser, Figma for `/agent-design-ui`. All plugins: [`../README.md`](../README.md).

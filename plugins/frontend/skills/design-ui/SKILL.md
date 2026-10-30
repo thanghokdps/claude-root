@@ -11,7 +11,7 @@ allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/compare-shots.py *) Bash
 
 **Invoke:** `/design-ui <figma link | design folder> [screen]`
 
-The design decides how the UI looks; primitives decide that each piece of it is built once. For an AI assistant's chat (CopilotKit), use `/agent-design-ui` (agent, if installed) — it runs these steps with the chat states and the CopilotKit theme.
+The design decides how the UI looks; primitives decide that each piece of it is built once. For an AI assistant's chat (CopilotKit), use `/agent-design-ui` (ai, if installed) — it runs these steps with the chat states and the CopilotKit theme.
 
 Everything this skill decides goes in `docs/design/ui-map.md`; frames live in `design/frames/<state>.png`.
 

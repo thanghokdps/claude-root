@@ -1,6 +1,6 @@
 {
   "name": "harness",
-  "description": "Claude Code plugins in two layers — the process every role shares (plan, dev, review, ship, lead, guards, bundled as harness) and role packs enabled per repo (frontend, backend, agent for AI assistants, workplace domain).",
+  "description": "Claude Code plugins in two layers — the process every role shares (plan, dev, review, ship, lead, guards, bundled as harness) and role packs enabled per repo (frontend, backend, ai, workplace domain).",
   "owner": {
     "name": "Thang Ho Quang"
   },
@@ -46,9 +46,9 @@
       "description": "Land and release: finish-branch, ci-triage, release-checklist, write-migration."
     },
     {
-      "name": "agent",
-      "source": "./plugins/agent",
-      "description": "CopilotKit / AG-UI assistants on Mastra, LangChainJS or LangGraph: architecture scaffolded from official reference repos, tools, HITL, graph, frontend, evals, security, turn verification — with their rules."
+      "name": "ai",
+      "source": "./plugins/ai",
+      "description": "AI role pack: the ai-engineer agent and the agent-* skills for CopilotKit / AG-UI assistants on Mastra, LangChainJS or LangGraph — architecture from official reference repos, tools, HITL, graph, frontend, RAG, evals, security, turn verification — with their rules. Enabled per repo by core's repo-profile hook."
     },
     {
       "name": "workplace",

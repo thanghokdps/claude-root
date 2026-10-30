@@ -42,7 +42,7 @@ Always-loaded context is the budget. Anything not needed on every task goes into
 | Global instructions | every session | `global/CLAUDE.md` → `~/.claude/CLAUDE.md` (via `scripts/install.sh`) | principles, lanes, the daily loop |
 | Rules | every session, or only for matching `paths:` | `plugins/core/rules/` → `~/.claude/rules/` | git, security, code quality, model cost (always); typescript, testing, app structure, API contract, data access (by path) |
 | Skills | on demand, routed by `description` / `when_to_use` | `plugins/<plugin>/skills/<name>/SKILL.md` | a step-by-step workflow with a "Done when" check |
-| References | read by a skill when it needs them | `plugins/<plugin>/references/`, `skills/<name>/references/`, `plugins/agent/rules/` | detail that would bloat the skill; the agent framework invariants |
+| References | read by a skill when it needs them | `plugins/<plugin>/references/`, `skills/<name>/references/`, `plugins/<pack>/rules/` | detail that would bloat the skill; the agent framework invariants |
 | Hooks | on events | `plugins/core/hooks/`, `dev/hooks/` (always on with the role); `ship/hooks/` (release gate); `guards/hooks/` (opt-in) | the checks that must happen rather than be remembered |
 | Project workspace | per project | `.claude/` written by `/project-init`, `docs/solutions/`, `specs/` | project docs, memory, lessons, handoffs |
 
@@ -69,7 +69,7 @@ What the hooks enforce versus what a skill only asks for is the subject of [0005
 
 ## 4. AI assistant design (`agent`)
 
-Target stack: TypeScript, **CopilotKit v2** in the web client, **AG-UI** as the transport, and **Mastra, LangChainJS or LangGraph** on the agent server, each scaffolded from the vendor's official reference repo. Every skill reads its invariants from `plugins/agent/rules/`; these load only when a skill reads them.
+Target stack: TypeScript, **CopilotKit v2** in the web client, **AG-UI** as the transport, and **Mastra, LangChainJS or LangGraph** on the agent server, each scaffolded from the vendor's official reference repo. Every skill reads its invariants from `plugins/ai/rules/`; these load only when a skill reads them.
 
 ### One skill per layer
 

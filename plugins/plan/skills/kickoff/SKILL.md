@@ -72,6 +72,6 @@ Ready when every mandatory row is ✅, *defaulted*, or deferred with what it blo
 No code is written here.
 
 - `Domain: workplace` → the workplace pack turns on in this repo from the next session (core's repo-profile hook); its `/workplace-review` (workplace, if installed) and its domain questions apply from then on. Say so in the closing summary.
-- AI assistant or chatbot → `/agent-architect greenfield` (agent, if installed). It reads this doc set and asks only what is still open.
+- AI assistant or chatbot → `/agent-architect greenfield` (ai, if installed). It reads this doc set and asks only what is still open.
 - Other app with an open approach → `/brainstorming`. Approach already decided → `/writing-plans`, wave 1 = scaffold.
 - Code already exists → `/project-init` (core, if installed), which reads this doc set into `.claude/docs/`.
