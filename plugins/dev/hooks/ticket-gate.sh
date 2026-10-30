@@ -7,6 +7,7 @@
 # and from <git-dir>/claude-ticket-ledger.jsonl (written by ticket-ledger.sh) what ran on this branch.
 # Blocks (exit 2) a commit that carries code, or a PR, when:
 #   - plan.md has no Skills: line or no Risk: line
+#   - plan-review.md is missing or its Verdict: line is not APPROVED (a fresh agent's plan review, references/plan-review.md)
 #   - a listed skill never ran; /agent-verify-turn never ran though an /agent-* skill is listed
 #   - no subagent ran with model sonnet or haiku (the code is written by a cheaper model)
 #   - commit only: spec.md § Concerns has a `blocking` row with an empty Decision, or § Decisions has an `(agent)`
@@ -73,6 +74,17 @@ if not skills_line:
 if not risk:
     problems.append("plan.md has no `Risk: high|normal` line")
 listed = [s.rpartition(":")[2].lower() for s in re.findall(r"/([\w:-]+)", skills_line.group(1))] if skills_line else []
+
+if "plan-review" not in waived:
+    review_path = os.path.join(top, "docs", "tickets", ticket, "plan-review.md")
+    try:
+        verdict = re.search(r"(?im)^[\s*>-]*Verdict\**\s*:\**\s*`?(APPROVED|REVISE|BLOCKED)\b", open(review_path, encoding="utf-8").read())
+    except OSError:
+        verdict = None
+    if not verdict:
+        problems.append("plan-review.md is missing or has no `Verdict: APPROVED|REVISE|BLOCKED` line (a fresh agent reviews plan.md first)")
+    elif verdict.group(1).upper() != "APPROVED":
+        problems.append(f"plan-review.md says `Verdict: {verdict.group(1).upper()}`: revise plan.md and re-run the review, or list the open findings and set APPROVED")
 
 ran, agents = set(), []
 git_dir = git("rev-parse", "--absolute-git-dir")

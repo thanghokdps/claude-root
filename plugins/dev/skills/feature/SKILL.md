@@ -69,11 +69,13 @@ Write a step-by-step plan:
 
 For high-risk: save plan to `specs/<slug>/PLAN.md` and show user before building.
 
+Then the plan is reviewed by an agent that has not seen this conversation (`${CLAUDE_PLUGIN_ROOT}/references/plan-review.md`): one fresh `opus` agent reads the plan against the code and returns `APPROVED`, `REVISE` or `BLOCKED` with a `path:line` per finding; at most 2 rounds, log in `specs/<slug>/PLAN-REVIEW.md`. A `BLOCKED` fact only the user can answer is asked now — this is still the up-front phase. No slice is dispatched before the log says `Verdict: APPROVED` or lists the open findings.
+
 ## Stage 3 — Build
 
 Follow the plan step by step.
 
-A feature is built as slices, in this order and one slice green before the next. Each slice belongs to one role pack and is dispatched to that pack's engineer with `Agent` (`subagent_type` from the table, `model: sonnet`) and a brief the engineer has nothing left to decide from: the contract (types, error codes), the files, the test to make pass, the done check (`model-cost.md`). The engineer runs the pack's skill; this session reviews its diff.
+A feature is built as slices, in this order and one slice green before the next. Each slice belongs to one role pack and is dispatched to that pack's engineer with `Agent` (`subagent_type` from the table, `model: sonnet`) and a brief the engineer has nothing left to decide from: the contract (types, error codes), the files, the test to make pass, the done check (`model-cost.md`). The engineer runs the pack's skill. Its diff is reviewed in two tiers by fresh agents (`${CLAUDE_PLUGIN_ROOT}/references/plan-review.md` § Two-tier slice review): spec compliance against the brief first, code quality only once spec passes; a `SPEC ❌` or a Critical/Important finding goes back to the same engineer, 3 fix rounds at most. This session arbitrates the findings; it does not review the diff inline.
 
 | Slice | Engineer | Runs | Green when |
 |-------|----------|------|------------|
@@ -104,7 +106,7 @@ Building N tasks across M waves. Current status:
 ```
 
 After each task: narrate completion + reprint table immediately.
-Status values: `✅ Done` · `🔵 Running (sonnet/haiku)` · `⬜ Waiting on Txx` · `❌ Failed`
+Status values: `✅ Done (spec ✅, quality clean)` · `🔵 Running (sonnet/haiku)` · `🔍 Review tier 1/2` · `🔁 Fix round n/3` · `⬜ Waiting on Txx` · `❌ Failed`
 
 Rules:
 - Run quality gates after each logical chunk: `npx tsc --noEmit`, lint, relevant tests
@@ -113,13 +115,13 @@ Rules:
 
 ## Stage 4 — Review
 
-Self-review before committing:
-1. Does the implementation match the plan?
-2. Any security issues? (secrets, injection, unvalidated input at boundaries)
+Every slice has passed its two-tier review by now; this stage checks the whole branch, once:
+1. Does the branch match the plan — every task done, every § Deviations entry explained, every parked finding listed?
+2. Any security issues across slices? (secrets, injection, unvalidated input at boundaries)
 3. Any TypeScript errors or lint warnings?
 4. Any dead code or accidental debugging artifacts?
 
-For high-risk: spawn a reviewer sub-agent with: "Review this diff for correctness bugs only. Focus on: [specific concern from plan]."
+For high-risk: one fresh reviewer agent on `opus` gets the whole-branch diff file (`git diff -U10 <base>..HEAD`) and the plan: "Review for correctness bugs across slices only — a contract one slice exports and another consumes differently, an error one slice raises and another swallows. Focus: [the plan's § Risks]."
 
 Then `/docs-sync`: the routes, layers, commands and conventions this feature added go into `.claude/docs/` and `CLAUDE.md` in the same branch, so the next session does not rescan for them.
 
