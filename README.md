@@ -56,27 +56,58 @@ Every gate has a written waiver, so a skipped step is a recorded decision rather
 
 ## How it works
 
-Four layers, each loaded at a different time, so the always-on context stays small:
+Two axes that never mix. The **process** (how work is done) is the same for every engineer and always on. The **role** (who does it, what they know) is a pack per discipline, turned on by what the repo contains.
 
-| Layer | Loaded | What it holds | Example |
-|---|---|---|---|
-| **Rules** | every session, or only for matching file paths | the non-negotiables: git, security, code quality, model cost, testing | never commit to `main`; parameterised queries only |
-| **Skills** | on demand, routed from your sentence by each skill's description | a step-by-step workflow with a "Done when" check | `/fix-bug`, `/review-checklist`, `/agent-feature` |
-| **Hooks** | on events: session start, before a tool runs, on stop | the checks that must happen, not just be remembered | block a commit, lock a test, show a skill's checklist |
-| **Memory** | per project, written by the skills | project docs, handoffs, solutions, team sync | `.claude/docs/`, `specs/HANDOFF.md` |
+### Pipeline
 
-A request moves through them like this:
+Every request, whatever the role, moves through the same stages:
 
 ```text
 your sentence
   → routing    the skill whose description matches fires (tested on every kit change, no model call)
   → lane       tiny: just do it · normal: plan mode → build → verify · high-risk: spec → confirm → build → review
-  → build      Opus plans, a cheaper subagent writes, hooks watch every tool call
+  → build      Opus plans and splits the work into slices; each slice goes to a role engineer; hooks watch every tool call
   → evidence   /verify-done, /review-checklist, then /finish-branch opens the PR
   → memory     /compact (handoff) · /compound (lessons) · /docs-sync (project docs)
 ```
 
 The lane comes from risk; a human is asked only to resolve ambiguity, never to classify risk. Auth, data migration, security, external providers, public contracts and weakened validation are always high-risk. The control model in full: [`HARNESS.md`](HARNESS.md).
+
+### Engineers
+
+`/feature` is the supervisor. It writes the plan, then dispatches each slice to the engineer of the pack that owns it, on the cheaper model, with a brief that leaves nothing to decide. You never call a role by hand.
+
+| Slice | Engineer | Runs |
+|---|---|---|
+| tables, queries, contract, endpoint, third-party API | `backend-engineer` | `/db-change` `/api-endpoint` `/api-client` |
+| web screen | `frontend-engineer` | `/ui-feature` (`/design-ui` first when there is a design) |
+| mobile screen | `mobile-engineer` | `/mobile-feature` |
+| tool, graph, HITL, prompt, chat surface | `ai-engineer` | `/agent-tool` `/agent-graph` `/agent-hitl` `/agent-frontend` … |
+| CI, container, infrastructure | `devops-engineer` | `/pipeline` `/container` `/infra-change` |
+
+A slice that touches two roles belongs to the pack of the **contract** it implements, not the language it is written in: a CopilotKit chat surface in a Next app is `ai` (its contract is the AG-UI event stream), the settings page beside it is `frontend`, the Prisma migration behind it is `backend`. Opus reviews every engineer's diff before it is integrated.
+
+### Hooks
+
+Gates live in the process plugins, never in a pack, so they hold before a pack is enabled: `branch-guard` and `secret-guard` (core, always on), `test-lock` and `ticket-gate` (dev), `release-gate` and `infra-gate` (ship): a production `eas submit` or `terraform apply` is run by a person, not from a session. Hooks exit 0 or 2 and never crash the session; everything stricter is opt-in (`guards`).
+
+### Packs
+
+Five role packs with one shape: one `<role>-engineer` agent, skills named after the deliverable, the stack rules read on demand, no hooks, depending only on `progress` and `dev`.
+
+| Pack | Turned on when the repo has | Rules it carries |
+|---|---|---|
+| `frontend` | React, Next.js, Vue, Svelte or Vite without React Native | React, Next.js, taste |
+| `backend` | a server framework, a database or ORM, Go or Rust | Python, FastAPI, Prisma |
+| `mobile` | React Native or Expo, `eas.json` | React Native |
+| `devops` | a Dockerfile, CI workflows, `*.tf`, `k8s/`, a Helm chart | CI, container, infra |
+| `ai` | CopilotKit, LangGraph, LangChain, Mastra | the framework rules |
+
+`core`'s `repo-profile` hook reads the repo on session start and writes the packs into `.claude/settings.local.json`; they load from the next session. A pack that is not on is not an error: `/feature` builds that slice with the generic steps. The domain pack `workplace` (HR / workplace apps) is turned on the same way.
+
+### Memory
+
+Rules load every session or only for matching paths, so the always-on context stays small; skills load on demand from your sentence. What a project learns is written down by the skills: `.claude/docs/` (project docs, `/docs-sync`), `specs/HANDOFF.md` (`/compact`, read by the next session), `docs/solutions/` (`/compound`).
 
 ## The plugins
 
