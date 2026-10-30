@@ -29,4 +29,4 @@ In `docs/tickets/<id>/plan.md` for a ticket, the plan's § Decisions for `/featu
 
 Each entry needs `challenged:` (the strongest argument against the pick, and why it did not win) and `revert:`. On a `Risk: high` ticket in auto mode the `auto-decisions` hook (dev) blocks the stop until the section is there.
 
-The final report lists every entry under **Decided for you**, so the user reviews them in one place.
+The final report lists every entry under **Decided for you**, so the user reviews them in one place, with the labels exactly as above (`challenged:`, `revert:`), never paraphrased.

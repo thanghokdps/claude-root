@@ -43,7 +43,8 @@ def test_question_before_any_edit_passes():
 
 def test_plan_and_spec_edits_do_not_start_the_build():
     sid = session()
-    for path in ("/r/specs/x/PLAN.md", "/r/docs/tickets/412/plan.md", "/Users/u/.claude/plans/p.md"):
+    for path in ("/r/specs/x/PLAN.md", "/r/docs/tickets/412/plan.md", "/Users/u/.claude/plans/p.md",
+                 "/r/docs/features/cancel-order.md", "/r/docs/adr/0002-writes.md"):
         edit(sid, path)
     assert ask(sid) == "allow"
 
