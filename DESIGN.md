@@ -1,87 +1,77 @@
 # DESIGN — harness
 
-Interactive version: [`docs/skill-map.html`](docs/skill-map.html) (zoom, click a node for what/when/how, double-click a plugin to see its skills; regenerate with `scripts/skill-map.py`).
-
-How the kit is packaged, what each layer does, and how the AI-assistant skills (`agent`) fit together. Why each big choice was made: [`docs/ddr/`](docs/ddr/README.md). To install it, see the README Quickstart. For everyday use, see `docs/USAGE.md`.
-
----
+Why the kit is shaped the way it is: how it is packaged, what each layer does and when it loads, how a request flows, and where each AI-assistant concern lives. Each big decision has a record in [`docs/ddr/`](docs/ddr/README.md). Interactive version of the whole map: [`docs/skill-map.html`](docs/skill-map.html) (regenerate with `scripts/skill-map.py`). To install, see the [README](README.md#quickstart); for everyday use, [`docs/USAGE.md`](docs/USAGE.md).
 
 ## 1. Packaging: one marketplace, role plugins, one bundle
 
-From the user's side it is **one install per need**:
-
-- Building an AI assistant: `/plugin install agent@harness`. Claude Code installs the plugins it depends on (`progress`) automatically, and every AI-assistant layer below (architecture, tools, HITL, graph, CopilotKit frontend, evals, tracing, security) is inside `agent`. Its skills never require another role plugin; where one helps, they name it "(dev, if installed)".
-- Everything: `/plugin install harness@harness`, a bundle that depends on all nine role plugins.
-
-What `agent` alone does not bring: the general dev loop (`/fix-bug`, `/review-checklist`, `/verify-done`, `/finish-branch`), `/project-init`, and the global rules and `global/CLAUDE.md` that `scripts/install.sh` copies to `~/.claude/`.
+From the user's side it is **one install per need**. A role plugin declares its dependencies in `plugin.json` and Claude Code installs them with it.
 
 ```mermaid
 graph LR
   kit[harness<br/>bundle]
-  kit --> dev & ship & agent & lead & guards
+  kit --> dev & ship & lead & guards
   dev[dev] --> core & plan & review
   ship[ship] --> core
   lead[lead] --> core
   guards[guards<br/>opt-in hooks] --> dev
-  agent[agent] --> dev & ship
+  agent[agent<br/>domain, per repo] --> dev & ship
+  workplace[workplace<br/>domain, per repo] --> progress
   core[core] --> progress
   plan[plan] --> progress
   review[review] --> progress
   progress[progress<br/>hooks only]
 ```
 
-Why role plugins rather than one flat plugin:
+| Decision | Reason | Record |
+|---|---|---|
+| Role plugins, not one flat plugin | Every installed skill's description is loaded into every session for routing. A flat plugin with ~50 skills puts all of them in every session, and close descriptions compete for one prompt. A role gets only the skills its work uses | [0001](docs/ddr/0001-role-plugins.md) |
+| Dependencies declared and linted | A skill may name another plugin's skill only when that plugin is a dependency; otherwise it writes "(<plugin>, if installed)". `scripts/lint-kit.py` fails the build otherwise, so a role installed alone never points at a missing skill | [0001](docs/ddr/0001-role-plugins.md) |
+| Domain plugins (`agent`, `workplace`) outside the bundle | A bundle dependency cannot be disabled. The domain plugins stay off at user scope so core's `repo-profile` hook can enable them per repo, from the repo's own manifests | `plugins/harness/README.md` |
+| Commit-blocking hooks beyond the core gates are opt-in (`guards`) | Rails that block commits never arrive with a plain skill install | [0005](docs/ddr/0005-hooks-enforce-the-process.md) |
+| Every plugin stays at `1.0.0` until the kit is published | Bumping on every change caused `plugin.json` conflicts across parallel PRs; the commit on `main` identifies the kit | [0002](docs/ddr/0002-versions-stay-1-0-0.md) |
+| The team installs from GitLab, GitHub is the mirror | Claude Code clones with the person's own git access, so there is no fixed install path; `/sync-remote` keeps the two in step | [0008](docs/ddr/0008-install-from-gitlab.md) |
 
-| Reason | Effect |
-|---|---|
-| Every installed skill's description is loaded into every session to route prompts | A role gets only the skills its work uses: `agent` brings the build loop it hands off to (`dev`, `ship` and through them `core`, `plan`, `review`) but not `lead`'s retro and skill-authoring skills or the opt-in `guards` hooks |
-| Dependencies are declared in `plugin.json` and checked by `scripts/lint-kit.py` | A skill can name another plugin's skill only when that plugin is a dependency, so nothing breaks when a role is installed on its own |
-| Each plugin has its own version | A change to `agent` ships without bumping the dev or review skills |
-| Hooks are opt-in (`guards`) | Guard rails that block commits never arrive with a plain skill install |
+Naming: plugin `<role>`; skill a verb-noun matching its directory (`fix-bug`, `review-checklist`), AI-assistant skills `agent-<layer>`; invocation `/<skill>`, or `/<plugin>:<skill>` when two plugins define the same name.
 
-**Naming conventions**
+## 2. Layers and when they load
 
-- Plugin: `<role>`, one role per plugin.
-- Skill: a verb-noun or noun name that matches its directory, e.g. `fix-bug` or `review-checklist`. AI-assistant skills are named `agent-<layer>`.
-- Invocation: `/<skill>`, or `/<plugin>:<skill>` when two plugins define the same name.
-
-## 2. Layers
+Always-loaded context is the budget. Anything not needed on every task goes into a skill or a reference.
 
 | Layer | Loaded | Lives in | Holds |
 |---|---|---|---|
-| Global instructions | every session | `global/CLAUDE.md` → `~/.claude/CLAUDE.md` | principles, lanes, the daily loop |
-| Rules | every session (or by `paths:`) | `plugins/core/rules/` → `~/.claude/rules/` | git, security, code quality, typescript, testing |
+| Global instructions | every session | `global/CLAUDE.md` → `~/.claude/CLAUDE.md` (via `scripts/install.sh`) | principles, lanes, the daily loop |
+| Rules | every session, or only for matching `paths:` | `plugins/core/rules/` → `~/.claude/rules/` | git, security, code quality, model cost (always); typescript, testing, app structure, API contract, data access (by path) |
 | Skills | on demand, routed by `description` / `when_to_use` | `plugins/<plugin>/skills/<name>/SKILL.md` | a step-by-step workflow with a "Done when" check |
-| References | read by a skill when needed | `plugins/<plugin>/references/`, `skills/<name>/references/` | detail that would bloat the skill |
-| Hooks | on events, opt-in | `plugins/guards/hooks/` | risk gate, commit gate, handoff, breadcrumbs |
-| Project workspace | per project | `.claude/` written by `/project-init` | project docs, memory, project rules |
+| References | read by a skill when it needs them | `plugins/<plugin>/references/`, `skills/<name>/references/`, `plugins/agent/rules/` | detail that would bloat the skill; the agent framework invariants |
+| Hooks | on events | `plugins/core/hooks/`, `dev/hooks/` (always on with the role); `ship/hooks/` (release gate); `guards/hooks/` (opt-in) | the checks that must happen rather than be remembered |
+| Project workspace | per project | `.claude/` written by `/project-init`, `docs/solutions/`, `specs/` | project docs, memory, lessons, handoffs |
 
-Always-loaded context is the budget. Anything that is not needed on every task goes into a skill or a reference.
-
-## 3. Workflow
+## 3. How a request flows
 
 ```mermaid
 flowchart TD
-  A[git clone the kit anywhere] --> B[bash scripts/install.sh]
-  B --> X{project?}
-  X -->|existing repo| C[cd your-project; claude; /project-init]
-  X -->|empty folder| Y[git init; /brainstorming → /writing-plans → scaffold<br/>or describe the assistant → agent-architect]
-  Y --> C
-  C --> D{prompt}
-  D -->|tiny| E[just do it]
-  D -->|normal| F[plan mode → build → /verify-done]
+  A[sentence in Claude Code] --> R[routing: the skill whose description matches fires]
+  R --> D{lane}
+  D -->|tiny| E[just do it; hooks are the safety net]
+  D -->|normal| F[plan mode → approve → build → /verify-done]
   D -->|high-risk| G[specs/slug: SUMMARY, PLAN, TEST_MATRIX → confirm → build → review]
   E & F & G --> H[/review-checklist → /code-review → /finish-branch/]
   H --> I[/compact or /compound at session end/]
 ```
 
-The Auto-Coordinator in `global/CLAUDE.md` picks the lane. The full routing logic is in `dev:coordinator`.
+Three principles run through it, each with its record:
+
+- **Ceremony scales with risk; human interruption scales with ambiguity.** The lane comes from the risk signals; a person is asked only to resolve intent. Auth, data migration, security, external providers, public contracts, weakened validation and `.claude/` config are always high-risk. Full control model: [`HARNESS.md`](HARNESS.md).
+- **Opus decides, cheaper models type.** The main session plans, decides and reviews. Code from an approved plan goes to Sonnet, mechanical work to Haiku. A skill whose wrong call is expensive pins `model: opus`; a light one runs on the session's model. [0003](docs/ddr/0003-model-by-role.md)
+- **Evidence over claims.** `/verify-done` re-runs checks in the session; the PR's Witness line comes from `run-log`; `/resolve-question` answers facts with a `file:line` citation. [0006](docs/ddr/0006-evidence-over-claims.md)
+
+What the hooks enforce versus what a skill only asks for is the subject of [0005](docs/ddr/0005-hooks-enforce-the-process.md): a skill's text is read once and forgotten under pressure, so what must happen is a hook.
 
 ## 4. AI assistant design (`agent`)
 
-Target stack: TypeScript, **CopilotKit v2** in the web client, **AG-UI** as the transport, and **LangChainJS / LangGraph** on the agent server. Every skill reads its invariants from `plugins/agent/rules/`. These rules load only when a skill reads them, so they cost nothing in other repos.
+Target stack: TypeScript, **CopilotKit v2** in the web client, **AG-UI** as the transport, and **Mastra, LangChainJS or LangGraph** on the agent server, each scaffolded from the vendor's official reference repo. Every skill reads its invariants from `plugins/agent/rules/`; these load only when a skill reads them.
 
-### Skill per layer
+### One skill per layer
 
 ```mermaid
 flowchart LR
@@ -89,9 +79,11 @@ flowchart LR
   feat --> tool[/agent-tool<br/>backend tools/]
   feat --> graph[/agent-graph<br/>agents, routing, prompts/]
   feat --> hitl[/agent-hitl<br/>confirm before write/]
+  feat --> rag[/agent-rag<br/>retrieval, semantic memory/]
   feat --> fe[/agent-frontend<br/>CopilotKit wiring/]
   fe --> ui[/agent-design-ui<br/>Figma → chat UI/]
-  tool & graph & hitl & fe --> verify[/agent-verify-turn<br/>real turn, AG-UI stream/]
+  graph & tool --> pr[/agent-prompt-review<br/>prompt and schema diffs/]
+  tool & graph & hitl & rag & fe --> verify[/agent-verify-turn<br/>real turn, AG-UI stream/]
   verify --> evals[/agent-evals<br/>dataset, suite, CI gate/]
   evals --> sec[/agent-security<br/>threat model/]
 ```
@@ -100,26 +92,26 @@ flowchart LR
 
 | Question | Skill | Rule / reference |
 |---|---|---|
-| Starting a new assistant: which architecture? | `/agent-architect greenfield` writes an ADR to `docs/adr/` and scaffolds the repo, including `.env.example`, a tracing switch and the first eval cases | `plugins/agent/skills/agent-architect/references/shapes.md`, `layouts.md` |
-| Adding a feature to an existing assistant | `/agent-feature`: checks the ADR, takes a reuse inventory, and decides reuse / extend / new for each slice | `plugins/agent/skills/agent-feature/references/reuse-inventory.md` |
-| Defining a backend agent tool | `/agent-tool`: Zod schema, identity from trusted context, read vs mutation, retry and audit | `plugins/agent/rules/agent-identity-and-tools.md` |
-| Defining a frontend tool, which runs in the browser | `/agent-frontend`: `useFrontendTool`, registered only for the agent allowed to call it | `plugins/agent/rules/agent-identity-and-tools.md` § Where a tool lives |
-| Agent tool or frontend tool? | Data, identity, secrets, audit or writes → agent tool. Browser-only effects (navigate, open a panel, fill a form) → frontend tool. Fetch-then-show → both | `plugins/agent/rules/agent-identity-and-tools.md` § Where a tool lives |
-| Integrating CopilotKit | `/agent-frontend`: provider, auth headers, `useAgent`, `useRenderTool`, and e2e tests against recorded AG-UI streams. `/agent-design-ui` handles the theme and slots | `plugins/agent/rules/agui-transport.md` |
-| Suggestions | `/agent-frontend`: `useConfigureSuggestions`, served by the backend and limited to tools that exist | — |
-| Shared context (page state → agent) | `/agent-frontend`: `useAgentContext`, memoised. It is display-only and never used for authorisation | `/agent-security` covers injection through context |
-| Short-term memory (the conversation) | LangGraph checkpointer keyed by `thread_id` | `plugins/agent/rules/langgraph.md` § State |
-| Long-term memory (across threads) | LangGraph Store, namespaced by the trusted user id | `plugins/agent/rules/langgraph.md` § Long-term memory |
-| Writes that need user confirmation | `/agent-hitl`: interrupt contract, pending-action record, resume | `plugins/agent/rules/langgraph.md` § Interrupts |
-| Evaluating prompts, including the dataset | `/agent-evals dataset` (JSONL, example `plugins/agent/skills/agent-evals/references/dataset-example.jsonl`) → `suite` → `compare-models` | `plugins/agent/rules/agent-prompts.md` |
-| Observability | Wired by `/agent-architect` at scaffold time; added to an existing repo with `/agent-evals observability`; read with `/agent-verify-turn prod-trace` | `plugins/agent/rules/agent-tracing-privacy.md` |
-| Code structure, conventions, responsive | `/agent-architect` scaffold, `/agent-design-ui` build and narrow-width shots, `/agent-feature` duplicate + shape check | `plugins/agent/rules/agent-code-structure.md` |
-| ERD from a design | `/agent-architect` writes `docs/erd.md` before the schema | `plugins/agent/skills/agent-architect/references/data-model.md` |
+| Which architecture for a new assistant? | `/agent-architect greenfield`: product questions first, then an ADR in `docs/adr/` and a scaffold with `.env.example`, a tracing switch and the first eval cases | `skills/agent-architect/references/shapes.md`, `layouts.md` |
+| Which models, at what cost? | `/agent-architect` sets three roles in `.env` from the hardest task, volume and budget; a change goes through `/agent-evals compare-models` | [0004](docs/ddr/0004-assistant-models-from-the-problem.md), `references/model-choice.md` |
+| A feature in an existing assistant | `/agent-feature`: ADR check, reuse inventory, reuse / extend / new per slice, duplicate check | `skills/agent-feature/references/reuse-inventory.md` |
+| A backend tool | `/agent-tool`: Zod schema, identity from trusted context, read vs mutation, retry and audit | `rules/agent-identity-and-tools.md` |
+| A frontend tool (runs in the browser) | `/agent-frontend`: `useFrontendTool`, registered only for the agent allowed to call it | `rules/agent-identity-and-tools.md` § Where a tool lives |
+| Agent tool or frontend tool? | Data, identity, secrets, audit or writes → agent tool. Browser-only effects → frontend tool. Fetch-then-show → both | same |
+| CopilotKit integration | `/agent-frontend`: provider, auth headers, `useAgent`, `useRenderTool`, suggestions, attachments, e2e on recorded AG-UI streams; `/agent-design-ui` for theme and slots | `rules/agui-transport.md` |
+| Shared context (page state → agent) | `/agent-frontend`: `useAgentContext`, display-only, never used for authorisation | `/agent-security` covers injection through context |
+| Short-term memory (the conversation) | LangGraph checkpointer keyed by `thread_id`; Mastra storage | `rules/langgraph.md` § State, `rules/mastra.md` |
+| Long-term memory, retrieval | `/agent-rag`: LangGraph Store or Mastra memory namespaced by the trusted user id; vector store with a server-side tenant filter | `rules/langgraph.md` § Long-term memory |
+| Writes that need confirmation | `/agent-hitl`: standard AG-UI interrupt and resume, pending-action record, confirm / cancel / replay | `rules/langgraph.md` § Interrupts, `rules/mastra.md` |
+| Prompts and output schemas | `/agent-graph` writes them; `/agent-prompt-review` reads a diff the way the model does | `rules/agent-prompts.md` |
+| Evals, including the dataset | `/agent-evals dataset` (JSONL) → `suite` (judged, baseline gate) → `compare-models` | `skills/agent-evals/references/dataset-example.jsonl` |
+| Observability | wired at scaffold time; added later with `/agent-evals observability`; read with `/agent-verify-turn prod-trace` | `rules/agent-tracing-privacy.md` |
+| Code structure, conventions, responsive | `/agent-architect` scaffold, `/agent-design-ui` narrow-width shots, `/agent-feature` shape check | `rules/agent-code-structure.md` |
 | Proving a change works | `/agent-verify-turn local`: drive a real turn and read the event stream | — |
-| Security and compliance | `/agent-security` | `plugins/agent/rules/agent-tracing-privacy.md` |
+| Security and compliance | `/agent-security`: injection, confused deputy, exfiltration, PII in traces, SOC 2 mapping | `rules/agent-tracing-privacy.md` |
 
 ## 5. Quality gates for the kit itself
 
-- `bash scripts/check.sh`: skill lint (frontmatter, dependency check), trigger eval (`eval/triggers/<skill>.json`, 3 prompts per skill must rank it in the top 3), and `claude plugin validate` per plugin.
-- `bash scripts/eval-plugin.sh <plugin>`: behaviour evals with a real model. These are paid and not part of `check.sh`.
-- Release: bump `version` in each changed `plugin.json`, merge, then run `claude plugin tag plugins/<plugin> --push`.
+- `bash scripts/check.sh`: skill lint (frontmatter, dependency check), the routing eval (`eval/triggers/<skill>.json`: three prompts per skill must rank it in the top 3, no model call), the hook tests, and `claude plugin validate` per plugin. CI runs the same script. [0007](docs/ddr/0007-routing-is-tested.md)
+- `bash scripts/eval-plugin.sh <plugin>`: behaviour evals with a real model, paid, run before a release or a demo.
+- Release, once published: bump `version` in each changed `plugin.json`, merge, `claude plugin tag plugins/<plugin> --push`.
