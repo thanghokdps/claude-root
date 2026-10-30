@@ -165,6 +165,13 @@ def test_home_folder_and_non_git_folder_get_no_team_settings():
     assert shared_settings(plain) is None
 
 
+def test_the_kit_repo_itself_gets_no_team_settings():
+    cwd = repo({".claude-plugin/marketplace.json": {"name": "harness", "plugins": []}})
+    run(cwd)
+    assert shared_settings(cwd) is None
+    assert not os.path.exists(os.path.join(cwd, ".claude", "rules"))
+
+
 def test_plain_backend_repo_without_docs():
     cwd = repo({"package.json": {"dependencies": {"express": "4"}}})
     ctx = run(cwd)
