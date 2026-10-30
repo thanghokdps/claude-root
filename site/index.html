@@ -93,14 +93,15 @@ h2 { font-size: clamp(26px, 3.5vw, 38px); letter-spacing: -.02em; margin: 0 0 8p
 .sub { color: var(--muted); margin: 0 0 32px; max-width: 42em; }
 
 /* pipeline */
-.pipe { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.pipe { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
 .pipe::before { content: ""; position: absolute; left: 4%; right: 4%; top: 34px; height: 2px; background: var(--line); }
 .pulse { position: absolute; top: 29px; left: 4%; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px var(--accent); animation: travel 6s cubic-bezier(.6,0,.4,1) infinite; }
 @keyframes travel { 0% { left: 4%; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { left: 95%; opacity: 0; } }
 .step { position: relative; text-align: center; }
 .step .n { width: 68px; height: 68px; margin: 0 auto 12px; border-radius: 18px; display: grid; place-items: center; font-size: 26px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); animation: lit 6s infinite; }
 .step:nth-child(2) .n { animation-delay: .9s; } .step:nth-child(3) .n { animation-delay: 1.8s; } .step:nth-child(4) .n { animation-delay: 2.7s; }
-.step:nth-child(5) .n { animation-delay: 3.6s; } .step:nth-child(6) .n { animation-delay: 4.5s; }
+.step:nth-child(5) .n { animation-delay: 3.6s; } .step:nth-child(6) .n { animation-delay: 4.5s; } .step:nth-child(7) .n { animation-delay: 5.4s; }
+.step code { display: block; margin-top: 4px; font: 11.5px "JetBrains Mono", monospace; color: var(--accent); }
 @keyframes lit { 0%, 12%, 100% { border-color: var(--line); transform: none; } 4% { border-color: var(--accent); transform: translateY(-4px) scale(1.06); box-shadow: 0 0 0 6px var(--glow); } }
 .step b { display: block; font-size: 14px; } .step small { color: var(--muted); font-size: 12.5px; }
 
@@ -182,7 +183,7 @@ article img { max-width: 100%; }
   .hero-inner, .map { grid-template-columns: 1fr; }
   .term { transform: none; }
   .stats { grid-template-columns: repeat(2, 1fr); }
-  .pipe { grid-template-columns: repeat(3, 1fr); row-gap: 28px; }
+  .pipe { grid-template-columns: repeat(2, 1fr); row-gap: 28px; }
   .pipe::before, .pulse { display: none; }
   .card.featured { grid-column: auto; }
   nav .links a.opt { display: none; }
@@ -215,7 +216,7 @@ article img { max-width: 100%; }
     <div>
       <span class="eyebrow">⚡ Claude Code plugin marketplace</span>
       <h1>One process. <span class="shimmer">Five engineers.</span></h1>
-      <p class="lede">Claude Code that follows your team's process: plan → build → verify → review → ship, the same for every role, with hooks that block the shortcut. Frontend, backend, mobile, devops and AI are role packs, turned on by what your repo contains, and <code>/feature</code> hands each slice to the right engineer.</p>
+      <p class="lede">Claude Code that follows your team's process from the requirement to the release: analyse → tasks and estimates on your tracker → plan → implement → test and review → deliver, the same for every role, with hooks that block the shortcut. Frontend, backend, mobile, devops and AI are role packs, turned on by what your repo contains.</p>
       <div class="cta">
         <a class="btn primary" href="#start">Start in 3 steps →</a>
         <a class="btn ghost" href="docs/skill-map.html">Explore the skill map</a>
@@ -267,9 +268,9 @@ article img { max-width: 100%; }
       <div class="card reveal"><span class="num">2</span><h3>Open your repo</h3><p>On the first session the <code>repo-profile</code> hook reads your manifests and prints the roles it turned on. They load from the next session.</p><pre class="out">REPO PROFILE: Next.js, Prisma.
 Roles: frontend, backend, devops.
 Prefer: features across roles → /feature …</pre></div>
-      <div class="card reveal"><span class="num">3</span><h3>Say what you want</h3><p>In your own words, any language. The matching skill fires, the lane is chosen from risk, slices go to the engineers.</p><pre>add CSV export to the reports page
-the upload crashes on files over 10 MB
+      <div class="card reveal"><span class="num">3</span><h3>Say what you want</h3><p>In your own words, any language. The matching skill fires, the lane is chosen from risk, slices go to the engineers.</p><pre>/breakdown &lt;requirement or Jira link&gt;
 /ticket 412
+the upload crashes on files over 10 MB
 Tôi muốn làm một chatbot tra cứu đơn hàng</pre></div>
     </div>
     <div class="detect reveal">
@@ -286,22 +287,23 @@ Tôi muốn làm một chatbot tra cứu đơn hàng</pre></div>
   </section>
 
   <section id="flow">
-    <h2 class="reveal">Pipeline</h2>
-    <p class="sub reveal">Every request, whatever the role, moves through the same stages. Say what you want in your own words; the skill fires from the sentence.</p>
+    <h2 class="reveal">An engineer's day, end to end</h2>
+    <p class="sub reveal">From the requirement in your inbox to the release, every step has a skill and leaves a file the next step reads. The same for every role; say it in your own words and the skill fires, or type the command.</p>
     <div class="pipe reveal">
       <div class="pulse"></div>
-      <div class="step"><div class="n">🧭</div><b>Route</b><small>skill from your sentence</small></div>
-      <div class="step"><div class="n">⚖️</div><b>Lane</b><small>tiny · normal · high-risk</small></div>
-      <div class="step"><div class="n">📐</div><b>Plan</b><small>Opus splits into slices</small></div>
-      <div class="step"><div class="n">🛠️</div><b>Build</b><small>one engineer per slice</small></div>
-      <div class="step"><div class="n">🔍</div><b>Evidence</b><small>verify-done · review</small></div>
-      <div class="step"><div class="n">🧠</div><b>Memory</b><small>handoff · lessons · docs</small></div>
+      <div class="step"><div class="n">🔎</div><b>Analyse</b><small>requirement vs the code, questions asked one at a time</small><code>/breakdown</code></div>
+      <div class="step"><div class="n">🗂️</div><b>Tasks &amp; estimates</b><small>criteria, role, order, a range each → GitLab · Jira · GitHub</small><code>/breakdown</code></div>
+      <div class="step"><div class="n">📐</div><b>Plan</b><small>the ticket's intent, spec and plan in the repo; design when needed</small><code>/ticket · /brainstorming</code></div>
+      <div class="step"><div class="n">🛠️</div><b>Implement</b><small>Opus splits into slices, one engineer per slice, tests with the code</small><code>/feature · /tdd · /fix-bug</code></div>
+      <div class="step"><div class="n">🔍</div><b>Test &amp; review</b><small>checks re-run and shown, findings with the failing case</small><code>/verify-done · /review-checklist</code></div>
+      <div class="step"><div class="n">🚀</div><b>Deliver</b><small>PR / MR, red build triage, release checklist, gates for production</small><code>/finish-branch · /release-checklist</code></div>
+      <div class="step"><div class="n">🧠</div><b>Learn</b><small>handoff for the next session, lessons, estimate vs actual</small><code>/compact · /compound · /retro</code></div>
     </div>
   </section>
 
   <section id="engineers">
     <h2 class="reveal">Engineers</h2>
-    <p class="sub reveal"><code>/feature</code> is the supervisor: it writes the plan, then dispatches each slice to the engineer of the pack that owns it, on the cheaper model. You never call a role by hand. A slice belongs to the pack of the <em>contract</em> it implements, not the language it is written in.</p>
+    <p class="sub reveal">When a task is built, whether it came through <code>/ticket</code>, <code>/feature</code> or <code>/fix-bug</code>, Opus writes the plan and dispatches each slice to the engineer of the pack that owns it, on the cheaper model. You never call a role by hand. A slice belongs to the pack of the <em>contract</em> it implements, not the language it is written in.</p>
     <div class="cards">
       <a class="card reveal" href="#/doc/plugins/backend/README.md"><h3>backend-engineer<em>backend</em></h3><p>Tables, queries, contract, endpoint, third-party API. Owner-scoped queries, a route matrix of 200 · 400 · 401 · 404.</p><div class="chips"><span class="chip">/db-change</span><span class="chip">/api-endpoint</span><span class="chip">/api-client</span></div></a>
       <a class="card reveal" href="#/doc/plugins/frontend/README.md"><h3>frontend-engineer<em>frontend</em></h3><p>A web screen from a fixture: every state, primitives built once, Testing Library, checked in the browser at each viewport.</p><div class="chips"><span class="chip">/ui-feature</span><span class="chip">/design-ui</span></div></a>
@@ -401,8 +403,10 @@ const SCRIPT = [
   ["ok", "✔ core plan review dev ship lead guards progress"],
   ["c", "# next session, in your repo"],
   ["ok", "Roles: frontend, backend  (Next.js · Prisma)"],
-  ["p", "add CSV export to the reports page"],
-  ["c", "→ /feature · db-change → backend-engineer · ui-feature → frontend-engineer"],
+  ["p", "/breakdown  đây là requirement export báo cáo CSV …"],
+  ["c", "→ 3 tasks · 9–13 h · created on GitLab: #412 #413 #414"],
+  ["p", "/ticket 412"],
+  ["c", "→ db-change → backend-engineer · ui-feature → frontend-engineer"],
 ];
 async function typeTerminal() {
   const el = document.getElementById("typed");
