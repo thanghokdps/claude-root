@@ -4,7 +4,7 @@ Read with Step 2s and Step 4s of `SKILL.md`. The user wants a chatbot that runs,
 
 ## 1. Recognise it
 
-Skeleton mode applies when the request sets up, inits, dựng or scaffolds a chatbot without saying what it should do: a skeleton, an empty chatbot, a shell, "no features yet", or only a stack. Examples: "init chatbot empty features", "init chatbot với Next.js và LangGraph", "dựng skeleton chatbot", "chưa làm feature nào", "khung trống", "just the skeleton", "empty chatbot on <stack>".
+Skeleton mode applies when the request sets up, inits, dựng or scaffolds a chatbot without saying what it should do: a skeleton, an empty chatbot, a shell, "no features yet", or only a stack. Examples: "init chatbot empty features", "init chatbot với Next.js và LangGraph", "init codebase chatbot assistant empty features using langchain (or mastra, or a custom langgraph), tracing with langfuse" (a tracing tool is part of the stack, not a feature), "dựng skeleton chatbot", "chưa làm feature nào", "khung trống", "just the skeleton", "empty chatbot on <stack>".
 
 A request that describes what the assistant helps with ("…hỗ trợ khách tra cứu đơn hàng") is greenfield (Step 2): the full interview and plan run there. Do not ask which mode; the wording decides.
 
