@@ -46,6 +46,19 @@ def local_settings(cwd):
     return json.load(open(p)) if os.path.exists(p) else None
 
 
+def shared_settings(cwd):
+    p = os.path.join(cwd, ".claude", "settings.json")
+    return json.load(open(p)) if os.path.exists(p) else None
+
+
+def shared_packs(cwd):
+    """Packs the hook put in the team file, without the dev@harness every set-up repo gets."""
+    return {k.split("@")[0] for k in (shared_settings(cwd) or {}).get("enabledPlugins", {})} - {"dev"}
+
+
+KIT_MARKETPLACE = {"source": {"source": "github", "repo": "thanghokdps/claude-root"}}
+
+
 AI_PKG = {"dependencies": {"next": "15", "@langchain/langgraph": "1", "@copilotkit/react-core": "1",
                            "@prisma/client": "6"}, "devDependencies": {"typescript": "5"}}
 
@@ -84,28 +97,72 @@ def test_subagents_get_the_profile_but_never_write_settings():
     out = subagent_output(cwd, config_dir({"ai@harness": False}))
     assert out["hookEventName"] == "SubagentStart"
     assert "AI assistant" in out["additionalContext"]
-    assert "settings.local.json" not in out["additionalContext"]
-    assert local_settings(cwd) is None
+    assert "settings" not in out["additionalContext"]
+    assert local_settings(cwd) is None and shared_settings(cwd) is None
 
 
-def test_ai_web_repo_gets_profile_and_agent_enabled_locally():
+def test_ai_web_repo_gets_the_kit_in_its_team_settings():
     cwd = repo({"package.json": AI_PKG, "prisma/schema.prisma": "", ".claude/docs/index.md": "# x"})
     ctx = run(cwd, config_dir({"ai@harness": False}))
     for want in ["Next.js", "AI assistant", "Prisma", "Roles: frontend, backend, ai", "/feature", "/agent-tool",
-                 "/db-change", ".claude/docs/index.md", "/docs-sync", "ai@harness"]:
+                 "/db-change", ".claude/docs/index.md", "/docs-sync", "ai@harness", ".claude/settings.json",
+                 "uncommitted", "/reload-plugins"]:
         assert want in ctx, (want, ctx)
-    enabled = local_settings(cwd)["enabledPlugins"]
-    assert enabled == {"frontend@harness": True, "backend@harness": True, "ai@harness": True}, enabled
-    exclude = open(os.path.join(cwd, ".git", "info", "exclude")).read()
-    assert ".claude/settings.local.json" in exclude
+    s = shared_settings(cwd)
+    assert s["extraKnownMarketplaces"] == {"harness": KIT_MARKETPLACE}, s
+    assert s["enabledPlugins"] == {"dev@harness": True, "frontend@harness": True, "backend@harness": True,
+                                   "ai@harness": True}, s
+    assert local_settings(cwd) is None
 
 
-def test_existing_local_settings_are_merged_not_replaced():
-    cwd = repo({"package.json": AI_PKG, ".claude/settings.local.json": {"permissions": {"allow": ["Bash(ls)"]}}})
+def test_existing_team_settings_are_merged_not_replaced():
+    cwd = repo({"package.json": AI_PKG, ".claude/settings.json": {
+        "permissions": {"allow": ["Bash(ls)"]}, "enabledPlugins": {"other@team": True},
+        "extraKnownMarketplaces": {"team": {"source": {"source": "github", "repo": "acme/kit"}}}}})
     run(cwd)
-    s = local_settings(cwd)
+    s = shared_settings(cwd)
     assert s["permissions"] == {"allow": ["Bash(ls)"]}
-    assert s["enabledPlugins"]["ai@harness"] is True
+    assert s["enabledPlugins"]["other@team"] is True and s["enabledPlugins"]["ai@harness"] is True
+    assert set(s["extraKnownMarketplaces"]) == {"team", "harness"}
+
+
+def test_second_session_writes_nothing():
+    cwd = repo({"package.json": AI_PKG})
+    run(cwd)
+    before = open(os.path.join(cwd, ".claude", "settings.json")).read()
+    ctx = run(cwd)
+    assert open(os.path.join(cwd, ".claude", "settings.json")).read() == before
+    assert "Wrote" not in ctx, ctx
+
+
+def test_written_source_is_never_this_machines_alias():
+    cfg = config_dir()
+    os.makedirs(os.path.join(cfg, "plugins"))
+    with open(os.path.join(cfg, "plugins", "known_marketplaces.json"), "w") as f:
+        json.dump({"harness": {"source": {"source": "git", "url": "git@github-me:me/kit.git"}}}, f)
+    cwd = repo({"package.json": AI_PKG})
+    run(cwd, cfg)
+    assert shared_settings(cwd)["extraKnownMarketplaces"]["harness"] == KIT_MARKETPLACE
+
+
+def test_odd_team_settings_are_left_alone():
+    for content in ("{not json", "[1, 2]", {"enabledPlugins": ["x"]}, {"extraKnownMarketplaces": "x"}):
+        cwd = repo({"package.json": {"dependencies": {"express": "4"}}, ".claude/settings.json": content})
+        before = open(os.path.join(cwd, ".claude", "settings.json")).read()
+        run(cwd)
+        assert open(os.path.join(cwd, ".claude", "settings.json")).read() == before, content
+        assert local_settings(cwd)["enabledPlugins"] == {"backend@harness": True}, content
+
+
+def test_home_folder_and_non_git_folder_get_no_team_settings():
+    cwd = repo({"package.json": AI_PKG})
+    run(cwd, env={"HOME": cwd})
+    assert shared_settings(cwd) is None
+    plain = tempfile.mkdtemp(prefix="repo-profile-nogit-")
+    with open(os.path.join(plain, "package.json"), "w") as f:
+        json.dump(AI_PKG, f)
+    run(plain)
+    assert shared_settings(plain) is None
 
 
 def test_plain_backend_repo_without_docs():
@@ -113,7 +170,7 @@ def test_plain_backend_repo_without_docs():
     ctx = run(cwd)
     assert "Express" in ctx and "/api-endpoint" in ctx and "/project-init" in ctx, ctx
     assert "AI assistant" not in ctx and "Roles: backend." in ctx, ctx
-    assert local_settings(cwd)["enabledPlugins"] == {"backend@harness": True}
+    assert shared_settings(cwd)["enabledPlugins"] == {"dev@harness": True, "backend@harness": True}
 
 
 def test_role_packs_follow_the_stack():
@@ -128,8 +185,7 @@ def test_role_packs_follow_the_stack():
     for files, want in cases:
         cwd = repo(files)
         run(cwd)
-        got = {k.split("@")[0] for k in (local_settings(cwd) or {}).get("enabledPlugins", {})}
-        assert got == want, (files, got)
+        assert shared_packs(cwd) == want, (files, shared_packs(cwd))
 
 
 def test_devops_repo_prefers_its_skills():
@@ -165,11 +221,21 @@ def test_mobile_repo():
     assert "React Native" in ctx and "/release-checklist" in ctx, ctx
 
 
-def test_explicit_opt_out_is_respected():
+def test_explicit_opt_out_keeps_the_repo_out_of_team_settings():
     cwd = repo({"package.json": AI_PKG, ".claude/settings.json": {"enabledPlugins": {"ai@harness": False}}})
     ctx = run(cwd)
     assert "AI assistant" in ctx
-    assert "ai@harness" not in local_settings(cwd)["enabledPlugins"]
+    assert shared_settings(cwd) == {"enabledPlugins": {"ai@harness": False}}
+    assert local_settings(cwd)["enabledPlugins"] == {"frontend@harness": True, "backend@harness": True}
+    assert ".claude/settings.local.json" in open(os.path.join(cwd, ".git", "info", "exclude")).read()
+
+
+def test_a_false_in_local_settings_also_opts_out():
+    cwd = repo({"package.json": {"dependencies": {"express": "4"}},
+                ".claude/settings.local.json": {"enabledPlugins": {"harness@harness": False}}})
+    run(cwd)
+    assert shared_settings(cwd) is None
+    assert local_settings(cwd)["enabledPlugins"]["backend@harness"] is True
 
 
 def test_legacy_agent_pack_is_renamed_to_ai():
@@ -178,11 +244,12 @@ def test_legacy_agent_pack_is_renamed_to_ai():
     assert local_settings(cwd)["enabledPlugins"] == {"ai@harness": True}
 
 
-def test_already_enabled_at_user_scope_writes_nothing():
+def test_user_scope_packs_still_reach_the_team_file():
     cwd = repo({"package.json": AI_PKG})
     ctx = run(cwd, config_dir({"ai@harness": True, "frontend@harness": True, "backend@harness": True}))
     assert "AI assistant" in ctx and "settings.local.json" not in ctx
     assert local_settings(cwd) is None
+    assert shared_packs(cwd) == {"frontend", "backend", "ai"}
 
 
 def test_malformed_local_settings_is_left_alone():
@@ -191,19 +258,28 @@ def test_malformed_local_settings_is_left_alone():
     assert open(os.path.join(cwd, ".claude", "settings.local.json")).read() == "{not json"
 
 
-def test_new_repo_names_the_packs_that_are_off_before_a_stack_is_scaffolded():
+def test_new_repo_gets_the_kit_and_names_the_packs_that_are_off():
     cwd = repo()
     ctx = run(cwd, config_dir({"frontend@harness": True}))
-    assert "no manifest" in ctx and "ai@harness" in ctx and "new session" in ctx, ctx
-    assert "frontend@harness" not in ctx, ctx
+    assert "no manifest" in ctx and "ai@harness" in ctx and "/reload-plugins" in ctx, ctx
+    assert "enabledPlugins in .claude/settings.json" in ctx and "frontend@harness," not in ctx, ctx
+    s = shared_settings(cwd)
+    assert s == {"extraKnownMarketplaces": {"harness": KIT_MARKETPLACE}, "enabledPlugins": {"dev@harness": True}}, s
     assert local_settings(cwd) is None
+
+
+def test_new_opted_out_repo_enables_packs_locally():
+    cwd = repo({".claude/settings.local.json": {"enabledPlugins": {"ai@harness": False}}})
+    ctx = run(cwd)
+    assert "claude plugin enable <pack> --scope local" in ctx, ctx
+    assert shared_settings(cwd) is None
 
 
 def test_off_switch_prints_nothing():
     assert run(repo(), env={"CLAUDE_REPO_PROFILE": "0"}) == ""
     cwd = repo({"package.json": AI_PKG})
     assert run(cwd, env={"CLAUDE_REPO_PROFILE": "0"}) == ""
-    assert local_settings(cwd) is None
+    assert local_settings(cwd) is None and shared_settings(cwd) is None
 
 
 def test_repo_modules_cannot_shadow_the_hooks_imports():
@@ -221,6 +297,12 @@ def test_symlinked_local_settings_or_claude_dir_is_never_written_through():
     cwd = repo({"package.json": AI_PKG})
     os.makedirs(os.path.join(cwd, ".claude"))
     os.symlink(target, os.path.join(cwd, ".claude", "settings.local.json"))
+    run(cwd)
+    assert json.load(open(target)) == {"keep": 1}
+
+    cwd = repo({"package.json": AI_PKG})
+    os.makedirs(os.path.join(cwd, ".claude"))
+    os.symlink(target, os.path.join(cwd, ".claude", "settings.json"))
     run(cwd)
     assert json.load(open(target)) == {"keep": 1}
 
@@ -253,14 +335,14 @@ def test_two_workplace_modules_enable_the_workplace_pack():
     cwd = repo(WORKPLACE_APPS)
     ctx = run(cwd)
     assert "Domain: workplace" in ctx and "/workplace-review" in ctx and "workplace@harness" in ctx, ctx
-    assert local_settings(cwd)["enabledPlugins"] == {"mobile@harness": True, "workplace@harness": True}
+    assert shared_packs(cwd) == {"mobile", "workplace"}
 
 
 def test_domain_marker_line_enables_the_workplace_pack():
     cwd = repo({"package.json": {"dependencies": {"express": "4"}},
                 "docs/requirements.md": "# Req\n\nDomain: workplace\n"})
     assert "Domain: workplace" in run(cwd)
-    assert local_settings(cwd)["enabledPlugins"]["workplace@harness"] is True
+    assert "workplace" in shared_packs(cwd)
 
 
 def test_backend_modules_one_level_down_count():
@@ -274,7 +356,7 @@ def test_one_matching_module_is_not_a_domain():
     cwd = repo({"package.json": {"private": True}, "src/modules/booking/index.ts": "",
                 "src/modules/users/index.ts": ""})
     assert "Domain:" not in run(cwd)
-    assert local_settings(cwd) is None
+    assert shared_packs(cwd) == set() and local_settings(cwd) is None
 
 
 def test_workplace_opt_out_is_respected_and_agent_still_enabled():

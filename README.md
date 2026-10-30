@@ -24,8 +24,9 @@ Install the role you are, then reload. A role brings its dependencies with it:
 ```text
 /plugin install dev@harness        # every developer: plan, build, fix, review (brings core, plan, review, ship, progress)
 /plugin install harness@harness    # the whole process kit: all eight general plugins
-# role packs (frontend, backend, mobile, devops, ai) and the workplace domain pack are turned on per repo by core's repo-profile hook;
-# to force one: /plugin install frontend@harness
+# role packs (frontend, backend, mobile, devops, ai) and the workplace domain pack are turned on per repo by core's repo-profile hook,
+# which also writes the repo's .claude/settings.json (kit marketplace, dev, packs): commit it and teammates get the kit.
+# A repo with any *@harness: false in its settings is left out. To force a pack: /plugin install frontend@harness
 /reload-plugins
 ```
 
