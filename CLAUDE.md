@@ -57,6 +57,8 @@ Behaviour evals (real model, paid, not in check.sh): `bash scripts/eval-plugin.s
 
 Upstream freshness (network, warn-only, not in check.sh): `bash scripts/check-upstream.sh` prints the latest npm version of each package in `scripts/upstream.json` beside the "checked against … on <date>" of every reference citing it, and flags references older than 30 days. Run it before touching the `agent` plugin's vendor guidance; re-date a reference only after re-reading its vendor source.
 
+Deploy the docs site to Vercel production (`deploy prod`, `release site`): `bash scripts/release-site.sh`, after the user confirms. Never `vercel --prod` — git auto-deploy is off (`vercel.json`) and releases go only through the Deploy Hook in `VERCEL_DEPLOY_HOOK_URL`; if the shell lacks it, run `source ~/.zshrc && bash scripts/release-site.sh`, and never write the URL into a file.
+
 Versions: every plugin stays at `1.0.0` until the kit is published — never bump a `version` on a change. After merging, reinstall with `bash scripts/install.sh` (it uninstalls and reinstalls every plugin, since an unchanged version keeps the old cached copy).
 
 Release (only once published): bump `version` in the changed plugins' `plugin.json` (a GitHub install compares versions on `/plugin update`), merge, then `claude plugin tag plugins/<plugin> --push` → tag `<plugin>--v<version>`.
