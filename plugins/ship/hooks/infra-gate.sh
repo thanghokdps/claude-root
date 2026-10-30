@@ -326,8 +326,9 @@ for seg in segs:
             ask("a variable set on this line may hold a terraform/kubectl/helm command for a later command; run the tool directly.")
         continue
     head = os.path.basename(raw[0])
-    if head.startswith("$") or (head == "printf" and "-v" in raw[1:3]):
-        # `$X …` runs whatever the variable holds; `printf -v X` builds such a variable from escapes
+    toks = unwrap(raw)
+    if any("$" in t or "`" in t for t in (raw[0], toks[0] if toks else "")) or (head == "printf" and "-v" in raw[1:3]):
+        # `$X …` or `sudo $X …` runs whatever the variable holds; `printf -v X` builds such a variable from escapes
         ask(f"{head} runs or builds a command the gate cannot read; run the tool directly.")
         continue
     if head == "eval" or head == "xargs" or (head in SHELLS and any(a in ("-c", "-lc", "-ic") for a in raw[1:3])):
@@ -338,7 +339,6 @@ for seg in segs:
         # bash script.sh, source x, or a pipe whose right-hand side is a shell: the command text is not readable here.
         ask(f"{head} runs a script or stdin that mentions terraform/kubectl/helm; the gate cannot read it — confirm what it applies.")
         continue
-    toks = unwrap(raw)
     if not toks:
         continue
     tool = os.path.basename(toks[0])
