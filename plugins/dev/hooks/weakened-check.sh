@@ -5,6 +5,8 @@
 #   - a deleted test file, or a kept test file that loses more assertion lines than it gains
 #   - coverageThreshold / fail_under / --cov-fail-under lowered (also a branches|functions|lines|statements key
 #     in a jest/vitest/nyc/c8 config), max-warnings raised
+#   - CONSTRAINTS.md (written by /constraints): a numbered row loosened (≥ lowered, ≤ raised) or removed, a row added
+#     under ## Exceptions, a Floor bullet removed
 # Docs (.md, .txt, …) only mention patterns, so their added lines are not read for suppressions or skips.
 # Tightening is silent. Diff walk ported from addyosmani/agent-skills constraint-driven-development floor-guard.md.
 command -v python3 >/dev/null 2>&1 || exit 0
@@ -142,6 +144,58 @@ for f, n, text in removed:
         now = next((v for g, _, t in added if g == f for k, v in METRIC.findall(t) if k == metric), None)
         if now is not None and float(now) < float(was):
             flag("threshold-loosened", f, n, f"{metric} {was} -> {now}: {text}")
+
+# CONSTRAINTS.md is the bar itself: loosening it is the cheapest road to green, so it asks like a config threshold.
+CONSTRAINTS = re.compile(r"(?:^|/)CONSTRAINTS\.md$")
+ROW = re.compile(r"^\s*\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|")  # first two cells: Dimension/Metric/ID, Rule/Today/Rule
+NUMBER = re.compile(r"(\d+(?:\.\d+)?)")
+
+
+def section_of(f, n, lines):
+    # the nearest ## heading above the line, read from the file as it was before the commit
+    for i in range(min(n, len(lines)) - 1, -1, -1):
+        h = re.match(r"^#{1,6}\s+(.+)", lines[i])
+        if h:
+            return h.group(1).strip().lower()
+    return ""
+
+
+for f in {f for f, _, _ in removed + added if CONSTRAINTS.search(f)}:
+    old = (git("show", f"HEAD:{f}") or "").split("\n")
+    cur = (git("show", f":{f}", env=env) if not commit_all else None)
+    if cur is None:
+        try:
+            cur = open(os.path.join(cwd, f), encoding="utf-8").read()
+        except OSError:
+            cur = ""
+    cur = cur.split("\n")
+    new_lines = [(n, t) for g, n, t in added if g == f]
+    new_rows = {ROW.match(t).group(1).lower(): ROW.match(t).group(2) for _, t in new_lines if ROW.match(t)}
+    for g, n, text in removed:
+        if g != f:
+            continue
+        sec = section_of(f, n, old)
+        row = ROW.match(text)
+        if row and "enforced" in sec:
+            key, rule = row.group(1).lower(), row.group(2)
+            if key not in new_rows:
+                flag("constraint-removed", f, n, text)
+                continue
+            was_n, now_n = NUMBER.search(rule), NUMBER.search(new_rows[key])
+            if was_n and now_n and was_n.group(1) != now_n.group(1):
+                a, b = float(was_n.group(1)), float(now_n.group(1))
+                floor = bool(re.search(r"≥|>=|\bmin\b|at least", rule))
+                ceiling = bool(re.search(r"≤|<=|\bmax\b|at most|\b0\b", rule))
+                if (floor and b < a) or (ceiling and not floor and b > a) or not (floor or ceiling):
+                    flag("constraint-loosened", f, n, f"{was_n.group(1)} -> {now_n.group(1)}: {text}")
+        elif "floor" in sec and re.match(r"^\s*[-*]\s+\S", text) and text.strip() not in {t.strip() for _, t in new_lines}:
+            flag("constraint-removed", f, n, text)
+    for n, text in new_lines:
+        row = ROW.match(text)
+        if not row or set(row.group(1)) <= set("-: ") or row.group(1).lower() in ("id", "dimension", "metric"):
+            continue
+        if "exception" in section_of(f, n, cur) and text.strip() not in {t.strip() for t in old}:
+            flag("constraint-exception-added", f, n, text)
 
 if findings:
     shown = findings[:10] + ([f"… and {len(findings) - 10} more"] if len(findings) > 10 else [])
