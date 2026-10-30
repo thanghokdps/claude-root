@@ -183,7 +183,7 @@ def test_git_is_inert_only_for_safe_subcommands():
                 "git fetch --upload-pack='terraform apply -var-file=prod.tfvars' origin", "git push -u origin x --receive-pack='kubectl apply -f k8s/ -n production'",
                 "git --exec-path=/tmp/x log terraform apply", "git -C rebase log -x 'terraform apply -var-file=prod.tfvars'"):
         assert gate(path, cmd)[0] == "ask", cmd
-    assert gate(path, "git -C /tmp/repo log --grep 'terraform apply'")[0] == "allow"  # -C takes a value, log is the verb
+    assert gate(path, "git -C /tmp/repo log --grep 'terraform apply'")[0] == "ask"  # -C is not on the inert option list
 
 
 def test_quoted_substitution_restores_the_quote_and_unbalanced_quotes_ask():
@@ -210,7 +210,7 @@ def test_inner_parens_cannot_close_the_substitution_early():
 def test_git_unknown_global_options_are_not_inert():
     path = repo()
     assert gate(path, "git --odd-opt log 'terraform apply'")[0] == "ask"
-    assert gate(path, "git --attr-source=x log 'terraform apply'")[0] == "allow"  # known value option, inline form
+    assert gate(path, "git --attr-source=x log 'terraform apply'")[0] == "ask"  # any option off the short list asks
     assert gate(path, "git --no-pager log --grep 'kubectl apply'")[0] == "allow"
     assert gate(path, "git --config=alias.a='!terraform apply' a")[0] == "ask"
 
@@ -230,6 +230,18 @@ def test_git_abbreviations_and_any_variable_are_not_inert():
     assert gate(path, "PAGER='kubectl apply -f k8s/ -n production' git log")[0] == "ask"
     assert gate(path, "EDITOR='helm upgrade api charts/api -n production' git commit")[0] == "ask"
     assert gate(path, "git log --oneline -- docs/terraform-apply.md")[0] == "allow"
+    # short flags bundled or glued to a value, and abbreviations, are simply not on the option list
+    assert gate(path, "git log -qx'terraform apply -var-file=prod.tfvars'")[0] == "ask"
+    assert gate(path, "git commit -uno -m 'terraform apply'")[0] == "ask"
+
+
+def test_line_continuations_and_deferred_variables():
+    path = repo()
+    assert gate(path, 'echo "$(true \\\n); terraform apply -var-file=prod.tfvars"')[0] != "allow"  # `\<newline>` vanishes
+    assert gate(path, "terraform \\\n  apply -var-file=prod.tfvars")[0] == "deny"
+    assert gate(path, "X='terraform apply -var-file=prod.tfvars'; git log")[0] == "ask"  # set here, used later
+    assert gate(path, "export X='kubectl apply -f k8s/ -n production'")[0] == "ask"
+    assert gate(path, 'echo "`echo \\`terraform apply -var-file=prod.tfvars\\``"')[0] == "ask"  # nested backticks
 
 
 def test_config_defines_production_names():
