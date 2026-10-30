@@ -18,6 +18,7 @@ The kit is one marketplace, `harness`, with one plugin per role. Install the rol
 | [`frontend`](frontend/README.md) | Role pack: web UI, enabled per repo | `ui-feature` `design-ui` + agent `frontend-engineer` | — | progress, dev |
 | [`backend`](backend/README.md) | Role pack: server side, enabled per repo | `api-endpoint` `db-change` `api-client` + agent `backend-engineer` | — | progress, dev |
 | [`ship`](ship/README.md) | Land and release | `finish-branch` `ci-triage` `release-checklist` `write-migration` `incident` `sync-remote` | `release-gate` | core |
+| [`mobile`](mobile/README.md) | Role pack: React Native / Expo screens, enabled per repo | `mobile-feature` + agent `mobile-engineer` | — | progress, dev |
 | [`ai`](ai/README.md) | Role pack: AI assistants on CopilotKit · AG-UI with Mastra, LangChainJS or LangGraph, enabled per repo | `agent-architect` `agent-feature` `agent-tool` `agent-hitl` `agent-graph` `agent-frontend` `agent-design-ui` `agent-rag` `agent-evals` `agent-verify-turn` `agent-security` `agent-prompt-review` + agent `ai-engineer` | — | progress, dev |
 | [`workplace`](workplace/README.md) | Domain pack for HR / workplace apps, enabled per repo | `workplace-review` | — | progress |
 | [`lead`](lead/README.md) | Improve the process | `retro` `diagnose-session` `writing-skills` | — | core |
@@ -35,7 +36,7 @@ Each skill is a Markdown prompt program in `plugins/<plugin>/skills/<name>/SKILL
 | Build a feature, or work a ticket by id | just describe it · `/feature` · `/ticket <id>` | dev |
 | Fix a bug that keeps coming back | `/fix-bug` (locks the reproducing test) | dev |
 | Add an endpoint · a table · a third-party API client | `/api-endpoint` · `/db-change` · `/api-client` | backend |
-| Add a React screen | `/ui-feature` | frontend |
+| Add a React screen · a React Native screen | `/ui-feature` · `/mobile-feature` | frontend · mobile |
 | Match a Figma design | `/design-ui` (any page) · `/agent-design-ui` (the chat) | frontend · ai |
 | Prove the work is done | `/verify-done` · `/checkpoint` | core · dev |
 | Review before the PR, then answer the review | `/review-checklist` · `/blast-radius` · `/resolve-pr-feedback` | review |
@@ -50,7 +51,7 @@ Each skill is a Markdown prompt program in `plugins/<plugin>/skills/<name>/SKILL
 
 ```text
 design   /kickoff or /brainstorming → design.md → /grill → /writing-plans → PLAN.md (a verify command per task)
-build    PLAN.md → /feature dispatches each slice to its pack's engineer (backend: api-endpoint, db-change, api-client · frontend: ui-feature, design-ui · ai: agent-*) → /checkpoint
+build    PLAN.md → /feature dispatches each slice to its pack's engineer (backend: api-endpoint, db-change, api-client · frontend: ui-feature, design-ui · mobile: mobile-feature · ai: agent-*) → /checkpoint
 prove    /verify-done → /review-checklist (+ /blast-radius on shared code) → /docs-sync → /finish-branch
 agent    /agent-architect → ADR + scaffold → /agent-feature → agent-tool · agent-hitl · agent-graph · agent-frontend → /agent-verify-turn → /agent-evals → /agent-security
 end      /compact (handoff for the next session) · /compound (lessons to docs/solutions/)

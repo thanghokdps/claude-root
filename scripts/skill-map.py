@@ -17,11 +17,12 @@ import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLUGINS = os.path.join(ROOT, "plugins")
-ORDER = ["progress", "core", "plan", "review", "dev", "ship", "frontend", "backend", "ai", "lead", "guards"]
+ORDER = ["progress", "core", "plan", "review", "dev", "ship", "frontend", "backend", "mobile", "ai", "lead", "guards"]
 ROLE = {
     "progress": "live ✅ checklist", "core": "session + project basics", "plan": "design before code",
     "review": "diffs, PRs, impact", "dev": "build, fix, test-first", "ship": "release + CI",
-    "frontend": "role pack: web UI", "backend": "role pack: server side", "ai": "role pack: AI assistants",
+    "frontend": "role pack: web UI", "backend": "role pack: server side", "mobile": "role pack: React Native",
+    "ai": "role pack: AI assistants",
     "lead": "retro, skill authoring", "guards": "opt-in hooks",
 }
 
@@ -124,7 +125,7 @@ def main():
                   "how": "Each role plugin can also be installed alone; its dependencies come with it.",
                   "source": "plugins/harness/.claude-plugin/plugin.json"})
     for p in ORDER:
-        if not any(e["to"] == f"p-{p}" for e in edges if e["id"].startswith("dep-")) or p in ("guards", "frontend", "backend", "ai"):
+        if not any(e["to"] == f"p-{p}" for e in edges if e["id"].startswith("dep-")) or p in ("guards", "frontend", "backend", "mobile", "ai"):
             edges.append({"id": f"dep-harness-{p}", "from": "harness", "to": f"p-{p}", "label": "installs"})
 
     start = ["brainstorming", "writing-plans", "project-init", "feature", "review-checklist", "finish-branch"]
