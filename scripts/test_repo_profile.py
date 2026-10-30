@@ -121,7 +121,7 @@ def test_role_packs_follow_the_stack():
              ({"package.json": {"dependencies": {"react": "19", "vite": "6"}}}, {"frontend"}),
              ({"pyproject.toml": '[project]\ndependencies = ["fastapi"]\n'}, {"backend"}),
              ({"go.mod": "module x\n"}, {"backend"}),
-             ({"package.json": {"dependencies": {"expo": "52", "react-native": "0.76", "react": "19"}}}, set()),
+             ({"package.json": {"dependencies": {"expo": "52", "react-native": "0.76", "react": "19"}}}, {"mobile"}),
              ({"package.json": {"dependencies": {"typescript": "5"}}}, set()))
     for files, want in cases:
         cwd = repo(files)
@@ -133,7 +133,7 @@ def test_role_packs_follow_the_stack():
 def test_rn_alone_is_mobile_not_frontend():
     cwd = repo({"package.json": {"dependencies": {"expo": "52", "react-native": "0.76", "react": "19"}}})
     ctx = run(cwd)
-    assert "Roles: mobile." in ctx and "/ui-feature" not in ctx, ctx
+    assert "Roles: mobile." in ctx and "/mobile-feature" in ctx and "/ui-feature" not in ctx, ctx
 
 
 def test_python_ai_repo_with_alembic():
@@ -237,7 +237,7 @@ def test_two_workplace_modules_enable_the_workplace_pack():
     cwd = repo(WORKPLACE_APPS)
     ctx = run(cwd)
     assert "Domain: workplace" in ctx and "/workplace-review" in ctx and "workplace@harness" in ctx, ctx
-    assert local_settings(cwd)["enabledPlugins"] == {"workplace@harness": True}
+    assert local_settings(cwd)["enabledPlugins"] == {"mobile@harness": True, "workplace@harness": True}
 
 
 def test_domain_marker_line_enables_the_workplace_pack():
@@ -267,7 +267,7 @@ def test_workplace_opt_out_is_respected_and_agent_still_enabled():
     cwd = repo(files)
     ctx = run(cwd)
     assert "Domain: workplace" in ctx and "AI assistant" in ctx, ctx
-    assert local_settings(cwd)["enabledPlugins"] == {"ai@harness": True}  # RN apps: mobile, no frontend pack yet
+    assert local_settings(cwd)["enabledPlugins"] == {"mobile@harness": True, "ai@harness": True}  # RN apps: mobile, not frontend
 
 
 def test_ticket_folder_is_mentioned():

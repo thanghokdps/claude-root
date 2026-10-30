@@ -1,0 +1,21 @@
+{
+  "name": "mobile",
+  "version": "1.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "Mobile role pack: the mobile-engineer agent /feature dispatches React Native / Expo screens to, mobile-feature (navigation, platform states, RN Testing Library, simulator check), React Native rules. Enabled per repo by core's repo-profile hook.",
+  "keywords": [
+    "mobile",
+    "react-native",
+    "expo",
+    "ios",
+    "android"
+  ],
+  "dependencies": [
+    "progress",
+    "dev"
+  ]
+}

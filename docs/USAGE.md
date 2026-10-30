@@ -61,7 +61,7 @@ Check with `claude plugin list` that the role and its dependencies are `✔ enab
 
 **MCP servers** the skills use when present (`claude mcp list`): Playwright (`claude mcp add playwright -- npx -y @playwright/mcp@latest`) so `/design-ui`, `/ui-feature` and `/agent-frontend` can check the page in a real browser at desktop and narrow widths; Figma only for `/design-ui` and `/agent-design-ui` from a Figma link.
 
-**Packs.** The role packs `frontend`, `backend`, `ai` and the domain pack `workplace` are not in the `harness` bundle. Installed by `scripts/install.sh` they stay off at user scope, and core's `repo-profile` hook enables the ones a repo needs (from its manifests: a web framework, a server framework or ORM, `@copilotkit/*` / `langgraph`, or a `Domain: workplace` line in the project docs) by writing `.claude/settings.local.json`, effective next session. Installing a pack by hand enables it everywhere, which is fine on a machine used for one kind of work.
+**Packs.** The role packs `frontend`, `backend`, `mobile`, `ai` and the domain pack `workplace` are not in the `harness` bundle. Installed by `scripts/install.sh` they stay off at user scope, and core's `repo-profile` hook enables the ones a repo needs (from its manifests: a web framework, a server framework or ORM, `@copilotkit/*` / `langgraph`, or a `Domain: workplace` line in the project docs) by writing `.claude/settings.local.json`, effective next session. Installing a pack by hand enables it everywhere, which is fine on a machine used for one kind of work.
 
 ## 3. Install the global rules (optional)
 
@@ -93,7 +93,7 @@ bash <kit-dir>/plugins/core/scripts/init.sh [project-dir]                 # lean
 STANDALONE=1 bash <kit-dir>/plugins/core/scripts/init.sh [project-dir]    # also copies rules, skills, commands, agents and hooks into .claude/
 ```
 
-Standalone is for a repo shared with people who do not have the plugins. It also copies the project commands (`/task`, `/auto`, `/workflow`), the project agents, and the stack bundle that matches (`react-native`: `/verify-feature`, `/gen-tests`, `/figma-to-screen`; `nextjs`; `python`). Stack signals it detects: `tsconfig.json` or `typescript` (TypeScript), `react`, `jest`, `next` (Next.js), `requirements.txt` or `pyproject.toml` (Python), `fastapi`, `langgraph`.
+Standalone is for a repo shared with people who do not have the plugins. It also copies the project commands (`/task`, `/auto`, `/workflow`), and the project agents (framework rules live in the role packs, which the standalone copy does not include). Stack signals it detects: `tsconfig.json` or `typescript` (TypeScript), `react`, `jest`, `next` (Next.js), `requirements.txt` or `pyproject.toml` (Python), `fastapi`, `langgraph`.
 
 What you get:
 

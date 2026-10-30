@@ -6,7 +6,7 @@
   },
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
-  "description": "The general kit: installs the eight role plugins. Role and domain packs (frontend, backend, ai, workplace) stay separate so they can be off at user scope and enabled per repo.",
+  "description": "The general kit: installs the eight role plugins. Role and domain packs (frontend, backend, mobile, ai, workplace) stay separate so they can be off at user scope and enabled per repo.",
   "keywords": [
     "bundle"
   ],
