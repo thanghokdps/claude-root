@@ -275,6 +275,71 @@ def test_new_opted_out_repo_enables_packs_locally():
     assert shared_settings(cwd) is None
 
 
+RULES = os.path.join(ROOT, "plugins", "core", "rules")
+CORE_RULES = sorted(f for f in os.listdir(RULES) if f.endswith(".md"))
+
+
+def repo_rules(cwd):
+    p = os.path.join(cwd, ".claude", "rules")
+    return sorted(os.listdir(p)) if os.path.isdir(p) else []
+
+
+def test_set_up_repo_gets_the_core_rules():
+    cwd = repo({"package.json": AI_PKG})
+    ctx = run(cwd)
+    assert repo_rules(cwd) == CORE_RULES, repo_rules(cwd)
+    assert open(os.path.join(cwd, ".claude", "rules", "git.md")).read() == open(os.path.join(RULES, "git.md")).read()
+    assert ".claude/rules" in ctx and "uncommitted" in ctx, ctx
+    assert "stacks" not in repo_rules(cwd)
+
+
+def test_new_repo_gets_the_core_rules_too():
+    cwd = repo()
+    assert ".claude/rules" in run(cwd)
+    assert repo_rules(cwd) == CORE_RULES
+
+
+def test_a_team_rule_with_the_same_name_is_kept():
+    cwd = repo({"package.json": AI_PKG, ".claude/rules/git.md": "# team git rule\n"})
+    run(cwd)
+    assert open(os.path.join(cwd, ".claude", "rules", "git.md")).read() == "# team git rule\n"
+    assert repo_rules(cwd) == CORE_RULES
+
+
+def test_rules_the_user_config_already_loads_are_not_copied():
+    cfg = config_dir()
+    os.makedirs(os.path.join(cfg, "rules"))
+    for name in CORE_RULES:
+        open(os.path.join(cfg, "rules", name), "w").close()
+    cwd = repo({"package.json": AI_PKG})
+    ctx = run(cwd, cfg)
+    assert repo_rules(cwd) == [] and ".claude/rules" not in ctx, ctx
+
+
+def test_opted_out_repo_gets_no_rules():
+    cwd = repo({"package.json": AI_PKG, ".claude/settings.json": {"enabledPlugins": {"ai@harness": False}}})
+    run(cwd)
+    assert repo_rules(cwd) == []
+
+
+def test_second_session_copies_no_rules():
+    cwd = repo({"package.json": AI_PKG})
+    run(cwd)
+    os.remove(os.path.join(cwd, ".claude", "rules", "testing.md"))
+    ctx = run(cwd)
+    assert "testing.md" in repo_rules(cwd) and "1 core rule" in ctx, ctx
+    assert "Wrote" not in run(cwd)
+
+
+def test_symlinked_rules_folder_is_never_written_through():
+    outside = tempfile.mkdtemp(prefix="repo-profile-outside-")
+    cwd = repo({"package.json": AI_PKG})
+    os.makedirs(os.path.join(cwd, ".claude"))
+    os.symlink(outside, os.path.join(cwd, ".claude", "rules"))
+    run(cwd)
+    assert os.listdir(outside) == []
+
+
 def test_off_switch_prints_nothing():
     assert run(repo(), env={"CLAUDE_REPO_PROFILE": "0"}) == ""
     cwd = repo({"package.json": AI_PKG})
