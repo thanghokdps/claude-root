@@ -215,6 +215,7 @@ Hook and CI changes take effect in a new session, not the current one. Plugin ve
 |---|---|
 | `/project-init` | once per repo, and after a big architecture change |
 | `/sync-memory` | start of a session on a team project |
+| `/breakdown <requirement>` | a requirement or epic → estimated tasks on GitLab / Jira / GitHub |
 | `/feature <desc>` · `/ticket <id>` | a new capability · a tracker ticket |
 | `/fix-bug <symptom>` | something broken, failing or slow |
 | `/tdd` | build test-first from a plan task |

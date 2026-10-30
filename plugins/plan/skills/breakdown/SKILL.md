@@ -38,7 +38,7 @@ Keep the list short: a requirement that yields more than ~8 tasks is an epic; pr
 
 ## Step 3 — Estimate
 
-Ask once which unit the team uses (hours, days or story points) and whether estimates include review and QA; remember the answer in `.claude/docs/team.md` under `## Estimation` for the next run.
+Ask once which unit the team uses (hours, days or story points) and whether estimates include review and QA; remember the answer in `.claude/docs/team.md` under `## Estimation` for the next run. Read the calibration line `/retro` (lead, if installed) leaves there (actual ÷ estimate over the last window) and apply it before showing the table.
 
 Estimate per task from evidence, never from the title:
 - Count the files and tests the task touches (Step 1's search tells you), the migrations, the new contracts, the UI states.
@@ -64,7 +64,7 @@ The body of every issue holds: the requirement quoted, the acceptance criteria, 
 
 ## Step 5 — Hand over
 
-Print the order to work them: `/ticket <id>` (dev, if installed) per task, in dependency order; parallel tickets run in separate worktrees. Record the breakdown in `docs/tickets/README.md` (one line per task: id, title, estimate) when `docs/tickets/` exists, so the estimate can be compared with the real time at `/retro` (lead, if installed).
+Print the order to work them: `/ticket <id>` (dev, if installed) per task, in dependency order; parallel tickets run in separate worktrees. Record the breakdown in `docs/tickets/README.md` as a table `| id | title | estimate | actual | note |` (one row per task, `actual` empty; create the file when missing). `/ticket` fills `actual` when the task ships and `/retro` (lead, if installed) compares the two columns, so the next estimate is calibrated on this team, not on a guess.
 
 ---
 
