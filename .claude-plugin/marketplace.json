@@ -1,6 +1,6 @@
 {
   "name": "harness",
-  "description": "Claude Code plugins in two layers — the process every role shares (plan, dev, review, ship, lead, guards, bundled as harness) and role packs enabled per repo (frontend, backend, mobile, ai, workplace domain).",
+  "description": "Claude Code plugins in two layers — the process every role shares (plan, dev, review, ship, lead, guards, bundled as harness) and role packs enabled per repo (frontend, backend, mobile, devops, ai, workplace domain).",
   "owner": {
     "name": "Thang Ho Quang"
   },
@@ -43,12 +43,17 @@
     {
       "name": "ship",
       "source": "./plugins/ship",
-      "description": "Land and release: finish-branch, ci-triage, release-checklist, write-migration."
+      "description": "Land and release: finish-branch, ci-triage, release-checklist, write-migration, incident, sync-remote; the release-gate and infra-gate hooks."
     },
     {
       "name": "mobile",
       "source": "./plugins/mobile",
       "description": "Mobile role pack: the mobile-engineer agent, mobile-feature (React Native / Expo screens, platform states, simulator check), React Native rules. Enabled per repo by core's repo-profile hook."
+    },
+    {
+      "name": "devops",
+      "source": "./plugins/devops",
+      "description": "DevOps role pack: the devops-engineer agent, pipeline (GitHub Actions / GitLab CI), container (Dockerfile, compose), infra-change (Terraform, Kubernetes, Helm with plan, review, approval, rollback), with their rules. Enabled per repo by core's repo-profile hook; the infra-gate hook lives in ship."
     },
     {
       "name": "ai",

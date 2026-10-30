@@ -121,6 +121,8 @@ def test_role_packs_follow_the_stack():
              ({"package.json": {"dependencies": {"react": "19", "vite": "6"}}}, {"frontend"}),
              ({"pyproject.toml": '[project]\ndependencies = ["fastapi"]\n'}, {"backend"}),
              ({"go.mod": "module x\n"}, {"backend"}),
+             ({"package.json": {"private": True}, ".github/workflows/ci.yml": "on: push\n", "infra/main.tf": ""}, {"devops"}),
+             ({"package.json": {"dependencies": {"express": "4"}}, "Dockerfile": "FROM node\n"}, {"backend", "devops"}),
              ({"package.json": {"dependencies": {"expo": "52", "react-native": "0.76", "react": "19"}}}, {"mobile"}),
              ({"package.json": {"dependencies": {"typescript": "5"}}}, set()))
     for files, want in cases:
@@ -128,6 +130,12 @@ def test_role_packs_follow_the_stack():
         run(cwd)
         got = {k.split("@")[0] for k in (local_settings(cwd) or {}).get("enabledPlugins", {})}
         assert got == want, (files, got)
+
+
+def test_devops_repo_prefers_its_skills():
+    cwd = repo({"package.json": {"private": True}, "k8s/deploy.yaml": "", "charts/api/Chart.yaml": ""})
+    ctx = run(cwd)
+    assert "Roles: devops." in ctx and "/infra-change" in ctx and "/pipeline" in ctx, ctx
 
 
 def test_rn_alone_is_mobile_not_frontend():

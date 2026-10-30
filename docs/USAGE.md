@@ -61,7 +61,7 @@ Check with `claude plugin list` that the role and its dependencies are `✔ enab
 
 **MCP servers** the skills use when present (`claude mcp list`): Playwright (`claude mcp add playwright -- npx -y @playwright/mcp@latest`) so `/design-ui`, `/ui-feature` and `/agent-frontend` can check the page in a real browser at desktop and narrow widths; Figma only for `/design-ui` and `/agent-design-ui` from a Figma link.
 
-**Packs.** The role packs `frontend`, `backend`, `mobile`, `ai` and the domain pack `workplace` are not in the `harness` bundle. Installed by `scripts/install.sh` they stay off at user scope, and core's `repo-profile` hook enables the ones a repo needs (from its manifests: a web framework, a server framework or ORM, `@copilotkit/*` / `langgraph`, or a `Domain: workplace` line in the project docs) by writing `.claude/settings.local.json`, effective next session. Installing a pack by hand enables it everywhere, which is fine on a machine used for one kind of work.
+**Packs.** The role packs `frontend`, `backend`, `mobile`, `devops`, `ai` and the domain pack `workplace` are not in the `harness` bundle. Installed by `scripts/install.sh` they stay off at user scope, and core's `repo-profile` hook enables the ones a repo needs (from its manifests: a web framework, a server framework or ORM, `@copilotkit/*` / `langgraph`, or a `Domain: workplace` line in the project docs) by writing `.claude/settings.local.json`, effective next session. Installing a pack by hand enables it everywhere, which is fine on a machine used for one kind of work.
 
 ## 3. Install the global rules (optional)
 

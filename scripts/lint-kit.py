@@ -276,7 +276,7 @@ def check_init_sources():
 
 
 # Role packs share one shape so /feature can dispatch to any of them the same way; grows one pack per PR.
-ROLE_PACKS = ("frontend", "backend", "mobile", "ai")
+ROLE_PACKS = ("frontend", "backend", "mobile", "devops", "ai")
 ROLE_PACK_DEPS = ["progress", "dev"]
 
 

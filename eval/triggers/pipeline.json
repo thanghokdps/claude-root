@@ -1,0 +1,23 @@
+{
+  "skill": "pipeline",
+  "positive": [
+    {
+      "prompt": "thêm job CI chạy test cho mỗi pull request trên GitHub Actions",
+      "top_k": 3
+    },
+    {
+      "prompt": "the pipeline is slow, cache node_modules and pin the actions by SHA",
+      "top_k": 3
+    },
+    {
+      "prompt": "add a deploy step to the GitLab CI that only runs from main",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "the build is red after my last commit, read the CI log and tell me why",
+      "owner": "ci-triage"
+    }
+  ]
+}

@@ -8,7 +8,8 @@
 # A role or domain pack the repo needs and that is not on gets enabled in .claude/settings.local.json (personal,
 # excluded from git), effective next session: frontend@harness for a web UI framework (not React Native alone),
 # backend@harness for a server framework, an ORM, go or rust, mobile@harness for react-native / expo / eas.json,
-# ai@harness for an AI assistant, workplace@harness for a
+# devops@harness for a Dockerfile, compose file, CI workflow, *.tf, k8s/ or Chart.yaml, ai@harness for an AI
+# assistant, workplace@harness for a
 # `Domain: workplace` line in docs/requirements.md or .claude/docs/index.md, or two or more HR/workplace module
 # folders (time off, booking, reservation, approval, maintenance, meal, lunch, attendance) under apps/,
 # src/{modules,features}/ or apps/*/src/{api,modules}/. An explicit false in the project or local settings is never
@@ -126,9 +127,14 @@ workplace = domain_marked("workplace") or sum(1 for m in modules if re.search(
 # Role and domain packs stay off at user scope (install.sh) and are turned on here for the repos that need them.
 frontend = web
 backend_pack = backend or bool(db) or "go" in manifests or "rust" in manifests
-roles = [r for r, on in (("frontend", frontend), ("backend", backend_pack), ("mobile", mobile), ("ai", ai)) if on]
+devops = bool(glob.glob(at("Dockerfile*")) or glob.glob(at("docker-compose*")) or glob.glob(at("compose.y*ml"))
+             or glob.glob(at(".github", "workflows", "*.y*ml")) or os.path.exists(at(".gitlab-ci.yml"))
+             or glob.glob(at("*.tf")) or glob.glob(at("*", "*.tf")) or os.path.isdir(at("k8s"))
+             or glob.glob(at("*", "Chart.yaml")) or os.path.exists(at("Chart.yaml")))
+roles = [r for r, on in (("frontend", frontend), ("backend", backend_pack), ("mobile", mobile), ("devops", devops),
+                         ("ai", ai)) if on]
 packs = [p for p, on in (("frontend@harness", frontend), ("backend@harness", backend_pack), ("mobile@harness", mobile),
-                         ("ai@harness", ai), ("workplace@harness", workplace)) if on]
+                         ("devops@harness", devops), ("ai@harness", ai), ("workplace@harness", workplace)) if on]
 
 
 def enabled_at(path, plugin):
@@ -201,6 +207,8 @@ if web:
     prefer.append("UI → /ui-feature, from a Figma → /design-ui")
 if mobile:
     prefer.append("screens → /mobile-feature, releases → /release-checklist")
+if devops:
+    prefer.append("CI → /pipeline, images → /container, terraform / k8s / helm → /infra-change")
 if os.path.isdir(at("docs", "tickets")):
     prefer.append("tracker work → /ticket <id>")
 
