@@ -147,6 +147,13 @@ def test_loosened_constraints_file_asks():
     r = repo()
     git(r, "rm", "-q", "CONSTRAINTS.md")
     assert "constraint-removed" in reason(hook(r))
+    r = repo()  # commit -a reads the work tree: a file the hook refuses to read (over 1 MB) is not clean
+    write(r, "CONSTRAINTS.md", c + "x" * 1_100_000 + "\n")
+    assert "constraint-unreadable" in reason(hook(r, "git commit -am x"))
+    r = repo()  # a symlink in its place shows as delete + add
+    os.remove(os.path.join(r, "CONSTRAINTS.md"))
+    os.symlink("/dev/null", os.path.join(r, "CONSTRAINTS.md"))
+    assert "constraint-" in reason(hook(r, "git commit -am x"))
 
 
 def test_tightened_or_reworded_constraints_are_silent():

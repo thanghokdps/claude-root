@@ -50,8 +50,8 @@ blank = [(f"filter.{d}.{k}", v) for d in drivers for k, v in (("clean", ""), ("s
 env = {**os.environ, "GIT_CONFIG_COUNT": str(len(blank))}
 for i, (k, v) in enumerate(blank):
     env[f"GIT_CONFIG_KEY_{i}"], env[f"GIT_CONFIG_VALUE_{i}"] = k, v
-diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv", "--no-renames",
-           "--ignore-submodules=all", "--submodule=short", env=env)  # a submodule's diff would read its own config; a rename is a delete + add
+diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv", "--no-renames", "--text",
+           "--ignore-submodules=all", "--submodule=short", env=env)  # a submodule's diff would read its own config; a rename is a delete + add; --text so a `binary` attribute cannot hide a change
 if not diff:
     sys.exit(0)
 
@@ -165,12 +165,12 @@ def worktree_text(f):
     p = os.path.join(cwd, f)
     try:
         if not os.path.isfile(p) or os.path.islink(p) or os.lstat(p).st_size > 1_000_000:
-            return ""
+            return None
         fd = os.open(p, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
         with os.fdopen(fd, encoding="utf-8", errors="replace") as fh:
             return fh.read()
     except OSError:
-        return ""
+        return None
 
 
 for f in {f for f, _, _ in removed + added if CONSTRAINTS.search(f)}:
@@ -178,7 +178,11 @@ for f in {f for f, _, _ in removed + added if CONSTRAINTS.search(f)}:
         flag("constraint-removed", f, 0, "file deleted or renamed")
         continue
     old = (git("show", f"HEAD:{f}") or "").split("\n")
-    cur = (worktree_text(f) if commit_all else git("show", f":{f}", env=env) or "").split("\n")
+    cur = worktree_text(f) if commit_all else git("show", f":{f}", env=env)
+    if cur is None:  # unreadable is not clean: the bar cannot be checked, so the commit asks
+        flag("constraint-unreadable", f, 0, "could not read the new CONSTRAINTS.md (symlink, over 1 MB, or unreadable)")
+        continue
+    cur = cur.split("\n")
     new_lines = [(n, t) for g, n, t in added if g == f]
     new_rows = {ROW.match(t).group(1).lower(): ROW.match(t).group(2) for _, t in new_lines if ROW.match(t)}
     for g, n, text in removed:
