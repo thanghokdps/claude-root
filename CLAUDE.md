@@ -24,7 +24,8 @@ A **source library** and the `harness` marketplace of role plugins (local direct
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
     core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile, learn-capture hooks (always on; repo-profile enables the role packs frontend, backend, mobile, devops, ai and the domain pack workplace per repo) — plus scripts/init.sh and
                 everything it copies: templates/ memory/ rules/ (rules/*.md → ~/.claude/rules/; rules/stacks/ holds only typescript, javascript, jest) hooks/stacks/ → progress
-    plan        kickoff brainstorming grill domain-model writing-plans codebase-design → progress
+    plan        breakdown kickoff brainstorming grill domain-model writing-plans codebase-design → progress
+                breakdown: requirement → tasks with criteria + estimates → issues on GitHub/GitLab/Jira → /ticket each
     review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger repo-audit → progress
       dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint → core, plan, review
                 feature is the supervisor: one slice table, each slice dispatched to a role pack's <role>-engineer (sonnet)

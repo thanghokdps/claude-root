@@ -1,0 +1,27 @@
+{
+  "skill": "breakdown",
+  "positive": [
+    {
+      "prompt": "đây là requirement của khách, phân tích rồi tạo task trên GitLab giúp tôi",
+      "top_k": 3
+    },
+    {
+      "prompt": "break this epic down into Jira stories with estimates",
+      "top_k": 3
+    },
+    {
+      "prompt": "how long will the CSV export feature take? give me the tasks and story points",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "làm ticket 412",
+      "owner": "ticket"
+    },
+    {
+      "prompt": "turn the approved design.md into a PLAN.md",
+      "owner": "writing-plans"
+    }
+  ]
+}

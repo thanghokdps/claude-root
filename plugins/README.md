@@ -12,7 +12,7 @@ The kit is one marketplace, `harness`, with one plugin per role. Install the rol
 |---|---|---|---|---|
 | [`progress`](progress/README.md) | A skill's checklist and live ✅ progress; never blocks | — | `skill-progress` | — |
 | [`core`](core/README.md) | Session and project basics every role uses | `verify-done` `project-init` `docs-sync` `compact` `compound` `sync-memory` `btw` | `branch-guard` `secret-guard` `sensitive-path` `edit-guard` `step-limit` `repo-profile` `compact-advisor` `learn-capture` | progress |
-| [`plan`](plan/README.md) | Design before code | `kickoff` `brainstorming` `grill` `domain-model` `codebase-design` `writing-plans` | — | progress |
+| [`plan`](plan/README.md) | Analyse, split, estimate and design before code | `breakdown` `kickoff` `brainstorming` `grill` `domain-model` `codebase-design` `writing-plans` | — | progress |
 | [`review`](review/README.md) | Review a diff, a PR or a whole repo | `review-checklist` `review-diff` `blast-radius` `create-pr` `resolve-pr-feedback` `debt-ledger` `repo-audit` | — | progress |
 | [`dev`](dev/README.md) | Build and fix for every role; `/feature` dispatches slices to the role packs | `coordinator` `feature` `ticket` `fix-bug` `tdd` `resolve-question` `checkpoint` | `ticket-ledger` `ticket-gate` `test-lock` `weakened-check` `auto-decisions` | core, plan, review |
 | [`frontend`](frontend/README.md) | Role pack: web UI, enabled per repo | `ui-feature` `design-ui` + agent `frontend-engineer` | — | progress, dev |
@@ -33,6 +33,7 @@ Each skill is a Markdown prompt program in `plugins/<plugin>/skills/<name>/SKILL
 | I want to… | Skill | Plugin |
 |---|---|---|
 | Start a project from the documents we have | `/kickoff` → `/writing-plans` | plan |
+| Turn a requirement or epic into tracker tasks with estimates | `/breakdown` → `/ticket <id>` per task | plan → dev |
 | Design a feature before building it | `/brainstorming` → `/grill` → `/writing-plans` | plan |
 | Build a feature, or work a ticket by id | just describe it · `/feature` · `/ticket <id>` | dev |
 | Fix a bug that keeps coming back | `/fix-bug` (locks the reproducing test) | dev |
@@ -52,6 +53,7 @@ Each skill is a Markdown prompt program in `plugins/<plugin>/skills/<name>/SKILL
 ## How the skills hand off
 
 ```text
+intake   requirement → /breakdown → tasks with criteria and estimates on the tracker → /ticket <id> each
 design   /kickoff or /brainstorming → design.md → /grill → /writing-plans → PLAN.md (a verify command per task)
 build    PLAN.md → /feature dispatches each slice to its pack's engineer (backend: api-endpoint, db-change, api-client · frontend: ui-feature, design-ui · mobile: mobile-feature · devops: pipeline, container, infra-change · ai: agent-*) → /checkpoint
 prove    /verify-done → /review-checklist (+ /blast-radius on shared code) → /docs-sync → /finish-branch

@@ -24,6 +24,7 @@ Hard gates (always high-risk): auth/authz, data migration, security/audit, exter
 Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the tool exists; never block on it.
 
 ## Daily loop
+- Work arrives as a requirement → `/breakdown` (tasks with criteria and estimates on the tracker), then `/ticket <id>` per task; as a ticket id → `/ticket <id>` straight away.
 - One topic per session; resume instead of re-explaining. Bad edit → `Esc Esc` to rewind.
 - Parallel tickets → separate sessions in git worktrees, not one session juggling both.
 - Deep reasoning only where it pays: `ultrathink` in one prompt, `/effort` for the session. `ultracode` = dynamic workflow (fan-out), not deeper thinking.
