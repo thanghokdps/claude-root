@@ -29,6 +29,7 @@ python3 scripts/test_learn_capture.py
 python3 scripts/test_learn_promote.py
 python3 scripts/test_check_upstream.py
 python3 scripts/test_build_site.py
+python3 scripts/test_release_site.py
 python3 scripts/test_skill_map.py
 bash plugins/review/scripts/tests/run.sh
 python3 scripts/lint-kit.py
