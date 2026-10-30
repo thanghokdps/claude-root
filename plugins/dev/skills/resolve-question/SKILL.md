@@ -67,9 +67,10 @@ One line per answer, where the next reader looks: the ticket's `spec.md` § Deci
 ```markdown
 - <YYYY-MM-DD> <question> → <answer> (user)
 - <YYYY-MM-DD> <question> → <answer> (agent) · why: <the fact or rule it rests on, with its citation> · revert: <what to change to undo it>
+- <YYYY-MM-DD> <question> → <answer> (agent) · why: <…> · challenged: <the strongest argument against, and why it lost> · revert: <…>
 ```
 
-A fact keeps its citation. An `(agent)` line without `why:` and `revert:` is not a decision: `ticket-gate.sh` blocks a ticket's code commit on it.
+A fact keeps its citation. An `(agent)` line without `why:` and `revert:` is not a decision: `ticket-gate.sh` blocks a ticket's code commit on it. A debated choice (Step 5, during the build) also carries `challenged:`. The **Decided for you** list in the final reply repeats these lines with the labels exactly as written (`why:`, `challenged:`, `revert:`), never paraphrased ("Argument against", "To undo"), so the user and the hooks read the same record.
 
 **Done when:** every question has an answer with a citation or a recorded decision.
 
