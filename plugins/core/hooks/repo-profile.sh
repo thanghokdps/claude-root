@@ -183,11 +183,17 @@ if not manifests:
               else "run `claude plugin enable <pack> --scope local`")
     lines = []
     if off:
+        ai_hint = "ai@harness for LangChain / LangGraph / Mastra / CopilotKit / Langfuse, " if "ai@harness" in off else ""
         lines.append("REPO PROFILE: new repo, no manifest yet. Role packs off here: " + ", ".join(off) + ". Before "
-                     "scaffolding a stack, stop and tell the user which pack it needs (ai@harness for LangChain / "
-                     "LangGraph / Mastra / CopilotKit / Langfuse, frontend, backend, mobile, devops by stack), "
-                     f"{enable}, and ask them to type /reload-plugins (or start a new session) so its skills "
-                     "(e.g. /agent-architect) load.")
+                     f"scaffolding a stack, stop and tell the user which pack it needs ({ai_hint}frontend, backend, "
+                     f"mobile, devops by stack), {enable}, and ask them to type /reload-plugins (or start a new "
+                     "session) so its skills load.")
+    if is_on("ai@harness"):
+        # A session once hand-wrote an API-only chatbot here with ai on: the hint never named the skill that was loaded.
+        lines.append("REPO PROFILE: new repo, ai@harness is on. Any request to init, set up or scaffold a chatbot or AI "
+                     "assistant (LangChain, LangGraph, Mastra, CopilotKit, Langfuse; with or without features) goes "
+                     "through /agent-architect first; it builds a chat page that streams a real reply. Never "
+                     "hand-write the scaffold.")
     if setup_note(added or []):
         lines.append(setup_note(added or []))
     if lines:

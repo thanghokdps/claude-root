@@ -266,6 +266,13 @@ def test_new_repo_gets_the_kit_and_names_the_packs_that_are_off():
     s = shared_settings(cwd)
     assert s == {"extraKnownMarketplaces": {"harness": KIT_MARKETPLACE}, "enabledPlugins": {"dev@harness": True}}, s
     assert local_settings(cwd) is None
+    assert "/agent-architect" not in ctx, ctx
+
+
+def test_new_repo_with_ai_on_routes_a_chatbot_init_to_agent_architect():
+    ctx = run(repo(), config_dir({"ai@harness": True}))
+    assert "ai@harness is on" in ctx and "/agent-architect first" in ctx, ctx
+    assert "ai@harness for LangChain" not in ctx, ctx
 
 
 def test_new_opted_out_repo_enables_packs_locally():

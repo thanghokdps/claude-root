@@ -40,6 +40,18 @@
     {
       "prompt": "init chatbot empty features",
       "top_k": 3
+    },
+    {
+      "prompt": "init codebase chatbot asisstant empty features for me using langchain framework and tracing with langfuse",
+      "top_k": 3
+    },
+    {
+      "prompt": "init codebase chatbot assistant empty features using mastra and tracing with langfuse",
+      "top_k": 3
+    },
+    {
+      "prompt": "init codebase chatbot empty features with a custom langgraph StateGraph, tracing with langfuse",
+      "top_k": 3
     }
   ],
   "negative": [

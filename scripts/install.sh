@@ -7,6 +7,7 @@
 #      another source, e.g. GitLab, which is kept) and install every plugin into the plugin cache
 #   4. Migrate from the old copy-based install: move kit skills out of ~/.claude/skills and
 #      drop kit hook registrations from ~/.claude/settings.json (the plugin registers them now)
+#   5. Raise skillListingBudgetFraction to 0.03 so a newly enabled pack's skills keep their descriptions
 #
 # Undo: restore from the printed backup dir, then `claude plugin uninstall harness && claude plugin prune`.
 set -euo pipefail
@@ -101,10 +102,14 @@ done
 python3 - "$G/settings.json" "$KIT/plugins/guards/hooks" <<'PY'
 import json, os, sys
 path, hooks_dir = sys.argv[1], sys.argv[2]
-if not os.path.exists(path):
-    sys.exit(0)
 kit_hooks = {f for f in os.listdir(hooks_dir) if f.endswith(".sh")}
-s = json.load(open(path))
+s = json.load(open(path)) if os.path.exists(path) else {}
+# The skill listing gets 1% of context by default and drops the least-invoked skills' descriptions first, so a
+# pack just enabled lists as a bare name and never auto-triggers (code.claude.com/docs/en/skills § Skill
+# descriptions are cut short). The kit alone lists ~35k chars; a user's own value is never lowered.
+if s.get("skillListingBudgetFraction", 0) < 0.03:
+    s["skillListingBudgetFraction"] = 0.03
+    print("  settings.json: skillListingBudgetFraction = 0.03 so every kit skill keeps its description")
 removed = 0
 for event, matchers in list(s.get("hooks", {}).items()):
     kept = []
