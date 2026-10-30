@@ -16,6 +16,7 @@ python3 scripts/test_guards_cwd.py
 python3 scripts/test_session_handoff.py
 python3 scripts/test_init_standalone.py
 python3 scripts/test_release_gate.py
+python3 scripts/test_infra_gate.py
 python3 scripts/test_compare_shots.py
 python3 scripts/test_text_styles.py
 python3 scripts/test_check_ui.py

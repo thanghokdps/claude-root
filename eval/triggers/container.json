@@ -1,0 +1,23 @@
+{
+  "skill": "container",
+  "positive": [
+    {
+      "prompt": "viết Dockerfile cho service Node này, chạy non-root và có healthcheck",
+      "top_k": 3
+    },
+    {
+      "prompt": "the image is 1.2 GB, make it a multi-stage build and shrink it",
+      "top_k": 3
+    },
+    {
+      "prompt": "add a postgres service to docker compose for local development",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "add a CI job that builds and pushes the image on every tag",
+      "owner": "pipeline"
+    }
+  ]
+}
