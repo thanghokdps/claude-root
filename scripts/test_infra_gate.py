@@ -143,6 +143,31 @@ def test_unknown_wrappers_and_scripts_fail_closed():
     assert gate(path, "make build")[0] == "allow"
 
 
+def test_unknown_flag_cannot_smuggle_a_read_only_subcommand():
+    path = repo()
+    assert gate(path, "kubectl --as admin apply -f k8s/ -n production")[0] == "deny"  # --as takes a value
+    assert gate(path, "kubectl --odd-flag get apply -f k8s/ -n production")[0] == "ask"  # fail closed, never 'get'
+    assert gate(path, "helm --kube-as-user me upgrade api charts/api -n production")[0] == "deny"
+    assert gate(path, "helm diff upgrade api charts/api -n production")[0] == "allow"
+
+
+def test_substitution_inside_double_quotes_is_a_segment():
+    path = repo()
+    assert gate(path, 'echo "$(terraform apply -var-file=prod.tfvars)"')[0] == "deny"
+    assert gate(path, 'OUT="$(kubectl apply -f k8s/ -n production)"')[0] == "deny"
+    assert gate(path, 'echo "`helm upgrade api charts/api -n production`"')[0] == "deny"
+    assert gate(path, "echo '$(terraform apply -var-file=prod.tfvars)'")[0] == "allow"  # single quotes run nothing
+
+
+def test_programs_that_can_execute_are_not_inert():
+    path = repo()
+    assert gate(path, "find . -name '*.yaml' -exec kubectl apply -f {} -n production \\;")[0] == "ask"
+    assert gate(path, "git -c alias.a='!terraform apply -var-file=prod.tfvars' a")[0] == "ask"
+    assert gate(path, "awk 'BEGIN{system(\"terraform apply\")}'")[0] == "ask"
+    assert gate(path, "git commit -m 'docs: terraform apply steps'")[0] == "allow"
+    assert gate(path, "grep -rn 'kubectl apply' docs/")[0] == "allow"
+
+
 def test_config_defines_production_names():
     path = repo(config={"production": ["eu-live"]})
     assert gate(path, "kubectl apply -f k8s/ -n eu-live")[0] == "deny"

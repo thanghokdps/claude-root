@@ -73,14 +73,25 @@ SHELLS = {"sh", "bash", "zsh", "dash", "ksh", "fish"}
 # Flags that take the next token as their value, so that value is never mistaken for the subcommand or the resource.
 VALUE_FLAGS = {"-n", "--namespace", "--context", "--kube-context", "--kubeconfig", "--cluster", "--user", "-chdir",
                "-var-file", "--var-file", "-var", "-f", "--filename", "-k", "--kustomize", "-o", "--output", "-l",
-               "--selector", "--values", "--set", "--set-string", "--set-file", "--version", "--timeout", "--field-selector"}
+               "--selector", "--values", "--set", "--set-string", "--set-file", "--version", "--timeout", "--field-selector",
+               # kubectl / helm global flags that take a value
+               "--as", "--as-group", "--as-uid", "-s", "--server", "--token", "--username", "--password",
+               "--certificate-authority", "--client-certificate", "--client-key", "--request-timeout", "--cache-dir",
+               "--tls-server-name", "--profile", "--profile-output", "--kube-apiserver", "--kube-as-user", "--kube-as-group",
+               "--kube-token", "--kube-ca-file", "--kube-tls-server-name", "--registry-config", "--repository-cache",
+               "--repository-config", "--burst-limit", "--qps", "--debug-level", "--log-file", "-v", "--v",
+               "--target", "-target", "-replace", "-backup", "-state", "-state-out", "-lock-timeout", "-parallelism",
+               "--description", "--history-max", "--ca-file", "--cert-file", "--key-file", "--repo", "--username"}
 # Programs that run the next word as a command; peeled off before the tool is looked for.
 WRAPPERS = {"sudo", "command", "exec", "time", "nice", "nohup", "timeout", "stdbuf", "doas", "ionice", "caffeinate",
             "builtin", "npx", "bunx"}
-# Programs that only print, read or move text: a tool name in their arguments runs nothing.
+# Programs that only print, read or move text: a tool name in their arguments runs nothing. find (-exec), awk (system),
+# sed (e), gh/glab (aliases) and yq can run a command, so they are not here. git is inert unless it carries -c, an alias
+# or a `!` shell alias (GIT_EXEC below).
 INERT = {"echo", "printf", "cat", "grep", "rg", "git", "ls", "head", "tail", "less", "more", "wc", "sort", "uniq", "diff",
          "cut", "tr", "tee", "touch", "mkdir", "cp", "mv", "ln", "test", "true", "false", "which", "type", "file", "stat",
-         "date", "gh", "glab", "sed", "awk", "jq", "yq", "find", "cd", "export", "read", "pwd"}
+         "date", "jq", "cd", "pwd"}
+GIT_EXEC = re.compile(r"(^|\s)(-c|--config-env\S*|alias\.\S*|!|config)(\s|$|=)")
 reasons, asks = [], []
 
 
@@ -93,9 +104,15 @@ def ask(msg):
 
 
 def segments(text):
+    """Split on shell operators outside quotes. Inside double quotes `$(` and backticks still start a new segment,
+    since the shell runs what they hold; only single quotes suppress everything."""
     out, cur, quote, i = [], "", None, 0
     while i < len(text):
         ch = text[i]
+        if quote == '"' and (text.startswith("$(", i) or ch == "`"):
+            out.append(cur)
+            cur, i = "", i + (2 if text.startswith("$(", i) else 1)
+            continue
         if quote:
             quote = None if ch == quote else quote
             cur += ch
@@ -199,11 +216,14 @@ def gate(tool, args, env):
     if tool in ("terraform", "tofu") and sub == "plan" and any(a in ("-destroy", "--destroy") for a in args):
         ask(f"{tool} plan -destroy writes a plan whose later apply tears resources down; confirm it is wanted.")
         return
-    if sub in READ_ONLY:
-        return  # helm diff upgrade, kubectl get … : the verb after a read-only subcommand is its argument
+    if tool == "helm" and sub == "diff":
+        return  # the helm-diff plugin: `helm diff upgrade …` renders, it never applies
     if sub not in MUT and any(a in MUT for a in args):
-        # A mutating verb sits somewhere the parser did not expect (unknown flag layout): fail closed.
+        # A mutating verb sits somewhere the parser did not expect (an unknown flag swallowed the subcommand): fail
+        # closed before any read-only shortcut, so `kubectl --odd get apply …` cannot ride on `get`.
         ask(f"{tool} command carries a mutating verb in an unexpected position; confirm what it runs.")
+        return
+    if sub in READ_ONLY:
         return
     if tool in ("terraform", "tofu"):
         if sub == "workspace" and pos[1:2] == ["select"] and is_prod(*pos[2:3]):
@@ -263,7 +283,7 @@ for seg in segs:
     tool = os.path.basename(toks[0])
     if tool in TOOLS:
         gate(tool, toks[1:], env)
-    elif mentions_tool(seg) and head not in INERT:
+    elif mentions_tool(seg) and (head not in INERT or (head == "git" and GIT_EXEC.search(" ".join(raw[1:])))):
         # The tool name appears behind a program the gate does not know (an alias, a make target, a wrapper it did not
         # peel): fail closed rather than let an apply through unread.
         ask(f"{head} wraps a terraform/kubectl/helm command the gate cannot parse; run the tool directly.")
