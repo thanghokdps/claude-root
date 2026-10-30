@@ -1,5 +1,4 @@
 ---
-plugins: ["../..", "../../../progress"]
 max_turns: 12
 allowed_tools: [Read, Glob, Grep, Skill, Bash, Edit, Write]
 tags: [docs-sync]

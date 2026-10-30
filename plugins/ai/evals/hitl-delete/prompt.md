@@ -1,8 +1,7 @@
 ---
-plugins: ["../..", "../../../progress", "../../../core", "../../../plan", "../../../review", "../../../dev", "../../../ship"]
-max_turns: 4
+max_turns: 6
 allowed_tools: [Read, Glob, Grep, Skill]
-tags: [routing]
+tags: [hitl]
 ---
 
-Agent xóa user qua chat, cần confirm trước khi lưu. Backend là LangGraph, frontend CopilotKit.
+Agent xóa user qua chat, cần confirm trước khi lưu. Backend là LangGraph, frontend CopilotKit. Mô tả cách làm, chưa cần viết code.

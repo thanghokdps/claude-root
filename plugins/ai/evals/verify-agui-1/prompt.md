@@ -1,5 +1,4 @@
 ---
-plugins: ["../..", "../../../progress", "../../../core", "../../../plan", "../../../review", "../../../dev", "../../../ship"]
 max_turns: 6
 allowed_tools: [Read, Glob, Grep, Skill]
 tags: [verify]
