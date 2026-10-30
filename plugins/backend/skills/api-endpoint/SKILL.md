@@ -10,7 +10,7 @@ when_to_use: new API endpoint, "thêm API endpoint", "viết API cho", REST rout
 
 **Invoke:** `/api-endpoint <method> <path> — what it does`
 
-Rules: `api-contract.md`, `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`). An agent tool is not an endpoint: use `/agent-tool` (agent, if installed).
+Rules: `api-contract.md`, `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`); on Python, `${CLAUDE_PLUGIN_ROOT}/rules/python.md` and `${CLAUDE_PLUGIN_ROOT}/rules/fastapi.md`. An agent tool is not an endpoint: use `/agent-tool` (ai, if installed).
 
 ---
 
@@ -61,4 +61,4 @@ Call the endpoint on the running dev server with a real session, once on your ow
 
 ---
 
-Hand-offs: new table or query → `/db-change` · the frontend that calls it → `/api-client` then `/ui-feature` · auth or permission model changes → high-risk lane (`/coordinator`) · done → `/verify-done` → `/review-checklist` → `/docs-sync` so the route lands in `entry-points.md` (skip when `/feature` called this skill; it syncs once for the whole feature).
+Hand-offs: new table or query → `/db-change` · the frontend that calls it → `/ui-feature` (frontend, if installed) · auth or permission model changes → high-risk lane (`/coordinator`) · done → `/verify-done` → `/review-checklist` → `/docs-sync` so the route lands in `entry-points.md` (skip when `/feature` called this skill; it syncs once for the whole feature).

@@ -22,9 +22,10 @@ Inside Claude Code, add the marketplace from **one** of the two sources. Both ho
 Install the role you are, then reload. A role brings its dependencies with it:
 
 ```text
-/plugin install dev@harness        # developer: plan, build, fix, review (brings core, plan, review, progress)
-/plugin install agent@harness      # AI-assistant builder (brings dev, ship and what they depend on)
-/plugin install harness@harness    # the whole general kit: all eight role plugins
+/plugin install dev@harness        # every developer: plan, build, fix, review (brings core, plan, review, progress)
+/plugin install harness@harness    # the whole process kit: all eight general plugins
+# role packs (frontend, backend, agent) and the workplace domain pack are turned on per repo by core's repo-profile hook;
+# to force one: /plugin install frontend@harness
 /reload-plugins
 ```
 
@@ -86,14 +87,16 @@ One marketplace, `harness`, one plugin per role. Installing a role pulls in what
 | [`core`](plugins/core/README.md) | everyone, through any role | `/verify-done`, `/project-init`, `/docs-sync`, `/compact`, `/compound`, `/sync-memory`, `/btw`; the always-on safety hooks | progress |
 | [`plan`](plugins/plan/README.md) | architects, tech leads | `/kickoff`, `/brainstorming`, `/grill`, `/domain-model`, `/codebase-design`, `/writing-plans` | progress |
 | [`review`](plugins/review/README.md) | reviewers | `/review-checklist`, `/review-diff`, `/blast-radius`, `/create-pr`, `/resolve-pr-feedback`, `/debt-ledger`, `/repo-audit` | progress |
-| [`dev`](plugins/dev/README.md) | developers | `/feature`, `/ticket`, `/fix-bug`, `/tdd`, `/api-endpoint`, `/db-change`, `/ui-feature`, `/api-client`, `/design-ui`, `/resolve-question`, `/checkpoint`, `/coordinator`; the ticket and test-lock hooks | core, plan, review |
+| [`dev`](plugins/dev/README.md) | every developer | `/feature` (dispatches slices to the role packs' engineers), `/ticket`, `/fix-bug`, `/tdd`, `/resolve-question`, `/checkpoint`, `/coordinator`; the ticket and test-lock hooks | core, plan, review |
+| [`frontend`](plugins/frontend/README.md) | web UI repos, turned on per repo | the `frontend-engineer` agent, `/ui-feature`, `/design-ui`; React and Next.js rules | progress, dev |
+| [`backend`](plugins/backend/README.md) | server repos, turned on per repo | the `backend-engineer` agent, `/api-endpoint`, `/db-change`, `/api-client`; Python, FastAPI and Prisma rules | progress, dev |
 | [`ship`](plugins/ship/README.md) | release and CI owners | `/finish-branch`, `/ci-triage`, `/release-checklist`, `/write-migration`, `/incident`, `/sync-remote`; the mobile release gate | core |
 | [`agent`](plugins/agent/README.md) | AI-assistant builders | `/agent-architect`, `/agent-feature`, `/agent-tool`, `/agent-hitl`, `/agent-graph`, `/agent-frontend`, `/agent-design-ui`, `/agent-rag`, `/agent-evals`, `/agent-verify-turn`, `/agent-security`, `/agent-prompt-review`; the framework rules | progress, dev, ship |
 | [`workplace`](plugins/workplace/README.md) | teams building HR / workplace apps | `/workplace-review` and the domain invariants; turned on per repo | progress |
 | [`lead`](plugins/lead/README.md) | process owners | `/retro`, `/diagnose-session`, `/writing-skills` | core |
 | [`guards`](plugins/guards/README.md) | anyone who wants stricter rails | opt-in hooks: commit quality gate, scope gate, blast radius, run log, push evidence, session handoff | dev |
 | [`progress`](plugins/progress/README.md) | comes with every role | a skill's checklist and live ✅ progress; never blocks | — |
-| [`harness`](plugins/harness/README.md) | "give me everything" | the eight general role plugins above; `agent` and `workplace` stay separate so they can turn on per repo | all eight |
+| [`harness`](plugins/harness/README.md) | "give me everything" | the eight general plugins above; the role packs `frontend`, `backend`, `agent` and the domain pack `workplace` stay separate so they can turn on per repo | all eight |
 
 Today: 11 plugins, 54 skills, 9 always-on rules, 8 recorded design decisions. The index with every skill: [`plugins/README.md`](plugins/README.md).
 

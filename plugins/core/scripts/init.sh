@@ -142,7 +142,8 @@ mkdir -p "$PROJECT_DIR/specs"
 echo "📋 Copying rules..."
 # Copy every universal rule. A hardcoded list here had drifted to 4 of 13 — agent-principles.md,
 # security.md, code-quality.md and plan-format.md never reached a project despite being
-# referenced as mandatory. Stack rules under rules/stacks/ stay conditional, below.
+# referenced as mandatory. Language rules under rules/stacks/ stay conditional, below; framework rules
+# (react, nextjs, python, fastapi, prisma) live in the role packs and are read on demand by their skills.
 # Lean mode skips them: ~/.claude/rules already loads them, and a second copy loads twice.
 if [ "$STANDALONE" = 1 ]; then
   for rule in "$HARNESS_DIR"/rules/*.md; do
@@ -153,12 +154,7 @@ fi
 # Stack-specific rules
 has_signal "typescript" && cp "$HARNESS_DIR/rules/stacks/typescript.md"  "$CLAUDE_DIR/rules/typescript.md"  2>/dev/null || true
 has_signal "nodejs"     && cp "$HARNESS_DIR/rules/stacks/javascript.md"  "$CLAUDE_DIR/rules/javascript.md"  2>/dev/null || true
-has_signal "react"      && cp "$HARNESS_DIR/rules/stacks/react.md"       "$CLAUDE_DIR/rules/react.md"       2>/dev/null || true
 has_signal "jest"       && cp "$HARNESS_DIR/rules/stacks/jest.md"        "$CLAUDE_DIR/rules/jest.md"        2>/dev/null || true
-has_signal "python"     && cp "$HARNESS_DIR/rules/stacks/python.md"      "$CLAUDE_DIR/rules/python.md"      2>/dev/null || true
-has_signal "nextjs"     && cp "$HARNESS_DIR/rules/stacks/nextjs.md"      "$CLAUDE_DIR/rules/nextjs.md"      2>/dev/null || true
-has_signal "prisma"     && cp "$HARNESS_DIR/rules/stacks/prisma.md"      "$CLAUDE_DIR/rules/prisma.md"      2>/dev/null || true
-has_signal "fastapi"    && cp "$HARNESS_DIR/rules/stacks/fastapi.md"     "$CLAUDE_DIR/rules/fastapi.md"     2>/dev/null || true
 
 if [ "$STANDALONE" = 1 ]; then
 # ─── Copy Universal Skills ───────────────────────────────────────────────────

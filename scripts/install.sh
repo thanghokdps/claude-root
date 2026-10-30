@@ -67,14 +67,15 @@ claude plugin prune >/dev/null 2>&1 || true
 for p in $PLUGINS; do
   out=$(claude plugin install "$p@harness" 2>&1) || echo "  $p: install failed — $(printf '%s' "$out" | tail -1)"
 done
-# Domain plugins stay off at user scope: core's repo-profile hook enables them per repo when it detects
-# their stack or domain (agent: @langchain/@copilotkit/@mastra/langgraph; workplace: a `Domain: workplace` line
-# or HR module folders), so other repos don't carry their skills.
-for p in agent workplace; do
+# Role and domain packs stay off at user scope: core's repo-profile hook enables them per repo when it detects
+# their stack or domain (frontend: react/next/vue/svelte; backend: a server framework, an ORM, go or rust;
+# agent: @langchain/@copilotkit/@mastra/langgraph; workplace: a `Domain: workplace` line or HR module folders),
+# so other repos don't carry their skills.
+for p in frontend backend agent workplace; do
   out=$(claude plugin disable "$p@harness" --scope user 2>&1) || true
   case "$out" in *Failed*) echo "  WARN $p stays on at user scope — $(printf '%s' "$out" | head -1)" ;; esac
 done
-echo "  domain plugins off at user scope (enabled per repo by repo-profile): agent workplace"
+echo "  packs off at user scope (enabled per repo by repo-profile): frontend backend agent workplace"
 echo "  plugins: $(for f in "$KIT"/plugins/*/.claude-plugin/plugin.json; do
   python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(f\"{d['name']} {d['version']}\", end=' ')" "$f"; done)"
 

@@ -5,8 +5,9 @@
 # never write settings). Reads manifests and marker folders only — no model call:
 # root, apps/*, packages/* package.json; pyproject.toml / requirements*.txt; go.mod, Cargo.toml; prisma/, drizzle/,
 # alembic/, eas.json, .claude/docs/, docs/tickets/. Prints nothing for a folder with no manifest.
-# A domain plugin the repo needs and that is not on gets enabled in .claude/settings.local.json (personal,
-# excluded from git), effective next session: agent@harness for an AI assistant, workplace@harness for a
+# A role or domain pack the repo needs and that is not on gets enabled in .claude/settings.local.json (personal,
+# excluded from git), effective next session: frontend@harness for a web UI framework (not React Native alone),
+# backend@harness for a server framework, an ORM, go or rust, agent@harness for an AI assistant, workplace@harness for a
 # `Domain: workplace` line in docs/requirements.md or .claude/docs/index.md, or two or more HR/workplace module
 # folders (time off, booking, reservation, approval, maintenance, meal, lunch, attendance) under apps/,
 # src/{modules,features}/ or apps/*/src/{api,modules}/. An explicit false in the project or local settings is never
@@ -121,8 +122,12 @@ modules = [os.path.basename(p).lower() for parent in ("apps", "src/modules", "sr
            for p in glob.glob(at(parent, "*"))[:200] if os.path.isdir(p)]
 workplace = domain_marked("workplace") or sum(1 for m in modules if re.search(
     r"time-?off|leave|booking|reservation|approval|maintenance|meal|lunch|attendance", m)) >= 2
-# Domain plugins stay off at user scope (install.sh) and are turned on here for the repos that need them.
-packs = [p for p, on in (("agent@harness", ai), ("workplace@harness", workplace)) if on]
+# Role and domain packs stay off at user scope (install.sh) and are turned on here for the repos that need them.
+frontend = web
+backend_pack = backend or bool(db) or "go" in manifests or "rust" in manifests
+roles = [r for r, on in (("frontend", frontend), ("backend", backend_pack), ("mobile", mobile), ("ai", ai)) if on]
+packs = [p for p, on in (("frontend@harness", frontend), ("backend@harness", backend_pack), ("agent@harness", ai),
+                         ("workplace@harness", workplace)) if on]
 
 
 def enabled_at(path, plugin):
@@ -180,14 +185,14 @@ if to_enable and event == "SessionStart":
         except OSError:
             enable_note = ""
 
-prefer = []
+prefer = ["features across roles → /feature, which dispatches each slice to its pack's engineer"]
 if ai:
-    prefer.append("features → /agent-feature (not /feature), tools → /agent-tool, prove a turn → /agent-verify-turn")
+    prefer.append("agent tools → /agent-tool, HITL → /agent-hitl, prove a turn → /agent-verify-turn")
 if db:
     prefer.append("schema or queries → /db-change")
-if backend and not ai:
+if backend_pack:
     prefer.append("endpoints → /api-endpoint")
-if web or mobile:
+if web:
     prefer.append("UI → /ui-feature, from a Figma → /design-ui")
 if mobile:
     prefer.append("releases → /release-checklist")
@@ -196,6 +201,8 @@ if os.path.isdir(at("docs", "tickets")):
 
 kind = ", ".join(stack + (["AI assistant"] if ai else []) + db) or "unrecognised stack"
 lines = [f"REPO PROFILE: {kind}."]
+if roles:
+    lines.append("Roles: " + ", ".join(roles) + ".")
 if prefer:
     lines.append("Prefer: " + "; ".join(prefer) + " (CLAUDE.md and team plugins that cover this repo win).")
 lines.append("Read .claude/docs/index.md before scanning source; /docs-sync before the PR." if has_docs

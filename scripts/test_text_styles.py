@@ -7,7 +7,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCRIPT = os.path.join(ROOT, "plugins", "dev", "skills", "design-ui", "scripts", "check-text-styles.py")
+SCRIPT = os.path.join(ROOT, "plugins", "frontend", "skills", "design-ui", "scripts", "check-text-styles.py")
 
 SPEC = {"welcome": [{"selector": "h1", "font-family": "Inter", "font-size": "32px", "font-weight": "600",
                      "line-height": "40px", "letter-spacing": "0px", "color": "#1F2937"}]}

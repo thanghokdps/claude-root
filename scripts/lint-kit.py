@@ -275,6 +275,36 @@ def check_init_sources():
         errors.append(f"{rel}: copies missing file {ref}")
 
 
+# Role packs share one shape so /feature can dispatch to any of them the same way; grows one pack per PR.
+ROLE_PACKS = ("frontend", "backend")
+ROLE_PACK_DEPS = ["progress", "dev"]
+
+
+def role_pack_errors(plugin, agents, manifest, has_hooks):
+    """Shape errors for one role pack: exactly one agents/<role>-engineer.md, the fixed dependencies, no hooks."""
+    out = []
+    if agents != [f"{plugin}-engineer.md"]:
+        out.append(f"plugins/{plugin}: role pack must ship exactly agents/{plugin}-engineer.md, has {agents}")
+    if manifest.get("dependencies") != ROLE_PACK_DEPS:
+        out.append(f"plugins/{plugin}: role pack dependencies must be {ROLE_PACK_DEPS}, got {manifest.get('dependencies')}")
+    if has_hooks:
+        out.append(f"plugins/{plugin}: a role pack carries no hooks — a gate must run before the pack is enabled, so it lives in core/dev/ship")
+    return out
+
+
+def check_role_packs():
+    for plugin in ROLE_PACKS:
+        agents_dir = os.path.join(PLUGINS_DIR, plugin, "agents")
+        agents = sorted(os.listdir(agents_dir)) if os.path.isdir(agents_dir) else []
+        manifest = load_json(f"plugins/{plugin}/.claude-plugin/plugin.json") or {}
+        errors.extend(role_pack_errors(plugin, agents, manifest, os.path.isdir(os.path.join(PLUGINS_DIR, plugin, "hooks"))))
+    for plugin in plugin_names():
+        if plugin not in ROLE_PACKS and os.path.isdir(os.path.join(PLUGINS_DIR, plugin, "rules", "stacks")):
+            for f in os.listdir(os.path.join(PLUGINS_DIR, plugin, "rules", "stacks")):
+                if f not in ("typescript.md", "javascript.md", "jest.md"):
+                    errors.append(f"plugins/{plugin}/rules/stacks/{f}: framework rules belong to a role pack's rules/")
+
+
 def check_shared_references():
     """A reference two plugins both need is copied (no cross-plugin paths in the cache); copies must not drift."""
     by_name = defaultdict(list)
@@ -320,6 +350,7 @@ if __name__ == "__main__":
     check_python_isolation()
     check_json()
     check_plugins()
+    check_role_packs()
     check_shared_references()
     check_init_sources()
     check_denylist()

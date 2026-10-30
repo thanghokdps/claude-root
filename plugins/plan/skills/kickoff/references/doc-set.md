@@ -24,7 +24,7 @@ An existing repo's facts (its `package.json`, schema, CI files) fill rows 3, 4 a
 | ERD image, DBML, SQL, Prisma/Drizzle schema | 4 | convert to Mermaid; keep the original file |
 | ADR, architecture doc, diagram | 3, 5, 7 | link it; restate only the decisions as ADR lines |
 | Tech stack list, `package.json`, team standards | 3, 9 | read versions from manifests, not from prose |
-| Figma link | 6 | record the link and the frames in scope; reading it is `/design-ui`'s job |
+| Figma link | 6 | record the link and the frames in scope; reading it is `/design-ui`'s job (frontend, if installed) |
 | OpenAPI, Postman, curl | 7 | store under `docs/api/`; a key inside it → rotate, keep the name |
 | Onboarding / setup doc | 2, 9 | list each prerequisite as a checkable line |
 
