@@ -171,7 +171,8 @@ def main():
 
 
 def emit(model):
-    """Print the model, or with --into <page.html> replace the #visual-data block of an already rendered page."""
+    """Print the model, or with --into <page.html> replace the #visual-data block and <title> of a rendered page."""
+    model = {"kind": "map", **model}  # the renderer draws a drill-down map only for kind "map"; otherwise a blank doc
     if "--into" in sys.argv:
         page = sys.argv[sys.argv.index("--into") + 1]
         html = read(page)
@@ -180,6 +181,7 @@ def emit(model):
                          lambda m: m.group(1) + data + m.group(2), html, count=1, flags=re.S)
         if n != 1:
             sys.exit(f"{page}: no #visual-data block to replace")
+        new = re.sub(r"<title>.*?</title>", lambda m: f"<title>{model['title']}</title>", new, count=1, flags=re.S)
         with open(page, "w", encoding="utf-8") as f:
             f.write(new)
         return
