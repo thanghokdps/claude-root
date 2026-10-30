@@ -40,13 +40,15 @@ def tasks(text):
         a = dict(re.findall(r'(\w+)="([^"]*)"', attrs))
         action = re.search(r"<action>(.*?)</action>", body, re.S)
         title = " ".join((action.group(1) if action else "").split())[:80]
-        out.append((a.get("id", "?"), a.get("status", "").lower() == "done", title))
+        tid = a.get("id", "")
+        out.append((tid if re.fullmatch(r"[0-9A-Za-z._-]{1,16}", tid) else "?", a.get("status", "").lower() == "done", title))
     return out
 
 
 def log_tail(text, n=3):
+    # quoted plan text is data: one line each, capped, so a planted paragraph cannot pose as an instruction
     m = re.search(r"^## Status log\s*$(.*?)(?=^## |\Z)", text, re.M | re.S)
-    lines = [ln.strip() for ln in (m.group(1) if m else "").splitlines() if ln.strip()]
+    lines = [ln.strip()[:160] for ln in (m.group(1) if m else "").splitlines() if ln.strip()]
     return lines[-n:]
 
 

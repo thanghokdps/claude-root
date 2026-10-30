@@ -42,7 +42,10 @@ def first_open_task(text):
         if a.get("status", "").lower() == "done":
             continue
         action = re.search(r"<action>(.*?)</action>", body, re.S)
-        return a.get("id", "?"), " ".join((action.group(1) if action else "").split())[:80]
+        tid = a.get("id", "")
+        # the title is plan text quoted as data: whitespace-collapsed and capped, the id a strict token
+        return (tid if re.fullmatch(r"[0-9A-Za-z._-]{1,16}", tid) else "?",
+                " ".join((action.group(1) if action else "").split())[:80])
     return None
 
 
