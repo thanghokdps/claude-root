@@ -49,13 +49,15 @@ A high-risk ticket waits for the user's approval of the three files before Step 
 
 Open questions → run `/resolve-question` on them now, before any code: it answers the facts from the repo with a citation and asks the user only the choices, one per turn as options. An existing `docs/tickets/<id>/` is updated, not overwritten: keep earlier decisions and add a dated entry under § Changes.
 
-**Done when:** the three files exist, every criterion has a test row and a cross-check row, no open question is unanswered or unrecorded, and no `blocking` concern lacks a Decision (or the user waived it: `skip concerns: <reason>` under plan.md § Deviations; `ticket-gate.sh` blocks code commits otherwise).
+Then `plan.md` is reviewed by an agent that has not seen this conversation (`${CLAUDE_PLUGIN_ROOT}/references/plan-review.md`): one fresh `opus` agent, verdict `APPROVED` / `REVISE` / `BLOCKED` with a `path:line` per finding, at most 2 rounds, logged in `docs/tickets/<id>/plan-review.md` so the PR reviewer reads it next to the diff. A changed `plan.md` is reviewed again (the log's `Plan: … @ <hash>` line says which version was approved).
+
+**Done when:** the four files exist (`plan-review.md` says `Verdict: APPROVED`, or lists its open findings with their arbitration), every criterion has a test row and a cross-check row, no open question is unanswered or unrecorded, and no `blocking` concern lacks a Decision (or the user waived it: `skip concerns: <reason>` under plan.md § Deviations; `ticket-gate.sh` blocks code commits otherwise).
 
 ## Step 3 — Build
 
 Run `/feature` with `plan.md` as its plan: it skips its own research and plan stages and builds the slices in order, one green before the next. In an AI-assistant repo (a `docs/adr/*agent-architecture*` file exists, or the code imports `@copilotkit/*`, `@mastra/core` or `@langchain/langgraph`), run `/agent-feature` (ai, if installed) from its Step 5 with `plan.md` as its brief instead: each slice goes through the layer skill its row names. Every deviation from the plan is written back into `plan.md` § Deviations as it happens.
 
-The plugin's hooks enforce this. `ticket-ledger.sh` records every skill and subagent that runs on the branch. `ticket-gate.sh` blocks a commit that carries code until every skill on the `Skills:` line has run, `/agent-verify-turn` (ai, if installed) has run when any `/agent-*` skill is listed, and at least one subagent with `model: "sonnet"` or `"haiku"` wrote code. It blocks the PR until `/verify-done` and `/review-checklist` have run, plus `/security-review` and `/code-review` on `Risk: high`. A check that truly does not apply is waived with a line `skip /<skill>: <reason>` (or `skip subagents: <reason>`) under § Deviations; the reason is then on record in the PR.
+The plugin's hooks enforce this. `ticket-ledger.sh` records every skill and subagent that runs on the branch. `ticket-gate.sh` blocks a commit that carries code until `plan-review.md` says `Verdict: APPROVED` (waiver: `skip plan-review: <reason>`), every skill on the `Skills:` line has run, `/agent-verify-turn` (ai, if installed) has run when any `/agent-*` skill is listed, and at least one subagent with `model: "sonnet"` or `"haiku"` wrote code. It blocks the PR until `/verify-done` and `/review-checklist` have run, plus `/security-review` and `/code-review` on `Risk: high`. A check that truly does not apply is waived with a line `skip /<skill>: <reason>` (or `skip subagents: <reason>`) under § Deviations; the reason is then on record in the PR.
 
 **Done when:** every `spec.md` row is green with its evidence (test path or command).
 
@@ -63,7 +65,7 @@ The plugin's hooks enforce this. `ticket-ledger.sh` records every skill and suba
 
 1. Tick the matrix in `spec.md` (status and evidence per row).
 2. `/verify-done` (core), then `/review-checklist` (review). High-risk lane (auth, data writes, migrations, external providers): also `/security-review` and `/code-review`; their findings are fixed or listed in `plan.md` § Deviations. The ticket's folder replaces `specs/<slug>/` from the global rules.
-3. Commit `docs/tickets/<id>/` with the code, `<type>: <what> (#<id>)`.
+3. Commit `docs/tickets/<id>/` (incl. `plan-review.md`) with the code, `<type>: <what> (#<id>)`.
 4. Record the actual: the hours between the branch's first commit and now (`git log --reverse --format=%cI <base>..HEAD | head -1`), rounded to the half hour, in the row for `<id>` of `docs/tickets/README.md` (`| id | title | estimate | actual | note |`; create the file and the row when missing). An actual outside the estimate's range gets a one-line note of why — that line is what `/retro` (lead, if installed) reads.
 5. `/finish-branch` (ship, if installed) opens the PR; its description links the ticket and `docs/tickets/<id>/`.
 6. Wait for the PR's checks. Red → fix on the branch (`/ci-triage` (ship, if installed)). Never call the ticket done, or suggest merging, while a check is red.

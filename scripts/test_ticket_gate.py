@@ -11,7 +11,7 @@ HOOKS = os.path.join(ROOT, "plugins", "dev", "hooks")
 PLAN = "# 7 — Plan\n\nRisk: {risk}\nSkills: /agent-tool, /agent-frontend\n\n## Deviations\n{waivers}\n"
 
 
-def repo(branch="feat/7-pin-chat", risk="normal", waivers="", plan=True):
+def repo(branch="feat/7-pin-chat", risk="normal", waivers="", plan=True, review="Verdict: APPROVED\nRounds: 1/2\n"):
     path = tempfile.mkdtemp(prefix="ticket-gate-")
     git = lambda *a: subprocess.run(["git", "-C", path, *a], check=True, capture_output=True)
     git("init", "-q", "-b", branch)
@@ -19,6 +19,9 @@ def repo(branch="feat/7-pin-chat", risk="normal", waivers="", plan=True):
         os.makedirs(os.path.join(path, "docs", "tickets", "7"))
         with open(os.path.join(path, "docs", "tickets", "7", "plan.md"), "w") as f:
             f.write(PLAN.format(risk=risk, waivers=waivers))
+        if review is not None:
+            with open(os.path.join(path, "docs", "tickets", "7", "plan-review.md"), "w") as f:
+                f.write(review)
     os.makedirs(os.path.join(path, "src"))
     with open(os.path.join(path, "src", "app.ts"), "w") as f:
         f.write("export {}\n")
@@ -100,6 +103,29 @@ def test_normal_pr_still_needs_verify_done_and_review_checklist():
     full_build(path)
     code, err = gate(path, "gh pr create --fill")
     assert code == 2 and "/verify-done" in err and "/review-checklist" in err and "security" not in err, err
+
+
+def test_missing_or_unapproved_plan_review_blocks_a_code_commit():
+    path = repo(review=None)
+    full_build(path)
+    code, err = gate(path)
+    assert code == 2 and "plan-review.md is missing" in err, err
+    path = repo(review="Verdict: REVISE\n\n## Round 1 — REVISE\n- T2 …\n")
+    full_build(path)
+    code, err = gate(path)
+    assert code == 2 and "Verdict: REVISE" in err, err
+    path = repo(review="**Verdict:** `approved`\n")
+    full_build(path)
+    assert gate(path)[0] == 0
+
+
+def test_plan_review_waiver_and_docs_only_commit_pass():
+    path = repo(review=None, waivers="- skip plan-review: one-line copy change\n")
+    full_build(path)
+    assert gate(path)[0] == 0
+    path = repo(review=None)
+    subprocess.run(["git", "-C", path, "reset", "-q", "src/app.ts"], check=True)
+    assert gate(path)[0] == 0
 
 
 def test_plan_without_skills_or_risk_line_is_blocked():
