@@ -108,12 +108,15 @@ GIT_BOOL_FLAGS = {"-p", "--paginate", "-P", "--no-pager", "--bare", "--literal-p
 
 def git_exec_token(tok):
     name = tok.split("=", 1)[0]
-    return name in GIT_EXEC or tok.startswith("alias.") or "!" in tok
+    # git accepts any unambiguous abbreviation of a long option (`--upload` for `--upload-pack`), so a prefix counts.
+    abbreviated = name.startswith("--") and len(name) > 3 and any(e.startswith(name) for e in GIT_EXEC)
+    return name in GIT_EXEC or abbreviated or tok.startswith("alias.") or "!" in tok
 
 
 def git_inert(args, env):
     """True when a git command line can only read, write or move text; anything that may run a program asks."""
-    if any(k.startswith("GIT_") for k in env) or any(git_exec_token(a) for a in args):
+    # Any variable on the line: GIT_*, but also EDITOR, PAGER, SSH_ASKPASS, LESSOPEN … name a program git may run.
+    if env or any(git_exec_token(a) for a in args):
         return False
     sub, skip = "", False
     for a in args:
@@ -143,10 +146,15 @@ def segments(text):
     """Split on shell operators outside quotes. Inside double quotes `$(` and backticks still start a new segment,
     parsed unquoted (`;`, `&&`, `|` split again inside) since the shell runs what they hold as a fresh command list;
     the matching `)` or backtick restores the double quote: every unquoted `(` opened inside the substitution is
-    pushed too, so an inner `)` cannot close it early. Only single quotes suppress everything."""
+    pushed too, so an inner `)` cannot close it early. A backslash outside single quotes escapes the next character,
+    which then changes no state. Only single quotes suppress everything. Returns (segments, balanced): balanced is
+    False when a substitution is still open at the end, and the caller then does not trust the split."""
     out, cur, quote, i, nest = [], "", None, 0, []  # nest: '"' = closes back into a double quote, '(' = inner paren
     while i < len(text):
         ch = text[i]
+        if ch == "\\" and quote != "'" and i + 1 < len(text):
+            cur, i = cur + text[i:i + 2], i + 2
+            continue
         if quote == '"' and (text.startswith("$(", i) or ch == "`"):
             out.append(cur)
             nest.append(('"', ")" if text.startswith("$(", i) else "`"))
@@ -177,7 +185,7 @@ def segments(text):
                 continue
             cur += ch
         i += 1
-    return out + [cur]
+    return out + [cur], not nest
 
 
 def tokens(seg):
@@ -314,8 +322,12 @@ def mentions_tool(text):
     return any(re.search(rf"\b{t}\b", text) for t in TOOLS)
 
 
-segs = [s for s in segments(cmd) if s.strip()]
+segs, balanced = segments(cmd)
+segs = [s for s in segs if s.strip()]
 whole_mentions = mentions_tool(cmd)
+if not balanced and whole_mentions:
+    ask("the command leaves a `$(` or backtick open around a terraform/kubectl/helm call; the gate cannot read it — rewrite it.")
+    segs = []
 for seg in segs:
     try:
         shlex.split(seg)

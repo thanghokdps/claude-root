@@ -215,6 +215,23 @@ def test_git_unknown_global_options_are_not_inert():
     assert gate(path, "git --config=alias.a='!terraform apply' a")[0] == "ask"
 
 
+def test_escaped_parens_and_unclosed_substitutions_fail_closed():
+    path = repo()
+    # `\)` is a literal paren, so the substitution stays open and the apply runs inside it
+    assert gate(path, 'echo "$(true \\); terraform apply -var-file=prod.tfvars)"')[0] == "deny"
+    assert gate(path, 'echo "$(true; kubectl apply -f k8s/ -n production"')[0] == "ask"  # never closed: do not trust the split
+    assert gate(path, 'echo "a \\" b"; helm upgrade api charts/api -n production')[0] == "deny"  # escaped quote stays inside
+    assert gate(path, 'echo "$(true)"')[0] == "allow"
+
+
+def test_git_abbreviations_and_any_variable_are_not_inert():
+    path = repo()
+    assert gate(path, "git fetch --upload='terraform apply -var-file=prod.tfvars' origin")[0] == "ask"
+    assert gate(path, "PAGER='kubectl apply -f k8s/ -n production' git log")[0] == "ask"
+    assert gate(path, "EDITOR='helm upgrade api charts/api -n production' git commit")[0] == "ask"
+    assert gate(path, "git log --oneline -- docs/terraform-apply.md")[0] == "allow"
+
+
 def test_config_defines_production_names():
     path = repo(config={"production": ["eu-live"]})
     assert gate(path, "kubectl apply -f k8s/ -n eu-live")[0] == "deny"
