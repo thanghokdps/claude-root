@@ -320,11 +320,16 @@ for seg in segs:
             continue
     env, raw = tokens(seg)
     if not raw:
-        if any(mentions_tool(v) for v in env.values()):
-            # `X='terraform apply …'; git log` sets the variable for a later segment, where the gate cannot see it
-            ask("a variable set on this line holds a terraform/kubectl/helm command for a later command; run the tool directly.")
+        if any(mentions_tool(v) or "$'" in v or "\\x" in v or "\\" in v for v in env.values()):
+            # `X='terraform apply …'; git log` sets the variable for a later segment, where the gate cannot see it;
+            # an escaped value ($'…', \x74…) may spell the tool once expanded
+            ask("a variable set on this line may hold a terraform/kubectl/helm command for a later command; run the tool directly.")
         continue
     head = os.path.basename(raw[0])
+    if head.startswith("$") or (head == "printf" and "-v" in raw[1:3]):
+        # `$X …` runs whatever the variable holds; `printf -v X` builds such a variable from escapes
+        ask(f"{head} runs or builds a command the gate cannot read; run the tool directly.")
+        continue
     if head == "eval" or head == "xargs" or (head in SHELLS and any(a in ("-c", "-lc", "-ic") for a in raw[1:3])):
         if whole_mentions:
             deny(f"{head} hides a terraform/kubectl/helm command from the gate; run it directly.")

@@ -242,6 +242,11 @@ def test_line_continuations_and_deferred_variables():
     assert gate(path, "X='terraform apply -var-file=prod.tfvars'; git log")[0] == "ask"  # set here, used later
     assert gate(path, "export X='kubectl apply -f k8s/ -n production'")[0] == "ask"
     assert gate(path, 'echo "`echo \\`terraform apply -var-file=prod.tfvars\\``"')[0] == "ask"  # nested backticks
+    # the command head is a variable, or the variable is spelled with escapes: the gate cannot read what runs
+    assert gate(path, "X=terraform; $X apply -var-file=prod.tfvars")[0] == "ask"
+    assert gate(path, "X=$'\\x74erraform'; ${X} apply -var-file=prod.tfvars")[0] == "ask"
+    assert gate(path, "printf -v X 'terra%s' form; $X apply")[0] == "ask"
+    assert gate(path, "X=1; echo $X")[0] == "allow"
 
 
 def test_config_defines_production_names():
