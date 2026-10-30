@@ -4,7 +4,7 @@
 # Trigger: SessionStart (startup|resume|clear|compact), and SubagentStart so subagents get the same profile (they
 # never write settings). Reads manifests and marker folders only — no model call:
 # root, apps/*, packages/* package.json; pyproject.toml / requirements*.txt; go.mod, Cargo.toml; prisma/, drizzle/,
-# alembic/, eas.json, .claude/docs/, docs/tickets/. Prints nothing for a folder with no manifest.
+# alembic/, eas.json, .claude/docs/, docs/tickets/. A folder with no manifest gets only the role packs still off and how to enable one.
 # A role or domain pack the repo needs and that is not on gets enabled in .claude/settings.local.json (personal,
 # excluded from git), effective next session: frontend@harness for a web UI framework (not React Native alone),
 # backend@harness for a server framework, an ORM, go or rust, mobile@harness for react-native / expo / eas.json,
@@ -45,6 +45,25 @@ def load_json(path):
         return None
 
 
+def enabled_at(path, plugin):
+    s = load_json(path)
+    if isinstance(s, dict) and isinstance(s.get("enabledPlugins"), dict):
+        return s["enabledPlugins"].get(plugin)
+    return None
+
+
+local_path = at(".claude", "settings.local.json")
+cfg = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
+
+
+def is_on(plugin):
+    for path in (local_path, at(".claude", "settings.json"), os.path.join(cfg, "settings.json")):
+        state = enabled_at(path, plugin)
+        if state is not None:
+            return state is True
+    return False
+
+
 deps, manifests = set(), []
 for path in [at("package.json")] + sorted(glob.glob(at("apps", "*", "package.json")) +
                                           glob.glob(at("packages", "*", "package.json")))[:30]:
@@ -66,6 +85,15 @@ for name, label in (("go.mod", "go"), ("Cargo.toml", "rust")):
     if os.path.exists(at(name)):
         manifests.append(label)
 if not manifests:
+    # Nothing to detect from yet, and a pack enabled now loads only next session: say so before a stack is scaffolded.
+    off = [p for p in ("frontend@harness", "backend@harness", "mobile@harness", "devops@harness", "ai@harness")
+           if not is_on(p)]
+    if off:
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": (
+            "REPO PROFILE: new repo, no manifest yet. Role packs off here: " + ", ".join(off) + ". Before scaffolding "
+            "a stack, stop and tell the user which pack it needs (ai@harness for LangChain / LangGraph / Mastra / "
+            "CopilotKit / Langfuse, frontend, backend, mobile, devops by stack), run `claude plugin enable "
+            "<pack> --scope local`, and ask them to start a new session so its skills (e.g. /agent-architect) load.")}}))
     sys.exit(0)
 
 
@@ -137,13 +165,6 @@ packs = [p for p, on in (("frontend@harness", frontend), ("backend@harness", bac
                          ("devops@harness", devops), ("ai@harness", ai), ("workplace@harness", workplace)) if on]
 
 
-def enabled_at(path, plugin):
-    s = load_json(path)
-    if isinstance(s, dict) and isinstance(s.get("enabledPlugins"), dict):
-        return s["enabledPlugins"].get(plugin)
-    return None
-
-
 def write_inside(path, text, append=False):
     """Write only a regular file whose folder resolves to where it claims; a cloned repo can plant symlinks."""
     folder = os.path.dirname(path)
@@ -157,8 +178,6 @@ def write_inside(path, text, append=False):
         f.write(text)
 
 
-local_path = at(".claude", "settings.local.json")
-cfg = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
 to_enable = []
 for plugin in packs:
     local, project = enabled_at(local_path, plugin), enabled_at(at(".claude", "settings.json"), plugin)

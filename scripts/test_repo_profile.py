@@ -191,8 +191,16 @@ def test_malformed_local_settings_is_left_alone():
     assert open(os.path.join(cwd, ".claude", "settings.local.json")).read() == "{not json"
 
 
-def test_empty_folder_and_off_switch_print_nothing():
-    assert run(repo()) == ""
+def test_new_repo_names_the_packs_that_are_off_before_a_stack_is_scaffolded():
+    cwd = repo()
+    ctx = run(cwd, config_dir({"frontend@harness": True}))
+    assert "no manifest" in ctx and "ai@harness" in ctx and "new session" in ctx, ctx
+    assert "frontend@harness" not in ctx, ctx
+    assert local_settings(cwd) is None
+
+
+def test_off_switch_prints_nothing():
+    assert run(repo(), env={"CLAUDE_REPO_PROFILE": "0"}) == ""
     cwd = repo({"package.json": AI_PKG})
     assert run(cwd, env={"CLAUDE_REPO_PROFILE": "0"}) == ""
     assert local_settings(cwd) is None
