@@ -4,6 +4,7 @@
   python3 scripts/skill-map.py > map.json
   python3 scripts/skill-map.py --plugin ai > map.json      # one plugin and its dependencies only
   python3 <super-board>/skills/visual/scripts/visual.py render --map map.json --out docs/skill-map.html
+  python3 scripts/skill-map.py --into docs/skill-map.html      # refresh the data in the rendered page (no renderer needed)
 
 Nodes come from plugin.json, SKILL.md frontmatter and hook headers, so the map follows the kit; the two
 workflow views are curated below because their order is a design decision, not something to infer.
@@ -59,18 +60,20 @@ def hook_nodes(plugin):
     path = os.path.join(PLUGINS, plugin, "hooks", "hooks.json")
     if not os.path.exists(path):
         return []
-    events = {}  # one script can be registered on several events
+    events = {}  # one script can be registered on several events; the command may carry an interpreter prefix
     for event, matchers in json.load(open(path))["hooks"].items():
         for m in matchers:
             for h in m["hooks"]:
-                events.setdefault(h["command"].split("/")[-1].strip('"'), []).append(event)
+                m_path = re.search(r'\$\{CLAUDE_PLUGIN_ROOT\}"?/([\w./-]+)', h["command"])
+                events.setdefault(m_path.group(1) if m_path else h["command"].split("/")[-1].strip('"'), []).append(event)
     nodes = []
-    for script, evs in events.items():
-        rel = f"plugins/{plugin}/hooks/{script}"
+    for relpath, evs in events.items():
+        script = relpath.split("/")[-1]
+        rel = f"plugins/{plugin}/{relpath}"
         header = [l.lstrip("# ").strip() for l in read(os.path.join(ROOT, rel)).splitlines()[1:6]
                   if l.startswith("#") and l.strip("# ")]
         what = re.sub(rf"^{re.escape(script)}\s*[—:-]\s*", "", header[0]) if header else script
-        nodes.append({"id": f"h-{script[:-3]}", "label": script[:-3], "kind": "hook",
+        nodes.append({"id": f"h-{script.rsplit('.', 1)[0]}", "label": script.rsplit('.', 1)[0], "kind": "hook",
                       "sublabel": ", ".join(dict.fromkeys(evs)), "what": what,
                       "when": f"Fires on {', '.join(dict.fromkeys(evs))}.",
                       "how": " ".join(header) or what, "source": rel})
@@ -120,9 +123,12 @@ def main():
     if only:
         return emit_single(only, order, nodes, edges, views)
     nodes.append({"id": "harness", "label": "harness", "kind": "board", "sublabel": "bundle — install this",
-                  "what": "The one install: depends on all nine role plugins.",
+                  "what": "The one install: the eight process plugins every role shares. The role packs (frontend, backend, "
+                          "mobile, devops, ai) and the workplace domain pack stay out of the bundle and are enabled per repo "
+                          "by core's repo-profile hook.",
                   "when": "/plugin install harness@harness, or bash scripts/install.sh from a clone.",
-                  "how": "Each role plugin can also be installed alone; its dependencies come with it.",
+                  "how": "Each plugin can also be installed alone; its dependencies come with it. A pack is installed off and "
+                         "turned on where the repo's manifests need it.",
                   "source": "plugins/harness/.claude-plugin/plugin.json"})
     for p in ORDER:
         if not any(e["to"] == f"p-{p}" for e in edges if e["id"].startswith("dep-")) or p in ("guards", "frontend", "backend", "mobile", "devops", "ai"):
@@ -132,7 +138,15 @@ def main():
     agent = ["agent-architect", "agent-feature", "agent-tool", "agent-hitl", "agent-frontend",
              "agent-verify-turn", "agent-evals", "agent-security"]
     chain = lambda ids, label: [{"id": f"w-{a}-{b}", "from": a, "to": b, "label": label} for a, b in zip(ids, ids[1:])]
+    roles = ["feature", "db-change", "api-endpoint", "ui-feature", "mobile-feature", "agent-feature", "infra-change"]
     views += [
+        {"id": "roles", "parent": "overview", "title": "Build a feature across roles",
+         "caption": "/feature is the supervisor: one slice table, each slice dispatched to its role pack's engineer "
+                    "(backend, frontend, mobile, ai, devops) on sonnet, reviewed here on opus.",
+         "nodeIds": roles, "edges": [
+             {"id": f"r-{s}", "from": "feature", "to": s, "label": label} for s, label in (
+                 ("db-change", "backend-engineer"), ("api-endpoint", "backend-engineer"), ("ui-feature", "frontend-engineer"),
+                 ("mobile-feature", "mobile-engineer"), ("agent-feature", "ai-engineer"), ("infra-change", "devops-engineer"))]},
         {"id": "start", "parent": "overview", "title": "Start a project",
          "caption": "Empty folder: design → plan → scaffold, then /project-init. Existing repo: start at /project-init.",
          "nodeIds": start, "mainSteps": True, "edges": chain(start, "then")},
@@ -150,11 +164,26 @@ def main():
              {"id": "a9", "from": "agent-evals", "to": "agent-security", "label": "before ship"}]},
     ]
     views.insert(0, {"id": "overview", "parent": None, "title": "harness",
-                     "caption": "One install, nine role plugins. Double-click a plugin to see its skills.",
+                     "caption": "One install for the process; role packs turn on per repo. Double-click a plugin to see its skills.",
                      "nodeIds": ["harness"] + [f"p-{p}" for p in ORDER]})
-    json.dump({"title": "harness — skill map", "root": "overview", "nodes": nodes, "edges": edges,
-               "views": views, "browserOrder": ["start", "ai-assistant"] + [f"p-{p}" for p in ORDER]},
-              sys.stdout, indent=1, ensure_ascii=False)
+    emit({"title": "harness — skill map", "root": "overview", "nodes": nodes, "edges": edges,
+          "views": views, "browserOrder": ["roles", "start", "ai-assistant"] + [f"p-{p}" for p in ORDER]})
+
+
+def emit(model):
+    """Print the model, or with --into <page.html> replace the #visual-data block of an already rendered page."""
+    if "--into" in sys.argv:
+        page = sys.argv[sys.argv.index("--into") + 1]
+        html = read(page)
+        data = json.dumps(model, ensure_ascii=False).replace("</", "<\\/")
+        new, n = re.subn(r'(<script id="visual-data" type="application/json">).*?(</script>)',
+                         lambda m: m.group(1) + data + m.group(2), html, count=1, flags=re.S)
+        if n != 1:
+            sys.exit(f"{page}: no #visual-data block to replace")
+        with open(page, "w", encoding="utf-8") as f:
+            f.write(new)
+        return
+    json.dump(model, sys.stdout, indent=1, ensure_ascii=False)
 
 
 def emit_single(only, order, nodes, edges, views):
@@ -184,9 +213,8 @@ def emit_single(only, order, nodes, edges, views):
     views.insert(0, {"id": "overview", "parent": None, "title": only,
                      "caption": f"{only} and the plugins it installs with it. Double-click a plugin to see its skills.",
                      "nodeIds": [f"p-{p}" for p in order]})
-    json.dump({"title": f"{only} — skill map", "root": "overview", "nodes": nodes, "edges": edges, "views": views,
-               "browserOrder": [v["id"] for v in views if v["id"] in ("ai-assistant", "land")] + [f"p-{p}" for p in order]},
-              sys.stdout, indent=1, ensure_ascii=False)
+    emit({"title": f"{only} — skill map", "root": "overview", "nodes": nodes, "edges": edges, "views": views,
+          "browserOrder": [v["id"] for v in views if v["id"] in ("ai-assistant", "land")] + [f"p-{p}" for p in order]})
 
 
 if __name__ == "__main__":
