@@ -98,6 +98,106 @@ def test_chained_segments_are_each_checked():
     assert gate(path, "cd envs/dev; terraform init; terraform plan")[0] == "allow"
 
 
+def test_flag_values_are_not_read_as_the_subcommand():
+    path = repo()
+    assert gate(path, "kubectl -n production apply -f k8s/")[0] == "deny"
+    assert gate(path, "kubectl --context prod delete deploy/api")[0] == "deny"
+    assert gate(path, "helm -n production upgrade api charts/api")[0] == "deny"
+    assert gate(path, "terraform -chdir=envs/prod apply")[0] == "deny"
+    assert gate(path, "kubectl -n staging get pods")[0] == "allow"
+
+
+def test_destroy_variants_and_kind_slash_name():
+    path = repo()
+    assert gate(path, "terraform apply -destroy -var-file=dev.tfvars")[0] == "deny"
+    assert gate(path, "terraform plan -destroy -out=p")[0] == "ask"  # the saved plan's apply shows no -destroy
+    assert gate(path, "kubectl delete ns/staging")[0] == "deny"
+    assert gate(path, "kubectl delete -n dev namespace staging")[0] == "deny"
+
+
+def test_background_subshell_and_substitution_are_segments():
+    path = repo()
+    for cmd in ("terraform plan & terraform apply -var-file=prod.tfvars", "(kubectl apply -f k8s/ -n production)",
+                "echo $(helm upgrade api charts/api -n production)", "echo `terraform apply -var-file=prod.tfvars`",
+                "{ kubectl delete node w1; }"):
+        assert gate(path, cmd)[0] == "deny", cmd
+
+
+def test_wrappers_are_peeled():
+    path = repo()
+    for cmd in ("sudo terraform apply -var-file=prod.tfvars", "timeout 300 kubectl apply -f k8s/ -n production",
+                "command helm upgrade api charts/api -n production", "pnpm exec terraform apply -var-file=prod.tfvars",
+                "npx -y terraform apply -var-file=prod.tfvars", "nohup terraform apply -var-file=prod.tfvars",
+                "env TF_WORKSPACE=prod terraform apply"):
+        assert gate(path, cmd)[0] == "deny", cmd
+    assert gate(path, "sudo terraform plan")[0] == "allow"
+
+
+def test_unknown_wrappers_and_scripts_fail_closed():
+    path = repo()
+    assert gate(path, "make deploy TOOL=terraform apply")[0] == "ask"
+    assert gate(path, "bash scripts/deploy.sh terraform")[0] == "ask"
+    assert gate(path, "cat cmd.txt | bash")[0] == "allow"  # nothing in the text names a tool
+    assert gate(path, "echo 'kubectl apply -f k8s/ -n production' | bash")[0] == "ask"
+    assert gate(path, "source ./apply-helm.sh")[0] == "ask"
+    assert gate(path, "make build")[0] == "allow"
+
+
+def test_unknown_flag_cannot_smuggle_a_read_only_subcommand():
+    path = repo()
+    assert gate(path, "kubectl --as admin apply -f k8s/ -n production")[0] == "deny"  # --as takes a value
+    assert gate(path, "kubectl --odd-flag get apply -f k8s/ -n production")[0] == "ask"  # fail closed, never 'get'
+    assert gate(path, "helm --kube-as-user me upgrade api charts/api -n production")[0] == "deny"
+    assert gate(path, "helm diff upgrade api charts/api -n production")[0] == "allow"
+    # `diff` behind an unknown flag may be that flag's value, with `upgrade` the real verb: never the read-only shortcut
+    assert gate(path, "helm --kube-token diff upgrade api charts/api -n production")[0] != "allow"
+    assert gate(path, "helm --odd diff upgrade api charts/api -n production")[0] != "allow"
+
+
+def test_substitution_inside_double_quotes_is_a_segment():
+    path = repo()
+    assert gate(path, 'echo "$(terraform apply -var-file=prod.tfvars)"')[0] == "deny"
+    assert gate(path, 'OUT="$(kubectl apply -f k8s/ -n production)"')[0] == "deny"
+    assert gate(path, 'echo "`helm upgrade api charts/api -n production`"')[0] == "deny"
+    assert gate(path, "echo '$(terraform apply -var-file=prod.tfvars)'")[0] == "allow"  # single quotes run nothing
+    # operators inside the substitution split again: the apply is not hidden behind an inert `echo a;`
+    assert gate(path, 'echo "$(echo a; terraform apply -var-file=prod.tfvars)"')[0] == "deny"
+    assert gate(path, 'echo "`true && kubectl apply -f k8s/ -n production`"')[0] == "deny"
+
+
+def test_programs_that_can_execute_are_not_inert():
+    path = repo()
+    assert gate(path, "find . -name '*.yaml' -exec kubectl apply -f {} -n production \\;")[0] == "ask"
+    assert gate(path, "git -c alias.a='!terraform apply -var-file=prod.tfvars' a")[0] == "ask"
+    assert gate(path, "awk 'BEGIN{system(\"terraform apply\")}'")[0] == "ask"
+    assert gate(path, "git commit -m 'docs: terraform apply steps'")[0] == "allow"
+    assert gate(path, "grep -rn 'kubectl apply' docs/")[0] == "allow"
+
+
+def test_git_is_inert_only_for_safe_subcommands():
+    path = repo()
+    for cmd in ("git rebase -x 'terraform apply -var-file=prod.tfvars' HEAD~2", "git bisect run kubectl apply -f k8s/ -n production",
+                "git submodule foreach 'helm upgrade api charts/api -n production'",
+                "git difftool --extcmd='terraform apply -var-file=prod.tfvars'",
+                "GIT_PAGER='terraform apply -var-file=prod.tfvars' git log", "GIT_SSH_COMMAND='kubectl apply -f k8s/ -n production' git fetch",
+                "git fetch --upload-pack='terraform apply -var-file=prod.tfvars' origin", "git push -u origin x --receive-pack='kubectl apply -f k8s/ -n production'",
+                "git --exec-path=/tmp/x log terraform apply", "git -C rebase log -x 'terraform apply -var-file=prod.tfvars'"):
+        assert gate(path, cmd)[0] == "ask", cmd
+    assert gate(path, "git -C /tmp/repo log --grep 'terraform apply'")[0] == "allow"  # -C takes a value, log is the verb
+
+
+def test_quoted_substitution_restores_the_quote_and_unbalanced_quotes_ask():
+    path = repo()
+    # after `)` the text is back inside the double quote, so the `;` is literal and the apply is a real segment again
+    assert gate(path, 'echo "a$(true)"; terraform apply -var-file=prod.tfvars')[0] == "deny"
+    assert gate(path, 'echo "`true`; done"; kubectl apply -f k8s/ -n production')[0] == "deny"
+    assert gate(path, 'echo "$(terraform plan -var-file=prod.tfvars) ok"')[0] == "allow"
+    assert gate(path, "echo 'x; terraform apply -var-file=prod.tfvars")[0] == "ask"  # unterminated quote
+    assert gate(path, "echo 'unterminated but harmless")[0] == "allow"
+    assert gate(path, "git log --grep 'terraform apply'")[0] == "allow"
+    assert gate(path, "git add docs/terraform-apply.md")[0] == "allow"
+
+
 def test_config_defines_production_names():
     path = repo(config={"production": ["eu-live"]})
     assert gate(path, "kubectl apply -f k8s/ -n eu-live")[0] == "deny"
