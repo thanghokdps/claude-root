@@ -37,7 +37,7 @@ Inside Claude Code, add the marketplace from **one** source. Both hold the same 
 Then install one role and reload:
 
 ```text
-/plugin install dev@harness          # developer (brings core, plan, review, progress)
+/plugin install dev@harness          # developer (brings core, plan, review, ship, progress)
 /plugin install ai@harness           # AI role pack by hand (normally enabled per repo by repo-profile)
 /plugin install harness@harness      # all eight general role plugins
 /reload-plugins

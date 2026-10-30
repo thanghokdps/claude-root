@@ -27,7 +27,7 @@ A **source library** and the `harness` marketplace of role plugins (local direct
     plan        breakdown kickoff brainstorming grill domain-model writing-plans codebase-design → progress
                 breakdown: requirement → tasks with criteria + estimates → issues on GitHub/GitLab/Jira → /ticket each
     review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger repo-audit → progress
-      dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint → core, plan, review
+      dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint → core, plan, review, ship
                 feature is the supervisor: one slice table, each slice dispatched to a role pack's <role>-engineer (sonnet)
                 + ticket-ledger, ticket-gate, test-lock, weakened-check, auto-decisions hooks (always on: a ticket's commit/PR waits for its plan's skills)
     frontend    role pack: agents/frontend-engineer.md + ui-feature design-ui + rules/ (react, nextjs) + references/ → progress, dev
