@@ -95,14 +95,25 @@ INERT = {"echo", "printf", "cat", "grep", "rg", "ls", "head", "tail", "less", "m
 GIT_SAFE = {"status", "log", "diff", "show", "add", "commit", "push", "pull", "fetch", "branch", "checkout", "switch",
             "restore", "reset", "rev-parse", "remote", "tag", "stash", "blame", "grep", "rm", "mv", "describe",
             "ls-files", "cherry-pick", "revert", "merge", "worktree", "clone", "init"}
-GIT_EXEC = re.compile(r"(^|\s)(-c|--config-env\S*|alias\.\S*|!|config|--extcmd\S*|-x|--exec)(\s|$|=)")
+GIT_EXEC = re.compile(r"(^|\s)(-c|--config-env\S*|alias\.\S*|!|config|--extcmd\S*|-x|--exec|-u|--upload-pack\S*"
+                      r"|--receive-pack\S*|--template\S*|--exec-path\S*)(\s|$|=)")
+# git's global options that take a value: skipped with their value before the subcommand is read.
+GIT_VALUE_FLAGS = {"-C", "--git-dir", "--work-tree", "--namespace", "--super-prefix"}
 
 
 def git_inert(args, env):
     """True when a git command line can only read, write or move text; anything that may run a program asks."""
     if any(k.startswith("GIT_") for k in env) or GIT_EXEC.search(" ".join(args)):
         return False
-    sub = next((a for a in args if not a.startswith("-")), "")
+    sub, skip = "", False
+    for a in args:
+        if skip:
+            skip = False
+        elif a.startswith("-"):
+            skip = a in GIT_VALUE_FLAGS
+        else:
+            sub = a
+            break
     return sub in GIT_SAFE
 reasons, asks = [], []
 
@@ -116,15 +127,21 @@ def ask(msg):
 
 
 def segments(text):
-    """Split on shell operators outside quotes. Inside double quotes `$(` and backticks still start a new segment
-    and the quote state is dropped, since the shell runs what they hold as a fresh command list (`;`, `&&`, `|` split
-    again inside); only single quotes suppress everything."""
-    out, cur, quote, i = [], "", None, 0
+    """Split on shell operators outside quotes. Inside double quotes `$(` and backticks still start a new segment,
+    parsed unquoted (`;`, `&&`, `|` split again inside) since the shell runs what they hold as a fresh command list;
+    the matching `)` or backtick restores the double quote. Only single quotes suppress everything."""
+    out, cur, quote, i, nest = [], "", None, 0, []
     while i < len(text):
         ch = text[i]
         if quote == '"' and (text.startswith("$(", i) or ch == "`"):
             out.append(cur)
+            nest.append(")" if text.startswith("$(", i) else "`")
             cur, quote, i = "", None, i + (2 if text.startswith("$(", i) else 1)
+            continue
+        if quote is None and nest and ch == nest[-1]:
+            out.append(cur)
+            nest.pop()
+            cur, quote, i = "", '"', i + 1
             continue
         if quote:
             quote = None if ch == quote else quote
@@ -280,6 +297,13 @@ def mentions_tool(text):
 segs = [s for s in segments(cmd) if s.strip()]
 whole_mentions = mentions_tool(cmd)
 for seg in segs:
+    try:
+        shlex.split(seg)
+    except ValueError:
+        if mentions_tool(seg):
+            # An unterminated quote: the shell's reading and the gate's may differ, so the gate does not guess.
+            ask("the command has an unbalanced quote around a terraform/kubectl/helm call; the gate cannot read it — rewrite it.")
+            continue
     env, raw = tokens(seg)
     if not raw:
         continue

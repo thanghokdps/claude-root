@@ -179,8 +179,21 @@ def test_git_is_inert_only_for_safe_subcommands():
     for cmd in ("git rebase -x 'terraform apply -var-file=prod.tfvars' HEAD~2", "git bisect run kubectl apply -f k8s/ -n production",
                 "git submodule foreach 'helm upgrade api charts/api -n production'",
                 "git difftool --extcmd='terraform apply -var-file=prod.tfvars'",
-                "GIT_PAGER='terraform apply -var-file=prod.tfvars' git log", "GIT_SSH_COMMAND='kubectl apply -f k8s/ -n production' git fetch"):
+                "GIT_PAGER='terraform apply -var-file=prod.tfvars' git log", "GIT_SSH_COMMAND='kubectl apply -f k8s/ -n production' git fetch",
+                "git fetch --upload-pack='terraform apply -var-file=prod.tfvars' origin", "git push -u origin x --receive-pack='kubectl apply -f k8s/ -n production'",
+                "git --exec-path=/tmp/x log terraform apply", "git -C rebase log -x 'terraform apply -var-file=prod.tfvars'"):
         assert gate(path, cmd)[0] == "ask", cmd
+    assert gate(path, "git -C /tmp/repo log --grep 'terraform apply'")[0] == "allow"  # -C takes a value, log is the verb
+
+
+def test_quoted_substitution_restores_the_quote_and_unbalanced_quotes_ask():
+    path = repo()
+    # after `)` the text is back inside the double quote, so the `;` is literal and the apply is a real segment again
+    assert gate(path, 'echo "a$(true)"; terraform apply -var-file=prod.tfvars')[0] == "deny"
+    assert gate(path, 'echo "`true`; done"; kubectl apply -f k8s/ -n production')[0] == "deny"
+    assert gate(path, 'echo "$(terraform plan -var-file=prod.tfvars) ok"')[0] == "allow"
+    assert gate(path, "echo 'x; terraform apply -var-file=prod.tfvars")[0] == "ask"  # unterminated quote
+    assert gate(path, "echo 'unterminated but harmless")[0] == "allow"
     assert gate(path, "git log --grep 'terraform apply'")[0] == "allow"
     assert gate(path, "git add docs/terraform-apply.md")[0] == "allow"
 
