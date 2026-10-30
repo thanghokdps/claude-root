@@ -1,0 +1,10 @@
+{
+  "scope": ".",
+  "runs": [
+    { "run_id": 1, "date": "2026-10-30", "commit": "0000000000000000000000000000000000000001", "units_audited": 1 }
+  ],
+  "units": [
+    { "id": "src", "kind": "folder", "path": "src", "status": "audited",
+      "last_commit": "0000000000000000000000000000000000000001", "axes_checked": ["bug"], "run_id": 1 }
+  ]
+}

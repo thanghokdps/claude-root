@@ -1,0 +1,18 @@
+[
+  { "id": "billing/close_day.py:utc-day", "verdict": "confirmed", "axis": "bug", "severity": "must",
+    "path": "src/billing/close_day.py", "line": 40,
+    "case": "an order at 00:30 Berlin time is billed the day before: today comes from the UTC server clock",
+    "fix": "datetime.now(ZoneInfo(\"Europe/Berlin\")).date()",
+    "cost_of_skipping": "late orders carry the wrong date and accounting corrects them by hand",
+    "commit": "0000000000000000000000000000000000000001", "run_id": 1 },
+  { "id": "api/orders.ts:replay", "verdict": "needs_validation", "axis": "risk",
+    "path": "src/api/routes.ts", "line": 88,
+    "case": "a replayed webhook creates a second order when the idempotency key is not enforced upstream",
+    "missing_fact": "whether the gateway dedupes by Idempotency-Key: the payments team or the gateway dashboard",
+    "commit": "0000000000000000000000000000000000000002", "run_id": 2 },
+  { "id": "lib/retry.ts:unused", "verdict": "rejected", "axis": "lean",
+    "path": "src/lib/retry.ts", "line": 1,
+    "case": "retry() has no caller and can be deleted",
+    "refuted_by": "src/jobs/sync.ts:14",
+    "commit": "0000000000000000000000000000000000000002", "run_id": 2 }
+]

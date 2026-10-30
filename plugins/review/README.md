@@ -2,7 +2,7 @@
 
 Review a diff, a PR or a whole repo and come back with numbered findings, each with the concrete case that fails, the fix and the cost of skipping it.
 
-**For:** reviewers, and authors reviewing themselves before the PR. Read-only except `/resolve-pr-feedback`, which makes the fixes a review asked for.
+**For:** reviewers, and authors reviewing themselves before the PR. Read-only except `/resolve-pr-feedback`, which makes the fixes a review asked for, and `/repo-audit`, which keeps its coverage ledger and findings under `specs/audit/` (gitignored) so a repeated run audits the gaps.
 
 ## Skills
 
