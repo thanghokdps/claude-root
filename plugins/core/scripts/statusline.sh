@@ -15,6 +15,11 @@ WINDOW = 200_000  # the transcript fallback has no window size; the docs' defaul
 SEP = " · "
 
 
+def clean(s):
+    # Text from the event or a PLAN.md goes straight to the terminal: no escape sequences from there.
+    return re.sub(r"[\x00-\x1f\x7f-\x9f]", "", str(s))
+
+
 def git(cwd, *args):
     try:
         r = subprocess.run(["git", "-C", cwd, *args], capture_output=True, text=True, timeout=2)
@@ -72,7 +77,7 @@ def plan_segment(path):
             done += 1
         elif current is None:
             action = re.search(r"<action>(.*?)</action>", body, re.S)
-            current = " ".join((action.group(1) if action else "").split())
+            current = " ".join(clean(action.group(1) if action else "").split())
     seg = f"plan {done}/{len(tasks)}"
     if current:
         seg += " " + (current[:29] + "…" if len(current) > 30 else current)
@@ -94,13 +99,13 @@ except ValueError:
 if not isinstance(ev, dict):
     ev = {}
 cwd = (ev.get("workspace") or {}).get("current_dir") or ev.get("cwd") or os.getcwd()
-branch = git(cwd, "symbolic-ref", "--short", "HEAD")
+branch = clean(git(cwd, "symbolic-ref", "--short", "HEAD"))
 
 segments = []
 try:
     model = (ev.get("model") or {}).get("display_name")
     if model:
-        segments.append(str(model))
+        segments.append(clean(model))
     if branch:
         # Same shape ticket-gate.sh reads: <type>/<ID>-<slug> with ID = 412 or JIRA-412.
         m = re.match(r"^[\w.-]+/([A-Za-z]+-\d+|\d+)(?:[-_]|$)", branch)
