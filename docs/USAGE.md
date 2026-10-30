@@ -169,6 +169,7 @@ Finish: `/verify-done` before saying done, `/review-checklist` before the PR, `/
 ## 8. Team workflow
 
 - `/sync-memory` at the start of a session: fetches and pulls, scans your commits since the last sync into `.claude/memory/commits/`, lists teammates' commits and flags files you both touched.
+- The first session in a repo writes `.claude/settings.json` with the kit marketplace (the GitHub mirror), `dev@harness` and the repo's packs, left uncommitted. Commit it and each teammate is offered the kit when they trust the folder. To keep a repo (a client's, say) out of it, set any `*@harness` to `false` in its `.claude/settings.json` or `.claude/settings.local.json`.
 - Everyone installs from the same marketplace, so a skill or hook change reaches the team on `/plugin marketplace update harness` (GitLab after `/sync-remote` has mirrored it).
 - Project rules and docs travel in the repo (`.claude/docs/`, `.claude/rules/`, `CLAUDE.md`), kept current by `/docs-sync` at the end of each feature.
 - `/retro` (lead) at the end of a week reads commits, PRs, reverts and CI failures and proposes what to standardise next.

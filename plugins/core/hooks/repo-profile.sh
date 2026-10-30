@@ -5,8 +5,10 @@
 # never write settings). Reads manifests and marker folders only — no model call:
 # root, apps/*, packages/* package.json; pyproject.toml / requirements*.txt; go.mod, Cargo.toml; prisma/, drizzle/,
 # alembic/, eas.json, .claude/docs/, docs/tickets/. A folder with no manifest gets only the role packs still off and how to enable one.
-# A role or domain pack the repo needs and that is not on gets enabled in .claude/settings.local.json (personal,
-# excluded from git), effective next session: frontend@harness for a web UI framework (not React Native alone),
+# Team setup: in a git repo (not $HOME) with no *@harness: false in its settings, SessionStart merges the kit
+# marketplace, dev@harness and the packs below into .claude/settings.json and leaves it uncommitted for the user.
+# An opted-out repo gets the packs in .claude/settings.local.json (personal, excluded from git) instead.
+# Packs, effective after /reload-plugins or a new session: frontend@harness for a web UI framework (not React Native alone),
 # backend@harness for a server framework, an ORM, go or rust, mobile@harness for react-native / expo / eas.json,
 # devops@harness for a Dockerfile, compose file, CI workflow, *.tf, k8s/ or Chart.yaml, ai@harness for an AI
 # assistant, workplace@harness for a
@@ -28,7 +30,8 @@ try:
     event = "SubagentStart" if ev.get("hook_event_name") == "SubagentStart" else "SessionStart"
     cwd = ev.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
     r = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"], capture_output=True, text=True)
-    top = r.stdout.strip() if r.returncode == 0 else cwd
+    in_git = r.returncode == 0
+    top = r.stdout.strip() if in_git else cwd
 except Exception:
     sys.exit(0)
 
@@ -53,15 +56,78 @@ def enabled_at(path, plugin):
 
 
 local_path = at(".claude", "settings.local.json")
+shared_path = at(".claude", "settings.json")
 cfg = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
+# A constant, never this machine's registration: that one can be a personal SSH alias or a local path.
+KIT_MARKETPLACE = {"source": {"source": "github", "repo": "thanghokdps/claude-root"}}
 
 
 def is_on(plugin):
-    for path in (local_path, at(".claude", "settings.json"), os.path.join(cfg, "settings.json")):
+    for path in (local_path, shared_path, os.path.join(cfg, "settings.json")):
         state = enabled_at(path, plugin)
         if state is not None:
             return state is True
     return False
+
+
+def write_inside(path, text, append=False):
+    """Write only a regular file whose folder resolves to where it claims; a cloned repo can plant symlinks."""
+    folder = os.path.dirname(path)
+    if os.path.islink(folder) or os.path.islink(path):
+        raise OSError("symlink")
+    os.makedirs(folder, exist_ok=True)
+    if os.path.realpath(folder) != os.path.join(os.path.realpath(os.path.dirname(folder)), os.path.basename(folder)):
+        raise OSError("folder resolves elsewhere")
+    flags = os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW | (os.O_APPEND if append else os.O_TRUNC)
+    with os.fdopen(os.open(path, flags, 0o600), "w") as f:
+        f.write(text)
+
+
+def opted_out():
+    """Any *@harness: false in the repo's settings keeps the kit out of its team file (e.g. a client repo)."""
+    for path in (local_path, shared_path):
+        s = load_json(path)
+        plugins = s.get("enabledPlugins") if isinstance(s, dict) else None
+        if isinstance(plugins, dict) and any(k.endswith("@harness") and v is False for k, v in plugins.items()):
+            return True
+    return False
+
+
+def setup_repo(plugins):
+    """Add the kit marketplace, dev and the repo's packs to .claude/settings.json so teammates get them once it is
+    committed. Returns what it added ([] when already there), or None when the repo is not set up this way."""
+    if event != "SessionStart" or not in_git or opted_out():
+        return None
+    if os.path.realpath(top) == os.path.realpath(os.path.expanduser("~")):
+        return None
+    if os.path.islink(at(".claude")) or os.path.islink(shared_path):
+        return None
+    settings = load_json(shared_path) if os.path.exists(shared_path) else {}
+    if not isinstance(settings, dict):
+        return None
+    markets, enabled = settings.get("extraKnownMarketplaces", {}), settings.get("enabledPlugins", {})
+    if not isinstance(markets, dict) or not isinstance(enabled, dict):
+        return None
+    added = []
+    if "harness" not in markets:
+        settings.setdefault("extraKnownMarketplaces", {})["harness"] = KIT_MARKETPLACE
+        added.append("the harness marketplace")
+    for plugin in ["dev@harness"] + plugins:
+        if plugin not in enabled:
+            settings.setdefault("enabledPlugins", {})[plugin] = True
+            added.append(plugin)
+    if added:
+        try:
+            write_inside(shared_path, json.dumps(settings, indent=2) + "\n")
+        except OSError:
+            return None
+    return added
+
+
+def setup_note(added):
+    return (f"Wrote .claude/settings.json ({', '.join(added)}), uncommitted: tell the user in your first reply that "
+            "committing it gives teammates the kit when they trust the folder, or that they can remove it; plugins "
+            "it turns on load after /reload-plugins.") if added else ""
 
 
 deps, manifests = set(), []
@@ -85,15 +151,23 @@ for name, label in (("go.mod", "go"), ("Cargo.toml", "rust")):
     if os.path.exists(at(name)):
         manifests.append(label)
 if not manifests:
-    # Nothing to detect from yet, and a pack enabled now loads only next session: say so before a stack is scaffolded.
+    # Nothing to detect from yet, and a pack enabled now loads only after a reload: say so before a stack is scaffolded.
+    added = setup_repo([])
     off = [p for p in ("frontend@harness", "backend@harness", "mobile@harness", "devops@harness", "ai@harness")
            if not is_on(p)]
+    enable = ("add it to enabledPlugins in .claude/settings.json" if added is not None
+              else "run `claude plugin enable <pack> --scope local`")
+    lines = []
     if off:
-        print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": (
-            "REPO PROFILE: new repo, no manifest yet. Role packs off here: " + ", ".join(off) + ". Before scaffolding "
-            "a stack, stop and tell the user which pack it needs (ai@harness for LangChain / LangGraph / Mastra / "
-            "CopilotKit / Langfuse, frontend, backend, mobile, devops by stack), run `claude plugin enable "
-            "<pack> --scope local`, and ask them to start a new session so its skills (e.g. /agent-architect) load.")}}))
+        lines.append("REPO PROFILE: new repo, no manifest yet. Role packs off here: " + ", ".join(off) + ". Before "
+                     "scaffolding a stack, stop and tell the user which pack it needs (ai@harness for LangChain / "
+                     "LangGraph / Mastra / CopilotKit / Langfuse, frontend, backend, mobile, devops by stack), "
+                     f"{enable}, and ask them to type /reload-plugins (or start a new session) so its skills "
+                     "(e.g. /agent-architect) load.")
+    if setup_note(added or []):
+        lines.append(setup_note(added))
+    if lines:
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": "\n".join(lines)}}))
     sys.exit(0)
 
 
@@ -165,21 +239,9 @@ packs = [p for p, on in (("frontend@harness", frontend), ("backend@harness", bac
                          ("devops@harness", devops), ("ai@harness", ai), ("workplace@harness", workplace)) if on]
 
 
-def write_inside(path, text, append=False):
-    """Write only a regular file whose folder resolves to where it claims; a cloned repo can plant symlinks."""
-    folder = os.path.dirname(path)
-    if os.path.islink(folder) or os.path.islink(path):
-        raise OSError("symlink")
-    os.makedirs(folder, exist_ok=True)
-    if os.path.realpath(folder) != os.path.join(os.path.realpath(os.path.dirname(folder)), os.path.basename(folder)):
-        raise OSError("folder resolves elsewhere")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW | (os.O_APPEND if append else os.O_TRUNC)
-    with os.fdopen(os.open(path, flags, 0o600), "w") as f:
-        f.write(text)
-
-
+added = setup_repo(packs)
 to_enable = []
-for plugin in packs:
+for plugin in packs if added is None else []:
     local, project = enabled_at(local_path, plugin), enabled_at(at(".claude", "settings.json"), plugin)
     explicit = local if local is not None else project
     if explicit is None and enabled_at(os.path.join(cfg, "settings.json"), plugin) is not True:
@@ -241,8 +303,9 @@ lines.append("Read .claude/docs/index.md before scanning source; /docs-sync befo
              else "No .claude/docs yet — /project-init builds it once, so later sessions skip the rescan.")
 if workplace:
     lines.append("Domain: workplace — requests, approvals, balances or bookings → /workplace-review before the PR.")
-if enable_note:
-    lines.append(enable_note)
+for note in (enable_note, setup_note(added or [])):
+    if note:
+        lines.append(note)
 print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": "\n".join(lines)}}))
 PY
 exit 0
