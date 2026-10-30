@@ -95,39 +95,21 @@ INERT = {"echo", "printf", "cat", "grep", "rg", "ls", "head", "tail", "less", "m
 GIT_SAFE = {"status", "log", "diff", "show", "add", "commit", "push", "pull", "fetch", "branch", "checkout", "switch",
             "restore", "reset", "rev-parse", "remote", "tag", "stash", "blame", "grep", "rm", "mv", "describe",
             "ls-files", "cherry-pick", "revert", "merge", "worktree", "clone", "init"}
-# Tokens (exact, or the prefix before `=`) that make git run a program.
-GIT_EXEC = {"-c", "--config", "--config-env", "--extcmd", "-x", "--exec", "-u", "--upload-pack", "--receive-pack",
-            "--template", "--exec-path", "config"}
-# git's global options: the ones that take a value are skipped with it; any other option before the subcommand is
-# unknown to the gate and makes the line non-inert.
-GIT_VALUE_FLAGS = {"-C", "--git-dir", "--work-tree", "--namespace", "--super-prefix", "--attr-source", "--list-cmds"}
-GIT_BOOL_FLAGS = {"-p", "--paginate", "-P", "--no-pager", "--bare", "--literal-pathspecs", "--glob-pathspecs",
-                  "--noglob-pathspecs", "--icase-pathspecs", "--no-replace-objects", "--no-optional-locks",
-                  "--no-lazy-fetch", "--no-advice"}
-
-
-def git_exec_token(tok):
-    name = tok.split("=", 1)[0]
-    return name in GIT_EXEC or tok.startswith("alias.") or "!" in tok
+# The options a git line may carry and still be inert. git has too many ways to run a program (-c, -x, -u,
+# --upload-pack, --exec-path, abbreviated long options, bundled short flags, EDITOR / PAGER variables) to deny-list
+# them: an option not on this list, or any variable on the line, makes the line non-inert, and only matters when
+# the line also names terraform / kubectl / helm.
+GIT_OPTS = {"-m", "--message", "--grep", "--oneline", "--stat", "--patch", "-n", "--all", "-a", "--amend", "--no-edit",
+            "--", "-q", "--quiet", "-v", "--verbose", "--cached", "--staged", "-s", "--short", "--name-only", "-b",
+            "-d", "-D", "--no-pager", "-P"}
 
 
 def git_inert(args, env):
     """True when a git command line can only read, write or move text; anything that may run a program asks."""
-    if any(k.startswith("GIT_") for k in env) or any(git_exec_token(a) for a in args):
+    if env:
         return False
-    sub, skip = "", False
-    for a in args:
-        if skip:
-            skip = False
-        elif a.startswith("-"):
-            if a in GIT_VALUE_FLAGS:
-                skip = True
-            elif a.split("=", 1)[0] not in GIT_VALUE_FLAGS and a not in GIT_BOOL_FLAGS:
-                return False
-        else:
-            sub = a
-            break
-    return sub in GIT_SAFE
+    sub = next((a for a in args if a not in ("--no-pager", "-P")), "")
+    return sub in GIT_SAFE and all(a.split("=", 1)[0] in GIT_OPTS for a in args if a.startswith("-"))
 reasons, asks = [], []
 
 
@@ -143,10 +125,16 @@ def segments(text):
     """Split on shell operators outside quotes. Inside double quotes `$(` and backticks still start a new segment,
     parsed unquoted (`;`, `&&`, `|` split again inside) since the shell runs what they hold as a fresh command list;
     the matching `)` or backtick restores the double quote: every unquoted `(` opened inside the substitution is
-    pushed too, so an inner `)` cannot close it early. Only single quotes suppress everything."""
+    pushed too, so an inner `)` cannot close it early. A backslash outside single quotes escapes the next character,
+    which then changes no state. Only single quotes suppress everything. Returns (segments, balanced): balanced is
+    False when a substitution is still open at the end, and the caller then does not trust the split."""
     out, cur, quote, i, nest = [], "", None, 0, []  # nest: '"' = closes back into a double quote, '(' = inner paren
     while i < len(text):
         ch = text[i]
+        if ch == "\\" and quote != "'" and i + 1 < len(text):
+            # `\<newline>` is a line continuation and vanishes; any other `\x` is kept as a unit
+            cur, i = (cur if text[i + 1] == "\n" else cur + text[i:i + 2]), i + 2
+            continue
         if quote == '"' and (text.startswith("$(", i) or ch == "`"):
             out.append(cur)
             nest.append(('"', ")" if text.startswith("$(", i) else "`"))
@@ -177,7 +165,7 @@ def segments(text):
                 continue
             cur += ch
         i += 1
-    return out + [cur]
+    return out + [cur], not nest
 
 
 def tokens(seg):
@@ -314,8 +302,14 @@ def mentions_tool(text):
     return any(re.search(rf"\b{t}\b", text) for t in TOOLS)
 
 
-segs = [s for s in segments(cmd) if s.strip()]
+segs, balanced = segments(cmd)
+segs = [s for s in segs if s.strip()]
 whole_mentions = mentions_tool(cmd)
+if whole_mentions and (not balanced or "\\`" in cmd):
+    # An open `$(` / backtick, or an escaped backtick (which nests substitutions inside backticks): the shell's reading
+    # and the gate's may differ, so the gate does not guess.
+    ask("the command nests or leaves open a `$(` / backtick around a terraform/kubectl/helm call; the gate cannot read it — rewrite it.")
+    segs = []
 for seg in segs:
     try:
         shlex.split(seg)
@@ -326,8 +320,19 @@ for seg in segs:
             continue
     env, raw = tokens(seg)
     if not raw:
+        if any(mentions_tool(v) or "$'" in v or "\\x" in v or "\\" in v for v in env.values()):
+            # `X='terraform apply …'; git log` sets the variable for a later segment, where the gate cannot see it;
+            # an escaped value ($'…', \x74…) may spell the tool once expanded
+            ask("a variable set on this line may hold a terraform/kubectl/helm command for a later command; run the tool directly.")
         continue
     head = os.path.basename(raw[0])
+    toks = unwrap(raw)
+    prefix = raw[:len(raw) - len(toks) + 1] if toks else raw  # the wrappers peeled, plus the command word itself
+    if any("$" in t or "`" in t for t in prefix) or (head == "printf" and "-v" in raw[1:3]):
+        # `$X …`, `sudo $X …` or `sudo $FLAG terraform …` runs whatever the variable holds; `printf -v X` builds such a
+        # variable from escapes
+        ask(f"{head} runs or builds a command the gate cannot read; run the tool directly.")
+        continue
     if head == "eval" or head == "xargs" or (head in SHELLS and any(a in ("-c", "-lc", "-ic") for a in raw[1:3])):
         if whole_mentions:
             deny(f"{head} hides a terraform/kubectl/helm command from the gate; run it directly.")
@@ -336,7 +341,6 @@ for seg in segs:
         # bash script.sh, source x, or a pipe whose right-hand side is a shell: the command text is not readable here.
         ask(f"{head} runs a script or stdin that mentions terraform/kubectl/helm; the gate cannot read it — confirm what it applies.")
         continue
-    toks = unwrap(raw)
     if not toks:
         continue
     tool = os.path.basename(toks[0])
