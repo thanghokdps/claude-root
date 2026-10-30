@@ -1,0 +1,7 @@
+exit 2
+coverage-ledger.json:src/api: a stale unit needs last_commit as a 40-hex git sha
+coverage-ledger.json:src/api: a stale unit needs at least one axis in axes_checked
+coverage-ledger.json:src/jobs: an unaudited unit has last_commit null, run_id null and no axes_checked
+findings: confirmed 0, needs_validation 0, rejected 0 (0 total)
+units: unaudited 1, audited 0, stale 2 (3 total); covered 0/3
+runs: 1 (last run 1 on 2026-10-01)

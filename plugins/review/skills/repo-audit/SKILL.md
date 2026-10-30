@@ -2,7 +2,7 @@
 model: opus
 effort: high
 name: repo-audit
-description: Audits a whole repo or a named folder the way a senior developer who just inherited it would — bugs, security and data-loss risks, what breaks at the expected load, risky code without a test, real slowness, and code to delete, reuse or merge. Returns at most 20 numbered findings in Must / Should / Nice, each with the concrete failing case, the fix and the cost of skipping it. Read-only, one-shot. Use when taking over a codebase or before a big change to it; for a diff or PR use review-checklist instead.
+description: Audits a whole repo or a named folder the way a senior developer who just inherited it would — bugs, security and data-loss risks, what breaks at the expected load, risky code without a test, real slowness, and code to delete, reuse or merge. Returns at most 20 numbered findings in Must / Should / Nice, each with the concrete failing case, the fix and the cost of skipping it. Changes no code; keeps a coverage ledger under specs/audit/ so a repeated run audits the gaps instead of the same files. Use when taking over a codebase or before a big change to it; for a diff or PR use review-checklist instead.
 when_to_use: audit this codebase, review the whole repo, inherited or legacy codebase, "audit repo", "rà soát toàn bộ repo", "đánh giá codebase", what can I delete, find bloat, health check before a rewrite or scale-up, /repo-audit
 ---
 
@@ -10,7 +10,11 @@ when_to_use: audit this codebase, review the whole repo, inherited or legacy cod
 
 **Invoke:** `/repo-audit [folder | package]` — default: the whole repo.
 
-A diff review sees what changed; this sees what is already there. Order of importance: correct, safe, holds at the expected load, tested, fast, lean. Reads and reports only; changes no code.
+A diff review sees what changed; this sees what is already there. Order of importance: correct, safe, holds at the expected load, tested, fast, lean. Changes no code; the only files it writes are `specs/audit/coverage-ledger.json` and `specs/audit/findings.json`, the audit's own state (gitignored).
+
+## Step 0 — Read the ledger
+
+One run finds about half of what repeated runs find, so each run starts from the last one's gaps. Follow `${CLAUDE_PLUGIN_ROOT}/references/audit-ledger.md`: read both files under `specs/audit/` if they exist (none → run 1), mark a unit `stale` when `git log -1 --format=%H -- <path>` differs from its `last_commit`, and note which `confirmed` findings sit in a changed file. A ledger that fails `python3 -I ${CLAUDE_PLUGIN_ROOT}/scripts/validate-audit.py specs/audit` is reported, never treated as empty.
 
 ## Step 1 — Map first
 
@@ -18,8 +22,9 @@ A diff review sees what changed; this sees what is already there. Order of impor
 - **Expected load:** one person running a script, or many users and processes at once (README, deploy config, replicas, queues). Scale findings are judged against it; state the load you assumed.
 - **Trace the main flows end to end:** where data comes in, what is stored, what goes out. Read fully the paths where a mistake costs the most: user input, money, auth, data writes, background jobs, state shared between processes.
 - **Big repo** (more than a few hundred source files): go deep on those paths, not file by file. Mapping many folders may go to `Explore` subagents on `haiku`, one per area, reporting paths and entry points only; every finding is still read and verified here.
+- **Units:** turn the map into ledger units (a folder or package, an entry point, a trust boundary) and add the new ones as `unaudited`. Work `unaudited` units first, then `stale`, then audited units checked on fewer than six axes; re-read a unit audited on all six only when a finding leads there.
 
-**Done when:** you can say in two or three sentences what the repo does, for whom, at what load — and you have listed which parts you did not read.
+**Done when:** you can say in two or three sentences what the repo does, for whom, at what load — and you have listed which units you did not read.
 
 ## Step 2 — Look for
 
@@ -42,9 +47,19 @@ A comment `shortcut: <limit>, <when to upgrade>` is a decision, not a finding �
 - Propose the smallest fix that works; prefer one that deletes code. Never propose a layer, framework or config the problem does not need.
 - No style taste, no "consider", no vague worries.
 
-Then send every candidate through `${CLAUDE_PLUGIN_ROOT}/references/refute.md`. The Must / Should / Nice groups hold only `confirmed` findings. List `needs_validation` findings under **Needs validation** (the missing fact and who answers it, no group) and count the `rejected` ones on a `Rejected:` line.
+Then send every candidate through `${CLAUDE_PLUGIN_ROOT}/references/refute.md` — including a carried `confirmed` finding whose file changed since its `commit`; one whose file is unchanged is carried forward as is, and a `rejected` one is raised again only when its cited lines changed. The Must / Should / Nice groups hold only `confirmed` findings. List `needs_validation` findings under **Needs validation** (the missing fact and who answers it, no group) and count the `rejected` ones on a `Rejected:` line.
 
-**Done when:** every finding has its case and a verdict, and each "unused" claim has the grep that proves it.
+## Step 4 — Write the ledger
+
+Append this run to `runs`, set every unit read this run to `audited` with its `last_commit`, `axes_checked` and `run_id`, and write every verdict (confirmed, needs_validation and rejected) to `specs/audit/findings.json`, keeping a carried finding's `id`. Then run:
+
+```bash
+python3 -I ${CLAUDE_PLUGIN_ROOT}/scripts/validate-audit.py specs/audit --summary
+```
+
+Fix every `file:id: message` line it prints and run it again before reporting; the summary's counts feed the Coverage section. A unit whose only findings are `needs_validation` is not covered.
+
+**Done when:** every finding has its case and a verdict, each "unused" claim has the grep that proves it, and the validator exits 0.
 
 ## Output
 
@@ -52,6 +67,7 @@ Plain words; explain a technical term the first time it appears — the reader m
 
 ```markdown
 ## Repo audit — <repo or folder>
+Run N; previous runs: 1 (<date>), 2 (<date>)   ← `Run 1; no previous runs` on the first
 What this repo does: <two or three sentences>. Load assumed: <one line>.
 
 ### Must fix (bug, security, data loss, breaks at the expected load)
@@ -67,13 +83,17 @@ What this repo does: <two or three sentences>. Load assumed: <one line>.
 
 Rejected: <N, each with its refuting path:line>
 
+### Coverage
+Units audited this run: <n> / <total> · stale units left: <m> (<ids>) · unaudited: <k>
+Carried from earlier runs: <c> confirmed findings re-checked, <d> still valid
+
 Verdict: <healthy | fix 1 and 3 first>
 Lean: -<N> lines, -<M> dependencies possible   ← only when lean findings exist
-Not checked: <parts not read or not run>
+Not checked: <units not read or not run>
 ```
 
-Skip empty groups. Nothing found: `What this repo does:`, then `Healthy. Nothing to fix.` and one line on what you checked.
+Skip empty groups. Nothing found: `Run N…`, `What this repo does:`, then `Healthy. Nothing to fix.`, the Coverage section and one line on what you checked.
 
 ## Hand-offs
 
-A finding to fix → `/fix-bug` for a bug, `/feature` for a larger change (dev, if installed) · security findings → built-in `/security-review` · what a fix would break → `/blast-radius` · deliberate shortcuts → `/debt-ledger` · no `.claude/docs/` yet → `/project-init` (core, if installed), so the next audit starts from the map.
+Stale or unaudited units left → run `/repo-audit` again; it starts from them. A finding to fix → `/fix-bug` for a bug, `/feature` for a larger change (dev, if installed) · security findings → built-in `/security-review` · what a fix would break → `/blast-radius` · deliberate shortcuts → `/debt-ledger` · no `.claude/docs/` yet → `/project-init` (core, if installed), so the next audit starts from the map.
