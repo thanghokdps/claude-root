@@ -4,6 +4,9 @@ specs/
 # User-specific local permissions
 .claude/settings.local.json
 
+# lessons the core learn-capture hook writes per machine
+.claude/docs/solutions/
+
 # macOS Finder metadata
 .DS_Store
 
