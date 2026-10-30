@@ -69,13 +69,13 @@ for p in $PLUGINS; do
 done
 # Role and domain packs stay off at user scope: core's repo-profile hook enables them per repo when it detects
 # their stack or domain (frontend: react/next/vue/svelte; backend: a server framework, an ORM, go or rust;
-# agent: @langchain/@copilotkit/@mastra/langgraph; workplace: a `Domain: workplace` line or HR module folders),
+# ai: @langchain/@copilotkit/@mastra/langgraph; workplace: a `Domain: workplace` line or HR module folders),
 # so other repos don't carry their skills.
-for p in frontend backend agent workplace; do
+for p in frontend backend ai workplace; do
   out=$(claude plugin disable "$p@harness" --scope user 2>&1) || true
   case "$out" in *Failed*) echo "  WARN $p stays on at user scope — $(printf '%s' "$out" | head -1)" ;; esac
 done
-echo "  packs off at user scope (enabled per repo by repo-profile): frontend backend agent workplace"
+echo "  packs off at user scope (enabled per repo by repo-profile): frontend backend ai workplace"
 echo "  plugins: $(for f in "$KIT"/plugins/*/.claude-plugin/plugin.json; do
   python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(f\"{d['name']} {d['version']}\", end=' ')" "$f"; done)"
 

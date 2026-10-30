@@ -22,7 +22,7 @@ A **source library** and the `harness` marketplace of role plugins (local direct
   .claude-plugin/marketplace.json  ← lists the 13 plugins below
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
-    core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile, learn-capture hooks (always on; repo-profile enables the role packs frontend, backend, agent and the domain pack workplace per repo) — plus scripts/init.sh and
+    core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile, learn-capture hooks (always on; repo-profile enables the role packs frontend, backend, ai and the domain pack workplace per repo) — plus scripts/init.sh and
                 everything it copies: templates/ memory/ rules/ (rules/*.md → ~/.claude/rules/; rules/stacks/ holds only typescript, javascript, jest) hooks/stacks/ → progress
     plan        kickoff brainstorming grill domain-model writing-plans codebase-design → progress
     review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger repo-audit → progress
@@ -35,12 +35,12 @@ A **source library** and the `harness` marketplace of role plugins (local direct
                 no hooks (gates live in core/dev/ship so they run before the pack is enabled); lint-kit checks the shape
     ship        finish-branch ci-triage release-checklist write-migration incident sync-remote → core
                 + release-gate hook (repos with eas.json: production releases need an approved release/<version>)
-    agent       agent-* + rules/ the skills read on demand                            → progress, dev, ship
+    ai          role pack: agents/ai-engineer.md + agent-* (the deliverable is an agent) + rules/ (mastra, langgraph…) → progress, dev
     workplace   domain pack (HR / workplace apps): workplace-review + references/    → progress
                 a domain pack = a plugin folder + its detect condition in core's repo-profile.sh + install.sh's off list
     lead        retro diagnose-session writing-skills                                 → core
     guards      hooks/hooks.json + hook scripts (opt-in)                              → dev
-    harness     bundle of the eight role plugins — never the domain plugins (agent, workplace): a bundle
+    harness     bundle of the eight process plugins — never the packs (frontend, backend, ai, workplace): a bundle
                 dependency cannot be disabled, so it could not stay off at user scope
   global/CLAUDE.md    ← installed to ~/.claude/CLAUDE.md
   eval/triggers/      ← one routing case per skill

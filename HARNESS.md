@@ -80,7 +80,7 @@ team project    /sync-memory at the start of a session: pull, rebuild memory fro
 
 ```bash
 # Inside Claude Code: add the marketplace once (GitLab or the GitHub mirror, see the README), then
-/plugin install dev@harness            # or agent@harness, or harness@harness
+/plugin install dev@harness            # or harness@harness; role packs (frontend, backend, ai) turn on per repo
 /plugin marketplace update harness     # later
 
 # From a clone, which also installs the global CLAUDE.md and rules into ~/.claude/

@@ -19,7 +19,7 @@ def run(payload):
     return json.loads(r.stdout) if r.stdout.strip() else None
 
 
-def invoke(session, skill="agent:agent-tool"):
+def invoke(session, skill="ai:agent-tool"):
     return run({"hook_event_name": "PostToolUse", "session_id": session, "tool_input": {"skill": skill}})
 
 
@@ -38,7 +38,7 @@ def test_invocation_injects_checklist_with_done_when():
 def test_same_invocation_from_both_events_is_injected_once():
     invoke("dedupe")
     assert run({"hook_event_name": "UserPromptExpansion", "session_id": "dedupe",
-                "command_name": "agent:agent-tool"}) is None
+                "command_name": "ai:agent-tool"}) is None
 
 
 def test_skill_without_steps_and_bad_input_stay_silent():

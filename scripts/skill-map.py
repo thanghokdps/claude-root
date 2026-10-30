@@ -2,7 +2,7 @@
 """Build the drill-down map model of this kit for super-board's /visual skill.
 
   python3 scripts/skill-map.py > map.json
-  python3 scripts/skill-map.py --plugin agent > map.json   # one plugin and its dependencies only
+  python3 scripts/skill-map.py --plugin ai > map.json      # one plugin and its dependencies only
   python3 <super-board>/skills/visual/scripts/visual.py render --map map.json --out docs/skill-map.html
 
 Nodes come from plugin.json, SKILL.md frontmatter and hook headers, so the map follows the kit; the two
@@ -17,11 +17,12 @@ import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLUGINS = os.path.join(ROOT, "plugins")
-ORDER = ["progress", "core", "plan", "review", "dev", "ship", "agent", "lead", "guards"]
+ORDER = ["progress", "core", "plan", "review", "dev", "ship", "frontend", "backend", "ai", "lead", "guards"]
 ROLE = {
     "progress": "live ✅ checklist", "core": "session + project basics", "plan": "design before code",
     "review": "diffs, PRs, impact", "dev": "build, fix, test-first", "ship": "release + CI",
-    "agent": "AI assistants", "lead": "retro, skill authoring", "guards": "opt-in hooks",
+    "frontend": "role pack: web UI", "backend": "role pack: server side", "ai": "role pack: AI assistants",
+    "lead": "retro, skill authoring", "guards": "opt-in hooks",
 }
 
 
@@ -123,7 +124,7 @@ def main():
                   "how": "Each role plugin can also be installed alone; its dependencies come with it.",
                   "source": "plugins/harness/.claude-plugin/plugin.json"})
     for p in ORDER:
-        if not any(e["to"] == f"p-{p}" for e in edges if e["id"].startswith("dep-")) or p in ("guards", "agent"):
+        if not any(e["to"] == f"p-{p}" for e in edges if e["id"].startswith("dep-")) or p in ("guards", "frontend", "backend", "ai"):
             edges.append({"id": f"dep-harness-{p}", "from": "harness", "to": f"p-{p}", "label": "installs"})
 
     start = ["brainstorming", "writing-plans", "project-init", "feature", "review-checklist", "finish-branch"]
@@ -161,7 +162,7 @@ def emit_single(only, order, nodes, edges, views):
     land = ["agent-feature", "verify-done", "review-checklist", "finish-branch"]
     ids = {n["id"] for n in nodes}
     chain = lambda xs, label: [{"id": f"w-{a}-{b}", "from": a, "to": b, "label": label} for a, b in zip(xs, xs[1:])]
-    if only == "agent" and set(agent + land) <= ids:
+    if only == "ai" and set(agent + land) <= ids:
         views += [
             {"id": "ai-assistant", "parent": "overview", "title": "Build an AI assistant",
              "caption": "One skill per layer, proven by a real turn and evals.",

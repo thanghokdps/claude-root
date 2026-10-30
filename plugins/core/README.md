@@ -25,14 +25,14 @@ Session and project basics every role uses: the evidence gate before "done", the
 | `sensitive-path` | before Edit, Write, Bash | An edit to secrets, CI/deploy config or `.claude/settings*.json` asks the user first, unless the ticket's `plan.md` names the path. `CLAUDE_SENSITIVE_PATHS=0` turns it off |
 | `edit-guard` | before Bash | Repo files change through Edit/Write, never `sed -i`, heredocs or redirects, so the per-edit lint and format hooks run on every change. Scratch output outside the repo is fine |
 | `step-limit` | before every tool | A subagent past `CLAUDE_STEP_LIMIT` (90) tool calls stops and reports what is done, what is stuck and the last error, so the main session can re-plan |
-| `repo-profile` | session and subagent start | From manifests and marker folders alone (no model call) tells the session what the repo is (stack, AI assistant, DB tool, docs present) and which skills to prefer. In an AI-assistant repo it enables `agent@harness` in `.claude/settings.local.json`; in a workplace repo, `workplace@harness`. `CLAUDE_REPO_PROFILE=0` turns it off |
+| `repo-profile` | session and subagent start | From manifests and marker folders alone (no model call) tells the session what the repo is (stack, AI assistant, DB tool, docs present) and which skills to prefer. It enables the role packs the stack needs (`frontend@harness`, `backend@harness`, `ai@harness`) and, in a workplace repo, `workplace@harness`, in `.claude/settings.local.json`. `CLAUDE_REPO_PROFILE=0` turns it off |
 | `compact-advisor` | on stop | Past `CLAUDE_COMPACT_ADVISE_TOKENS` (200k) of context, shows the user one line suggesting `/compact`. The model never sees it |
 | `learn-capture` + `learn-promote` | every 50 tool calls; session start | Lessons capture themselves: a background Haiku reflector proposes them from a scrubbed digest of the session; at the next session start the valid ones land in `.claude/docs/solutions/` with an index line, stale ones retire, and one seen in two or more repos is copied to `~/.claude/docs/solutions/` |
 
 ## Also in this plugin
 
 - **Rules** installed to `~/.claude/rules/` by `scripts/install.sh`: `git`, `security`, `code-quality`, `model-cost` (always on); `typescript`, `testing`, `app-structure`, `api-contract`, `data-access` (only for matching files).
-- **Templates and stacks** that `/project-init` and `scripts/init.sh` copy into a project: `CLAUDE.md`, `settings.json`, spec templates, project agents and commands, and the `nextjs`, `python` and `react-native` stack bundles.
+- **Templates and stacks** that `/project-init` and `scripts/init.sh` copy into a project: `CLAUDE.md`, `settings.json`, spec templates, project agents and commands, and the `react-native` stack bundle (framework rules live in the role packs).
 
 ## Depends on
 

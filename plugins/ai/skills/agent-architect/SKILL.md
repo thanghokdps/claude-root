@@ -127,4 +127,4 @@ End with the closing message in `skeleton.md` § 6: the stack built, the run com
 
 ## Hand-offs
 
-Scaffold or skeleton done → `/project-init` → `/verify-done` → `/review-checklist` → `/finish-branch`. Release → `/release-checklist` with `production.md`. The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · documents, embeddings or semantic memory → `/agent-rag` · threat model → `/agent-security`.
+Scaffold or skeleton done → `/project-init` → `/verify-done` → `/review-checklist` → `/finish-branch` (ship, if installed). Release → `/release-checklist` with `production.md` (ship, if installed). The remaining P2 tasks, and every later feature → `/agent-feature` · tools → `/agent-tool` · writes → `/agent-hitl` · more agents or routing → `/agent-graph` · web client → `/agent-frontend` · chat UI from a design → `/agent-design-ui` · evals → `/agent-evals` · documents, embeddings or semantic memory → `/agent-rag` · threat model → `/agent-security`.
