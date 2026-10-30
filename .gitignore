@@ -12,6 +12,8 @@ specs/
 
 # plugin eval reports (claude plugin eval)
 plugins/*/evals/results/
+# cases with their `plugins:` filled in (scripts/eval-build.py)
+plugins/*/evals-build/
 
 .playwright-mcp
 __pycache__/

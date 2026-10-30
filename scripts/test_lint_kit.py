@@ -7,6 +7,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("lint_kit", os.path.join(HERE, "lint-kit.py"))
 lint_kit = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(lint_kit)
+spec = importlib.util.spec_from_file_location("eval_build", os.path.join(HERE, "eval-build.py"))
+eval_build = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(eval_build)
 
 
 def test_flags_company_and_internal_names():
@@ -80,10 +83,12 @@ def test_role_pack_shape():
     assert len(bad) == 3 and "agents/frontend-engineer.md" in bad[0] and "dependencies" in bad[1] and "hooks" in bad[2], bad
 
 
-def test_eval_case_missing_dependency_is_flagged():
-    case = "/k/plugins/ai/evals/tool-add"
-    assert lint_kit.missing_eval_plugins(None, case, {"ai", "progress"}) == ["ai", "progress"]
-    assert lint_kit.missing_eval_plugins(["../..", "../../../progress"], case, {"ai", "progress"}) == []
+def test_eval_build_adds_dependency_closure():
+    graph = {"ai": ["progress", "dev"], "dev": ["core"], "progress": [], "core": ["progress"]}
+    plugins = eval_build.case_plugins("ai", graph)
+    assert plugins == ["../..", "../../../core", "../../../dev", "../../../progress"], plugins
+    out = eval_build.with_plugins("---\nmax_turns: 4\n---\n\nhi\n", plugins)
+    assert out.startswith('---\nplugins: ["../..", "../../../core"') and out.endswith("max_turns: 4\n---\n\nhi\n"), out
 
 
 if __name__ == "__main__":

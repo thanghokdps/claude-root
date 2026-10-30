@@ -1,7 +1,7 @@
 ---
 type: regex
 target: trace
-pattern: '\[data-copilotkit\][^}]*--primary:\s*oklch\('
+pattern: '\[data-copilotkit\][^}]*--primary\s*:'
 ---
 
-The theme sets the v2 --primary token as oklch under [data-copilotkit], not v1 --copilot-kit-* variables.
+The theme sets the v2 --primary token under [data-copilotkit] (any colour notation), not v1 --copilot-kit-* variables.

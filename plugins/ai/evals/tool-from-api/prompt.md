@@ -1,8 +1,7 @@
 ---
-plugins: ["../..", "../../../progress", "../../../core", "../../../plan", "../../../review", "../../../dev", "../../../ship"]
 max_turns: 6
 allowed_tools: [Read, Glob, Grep, Skill, AskUserQuestion]
-tags: [routing]
+tags: [tool]
 ---
 
 Đây là API đơn hàng của tôi, implement tools cho agent LangGraph từ nó:

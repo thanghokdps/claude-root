@@ -1,8 +1,7 @@
 ---
-plugins: ["../..", "../../../progress", "../../../core", "../../../plan", "../../../review", "../../../dev", "../../../ship"]
-max_turns: 4
-allowed_tools: [Read, Glob, Grep, Skill]
-tags: [routing]
+max_turns: 14
+allowed_tools: [Read, Glob, Grep, Skill, Write, Edit]
+tags: [tool]
 ---
 
-Thêm tool cho agent để tra cứu đơn hàng theo mã. Agent dùng LangGraph với @langchain/core.
+Thêm tool cho agent để tra cứu một đơn hàng theo mã.

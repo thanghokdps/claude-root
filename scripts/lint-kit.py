@@ -5,7 +5,7 @@ Errors: SKILL.md frontmatter parses as YAML; no private names in agent (denylist
 unique across plugins; description present, <=1024 chars, says when to use; only documented frontmatter keys; description + when_to_use
 <=1536; ${CLAUDE_PLUGIN_ROOT}/ paths exist in the skill's own plugin and ${CLAUDE_SKILL_DIR}/ paths in its directory; hooks pass `bash -n` and are executable; inline python3 in a plugin .sh runs with -I; plugin/marketplace/hooks JSON parse; every plugin
 is listed in the marketplace, dependencies exist and are acyclic; a SKILL.md body that names another plugin's skill
-names a declared dependency or says "if (<plugin> is) installed"; every eval case loads its plugin and all its dependencies; same-named references/ files are identical across plugins; every file init.sh copies exists.
+names a declared dependency or says "if (<plugin> is) installed"; no eval case hand-writes `plugins:`; same-named references/ files are identical across plugins; every file init.sh copies exists.
 Warnings: SKILL.md over 500 lines; no trigger case under eval/triggers/.
 """
 import filecmp
@@ -229,7 +229,7 @@ def check_plugins():
     if cycle:
         errors.append(f"plugin dependency cycle: {' → '.join(cycle)}")
         return
-    check_eval_cases(graph)
+    check_eval_cases()
     owners = {name: plugin for plugin, name, _ in skill_paths()}
     for plugin, name, path in skill_paths():
         text = open(path, encoding="utf-8").read()
@@ -240,27 +240,17 @@ def check_plugins():
                           f"not a dependency of {plugin} — declare it or say \"if installed\" / \"if <plugin> is installed\"")
 
 
-def missing_eval_plugins(declared, case_dir, needed):
-    """Plugins in `needed` that the case's `plugins:` list does not load. `plugin eval` drops a plugin whose
-    dependency is not loaded — the run goes on without it and every skill grader fails as a routing miss."""
-    loaded = {os.path.basename(os.path.normpath(os.path.join(case_dir, d))) for d in declared or []}
-    return sorted(set(needed) - loaded)
-
-
-def check_eval_cases(graph):
-    for plugin in graph:
+def check_eval_cases():
+    """A hand-written `plugins:` list goes stale when a dependency changes; eval-build.py writes it from plugin.json."""
+    for plugin in plugin_names():
         evals = os.path.join(PLUGINS_DIR, plugin, "evals")
-        if not os.path.isdir(evals) or not graph[plugin]:
+        if not os.path.isdir(evals):
             continue
         for case in sorted(os.listdir(evals)):
-            case_dir, prompt = os.path.join(evals, case), os.path.join(evals, case, "prompt.md")
-            if not os.path.isfile(prompt):
-                continue
-            missing = missing_eval_plugins(frontmatter(prompt)[0].get("plugins"), case_dir,
-                                           {plugin} | closure(graph, plugin))
-            if missing:
-                errors.append(f"{os.path.relpath(prompt, ROOT)}: plugins: does not load {', '.join(missing)} — "
-                              f"list each as a path relative to the case (run via scripts/eval-plugin.sh)")
+            prompt = os.path.join(evals, case, "prompt.md")
+            if os.path.isfile(prompt) and "plugins" in frontmatter(prompt)[0]:
+                errors.append(f"{os.path.relpath(prompt, ROOT)}: drop `plugins:` — scripts/eval-plugin.sh adds "
+                              f"the plugin and its dependencies from plugin.json")
 
 
 def missing_init_sources(script, core_dir):

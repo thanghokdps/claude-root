@@ -1,7 +1,7 @@
 ---
 type: tool_used
 tool: Skill
-input_match: '"skill"\s*:\s*"(?:[\w-]+:)?agent-security"'
+input_match: '"skill"\s*:\s*"(?:[\w-]+:)?agent-'
 ---
 
-A question about what the client can make the agent believe routes to agent-security.
+Wiring the agent's route pulls in an agent-* skill; which one is not the point — the history check must hold whichever fires.

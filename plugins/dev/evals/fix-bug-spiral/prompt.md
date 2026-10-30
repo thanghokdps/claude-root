@@ -1,5 +1,4 @@
 ---
-plugins: ["../..", "../../../progress", "../../../core", "../../../plan", "../../../review", "../../../ship"]
 max_turns: 12
 allowed_tools: [Read, Glob, Grep, Skill, Edit, Write]
 tags: [fix-bug]
