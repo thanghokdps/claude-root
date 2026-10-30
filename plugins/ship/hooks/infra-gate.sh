@@ -327,8 +327,10 @@ for seg in segs:
         continue
     head = os.path.basename(raw[0])
     toks = unwrap(raw)
-    if any("$" in t or "`" in t for t in (raw[0], toks[0] if toks else "")) or (head == "printf" and "-v" in raw[1:3]):
-        # `$X …` or `sudo $X …` runs whatever the variable holds; `printf -v X` builds such a variable from escapes
+    prefix = raw[:len(raw) - len(toks) + 1] if toks else raw  # the wrappers peeled, plus the command word itself
+    if any("$" in t or "`" in t for t in prefix) or (head == "printf" and "-v" in raw[1:3]):
+        # `$X …`, `sudo $X …` or `sudo $FLAG terraform …` runs whatever the variable holds; `printf -v X` builds such a
+        # variable from escapes
         ask(f"{head} runs or builds a command the gate cannot read; run the tool directly.")
         continue
     if head == "eval" or head == "xargs" or (head in SHELLS and any(a in ("-c", "-lc", "-ic") for a in raw[1:3])):

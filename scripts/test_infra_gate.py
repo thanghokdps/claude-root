@@ -248,6 +248,7 @@ def test_line_continuations_and_deferred_variables():
     assert gate(path, "printf -v X 'terra%s' form; $X apply")[0] == "ask"
     assert gate(path, "X=terraform; sudo $X apply -var-file=prod.tfvars")[0] == "ask"  # behind a peeled wrapper
     assert gate(path, "X=form; timeout 30 terra${X} apply -var-file=prod.tfvars")[0] == "ask"  # expansion inside the word
+    assert gate(path, "F=-i; sudo $F terraform apply -var-file=prod.tfvars")[0] == "ask"  # expansion inside the wrapper prefix
     assert gate(path, "X=1; echo $X")[0] == "allow"
 
 
