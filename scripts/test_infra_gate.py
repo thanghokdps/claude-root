@@ -98,6 +98,51 @@ def test_chained_segments_are_each_checked():
     assert gate(path, "cd envs/dev; terraform init; terraform plan")[0] == "allow"
 
 
+def test_flag_values_are_not_read_as_the_subcommand():
+    path = repo()
+    assert gate(path, "kubectl -n production apply -f k8s/")[0] == "deny"
+    assert gate(path, "kubectl --context prod delete deploy/api")[0] == "deny"
+    assert gate(path, "helm -n production upgrade api charts/api")[0] == "deny"
+    assert gate(path, "terraform -chdir=envs/prod apply")[0] == "deny"
+    assert gate(path, "kubectl -n staging get pods")[0] == "allow"
+
+
+def test_destroy_variants_and_kind_slash_name():
+    path = repo()
+    assert gate(path, "terraform apply -destroy -var-file=dev.tfvars")[0] == "deny"
+    assert gate(path, "terraform plan -destroy -out=p")[0] == "ask"  # the saved plan's apply shows no -destroy
+    assert gate(path, "kubectl delete ns/staging")[0] == "deny"
+    assert gate(path, "kubectl delete -n dev namespace staging")[0] == "deny"
+
+
+def test_background_subshell_and_substitution_are_segments():
+    path = repo()
+    for cmd in ("terraform plan & terraform apply -var-file=prod.tfvars", "(kubectl apply -f k8s/ -n production)",
+                "echo $(helm upgrade api charts/api -n production)", "echo `terraform apply -var-file=prod.tfvars`",
+                "{ kubectl delete node w1; }"):
+        assert gate(path, cmd)[0] == "deny", cmd
+
+
+def test_wrappers_are_peeled():
+    path = repo()
+    for cmd in ("sudo terraform apply -var-file=prod.tfvars", "timeout 300 kubectl apply -f k8s/ -n production",
+                "command helm upgrade api charts/api -n production", "pnpm exec terraform apply -var-file=prod.tfvars",
+                "npx -y terraform apply -var-file=prod.tfvars", "nohup terraform apply -var-file=prod.tfvars",
+                "env TF_WORKSPACE=prod terraform apply"):
+        assert gate(path, cmd)[0] == "deny", cmd
+    assert gate(path, "sudo terraform plan")[0] == "allow"
+
+
+def test_unknown_wrappers_and_scripts_fail_closed():
+    path = repo()
+    assert gate(path, "make deploy TOOL=terraform apply")[0] == "ask"
+    assert gate(path, "bash scripts/deploy.sh terraform")[0] == "ask"
+    assert gate(path, "cat cmd.txt | bash")[0] == "allow"  # nothing in the text names a tool
+    assert gate(path, "echo 'kubectl apply -f k8s/ -n production' | bash")[0] == "ask"
+    assert gate(path, "source ./apply-helm.sh")[0] == "ask"
+    assert gate(path, "make build")[0] == "allow"
+
+
 def test_config_defines_production_names():
     path = repo(config={"production": ["eu-live"]})
     assert gate(path, "kubectl apply -f k8s/ -n eu-live")[0] == "deny"
