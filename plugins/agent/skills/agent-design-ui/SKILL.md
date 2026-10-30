@@ -28,6 +28,12 @@ Map the tokens onto the v2 variables in `${CLAUDE_SKILL_DIR}/references/copilotk
 
 **Done when:** every colour and radius in the chat frames reaches the chat through a `[data-copilotkit]` variable or a slot class built on tokens.
 
+## At /design-ui Step 3 — Primitives in the chat
+
+CopilotKit drawing an element does not make it CopilotKit's: its slots take a `components/ui/` component (L2) or a class (L1), so "rendered by the slot" is a rung, never a class. Record the /design-ui Step 3 table in the map in every pass, a map-only pass included: every reusable element the frames show (send and other buttons, text input, suggestion chips, cards, avatar, badges, each icon), its class (library primitive with the library component it maps to · design primitive · feature component), and that screens and slots are built from these primitives in `components/ui/`.
+
+**Done when:** every element drawn in a frame has a row and a class.
+
 ## After /design-ui Step 3 — Decide per chat element (the ladder)
 
 CopilotKit slots render the same `components/ui/` primitives. For each chat element pick the lowest rung that reaches the design, and record `Element | Rung | Implementation | Why` in the map:
