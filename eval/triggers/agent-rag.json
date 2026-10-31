@@ -12,6 +12,10 @@
     {
       "prompt": "the agent should remember each user across conversations with semantic recall",
       "top_k": 3
+    },
+    {
+      "prompt": "Cho agent policy trả lời từ tài liệu, dùng vector store, mỗi tenant chỉ thấy tài liệu của mình",
+      "top_k": 1
     }
   ],
   "negative": [
