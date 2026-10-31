@@ -1,9 +1,11 @@
 ---
 type: llm
-focus: trace
+focus:
+  source: file
+  path: shop/cart.py
 ---
 
-The red test expects `total([{"price": 60, "qty": 2}])` to be 108.0 (120 less 10%). The existing test_total_sums_lines (total 25, under 100) must stay green.
+This is `shop/cart.py` after the run. The red test expects `total([{"price": 60, "qty": 2}])` to be 108.0 (120 less 10%). The existing test_total_sums_lines (total 25, under 100) must stay green.
 
-Judge from the trace. PASS if the run executed the test suite before changing `shop/cart.py` (watching it fail), then changed only `shop/cart.py` with a minimal discount rule (over 100 gives 10% off), and ran the suite again with both tests passing.
-FAIL if it edits or writes any file under `tests/` (even to loosen the expected value), adds speculative extras (tiers, config, other discounts), or claims green without a second test run.
+PASS if `total` gives 10% off when the lines total over 100 and nothing else changed in behaviour: a minimal discount rule.
+FAIL if the discount is missing or wrong (an order of 100 or less is discounted, or the rate is not 10%), or it adds speculative extras (tiers, config, other discounts).
