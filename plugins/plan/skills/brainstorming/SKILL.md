@@ -23,7 +23,7 @@ Read relevant files to understand:
 
 ### Step 2 — Clarify intent (one question at a time)
 
-Ask clarifying questions **one at a time**, as choices: `AskUserQuestion` with 2–4 options, your recommended answer first with `(Recommended)` and a description of what each changes (numbered options with one marked *recommended* when the tool is absent). Do not ask the next question until the user answers the current one.
+Ask clarifying questions **one at a time**, as choices: `AskUserQuestion` with 2–4 options, your recommended answer first with `(Recommended)` and a description of what each changes (numbered options with one marked *recommended* when the tool is absent). Do not ask the next question until the user answers the current one. The message ends with that one question and its options: no "also…", no second question appended after the options, however small.
 
 Ask needs, not tools: "large enterprise or quick and lean?", not "Angular or React?" — the option says the need, its description the tech it maps to (`${CLAUDE_PLUGIN_ROOT}/references/need-questions.md`). Ask at tech level only when the user did.
 

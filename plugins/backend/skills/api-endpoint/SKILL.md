@@ -3,7 +3,7 @@ model: opus
 effort: high
 name: api-endpoint
 description: Adds or changes a backend HTTP endpoint (Next.js route handler, Express/Hono, FastAPI) the way the repo already builds them. It covers the request/response schema, session auth, a permission check on the specific resource, a thin handler calling a service and repository, stable error codes, and the route test matrix (200, 400, 401, 404 for another user's resource). Use when the user asks for a new API route or endpoint, to change what an endpoint accepts or returns, or to fix an endpoint that leaks data or returns the wrong status.
-when_to_use: new API endpoint, "thêm API endpoint", "viết API cho", REST route, route handler, controller, CRUD API, endpoint returns 500 instead of 400, endpoint shows another user's data, change request or response shape
+when_to_use: new API endpoint, "thêm endpoint", "thêm API endpoint", "viết API cho", add a DELETE / POST / PATCH route, "GET /orders/{id}" or any method + path, REST route, route handler, controller, CRUD API, a user may only act on their own resource, endpoint returns 500 instead of 400, endpoint shows another user's data, change request or response shape — even a single-route change
 ---
 
 # api-endpoint
