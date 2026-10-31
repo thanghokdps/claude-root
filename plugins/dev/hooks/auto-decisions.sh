@@ -52,8 +52,9 @@ if not problem:
 rel = os.path.relpath(plan_path, top)
 print(json.dumps({"decision": "block", "reason": (
     f"auto-decisions: this is a Risk: high ticket worked in auto mode, and {rel} {problem}. "
-    "For each choice the user did not make, dispatch one cheap subagent (model: haiku) per rejected option "
-    "to argue for it, then record `- <decision> · options: … · chose … because … · challenged: <best "
-    "counter-argument> → kept | switched`. If the user made every choice, add `- none: <why>`.")}))
+    "For each choice the user did not make, run the debate in the dev plugin's references/auto-decisions.md "
+    "(one sonnet advocate per option, a rebuttal round and an opus red team on hard gates), then record "
+    "`- <decision> · options: … · chose … because … · challenged: <best counter-argument> → kept | switched "
+    "· revert: <files to change>`. If the user made every choice, add `- none: <why>`.")}))
 sys.exit(0)
 PY
