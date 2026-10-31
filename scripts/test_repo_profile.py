@@ -282,6 +282,13 @@ def test_new_repo_with_ai_on_routes_a_chatbot_init_to_agent_architect():
     assert "ai@harness for LangChain" not in ctx, ctx
 
 
+def test_new_repo_with_ai_on_routes_layer_requests_to_their_skill():
+    ctx = run(repo(), config_dir({"ai@harness": True}))
+    for skill in ("/agent-feature", "/agent-hitl", "/agent-rag", "/agent-tool", "/agent-graph"):
+        assert skill in ctx, (skill, ctx)
+    assert "even with no code yet" in ctx, ctx
+
+
 def test_new_opted_out_repo_enables_packs_locally():
     cwd = repo({".claude/settings.local.json": {"enabledPlugins": {"ai@harness": False}}})
     ctx = run(cwd)
