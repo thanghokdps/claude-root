@@ -4,8 +4,11 @@
 # Emits only what CLAUDE.md cannot know — the keyword scan result. The routing steps
 # themselves are already in context from CLAUDE.md; repeating them here just doubles
 # the prompt.
+# Acts on the event's cwd (process cwd only when .cwd is empty).
 
 INPUT=$(cat)
+CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null)
+[ -n "$CWD" ] && { cd -P "$CWD" 2>/dev/null || true; }
 
 PROMPT=$(printf '%s' "$INPUT" | jq -r '.prompt // ""')
 WORD_COUNT=$(printf '%s' "$PROMPT" | wc -w)

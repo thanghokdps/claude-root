@@ -4,9 +4,12 @@
 # Exit 2 / asyncRewake surfaced every big output as a blocking error and re-woke the model, so this
 # emits additionalContext instead (non-blocking), at most once per session, and only when the
 # headroom MCP is registered. Read is excluded: a file being edited must stay verbatim.
+# Acts on the event's cwd (process cwd only when .cwd is empty).
 
 INPUT=$(cat 2>/dev/null)
 [ -z "$INPUT" ] && exit 0
+CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null)
+[ -n "$CWD" ] && { cd -P "$CWD" 2>/dev/null || true; }
 grep -q '"headroom"' "$HOME/.claude.json" 2>/dev/null || exit 0
 
 LEN=$(printf '%s' "$INPUT" | jq -r '.tool_response | tostring' 2>/dev/null | wc -c | tr -d ' ')

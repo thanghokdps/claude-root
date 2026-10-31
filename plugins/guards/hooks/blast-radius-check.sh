@@ -2,8 +2,11 @@
 
 # PostToolUse(Edit|Write): flag edits to files outside the active PLAN.md <files> set.
 # WARN by default. Set BLAST_RADIUS_STRICT=1 to block (exit 2).
+# Acts on the event's cwd (process cwd only when .cwd is empty).
 
 INPUT=$(cat /dev/stdin)
+CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null)
+[ -n "$CWD" ] && { cd -P "$CWD" 2>/dev/null || true; }
 FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 [ -z "$FILE" ] && exit 0
 
@@ -11,9 +14,14 @@ REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null)"
 [ -z "$REPO_DIR" ] && exit 0
 
 REPO_DIR="$(cd "$REPO_DIR" 2>/dev/null && pwd -P)"
-if [ -e "$FILE" ]; then
-  FILE="$(cd "$(dirname "$FILE")" 2>/dev/null && pwd -P)/$(basename "$FILE")"
-fi
+# Resolve symlinks (/var -> /private/var) via the nearest existing ancestor, so a Write that creates
+# the file or its parent dirs still lines up with REPO_DIR.
+FDIR="$(dirname "$FILE")"; FTAIL="$(basename "$FILE")"
+while [ ! -d "$FDIR" ] && [ "$FDIR" != "/" ] && [ "$FDIR" != "." ]; do
+  FTAIL="$(basename "$FDIR")/$FTAIL"; FDIR="$(dirname "$FDIR")"
+done
+FREAL="$(cd "$FDIR" 2>/dev/null && pwd -P)"
+[ -n "$FREAL" ] && FILE="$FREAL/$FTAIL"
 
 REL="${FILE#"$REPO_DIR"/}"
 
