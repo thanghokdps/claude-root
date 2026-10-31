@@ -11,8 +11,10 @@ HOOK = os.path.join(ROOT, "plugins", "dev", "hooks", "ask-once.sh")
 TMP = tempfile.mkdtemp(prefix="ask-once-")
 
 
-def run(sid, event, tool=None, tool_input=None):
+def run(sid, event, tool=None, tool_input=None, cwd=None):
     payload = {"session_id": sid, "hook_event_name": event}
+    if cwd:
+        payload["cwd"] = cwd
     if tool:
         payload["tool_name"] = tool
         payload["tool_input"] = tool_input or {}
@@ -47,6 +49,14 @@ def test_plan_and_spec_edits_do_not_start_the_build():
                  "/r/docs/features/cancel-order.md", "/r/docs/adr/0002-writes.md"):
         edit(sid, path)
     assert ask(sid) == "allow"
+
+
+def test_scratch_edits_outside_the_project_do_not_start_the_build():
+    sid = session()
+    run(sid, "PostToolUse", "Write", {"file_path": "/private/tmp/claude-501/scratchpad/time_hooks.py"}, cwd="/r")
+    assert ask(sid) == "allow"
+    run(sid, "PostToolUse", "Edit", {"file_path": "/r/src/app.ts"}, cwd="/r")
+    assert ask(sid) == "deny"
 
 
 def test_first_question_after_a_code_edit_is_denied_then_the_retry_passes():

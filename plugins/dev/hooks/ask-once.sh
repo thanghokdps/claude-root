@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ask-once.sh — the user is asked everything before the build, never during it.
 # UserPromptSubmit: a new turn clears the state. PostToolUse(Edit|Write|MultiEdit|NotebookEdit): an edit to a
-# file outside specs/, docs/ (ADRs, feature docs, tickets) and a plans/ dir marks the build started. PreToolUse(AskUserQuestion): once
+# project file outside specs/, docs/ (ADRs, feature docs, tickets) and a plans/ dir marks the build started. PreToolUse(AskUserQuestion): once
 # started, the first question of the turn is denied with a pointer to the debate in references/auto-decisions.md;
 # a second call passes, so a confirmation no rollback undoes (push, merge, deploy, delete) still reaches the user.
 # Stop: once started, a reply whose last line is a question is blocked once (stop_hook_active lets the retry end).
@@ -61,6 +61,9 @@ try:
         path = (ev.get("tool_input") or {}).get("file_path") or (ev.get("tool_input") or {}).get("notebook_path") or ""
         if not path or re.search(r"(^|/)(specs|docs|plans)/", path):
             sys.exit(0)
+        cwd = ev.get("cwd") or ""
+        if cwd and os.path.isabs(path) and not (path + "/").startswith(cwd.rstrip("/") + "/"):
+            sys.exit(0)  # a scratch file outside the project is not the build
         os.makedirs(state_dir, exist_ok=True)
         if not os.path.exists(state):
             with open(state, "w") as f:
