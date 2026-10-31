@@ -10,12 +10,17 @@ Not a choice: an action no rollback undoes (push, merge, deploy, delete data, fo
 
 ## The debate
 
-1. **Advocates.** One subagent per option (2–3 options), `model: "sonnet"`, all in one message. Brief: the criterion, every option, the facts already cited, and "argue that <option> is the best choice for this repo; cite file:line for every claim; name the strongest failure of each other option".
-2. **Judge.** You (the main session) open every cited line; a citation that does not say what the advocate claims is dropped. Pick the option whose surviving arguments rest on facts (a file, a rule, a criterion), not taste.
-3. **Red team.** When the choice touches a hard gate (auth/authz, data migration, security/audit, external provider, public contract, weakening validation), one more subagent, `model: "opus"`, gets the pick and every argument and is told "find the case where this pick fails". Switch only when it names a fact the pick missed.
-4. A switch after code exists is a deviation: record it in § Deviations too.
+0. **Past lessons.** Read `.claude/docs/decisions.md` when it exists (`/retro` settles past decisions there; lead, if installed) and take at most 3 entries, newest first, about the same kind of choice or the same files. They go into every brief and weigh in the judgment like a cited fact: a pick that repeats a choice later reverted names what is different this time.
+1. **Advocates.** One subagent per option (2–3 options), `model: "sonnet"`, all in one message. Brief: the criterion, every option, the facts already cited, the past lessons, and "argue that <option> is the best choice for this repo; cite file:line for every claim; name the strongest failure of each other option". Rotate the order the options are listed in, so no option is first in every brief.
+2. **Rebuttal** (hard gate only, see 4). Continue each advocate (`SendMessage` to its agent id) with the other advocates' arguments: "answer the strongest point against <option> with file:line; concede what you cannot answer". An advocate whose option nobody attacked says so instead of inventing an attack to answer. A concession counts against its option.
+3. **Judge.** You (the main session) open every cited line; a citation that does not say what the advocate claims is dropped. Pick the option whose surviving arguments rest on facts (a file, a rule, a criterion), not taste, sized by how clearly it wins.
+   - Conflicting arguments are the input, never a reason by themselves to take the most cautious or smallest option.
+   - Weigh each argument on its facts, never by which advocate answered first, last or at greatest length.
+   - Still tied on facts → the option the repo's existing convention matches; still tied → the one cheaper to revert.
+4. **Red team.** When the choice touches a hard gate (auth/authz, data migration, security/audit, external provider, public contract, weakening validation), one more subagent, `model: "opus"`, gets the pick and every argument and is told "find the case where this pick fails". Switch only when it names a fact the pick missed.
+5. A switch after code exists is a deviation: record it in § Deviations too.
 
-Cost: one sonnet call per option per choice, plus one opus call on a hard-gate choice. Never debate a decide-tier choice.
+Cost: one sonnet call per option per choice; on a hard-gate choice, one more sonnet call per option for the rebuttal and one opus call. Never debate a decide-tier choice.
 
 ## Format
 
@@ -27,6 +32,6 @@ In `docs/tickets/<id>/plan.md` for a ticket, the plan's § Decisions for `/featu
 - none: every choice was the user's (answered in chat)
 ```
 
-Each entry needs `challenged:` (the strongest argument against the pick, and why it did not win) and `revert:`. On a `Risk: high` ticket in auto mode the `auto-decisions` hook (dev) blocks the stop until the section is there.
+Each entry needs `challenged:` (the strongest argument against the pick, and why it did not win) and `revert:`, which names the files to change: `/retro` settles the decision by the later commits on those files. On a `Risk: high` ticket in auto mode the `auto-decisions` hook (dev) blocks the stop until the section is there.
 
 The final report lists every entry under **Decided for you**, so the user reviews them in one place, with the labels exactly as above (`challenged:`, `revert:`), never paraphrased.
