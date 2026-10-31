@@ -29,6 +29,26 @@ Also read: `specs/*/ESCALATIONS.md` touched in the window, `specs/STATE.md`, `do
 | Worked | Workflows worth repeating — with the evidence |
 | Estimates | Per shipped ticket: estimate → actual and the note. The ratio over the window (actual ÷ estimate midpoint) becomes the calibration line in `.claude/docs/team.md` § Estimation that the next `/breakdown` (plan, if installed) reads; a ticket off by more than ×2 is a Hurt row with its cause |
 
+## Step 2b — Settle the decisions agents made
+
+Agents decide choices for the user mid-build (`/resolve-question`, dev, if installed) and record each with a `revert:` naming its files. Score them the way an estimate is scored:
+
+```bash
+python3 -I ${CLAUDE_SKILL_DIR}/scripts/settle-decisions.py .
+```
+
+One JSON line per decision ready to settle: `reverted` or `changed` (a later `revert`/`fix` commit on its files, in `evidence`), `kept` (14 days with neither), `unreadable` (`revert:` names no file). Append one line each to `.claude/docs/decisions.md`, keyed exactly as `key` so the next run skips it:
+
+```markdown
+- <today> · <status> · <key> · evidence: <sha> <subject> · lesson: <2–4 sentences>
+```
+
+- `reverted` / `changed`: the lesson says, in plain prose, what the decision assumed, what the evidence commit shows it got wrong, and one concrete rule for the next similar choice. Open the evidence commit before writing it; the commit says what changed, the lesson must not claim more.
+- `kept`: `lesson: none`. `unreadable`: `lesson: revert: named no file` — a Hurt row, since nobody can roll it back.
+- A reverted or changed share above 1 in 4 over the window is a Hurt row.
+
+The debate reads the newest lessons back before its next choice of the same kind, so every word must earn its place.
+
 ## Step 3 — Standardize (the point of the retro)
 
 Pick at most three changes, each with an owner and a home:
