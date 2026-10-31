@@ -101,7 +101,7 @@ def main(argv):
         text = open(os.path.join(top, rel), encoding="utf-8").read()
         for decision in decision_lines(text, os.path.basename(rel)):
             row = settle(top, ticket, rel, decision, opts.min_days, now)
-            if not row or row["key"] in settled:
+            if not row or f" · {row['key']} · " in settled:
                 continue
             if row["status"] != "pending" or opts.all:
                 print(json.dumps(row, ensure_ascii=False))
