@@ -38,6 +38,9 @@ Read with `jq`, never by dumping the whole file into context.
 
 For each finding: what happened, the transcript line(s) as evidence (quote ≤2 lines, scrub secrets and personal data), and the smallest kit change that prevents it — a skill description tweak (then add a trigger case under `eval/triggers/`), a hook fix, or a rule.
 
+- One finding, one concrete change: name the file and what to add. A symptom of another finding (the same test re-run after each blind edit) merges into that finding instead of standing alone without a change.
+- Before proposing a new skill, check the session's skill list for one that covers it (a debugging skill for "still red"); extend that skill's trigger instead. No "consider" or "maybe": a change you cannot make concrete is not a finding.
+
 ## Rules
 
 - Evidence or it didn't happen: every finding cites a transcript location.
