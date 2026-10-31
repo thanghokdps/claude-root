@@ -3,6 +3,7 @@ model: opus
 effort: high
 name: writing-plans
 description: Converts an approved design doc (specs/<slug>/design.md) into a detailed PLAN.md with wave-organized tasks, file maps, and verifiable acceptance criteria. Run after /brainstorming.
+when_to_use: an approved design.md with no PLAN.md yet, "write the plan", "lên plan từ design", "chia thành wave / task", turn this design doc into an ordered task list with verify commands
 ---
 
 # Writing Plans

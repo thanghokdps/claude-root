@@ -2,8 +2,8 @@
 model: opus
 effort: medium
 name: ci-triage
-description: Classifies a red CI build as regression, flaky, or environment and returns a one-sentence root cause with the evidence and the next action. Use when a pipeline, GitHub Action, GitLab job or test run fails and the cause is not yet known.
-when_to_use: red build, failing pipeline, "CI failed", "why is the build red", "is this flaky", a pasted CI log
+description: Diagnoses a red build from its log and the diff since the last green run — classifies the failure as regression, flaky, or environment and returns a one-sentence root cause with the evidence line and the next action. Read-only triage of a failed run whose cause is not yet known; it does not write or edit configuration.
+when_to_use: red build, failing run, "CI failed", "why is the build red", "is this flaky or a regression", "build đỏ sau commit", a pasted failure log, a test that passes locally and fails in the runner
 ---
 
 # ci-triage — regression, flaky, or environment?

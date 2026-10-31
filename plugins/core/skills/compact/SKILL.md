@@ -2,6 +2,7 @@
 effort: high
 name: compact
 description: Compact the current conversation — summarize what's been done, merge into persistent memory and HANDOFF.md, so the next session resumes with full context. Run when conversation is getting long or before ending a session.
+when_to_use: the conversation is getting long, context is nearly full, "compact", "tóm tắt session này", before ending or handing off a session, the compact-advisor hook suggests it
 ---
 
 # Compact

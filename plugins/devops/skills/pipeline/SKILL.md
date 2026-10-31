@@ -2,8 +2,8 @@
 model: opus
 effort: high
 name: pipeline
-description: Adds or changes a CI/CD workflow or job in GitHub Actions or GitLab CI the way the repo already runs them — the same gate script locally and in CI, actions pinned by commit SHA, least-privilege token permissions, secrets from the platform store, caches keyed on lockfiles, a deploy step that cannot run from a fork. Proves it with the workflow green on the branch. Use when the user asks for a CI job, a build or test workflow, a deploy step, a cache, or to fix a red or slow pipeline's configuration.
-when_to_use: add a CI job, "thêm job CI", GitHub Actions workflow, GitLab CI stage, "setup CI cho repo", run tests on pull requests, deploy step in CI, pipeline is slow, cache node_modules, pin actions, workflow permissions, CI secret, matrix build
+description: Adds or changes a CI/CD workflow or job in GitHub Actions or GitLab CI the way the repo already runs them — the same gate script locally and in CI, actions pinned by commit SHA, least-privilege token permissions, secrets from the platform store, caches keyed on lockfiles, a deploy step that cannot run from a fork. Proves it with the workflow green on the branch. Use when the user asks to add or edit workflow YAML — a CI job, a build or test workflow, a deploy step, a cache, permissions, or a slow pipeline's configuration.
+when_to_use: add a CI job, "thêm job CI", GitHub Actions workflow, GitLab CI stage, "setup CI cho repo", run tests on pull requests, deploy step in CI, pipeline is slow, cache node_modules, pin actions by SHA, workflow permissions, CI secret, matrix build, edit the workflow yaml
 ---
 
 # pipeline

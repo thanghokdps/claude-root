@@ -3,6 +3,7 @@ model: opus
 effort: high
 name: compound
 description: Crystallize learnings from the current session into persistent docs/solutions/ files. Run at the end of any session with significant work — mistakes found, solutions discovered, patterns identified. Prevents agents from repeating the same mistakes across sessions.
+when_to_use: end of a session with a tricky fix or a mistake that cost time, "save this learning", "lưu bài học", "ghi lại để lần sau không lặp lại", after /retro, a commit hook reminds that many files changed
 ---
 
 # Compound — Crystallize Session Learnings
