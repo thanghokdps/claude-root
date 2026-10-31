@@ -32,6 +32,6 @@ In `docs/tickets/<id>/plan.md` for a ticket, the plan's § Decisions for `/featu
 - none: every choice was the user's (answered in chat)
 ```
 
-Each entry needs `challenged:` (the strongest argument against the pick, and why it did not win) and `revert:`, which names the files to change: `/retro` settles the decision by the later commits on those files. On a `Risk: high` ticket in auto mode the `auto-decisions` hook (dev) blocks the stop until the section is there.
+Each entry needs `challenged:` (the strongest argument against the pick, and why it did not win) and `revert:`, which names the files to change: `/retro` (lead, if installed) settles the decision by the later commits on those files. On a `Risk: high` ticket in auto mode the `auto-decisions` hook (dev) blocks the stop until the section is there.
 
 The final report lists every entry under **Decided for you**, so the user reviews them in one place, with the labels exactly as above (`challenged:`, `revert:`), never paraphrased.

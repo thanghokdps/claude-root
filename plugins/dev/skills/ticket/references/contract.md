@@ -75,7 +75,7 @@ Branch: <type>/<id>-<slug> · Lane: <tiny|normal|high-risk>
 
 | Slice | Skill | Files | Green when |
 |-------|-------|-------|------------|
-| schema | /db-change | <paths> | <check> |
+| schema | /db-change (backend, if installed) | <paths> | <check> |
 
 Waves: Wave 1 (parallel): <task> [files] | <task> [files] · Wave 2: …
 

@@ -51,8 +51,16 @@ def test_undeclared_cross_plugin_ref_fails():
 
 def test_soft_declared_and_own_refs_pass():
     lines = ["hand regressions to `/fix-bug` (if installed).", "Run `/verify-done`.", "see `/ci-triage`",
-             "if dev is installed, suggest `/fix-bug`"]
+             "if dev is installed, suggest `/fix-bug`", "a Node server/fix-bug path is a path, not a skill"]
     assert lint_kit.undeclared_refs(lines, "ship", {"core"}, OWNERS) == []
+
+
+def test_cross_plugin_check_reads_references_and_agents():
+    paths = {os.path.relpath(path, lint_kit.ROOT) for _, path in lint_kit.instruction_paths()}
+    assert "plugins/ai/skills/agent-tool/references/api-to-tools.md" in paths
+    assert "plugins/dev/references/auto-decisions.md" in paths
+    assert "plugins/ai/agents/ai-engineer.md" in paths
+    assert not any(p.endswith("/SKILL.md") for p in paths)
 
 
 def test_dependency_cycle_detected():

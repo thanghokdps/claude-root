@@ -1,6 +1,6 @@
 # The kickoff doc set
 
-Read by `/kickoff`, and by the skills that start from it (`/agent-architect`, `/project-init`). Order is dependency order: each item narrows the ones after it, so gaps are grilled in this order too.
+Read by `/kickoff`, and by the skills that start from it (`/agent-architect`, `/project-init`, if installed). Order is dependency order: each item narrows the ones after it, so gaps are grilled in this order too.
 
 | # | Item | Sub-items (each is a matrix row) | Canonical file | Mandatory |
 |---|------|----------------------------------|----------------|-----------|
