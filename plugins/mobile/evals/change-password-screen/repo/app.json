@@ -1,0 +1,1 @@
+{ "expo": { "name": "Acme", "slug": "acme", "platforms": ["ios", "android"], "experiments": { "typedRoutes": true } } }
