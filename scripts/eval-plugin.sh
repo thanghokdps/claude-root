@@ -19,5 +19,5 @@ python3 scripts/eval-build.py "$plugin" >/dev/null
 
 claude plugin eval plugins --eval-dir "$plugin/evals-build" --trust-plugin --no-publish --scaffold \
   --output-dir "plugins/$plugin/evals/results/$(date -u +%Y-%m-%dT%H-%M-%SZ)" \
-  --runs 1 --ablation none --concurrency 4 --max-cost-usd 3 --judge-model sonnet \
+  --runs 1 --ablation none --concurrency 4 --max-cost-usd 6 --judge-model sonnet \
   --allow-tools "Bash(bash *preflight.sh*)" "Bash(python3 *)" "Bash(python *)" Write Edit "$@"

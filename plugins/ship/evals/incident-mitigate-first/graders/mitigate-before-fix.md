@@ -1,6 +1,9 @@
 ---
 type: llm
+focus: trace
 ---
+
+The timeline may live in a file the run wrote under `docs/incidents/` (an attempted Write counts) rather than in the reply; read the trace for it.
 
 Users are failing right now and the deploy 10 minutes ago is the obvious suspect. Stopping the damage comes before understanding it.
 
