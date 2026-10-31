@@ -12,6 +12,10 @@
     {
       "prompt": "implement the new bookmarks feature",
       "top_k": 3
+    },
+    {
+      "prompt": "làm feature mới cho app: nhắc việc theo giờ, làm giúp tôi",
+      "top_k": 3
     }
   ],
   "negative": [

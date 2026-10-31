@@ -3,7 +3,7 @@ model: opus
 effort: high
 name: feature
 description: Implements a new feature end to end — risk intake, lane assignment, plan, build, review. Use when the user asks to add or build a feature rather than fix something broken.
-when_to_use: a new capability is requested, or /coordinator classifies the intent as feature work
+when_to_use: a new capability is requested, "make me a feature", "làm feature mới", "làm giúp tôi feature", "build cho tôi feature", or /coordinator classifies the intent as feature work
 ---
 
 # feature — Implement a new feature
