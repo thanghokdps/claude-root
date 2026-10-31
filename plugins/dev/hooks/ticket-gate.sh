@@ -16,6 +16,10 @@
 # A line `skip /<skill>: <reason>` (or `skip subagents: <reason>`) in plan.md waives one check, with the reason on record.
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
+# No docs/tickets/ → no plan.md to gate on: exit before python starts (it runs on every Bash call)
+CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null) &&
+  TOP=$(git -C "${CWD:-${CLAUDE_PROJECT_DIR:-$PWD}}" rev-parse --show-toplevel 2>/dev/null) &&
+  [ ! -d "$TOP/docs/tickets" ] && exit 0
 
 HOOK_INPUT="$INPUT" python3 -I - <<'PY'
 import json, os, re, subprocess, sys
