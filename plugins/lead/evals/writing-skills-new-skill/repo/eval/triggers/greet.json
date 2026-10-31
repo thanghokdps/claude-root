@@ -1,0 +1,11 @@
+{
+  "skill": "greet",
+  "positive": [
+    {"prompt": "write a greeting for Anna", "top_k": 3},
+    {"prompt": "welcome the new teammate in a message", "top_k": 3},
+    {"prompt": "say hello to the client politely", "top_k": 3}
+  ],
+  "negative": [
+    {"prompt": "summarize this meeting", "owner": "summarize"}
+  ]
+}

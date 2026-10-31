@@ -1,0 +1,3 @@
+CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL);
+CREATE TABLE orders (id INTEGER PRIMARY KEY, client_id INTEGER REFERENCES customers(id), sku TEXT);
+CREATE TABLE invoices (id INTEGER PRIMARY KEY, customer_id INTEGER REFERENCES customers(id), amount INTEGER);

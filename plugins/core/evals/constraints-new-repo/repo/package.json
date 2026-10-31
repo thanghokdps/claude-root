@@ -1,0 +1,9 @@
+{
+  "name": "slugify-lib",
+  "private": true,
+  "scripts": {
+    "lint": "eslint src",
+    "test": "node --test"
+  },
+  "devDependencies": { "eslint": "9.12.0" }
+}
