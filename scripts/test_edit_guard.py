@@ -51,6 +51,17 @@ def test_reads_scratch_and_ignored_targets_are_allowed():
         assert code(cmd) == 0, cmd
 
 
+def test_inline_script_judged_by_its_write_targets_not_its_data():
+    # repo-audit writes its ledger to gitignored specs/; the tracked paths it mentions are data, not targets
+    data = "rows = ['src/app.ts', 'README.md']\n"
+    allowed = f"python3 - <<'PY'\n{data}open('logs/ledger.json', 'w').write(str(rows))\nPY"
+    assert code(allowed) == 0
+    tracked = f"python3 - <<'PY'\n{data}open('logs/ledger.json', 'w')\nopen('src/b.ts', 'w')\nPY"
+    assert code(tracked) == 2
+    unknown = f"python3 - <<'PY'\n{data}p = rows[0]\nopen(p, 'w').write('x')\nPY"
+    assert code(unknown) == 2
+
+
 def test_outside_a_git_repo_nothing_is_blocked():
     assert code("sed -i 's/a/b/' x.ts", cwd=tempfile.mkdtemp()) == 0
 
