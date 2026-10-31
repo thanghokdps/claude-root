@@ -97,6 +97,13 @@ def test_settled_keys_in_the_ledger_are_skipped():
     assert "[412] Page size" not in run(repo, "--min-days", "0")
 
 
+def test_a_longer_settled_key_does_not_hide_a_shorter_one():
+    repo = setup()
+    write(repo, ".claude/docs/decisions.md", "- 2026-10-31 · kept · [412] Page size limit · lesson: none\n")
+    commit(repo, "docs: ledger")
+    assert "[412] Page size" in run(repo, "--min-days", "0")
+
+
 def test_revert_naming_no_file_is_unreadable():
     repo = setup()
     write(repo, "docs/tickets/9/plan.md", "## Auto decisions\n- Tone · chose terse · challenged: x · revert: be chatty\n")
