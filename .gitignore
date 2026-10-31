@@ -1,5 +1,5 @@
-# Session state — changes every session
-specs/
+# Session state — changes every session; anchored so eval fixtures (plugins/*/evals/*/repo/specs/) stay tracked
+/specs/
 
 # User-specific local permissions
 .claude/settings.local.json
