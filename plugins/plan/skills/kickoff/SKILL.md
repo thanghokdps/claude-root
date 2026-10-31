@@ -18,7 +18,7 @@ The doc set, its order and its canonical files are in `${CLAUDE_SKILL_DIR}/refer
 
 ## Step 1 — Collect what exists
 
-Scan before asking: `docs/`, `specs/`, `README*`, root `*.md`, `openapi.*` / `swagger.*`, `*.prisma`, Drizzle or SQL schema files, `docs/adr/*`. Then ask **once**, through `AskUserQuestion`, for what the repo does not hold:
+Scan before asking: `docs/`, `specs/`, `README*`, root `*.md`, `openapi.*` / `swagger.*`, `*.prisma`, Drizzle or SQL schema files, `docs/adr/*`, plus every path or link the user named. Anything found is read now and goes straight to Step 2: the first message to the user is the matrix, and a document the scan did not find is asked for as its ❌ row in Step 4 ("do you have the Stripe spec, or shall we interview?"). Only when the scan finds nothing at all, ask **once**, through `AskUserQuestion`, where the documents are:
 
 - *I'll attach or link them (Recommended)* — paths, URLs, pasted text, a Figma link
 - *Some of it, ask me the rest*
@@ -41,7 +41,7 @@ Walk the nine items of `doc-set.md` in order (requirements → prerequisites →
 
 ## Step 3 — Coverage matrix
 
-Write `docs/kickoff.md` from the template in `doc-set.md`: one row per sub-item, status ✅ (source `path:line`), ⚠️ partial, ❌ missing, ⛔ conflict (both sources quoted), or n/a (with why: no UI, no stored data). Show the matrix to the user before the first question.
+Write `docs/kickoff.md` from the template in `doc-set.md`: one row per sub-item, status ✅ (source `path:line`), ⚠️ partial, ❌ missing, ⛔ conflict (both sources quoted), or n/a (with why: no UI, no stored data). No sub-item is folded into its neighbour: a provider the requirements name is ✅ for *system*, and its *spec or docs* sub-item stays ❌ until a spec sits under `docs/api/` — naming Stripe is not having its API. Show the matrix to the user before the first question.
 
 **Done when:** the matrix is shown, and every mandatory row has a status.
 
