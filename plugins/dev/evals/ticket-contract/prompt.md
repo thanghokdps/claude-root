@@ -1,5 +1,5 @@
 ---
-max_turns: 12
+max_turns: 20
 allowed_tools: [Skill, Read, Glob, Grep, Edit, Write]
 tags: [ticket]
 ---
