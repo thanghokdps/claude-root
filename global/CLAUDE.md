@@ -42,7 +42,7 @@ Chosen per pair on content, not by plugin. When both are available:
 - Team-only skills (flash, BA/QA, `developers:verify-features`, `explain-code`, `develop-components`) have no kit equivalent — use them.
 
 ## Rules and references
-- Always loaded: `~/.claude/rules/` `git` · `security` · `code-quality`. Path-scoped: `typescript`, `testing`.
+- Always loaded: `~/.claude/rules/` `git` · `security` · `code-quality` · `model-cost`. Path-scoped: `typescript`, `testing`, `api-contract`, `app-structure`, `data-access`.
 - On demand (skills read them): each plugin's `references/` — dev `orchestration` · `wave-parallelism` · `plan-format` · `auto-correct-scope` · `spec-templates` · `agent-prompts`; core `memory`.
 
 ## Gotchas

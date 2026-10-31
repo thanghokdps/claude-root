@@ -22,14 +22,14 @@ A **source library** and the `harness` marketplace of role plugins (local direct
   .claude-plugin/marketplace.json  ← lists the 15 plugins below
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
-    core        verify-done btw compact compound sync-memory project-init docs-sync + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, repo-profile, learn-capture hooks (always on; repo-profile enables the role packs frontend, backend, mobile, devops, ai and the domain pack workplace per repo) — plus scripts/init.sh and
+    core        verify-done btw compact compound sync-memory project-init docs-sync constraints + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, step-limit, repo-profile, learn-capture hooks (always on; repo-profile enables the role packs frontend, backend, mobile, devops, ai and the domain pack workplace per repo) — plus scripts/init.sh and
                 everything it copies: templates/ memory/ rules/ (rules/*.md → ~/.claude/rules/; rules/stacks/ holds only typescript, javascript, jest) hooks/stacks/ → progress
     plan        breakdown kickoff brainstorming grill domain-model writing-plans codebase-design → progress
                 breakdown: requirement → tasks with criteria + estimates → issues on GitHub/GitLab/Jira → /ticket each
     review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger repo-audit → progress
-      dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint → core, plan, review, ship
+    dev         coordinator feature ticket resolve-question fix-bug tdd checkpoint → core, plan, review, ship
                 feature is the supervisor: one slice table, each slice dispatched to a role pack's <role>-engineer (sonnet)
-                + ticket-ledger, ticket-gate, test-lock, weakened-check, auto-decisions, ask-once hooks (always on: a ticket's commit/PR waits for its plan's skills; no question to the user once the build has started)
+                + ticket-ledger, ticket-gate, test-lock, weakened-check, auto-decisions, ask-once, plan-recall, plan-gate hooks (always on: a ticket's commit/PR waits for its plan's skills; no question to the user once the build has started; an active PLAN.md stays live)
     frontend    role pack: agents/frontend-engineer.md + ui-feature design-ui + rules/ (react, nextjs) + references/ → progress, dev
     backend     role pack: agents/backend-engineer.md + api-endpoint db-change api-client + rules/ (python, fastapi, prisma) → progress, dev
                 a role pack = one agents/<role>-engineer.md, deliverable-named skills, on-demand rules, deps exactly [progress, dev],
