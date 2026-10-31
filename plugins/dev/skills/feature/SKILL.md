@@ -44,7 +44,7 @@ Output `LANE:` and `CONFIDENCE:` before proceeding.
 
 ### Open questions — every lane, before the first edit
 
-List what the request leaves open: scope (what is in and out), the data it stores, what the user sees or gets back, where it surfaces, anything the repo answers two ways. Any open point → ask them all now, in one `AskUserQuestion` call (2–4 options each, the recommended one first with what it changes), and stop until answered. None → write `No open questions: <why the request already answers them>` and go on. The tiny lane skips research and the plan, never this step: a feature built on a guess is rebuilt.
+Write five lines, one per dimension, each quoting the request's words that settle it or `open`: scope (what is in and out) · the data it stores and its shape (a time: which zone, which format) · what the user sees or gets back and how (a list, a message, a notification) · where it surfaces (CLI, API, screen) · anything the repo already answers two ways. Any `open` → ask them all now, in one `AskUserQuestion` call (2–4 options each, the recommended one first with what it changes), and stop until answered; a request of one or two sentences for a new user-facing capability always has at least one. All five quoted → write `No open questions` with the five lines and go on. The tiny lane skips research and the plan, never this step: a feature built on a guess is rebuilt.
 
 ### Hard gates (always high-risk, ask user first)
 - auth / authorization
