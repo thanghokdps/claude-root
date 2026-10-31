@@ -31,7 +31,7 @@ Ticket: <link> · Opened by: <reporter> · Read: <YYYY-MM-DD>
 ## Acceptance criteria
 | # | Given | When | Then | Source |
 |---|-------|------|------|--------|
-| AC1 | <state> | <action> | <observable result> | ticket / decision <date> |
+| AC1 | <state> | <action> | <observable result> | ticket / C<n> / decision <date> |
 
 ## Contract
 <the endpoint, schema, event or UI state that changes — request/response shape, status codes, migration name>

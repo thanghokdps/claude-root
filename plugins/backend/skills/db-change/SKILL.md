@@ -3,7 +3,7 @@ model: opus
 effort: high
 name: db-change
 description: Changes the database the way the repo manages it (Drizzle, Prisma, SQLAlchemy/Alembic). It covers a new table, column, index or relation, and new or changed repository queries. It updates the ERD and the schema in code, generates and reviews the migration, adds owner-scoped repository functions and seed data, and tests on a real engine (PGlite, SQLite, testcontainers). Use when a feature needs to store something new, a query is slow or returns another owner's rows, or the schema and the migrations have drifted.
-when_to_use: add a table, "thêm bảng", "thêm cột", add column, index, foreign key, relation, migration, schema change, repository function, query, N+1, slow query, seed data, drizzle, prisma, alembic, "query trả dữ liệu của user khác"
+when_to_use: add a table, "thêm bảng", "thêm cột", add a column to a table, a new field such as cancelled_at or deleted_at, index, foreign key, relation, migration, schema change, a query that returns rows by a new field, repository function, query, N+1, slow query, seed data, drizzle, prisma, alembic, sqlalchemy, "query trả dữ liệu của user khác" — even a one-column change
 ---
 
 # db-change

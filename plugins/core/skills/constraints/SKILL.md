@@ -67,6 +67,7 @@ Last reviewed: <date> by <user>
 
 Rules for the file:
 - Every row in **Enforced with numbers** names the command that produces the verdict; a row without one goes to **Measured** instead. The command is the repo's own script (`pnpm lint`, `pytest --cov`), never a tool the repo does not have — a dimension whose tool is not installed is listed under Measured with `tool: <name> not installed` until the user installs it (name the install command once, do not run it).
+- Prove each Enforced command exists before writing its row: the script name is in `package.json` `scripts` (or the `pyproject` / `Makefile` equivalent) as read this session, or the binary is on the path. A script you would have to add (`test:coverage`, a coverage flag the test runner does not have yet) is not enforced today: it goes to Measured as `script to add: <name>`, and moves up once the user has it.
 - A dimension needs a running URL (page performance, accessibility): skip it for a CLI, library or API with no page, and say so.
 - Numbers come with the reason (`≥ 80%: high enough to force a test, low enough to allow a config line`) in the Rule cell when it is not obvious.
 - An exception expires (default 90 days) and has an owner.
