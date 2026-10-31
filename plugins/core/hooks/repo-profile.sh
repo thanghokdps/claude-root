@@ -197,7 +197,10 @@ if not manifests:
         lines.append("REPO PROFILE: new repo, ai@harness is on. Any request to init, set up or scaffold a chatbot or AI "
                      "assistant (LangChain, LangGraph, Mastra, CopilotKit, Langfuse; with or without features) goes "
                      "through /agent-architect first; it builds a chat page that streams a real reply. Never "
-                     "hand-write the scaffold.")
+                     "hand-write the scaffold. Any other assistant request goes through its skill even with no code "
+                     "yet: a feature → /agent-feature, a write behind a confirm card → /agent-hitl, documents or a "
+                     "vector store → /agent-rag, a tool → /agent-tool, routing → /agent-graph. Invoke the skill "
+                     "before asking questions or planning; never plan or build the layer by hand.")
     if setup_note(added or []):
         lines.append(setup_note(added or []))
     if lines:
