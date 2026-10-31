@@ -3,6 +3,7 @@ model: opus
 effort: high
 name: project-init
 description: One-time project scan that bootstraps the full .claude/ workspace — docs, agents, hooks, rules, skills, templates, memory, and CLAUDE.md — all tailored to this specific project. Run once per project. Re-run when architecture changes significantly.
+when_to_use: a repo with no .claude/ workspace or CLAUDE.md, "set up claude for this project", "init .claude", "khởi tạo workspace cho repo này", after /kickoff on a new project, the architecture changed enough that the docs no longer match
 ---
 
 # Project Init

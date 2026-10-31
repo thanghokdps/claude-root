@@ -32,6 +32,15 @@ python3 scripts/test_build_site.py
 python3 scripts/test_release_site.py
 python3 scripts/test_skill_map.py
 python3 scripts/test_settle_decisions.py
+python3 scripts/test_scope_gate.py
+python3 scripts/test_blast_radius_check.py
+python3 scripts/test_headroom_compress.py
+python3 scripts/test_risk_corroboration.py
+python3 scripts/test_notify_on_finish.py
+python3 scripts/test_agent_progress.py
+python3 scripts/test_statusline.py
+python3 scripts/test_sync_team.py
+python3 scripts/test_preflight.py
 bash plugins/review/scripts/tests/run.sh
 python3 scripts/lint-kit.py
 python3 scripts/eval-triggers.py

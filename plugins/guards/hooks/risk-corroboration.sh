@@ -3,8 +3,11 @@
 # PreToolUse hook: block git commit when staged diff trips a hard-gate signal
 # but the declared Lane in specs/<slug>/SUMMARY.md is below high-risk.
 # Exits 0 to allow, 2 to block.
+# Acts on the event's cwd (process cwd only when .cwd is empty).
 
 INPUT=$(cat /dev/stdin)
+CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null)
+[ -n "$CWD" ] && { cd -P "$CWD" 2>/dev/null || true; }
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
 
 echo "$COMMAND" | grep -qE '^git commit' || exit 0

@@ -88,6 +88,7 @@ MY_COMMITS=$(git -C "$PROJECT_DIR" log $SINCE_ARG \
   --format="%H|%ai|%s" \
   --no-merges 2>/dev/null || echo "")
 
+COMMIT_COUNT=0
 if [ -z "$MY_COMMITS" ]; then
   echo "   No new commits from you since last sync."
 else
@@ -100,20 +101,30 @@ fi
 mkdir -p "$MEMORY_DIR/commits"
 OUTFILE="$MEMORY_DIR/commits/$TODAY.md"
 
-{
-  echo "---"
-  echo "name: commits-$TODAY"
-  echo "description: Commits by $GIT_USER on $TODAY (team sync)"
-  echo "metadata:"
-  echo "  type: project"
-  echo "---"
-  echo ""
-  echo "# Commits — $TODAY (synced $NOW)"
-  echo ""
-} > "$OUTFILE"
+if [ -f "$OUTFILE" ]; then
+  # Re-run on the same day: drop the regenerated team section, keep earlier entries.
+  TEAM_LINE=$(grep -n '^# Team changes since last sync' "$OUTFILE" | head -1 | cut -d: -f1 || true)
+  if [ -n "$TEAM_LINE" ]; then
+    head -n $((TEAM_LINE - 4)) "$OUTFILE" > "$OUTFILE.tmp" && mv "$OUTFILE.tmp" "$OUTFILE"
+  fi
+else
+  {
+    echo "---"
+    echo "name: commits-$TODAY"
+    echo "description: Commits by $GIT_USER on $TODAY (team sync)"
+    echo "metadata:"
+    echo "  type: project"
+    echo "---"
+    echo ""
+    echo "# Commits — $TODAY (synced $NOW)"
+    echo ""
+  } > "$OUTFILE"
+fi
 
 if [ -n "$MY_COMMITS" ]; then
   echo "$MY_COMMITS" | while IFS='|' read -r hash date subject; do
+    # Skip a commit already listed in today's file (match on the short sha).
+    if grep -qF "\`${hash:0:8}\`" "$OUTFILE"; then continue; fi
     echo "## \`${hash:0:8}\` — $date"
     echo ""
     echo "**$subject**"
@@ -133,13 +144,14 @@ if [ -n "$MY_COMMITS" ]; then
   # Save last sync hash
   echo "$MY_COMMITS" | head -1 | cut -d'|' -f1 > "$MEMORY_DIR/commits/last-sync.txt"
 fi
+COMMIT_COUNT=$(grep -c '^## `' "$OUTFILE" || true)
 
 # ─── 6. Scan what teammates changed (highlight conflicts) ────────────────────
 
+# git --author cannot be negated portably, so filter on the author name instead.
 TEAM_CHANGES=$(git -C "$PROJECT_DIR" log $SINCE_ARG \
-  --not --author="$GIT_USER" \
   --format="%H|%an|%s" \
-  --no-merges 2>/dev/null | head -20 || echo "")
+  --no-merges 2>/dev/null | awk -F'|' -v u="$GIT_USER" '$2 != u' | head -20 || echo "")
 
 if [ -n "$TEAM_CHANGES" ]; then
   echo "" >> "$OUTFILE"

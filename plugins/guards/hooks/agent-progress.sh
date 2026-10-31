@@ -4,8 +4,11 @@
 #   - statusMessage appears inline in Claude Code UI
 #   - Full colored log written to ~/.claude/progress.log
 #   - tail -f ~/.claude/progress.log in a separate terminal for live view
+# Acts on the event's cwd (process cwd only when .cwd is empty).
 
 INPUT=$(cat /dev/stdin)
+CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null)
+[ -n "$CWD" ] && { cd -P "$CWD" 2>/dev/null || true; }
 HOOK_TYPE="${1:-post}"
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 TS=$(date "+%H:%M:%S")
