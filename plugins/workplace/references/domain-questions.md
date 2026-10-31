@@ -1,6 +1,6 @@
 # Workplace need questions
 
-Asked by `/kickoff` and `/brainstorming` in a `Domain: workplace` repo, one per turn, as options with the recommended one first. Ask the need; the description carries what it maps to. Skip any the requirements or the code already answer.
+Asked by `/kickoff` and `/brainstorming` (plan, if installed) in a `Domain: workplace` repo, one per turn, as options with the recommended one first. Ask the need; the description carries what it maps to. Skip any the requirements or the code already answer.
 
 | Need question | Options → maps to |
 |---------------|-------------------|

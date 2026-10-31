@@ -1,6 +1,6 @@
 # Workplace starter domain model
 
-A starting point for `/domain-model` and `/db-change`; rename to the repo's terms. Every owned table carries the tenant key (`org_id`) when the app serves more than one company.
+A starting point for `/domain-model` and `/db-change` (if installed); rename to the repo's terms. Every owned table carries the tenant key (`org_id`) when the app serves more than one company.
 
 | Entity | Key fields | Notes |
 |--------|-----------|-------|

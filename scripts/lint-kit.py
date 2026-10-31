@@ -4,7 +4,7 @@
 Errors: SKILL.md frontmatter parses as YAML; no private names in agent (denylist); name == directory, kebab-case,
 unique across plugins; description present, <=1024 chars, says when to use; only documented frontmatter keys; description + when_to_use
 <=1536; ${CLAUDE_PLUGIN_ROOT}/ paths exist in the skill's own plugin and ${CLAUDE_SKILL_DIR}/ paths in its directory; hooks pass `bash -n` and are executable; inline python3 in a plugin .sh runs with -I; plugin/marketplace/hooks JSON parse; every plugin
-is listed in the marketplace, dependencies exist and are acyclic; a SKILL.md body that names another plugin's skill
+is listed in the marketplace, dependencies exist and are acyclic; a SKILL.md body, references/ or agents/ file that names another plugin's skill
 names a declared dependency or says "if (<plugin> is) installed"; no eval case hand-writes `plugins:`; same-named references/ files are identical across plugins; every file init.sh copies exists.
 Warnings: SKILL.md over 500 lines; no trigger case under eval/triggers/.
 """
@@ -61,6 +61,19 @@ def skill_paths():
             path = os.path.join(skills_dir, name, "SKILL.md")
             if os.path.isfile(path):
                 yield plugin, name, path
+
+
+def instruction_paths():
+    """(plugin, path) for the other files a skill or agent follows: references/ at plugin or skill level, agents/."""
+    for plugin in plugin_names():
+        base = os.path.join(PLUGINS_DIR, plugin)
+        for top in ("references", "skills", "agents"):
+            for dirpath, _, files in os.walk(os.path.join(base, top)):
+                if top == "skills" and "references" not in os.path.relpath(dirpath, base).split(os.sep):
+                    continue
+                for name in sorted(files):
+                    if name.endswith(".md"):
+                        yield plugin, os.path.join(dirpath, name)
 
 
 def check_skills():
@@ -206,7 +219,7 @@ def undeclared_refs(lines, plugin, deps, owners):
     for i, line in enumerate(lines, 1):
         if SOFT_REF.search(line):
             continue
-        for skill in re.findall(r"/([a-z0-9]+(?:-[a-z0-9]+)*)\b", line):
+        for skill in re.findall(r"(?<![\w.-])/([a-z0-9]+(?:-[a-z0-9]+)*)\b", line):
             owner = owners.get(skill)
             if owner and owner != plugin and owner not in deps and (i, skill) not in hits:
                 hits.append((i, skill))
@@ -237,6 +250,11 @@ def check_plugins():
         body = text.splitlines()[head + 1:]
         for lineno, skill in undeclared_refs(body, plugin, closure(graph, plugin), owners):
             errors.append(f"{os.path.relpath(path, ROOT)}:{lineno + head + 1}: /{skill} is in {owners[skill]}, "
+                          f"not a dependency of {plugin} — declare it or say \"if installed\" / \"if <plugin> is installed\"")
+    for plugin, path in instruction_paths():
+        lines = open(path, encoding="utf-8").read().splitlines()
+        for lineno, skill in undeclared_refs(lines, plugin, closure(graph, plugin), owners):
+            errors.append(f"{os.path.relpath(path, ROOT)}:{lineno}: /{skill} is in {owners[skill]}, "
                           f"not a dependency of {plugin} — declare it or say \"if installed\" / \"if <plugin> is installed\"")
 
 

@@ -32,9 +32,9 @@ Fill this table in `docs/api/<system>.tools.md` before writing any code:
 
 **Done when:** every endpoint in the source has a row and a decision, and the user has confirmed the table.
 
-## 3. The client layer — one per system, built by `/api-client`
+## 3. The client layer — one per system, built by `/api-client` (backend, if installed)
 
-Run `/api-client` Step 3 for each system, with the spec from § 1 as its source of truth. It builds `server/<system>/` (generated `schema.d.ts` with an `api:types` script, `client.ts` on `openapi-fetch`, `errors.ts`, `mappers.ts`), puts base URL, timeout and keys in the env schema, gives every call a timeout and an abort signal, retries only idempotent reads, and writes spec-based MSW mocks. An app route that already uses the system keeps its client: the tools reuse it. In shape M the client can sit beside `src/mastra/tools/`, imported by them.
+Run `/api-client` Step 3 for each system (backend, if installed; otherwise build the same files below by hand), with the spec from § 1 as its source of truth. It builds `server/<system>/` (generated `schema.d.ts` with an `api:types` script, `client.ts` on `openapi-fetch`, `errors.ts`, `mappers.ts`), puts base URL, timeout and keys in the env schema, gives every call a timeout and an abort signal, retries only idempotent reads, and writes spec-based MSW mocks. An app route that already uses the system keeps its client: the tools reuse it. In shape M the client can sit beside `src/mastra/tools/`, imported by them.
 
 What a tool needs on top of that client:
 
@@ -45,7 +45,7 @@ What a tool needs on top of that client:
 
 ## 4. Tool tests on the spec's mocks
 
-- Tool tests run on the MSW handlers from `/api-client`, with no network. Endpoints without examples → fixtures under `dev/fixtures/<system>/`, never in app code.
+- Tool tests run on the MSW handlers from `/api-client` (backend, if installed) or the hand-written ones, with no network. Endpoints without examples → fixtures under `dev/fixtures/<system>/`, never in app code.
 - Each tool keeps its Step 2 tests (schema rejects identity fields · happy path · upstream error → short message). Add one per error mapping the tool can hit.
 
 ## 5. The system already speaks MCP
@@ -60,5 +60,5 @@ Connect to it; do not rewrite its tools.
 ## Order of work
 
 1. § 1–2 for the whole API, confirmed by the user.
-2. § 3–4 once per system: `/api-client` builds the client, then the tool-specific additions.
+2. § 3–4 once per system: `/api-client` (backend, if installed) builds the client, then the tool-specific additions.
 3. Then `/agent-tool` Steps 1–4 **one tool at a time**, read tools first, each with its turn proven before the next. Write tools go through `/agent-hitl`.

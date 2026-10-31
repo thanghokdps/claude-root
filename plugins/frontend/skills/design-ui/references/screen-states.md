@@ -1,6 +1,6 @@
 # Screen states to inventory
 
-Every screen the design covers gets these rows; each needs a frame or a recorded decision. The ones in **bold** are the ones designs most often leave out — and the ones users see when something goes wrong. A domain skill may add its own rows (`/agent-design-ui` adds the chat states).
+Every screen the design covers gets these rows; each needs a frame or a recorded decision. The ones in **bold** are the ones designs most often leave out — and the ones users see when something goes wrong. A domain skill may add its own rows (`/agent-design-ui` adds the chat states, if installed).
 
 | State | What it shows |
 |-------|---------------|
