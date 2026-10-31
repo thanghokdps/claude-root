@@ -18,4 +18,5 @@ paths:
 - A budget test measures the assembled system prompt per agent, and each section in it, in tokens; growth over the budget fails CI, so trimming is a decision, not an accident.
 - No real people's names or real customer data in prompts or examples.
 - Static instructions first, dynamic context (date, user, memory) last — keeps the prefix cacheable.
+- An interpolated value that can be empty (a report not produced, no prior turn, no memory) is replaced by a marker that says so ("(no news report: the news step did not run)"), never an empty string: a prompt that says "refute the argument below" over nothing gets an invented argument.
 - Tests and evals assert on outcomes (tool chosen, data written, refusal given), never on exact wording.

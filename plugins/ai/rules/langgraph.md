@@ -38,16 +38,19 @@ return { messages: [...state.messages, aiResponse] }; // duplicates history
 - Compile once at module level with its dependencies; invoke many times. Never compile or build a checkpointer per request.
 - Pass per-run limits at invoke time: `recursionLimit`, timeout, abort `signal`.
 - `GraphRecursionError` and timeouts end as a readable assistant turn, never a 500.
+- An agent that loops model → tools counts its tool rounds; at the cap it gets one last turn told to answer with what it has, and that turn ends the loop whatever it returns, so a model that keeps calling tools ends with an answer instead of the recursion limit.
 - Nodes that route, prepare or summarise must not stream into the chat: tag them `nostream` / disable message emission.
 
 ## Models
 
 - `temperature: 0` for anything that routes or produces structured output.
+- Structured output that fails to parse, and has no free-text fallback that yields the field, becomes an explicit `needs_review` value the caller handles, never the schema's default or the middle option: a guessed default is read later as a decision the model made.
 - Check model-specific options against the bound tools (some models reject reasoning-effort with tools); verify on the installed model, not from memory.
 
 ## Fixed workflows
 
 - A fixed order of steps (validate → approve → write) is a `StateGraph` with fixed edges and a typed state, not a prompt instruction; conditional edges only where a step's output decides the branch.
+- Every conditional edge driven by one router maps every target that router can return, from one shared constant, including its fall-through; a test calls the router with an unexpected value and asserts the target is in the map.
 - Compile it once at module level with the checkpointer, and expose it to the agent as one tool or a subgraph node.
 - A step that waits for a human uses `interrupt()` per § Interrupts; code before it runs again on resume, so make it idempotent.
 
