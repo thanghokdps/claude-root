@@ -1,6 +1,6 @@
 # Container rules — read by devops-engineer and container
 
-- Multi-stage build: toolchain in the build stage, only built output and production dependencies in the runtime stage.
+- Multi-stage build when there is a build or install step: toolchain in the build stage, only built output and production dependencies in the runtime stage. An app with neither copies only its runtime files into one pinned stage.
 - Base image pinned by tag and digest, from the same family the repo's other services use; rebuilt on a schedule so patches land.
 - Non-root `USER` that owns only the paths it writes; no `sudo`, no `chmod 777`, no `curl | sh`.
 - No secret in any layer: no `COPY .env`, no `ARG` carrying a token, no credential in a `RUN`. Runtime secrets arrive as env or mounted files.
