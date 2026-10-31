@@ -17,6 +17,7 @@ A green unit suite does not prove a turn. The stream is the evidence: no "fixed"
 ## Mode local — drive a real turn
 
 1. **Boot** the stack the turn needs (agent server, persistence worker, upstream mocks or the dev API) with the repo's own scripts; confirm health endpoints answer.
+   Credentials come from the process environment first (`printenv | grep -c _API_KEY`), then from the repo's env file; a key exported in the shell counts even when no `.env` exists. Never create or read `.env` yourself (the secret-guard hook refuses it): when no key is found anywhere, stop and ask the user to export it, and say which variable the repo expects.
 2. **Drive** the turn through the same entry the client uses (runtime endpoint or AG-UI route) with a real, fresh auth token. An expired token looks like broken wiring — check it first.
 3. **Capture** the raw event stream to a file in the scratchpad.
 4. **Read** it against `${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md`:
