@@ -336,4 +336,4 @@ All future agents load .claude/docs/ before touching code.
 Re-run /project-init if the architecture changes significantly.
 ```
 
-If the signals include `langchain`, `langgraph` or `copilotkit` and no `docs/adr/*agent-architecture*` exists, and if agent is installed, add one line to the report — do not run it: `Next: /agent-architect greenfield` when no `createAgent(` / `new StateGraph(` exists yet, otherwise `Next: /agent-architect audit`.
+If the signals include `langchain`, `langgraph` or `copilotkit` and no `docs/adr/*agent-architecture*` exists, and if ai is installed, add one line to the report — do not run it: `Next: /agent-architect greenfield` when no `createAgent(` / `new StateGraph(` exists yet, otherwise `Next: /agent-architect audit`.

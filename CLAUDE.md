@@ -55,7 +55,7 @@ Install / update: `bash scripts/install.sh` — needed for global/CLAUDE.md and 
 
 Behaviour evals (real model, paid, not in check.sh): `bash scripts/eval-plugin.sh <plugin>` runs `plugins/<plugin>/evals/` — one routing case per demo prompt, graded by which skill fired (`tool_used: Skill`). Before a demo: add `--runs 3 --ablation with-without`.
 
-Upstream freshness (network, warn-only, not in check.sh): `bash scripts/check-upstream.sh` prints the latest npm version of each package in `scripts/upstream.json` beside the "checked against … on <date>" of every reference citing it, and flags references older than 30 days. Run it before touching the `agent` plugin's vendor guidance; re-date a reference only after re-reading its vendor source.
+Upstream freshness (network, warn-only, not in check.sh): `bash scripts/check-upstream.sh` prints the latest npm version of each package in `scripts/upstream.json` beside the "checked against … on <date>" of every reference citing it, and flags references older than 30 days. Run it before touching the `ai` plugin's vendor guidance; re-date a reference only after re-reading its vendor source.
 
 Deploy the docs site to Vercel production (`deploy prod`, `release site`): `bash scripts/release-site.sh`, after the user confirms. Never `vercel --prod` — git auto-deploy is off (`vercel.json`) and releases go only through the Deploy Hook in `VERCEL_DEPLOY_HOOK_URL`; if the shell lacks it, run `source ~/.zshrc && bash scripts/release-site.sh`, and never write the URL into a file.
 
@@ -74,7 +74,7 @@ Release (only once published): bump `version` in the changed plugins' `plugin.js
 
 ## How to add a rule
 
-Always-loaded context is the budget: add `paths:` frontmatter unless the rule applies to every task. Process detail belongs in `references/`, read by the skill that needs it. Global rules live in `plugins/core/rules/` (then `bash scripts/install.sh`); agent rules in `plugins/agent/rules/`, read on demand by the agent skills.
+Always-loaded context is the budget: add `paths:` frontmatter unless the rule applies to every task. Process detail belongs in `references/`, read by the skill that needs it. Global rules live in `plugins/core/rules/` (then `bash scripts/install.sh`); agent rules in `plugins/ai/rules/`, read on demand by the agent skills.
 
 ## How to add a hook
 
