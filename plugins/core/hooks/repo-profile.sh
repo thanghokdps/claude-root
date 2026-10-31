@@ -183,8 +183,9 @@ if not manifests:
     added = setup_repo([])
     off = [p for p in ("frontend@harness", "backend@harness", "mobile@harness", "devops@harness", "ai@harness")
            if not is_on(p)]
-    enable = ("add it to enabledPlugins in .claude/settings.json" if added is not None
-              else "run `claude plugin enable <pack> --scope local`")
+    # .claude/settings.json is a guarded path (sensitive-path), so the CLI enables the pack, never an Edit by the model.
+    enable = ("ask the user to run `claude plugin enable <pack> --scope project`" if added is not None
+              else "ask the user to run `claude plugin enable <pack> --scope local`")
     lines = []
     if off:
         ai_hint = "ai@harness for LangChain / LangGraph / Mastra / CopilotKit / Langfuse, " if "ai@harness" in off else ""

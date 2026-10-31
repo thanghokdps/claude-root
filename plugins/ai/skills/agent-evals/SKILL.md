@@ -12,6 +12,8 @@ when_to_use: write evals for the agent, eval dataset, golden cases, evaluate the
 
 Unit tests prove code paths with no model. Evals prove behaviour with a real model. Keep them in separate trees and separate commands; never let evals run inside `test`.
 
+**Precondition.** No assistant in the repo yet (no agent framework dependency, no agent entry point, no ADR) → stop and say so: a new assistant starts with `/agent-architect`, which writes the ADR this skill builds inside. Never scaffold an agent here to have something to test; come back once the ADR exists.
+
 ---
 
 ## Mode unit — no real model
@@ -40,7 +42,7 @@ Unit tests prove code paths with no model. Evals prove behaviour with a real mod
 - Deterministic checks first (tool chosen, args, data written); an LLM judge only for qualities code cannot check, with the median of N samples and a judge model different from the agent model.
 - Thresholds per scorer (data integrity at 1.0); assert on outcomes, never exact wording.
 - RAG answers: retrieval recall@k on the expected `sourceId` (no LLM, cheap) plus faithfulness and citation scorers, and a "not found" answer for out-of-corpus cases (`/agent-rag` Step 6).
-- CI gate: path-filtered PRs plus a schedule; fail on missing keys, zero executed, or any case going passed → failed against the last good baseline; privacy-scan the report before publishing it.
+- CI gate: path-filtered PRs plus a schedule; fail on missing keys, zero executed, or any case going passed → failed against the last good baseline; privacy-scan the report before publishing it. `.github/workflows/**` is a guarded path (core's `sensitive-path` blocks the write): write the workflow to `evals/ci/<name>.yml`, show it, and ask the user to move it, or hand it to `/pipeline` (devops, if installed). Never report the gate as done when the file was blocked.
 
 **Done when:** the suite runs locally, the gate fails on a deliberately broken case, and the report is published only after the privacy scan.
 

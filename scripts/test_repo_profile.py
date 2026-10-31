@@ -269,7 +269,8 @@ def test_new_repo_gets_the_kit_and_names_the_packs_that_are_off():
     cwd = repo()
     ctx = run(cwd, config_dir({"frontend@harness": True}))
     assert "no manifest" in ctx and "ai@harness" in ctx and "/reload-plugins" in ctx, ctx
-    assert "enabledPlugins in .claude/settings.json" in ctx and "frontend@harness," not in ctx, ctx
+    assert "claude plugin enable <pack> --scope project" in ctx and "frontend@harness," not in ctx, ctx
+    assert "enabledPlugins in .claude/settings.json" not in ctx, ctx  # a guarded path: the model must not edit it
     s = shared_settings(cwd)
     assert s == {"extraKnownMarketplaces": {"harness": KIT_MARKETPLACE}, "enabledPlugins": {"dev@harness": True}}, s
     assert local_settings(cwd) is None

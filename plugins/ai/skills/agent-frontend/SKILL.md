@@ -12,6 +12,8 @@ when_to_use: CopilotKit provider, useAgent, useAgentContext, useFrontendTool, us
 
 Scope: React web on `@copilotkit/react-core/v2`. How the chat looks — a Figma design, theme, slots — is `/agent-design-ui`; this skill wires it. Mobile/headless clients follow the client contract in `/agent-hitl` and `${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md`; chat channels (Slack, Teams, Discord, WhatsApp) follow `${CLAUDE_SKILL_DIR}/references/chat-channels.md`.
 
+**Precondition.** No assistant in the repo yet (no agent framework dependency, no agent entry point, no ADR) → stop and say so: a new assistant starts with `/agent-architect`, which writes the ADR this skill builds inside. Never scaffold the app from here; come back once the ADR exists.
+
 ---
 
 ## Step 1 — Detect

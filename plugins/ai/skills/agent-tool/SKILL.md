@@ -12,6 +12,8 @@ when_to_use: add a tool, "thêm tool cho agent", "chỉ giữ 2 tool này", tool
 
 The invariants live in `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`; this skill is the order of work.
 
+**Precondition.** No assistant in the repo yet (no agent framework dependency, no agent entry point, no ADR) → stop and say so: a new assistant starts with `/agent-architect`, which writes the ADR this skill builds inside. Never scaffold the app from here; come back once the ADR exists.
+
 ---
 
 ## Step 0 — From an API the user provides (when there is one)
@@ -47,6 +49,7 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 ## Step 3 — Implement
 
 - Identity and authority from trusted context only; the upstream call uses the caller's credentials or a server credential scoped by those claims.
+- Every upstream call carries a deadline (`AbortSignal.timeout(ms)` or the client's timeout option; a few seconds for a read) and honours the run's abort signal. A call with no timeout is a defect: an upstream hang becomes a hung turn.
 - Read tool: wrap with retry (stock `toolRetryMiddleware` scoped to read tools when available; shape M retries inside `execute`, read tools only — `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/stock-map.md`), audit outside retry.
 - Mutation tool: stop here and run `/agent-hitl` — a mutation is never a plain tool.
 - Upstream errors → the short message from Step 2; in shape A stock `toolErrorMiddleware` does the mapping for the tools you name.
