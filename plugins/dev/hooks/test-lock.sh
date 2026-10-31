@@ -8,6 +8,10 @@
 # Asks: lock-tests.sh unlock (the user confirms the fix is committed or the test is wrong).
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
+# No lock file → nothing to guard: exit before python starts (it runs on every edit and Bash call)
+CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null) &&
+  GD=$(git -C "${CWD:-${CLAUDE_PROJECT_DIR:-$PWD}}" rev-parse --absolute-git-dir 2>/dev/null) &&
+  [ ! -e "$GD/claude-fix-lock.json" ] && exit 0
 
 HOOK_INPUT="$INPUT" python3 -I - <<'PY'
 import json, os, re, subprocess, sys

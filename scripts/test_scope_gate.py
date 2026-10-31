@@ -29,6 +29,14 @@ def test_question_short_and_skill_prompts_stay_silent():
         assert r.returncode == 0 and r.stdout == "", prompt
 
 
+def test_shell_input_and_questions_in_any_language_stay_silent():
+    for prompt in ["<bash-input>git -C /repo branch -D fix/kit-audit-drift</bash-input>",
+                   "!git branch -D fix/old-branch now", "is there nothing left to improve in the kit?",
+                   "không còn gì để improve nữa hả", "fix này đã merge chưa", "có cần update docs không"]:
+        r = run({"hook_event_name": "UserPromptSubmit", "prompt": prompt})
+        assert r.returncode == 0 and r.stdout == "", prompt
+
+
 def test_implementation_prompt_gets_coordinator_context():
     r = run({"hook_event_name": "UserPromptSubmit", "prompt": "add a button to the settings page"})
     assert r.returncode == 0

@@ -19,6 +19,13 @@
 #   (echo, cat, grep, git …) whose arguments merely mention a tool.
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
+# None of the activating files below → silent: exit before python starts (it runs on every Bash call).
+# Same checks as `active` in the python; compgen -G, like glob.glob, skips dotfiles.
+CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null) &&
+  T=$(git -C "${CWD:-${CLAUDE_PROJECT_DIR:-$PWD}}" rev-parse --show-toplevel 2>/dev/null) &&
+  ! { [ -e "$T/.claude/infra-gate.json" ] || [ -d "$T/k8s" ] || [ -d "$T/manifests" ] || [ -e "$T/Chart.yaml" ] ||
+      [ -e "$T/kustomization.yaml" ] || compgen -G "$T/*.tf" || compgen -G "$T/*/*.tf" || compgen -G "$T/*/*/*.tf" ||
+      compgen -G "$T/*/Chart.yaml"; } >/dev/null && exit 0
 
 HOOK_INPUT="$INPUT" python3 -I - <<'PY'
 import glob, json, os, re, shlex, subprocess, sys

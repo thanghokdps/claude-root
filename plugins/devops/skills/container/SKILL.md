@@ -27,7 +27,7 @@ Rules: `${CLAUDE_PLUGIN_ROOT}/rules/container.md`, `security.md` from core. The 
 
 ## Step 2 — Write the Dockerfile the way the repo does
 
-- Multi-stage: a build stage with the toolchain, a runtime stage with only the built output and production dependencies.
+- Multi-stage when there is a build or install step: a build stage with the toolchain, a runtime stage with only the built output and production dependencies. No build and no dependencies → one pinned stage with only the runtime files.
 - Base image pinned by tag **and** digest; the same family as the repo's other services.
 - A non-root user owning only the paths it writes; `WORKDIR` set; no `latest`, no `curl | sh`.
 - Secrets never in a layer: no `COPY .env`, no `ARG` holding a token; runtime secrets arrive as env or mounted files.

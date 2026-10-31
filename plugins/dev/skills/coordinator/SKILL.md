@@ -273,36 +273,7 @@ If any task FAILS → fix it before advancing. Print `❌ Failed` in the table.
 
 ### 5c — Status table format rules
 
-Always use a two-column `| Task | Status |` table. Never use a wider table for the inline status board — keep it scannable.
-
-**Example mid-wave output:**
-```
-T1.1 and T1.2 running in parallel. Updated pipeline status:
-
-| Task | Status |
-|------|--------|
-| T1.1 | 🔵 Running (sonnet) |
-| T1.2 | 🔵 Running (haiku) |
-| T2.1 | ⬜ Waiting on T1.1 |
-| T3.1 | ⬜ Waiting on T1.1+T1.2 |
-
-* Waiting for 2 background agents to finish
-```
-
-**After T1.1 completes:**
-```
-Agent "T1.1 implement auth middleware" completed · 4m 12s
-T1.1 done ✅. Spawning T2.1 now (depends on T1.1). Still waiting on T1.2 before I can start T3.1.
-
-| Task | Status |
-|------|--------|
-| T1.1 | ✅ Done |
-| T1.2 | 🔵 Running (haiku) |
-| T2.1 | 🔵 Running (sonnet) |
-| T3.1 | ⬜ Waiting on T1.2 |
-
-* Waiting for 2 background agents to finish
-```
+Always use the two-column `| Task | Status |` table from 5b Step 1. Never use a wider table for the inline status board — keep it scannable.
 
 ---
 
@@ -342,7 +313,7 @@ After all agents complete:
 
 ### Context loading
 - **Load `.claude/docs/` first.** If missing → prompt user to run `/project-init`.
-- **Load `docs/solutions/INDEX.md`** — read any critical-severity entries before dispatching.
+- **Load `~/.claude/docs/solutions/INDEX.md` and `.claude/docs/solutions/INDEX.md`** — read any critical-severity entries before dispatching.
 - **Pass project context explicitly** to every agent prompt. Agents inherit nothing.
 - **Never let agents re-scan the codebase.** Docs + targeted source files only.
 
@@ -359,17 +330,16 @@ Before dispatching wave agents, check scale:
 If a dynamic workflow is warranted, tell the user: "This task is codebase-wide. I recommend running it as a dynamic workflow. Rephrasing with `ultracode:` trigger…"
 
 ### Dispatch rules
-- **Never implement yourself.** Classify, route, synthesize. Agents implement.
+- **Never implement yourself** outside the `tiny` lane, which edits directly. Classify, route, synthesize. Agents implement.
 - **Parallel tasks MUST be dispatched in ONE message** with `run_in_background: true` on each Agent call. Separate messages = sequential. Sequential when parallel is correct = wasted time.
 - **Sequential dispatch** only when: file overlap between tasks, explicit dependency, or scope needs clarification.
 - **Model selection** per `~/.claude/rules/model-cost.md`: `sonnet` for code, `haiku` for mechanical tasks; set `model` on every Agent call.
 - **Never advance to Wave N+1** until all Wave N tasks pass verification.
 
 ### Tracking
-- **Always create tasks before dispatching.** Every agent step needs a `TaskCreate` entry.
+- **Create tasks before dispatching** when `TaskCreate` exists (Step 4.5); end the run with `TaskList`.
 - **Always show status board** before starting and after each wave.
-- **Always initialize specs/** before first agent: SUMMARY.md, TEST_MATRIX.md, ESCALATIONS.md.
-- **End every run with `TaskList`** so the user sees the completed board.
+- **`high-risk` lane: initialize specs/** before the first agent: SUMMARY.md, TEST_MATRIX.md, ESCALATIONS.md (Step 4b).
 
 ### Safety
 - **Never skip the Verifier** when code changes.

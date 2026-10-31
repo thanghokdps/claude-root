@@ -66,9 +66,28 @@ for m in re.finditer(r"(?<![0-9&<])>{1,2}\|?\s*([^\s;&|<>()]+)", shell):
 blocked = [(how, t) for how, targets in hits for t in targets if t == "?" or in_repo(t)]
 
 WRITES = r"open\([^)]*['\"][wax]\+?b?['\"]|\.write_text\(|\.write_bytes\(|writeFileSync|writeFile\(|File\.write|shutil\.(copy|move)"
+LIT = r"\s*['\"]([^'\"]+)['\"]"
+
+
+def write_target(body, m):
+    """The literal path a write call names, or None when it is a variable or expression."""
+    call = body[m.start():]
+    if call.startswith("."):  # Path("x").write_text(
+        t = re.search(r"Path\(" + LIT + r"\s*\)\s*$", body[:m.start()])
+    elif call.startswith("shutil"):
+        t = re.match(r"shutil\.\w+\([^,]+," + LIT, call)
+    else:
+        t = re.match(r"[\w.]+\(" + LIT, call)
+    return t.group(1) if t else None
+
+
 inline = [b for _, b in bodies] + re.findall(r"\b(?:python3?|node|ruby)\s+-[ce]\s+(\"[^\"]*\"|'[^']*')", cmd)
 if re.search(r"\b(?:python3?|node|ruby)\b", shell) and any(re.search(WRITES, b) for b in inline):
-    paths = re.findall(r"['\"]([^'\"\s]+\.[A-Za-z0-9]{1,8})['\"]", " ".join(inline))
+    targets = [write_target(b, m) for b in inline for m in re.finditer(WRITES, b)]
+    if all(targets):  # every write names its file: judge those, not paths the script only mentions as data
+        paths = targets
+    else:
+        paths = re.findall(r"['\"]([^'\"\s]+\.[A-Za-z0-9]{1,8})['\"]", " ".join(inline))
     if not paths or any(in_repo(p) for p in paths):
         blocked.append(("inline script", "a file in the repo"))
 

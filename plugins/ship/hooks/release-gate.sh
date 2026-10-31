@@ -14,6 +14,10 @@
 # This stops mistakes in a session; the real protection is who may build and publish on EAS and the stores.
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
+# No eas.json or config → silent: exit before python starts (it runs on every Bash call)
+CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null) &&
+  TOP=$(git -C "${CWD:-${CLAUDE_PROJECT_DIR:-$PWD}}" rev-parse --show-toplevel 2>/dev/null) &&
+  [ ! -e "$TOP/eas.json" ] && [ ! -e "$TOP/.claude/release-gate.json" ] && exit 0
 
 HOOK_INPUT="$INPUT" python3 -I - <<'PY'
 import json, os, re, shlex, subprocess, sys

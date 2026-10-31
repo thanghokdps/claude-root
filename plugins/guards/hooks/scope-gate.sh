@@ -18,6 +18,11 @@ printf '%s' "$PROMPT" | grep -qiE '\b(add|implement|refactor|build|create|fix|ch
 
 IS_QUESTION=0
 printf '%s' "$PROMPT" | grep -qiE '^\s*(what|how|why|when|where|which|who|can you explain|tell me|explain|show me|describe)' && IS_QUESTION=1
+# A trailing ? or a Vietnamese question particle (hả, không, chưa, à, nhỉ, sao) also marks a question
+printf '%s' "$PROMPT" | grep -qiE '(\?|(^|[[:space:]])(hả|không|chưa|à|nhỉ|sao))[[:space:][:punct:]]*$' && IS_QUESTION=1
+
+# A command the user ran in the shell (! or <bash-input>) is not a request to Claude
+printf '%s' "$PROMPT" | grep -qE '^\s*(!|<bash-(input|stdout)>)' && exit 0
 
 # Already using a skill explicitly — don't double-inject
 HAS_SKILL=0
