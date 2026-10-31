@@ -2,7 +2,7 @@
 model: opus
 effort: high
 name: agent-feature
-description: Implements a new feature in an existing AI assistant (CopilotKit, AG-UI, Mastra, LangChainJS, LangGraph) within the architecture its ADR records — checks the feature against the ADR, inventories the tools, agents, schemas, HITL contract and renderers already there, slices the feature across layers with a reuse / extend / new decision per piece, builds each slice through the layer skill, and checks the diff for duplicates. Use when adding a feature or user capability to an assistant that already exists — including one that writes data behind a confirm step, whose write slice this skill hands to agent-hitl.
+description: Implements a new feature in an existing AI assistant (CopilotKit, AG-UI, Mastra, LangChainJS, LangGraph) within the architecture its ADR records — checks the feature against the ADR, inventories the tools, agents, schemas, HITL contract and renderers already there, slices the feature across layers with a reuse / extend / new decision per piece, builds each slice through the layer skill, and checks the diff for duplicates. Use when adding a feature or user capability to an assistant that already exists — including one that writes data behind a confirm step, whose write slice this skill hands to agent-hitl. Not for one layer on its own (adding RAG or a vector store, a single confirm flow on a tool that exists) goes straight to agent-rag or agent-hitl.
 when_to_use: add a feature to the chatbot, "thêm tính năng cho chatbot", "làm thêm feature cho agent", new capability across tool + UI + confirm, "dựa trên kiến trúc đã có", "đừng viết trùng code", extend the assistant so users can do X
 ---
 
@@ -77,7 +77,7 @@ Show the table, then ask through `AskUserQuestion`: *build as planned (Recommend
 Run each slice through its layer skill in dependency order (contract schema → db → API client → endpoint → retrieval → tool → HITL → agent scope → chat frontend → screens → evals), one slice green before the next. Pass the slice row as the brief so the layer skill does not re-decide placement.
 
 - **Invoke the layer skill** (`/agent-tool`, `/agent-hitl`, `/agent-frontend`, `/agent-design-ui`, `/agent-evals` …) with the Skill tool for every agent-side slice, even a small one; an app-side row goes back to `/feature` for its engineer. Never build a slice inline from memory of what the skill says: its checks (no identity in the schema, no write before confirm, states, tokens) are what the slice is reviewed against. A slice with no matching skill says so in its row.
-- **Code goes to a cheaper model.** Inside the layer skill, the main session decides; the code for the slice goes to one `sonnet` subagent (`model: "sonnet"`) whose brief is the slice row, the contract and the test to make pass, per `model-cost.md` (core). The main session reviews its diff before the next slice.
+- **Code goes to a cheaper model.** Inside the layer skill, the main session decides; the code for the slice goes to one subagent dispatched with `Agent` as `subagent_type: "ai:ai-engineer"`, `model: "sonnet"` (never an untyped, general-purpose agent) whose brief is the slice row, the contract and the test to make pass, per `model-cost.md` (core). The main session reviews its diff before the next slice.
 - **Edit files with Edit or Write**, not shell heredocs, `sed` or scripts, so the repo's edit hooks (lint, format) run on every change.
 
 **Done when:** each slice's own Done-when is met, its layer skill was invoked (or its row says why none fits), and typecheck, lint and tests pass.

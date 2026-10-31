@@ -3,7 +3,7 @@ model: opus
 effort: high
 name: agent-rag
 description: Adds retrieval (RAG), embeddings, a vector store or semantic long-term memory to a Mastra, LangChainJS or LangGraph assistant. It covers the ingest pipeline (load, chunk, embed, index with model metadata), the vector store choice, a retrieval read tool with a server-side tenant filter and citations, semantic recall scoped to the trusted user, re-embedding on a model change, and retrieval evals. Use when the assistant must answer from documents or a knowledge base, remember users across threads by meaning, or when retrieval returns wrong, stale or another tenant's content.
-when_to_use: RAG, "thêm RAG cho chatbot", "chatbot trả lời từ tài liệu", embeddings, vector store, pgvector, Pinecone, Qdrant, chunking, knowledge base, semantic search, semantic recall, vector memory, "nhớ người dùng qua các cuộc hội thoại", retrieval returns irrelevant or another customer's documents, change embedding model
+when_to_use: RAG, "thêm RAG cho chatbot", "chatbot trả lời từ tài liệu", "cho agent trả lời từ tài liệu", "mỗi tenant chỉ thấy tài liệu của mình", embeddings, vector store, pgvector, Pinecone, Qdrant, chunking, knowledge base, semantic search, semantic recall, vector memory, "nhớ người dùng qua các cuộc hội thoại", retrieval returns irrelevant or another customer's documents, change embedding model
 ---
 
 # agent-rag
