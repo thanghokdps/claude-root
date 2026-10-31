@@ -25,7 +25,7 @@ Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT
 | Tests | Testing Library + jsdom config, existing component tests, a `/design-states` or Storybook page |
 | Viewports | the ADR, the design doc, or the existing breakpoints |
 
-**Done when:** each row names a path. The screen's states are listed: default, loading, empty, error, and for writes saving, saved and failed, plus any role-specific views.
+**Done when:** each row names a path. The screen's states are listed: default, loading, empty, error, and for writes saving, saved and failed (the value before the write is back on screen), plus any role-specific views. A form that edits an existing value (a profile name, a setting) loads that value first; "" is not a previous value.
 
 ## Step 2 — Tests first, from what the user sees
 
@@ -42,7 +42,7 @@ Write Testing Library tests for the states and interactions in Step 1, with the 
 - Place it per `app-structure.md`: the page in `app/` renders the feature, the logic lives in `features/<f>/`, and other features import it only through `index.ts`.
 - Use the primitives from `components/ui/`. No raw `<button>`/`<input>` outside them, no raw hex or one-off px (tokens only), and icons from the one set at its sizes. A missing primitive or variant is added there once (with its own test), not inlined.
 - Data: typed fetchers in `api.ts`, with types imported from the backend schema, never re-declared (`${CLAUDE_PLUGIN_ROOT}/references/fetchers.md`). In a server-rendering framework, fetch on the server when the data does not depend on client state.
-- Every state is real UI: a skeleton or spinner, an empty state with the next action, an error with retry, and disabled controls while saving. Optimistic updates keep the previous value and roll back on failure.
+- Every state is real UI: a skeleton or spinner, an empty state with the next action, an error with retry, and disabled controls while saving. A write is optimistic: keep the value from before the write in state, show the new one at once, and on failure put the old one back (input and any place the value is displayed) and announce the error — a form that only shows the error and leaves the unsaved text in the input has no rollback.
 - Accessible names on controls, labels tied to inputs, errors announced (`aria-live` or `role="alert"`), contrast through tokens.
 - Mobile first: base classes are the narrowest viewport, and `md:`/`lg:` add the wider layout.
 
