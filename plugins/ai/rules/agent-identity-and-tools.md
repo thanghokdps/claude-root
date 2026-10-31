@@ -36,6 +36,7 @@ paths:
 ## Tools
 
 - Name and description live in constants; the description says when to use the tool and what it cannot do, in short bullets.
+- Every upstream call has a deadline (`AbortSignal.timeout` or the client's timeout); no call waits forever.
 - Read tools: may retry on 429/502/503/504 and network errors, with backoff, honouring the abort signal.
 - Mutation tools: never retried; gated by HITL (`interrupt()`); the only write before the decision is the pending-action record; the upstream write happens after confirm.
 - Wrapper order: audit outside retry; every wrapper rethrows `GraphInterrupt`.

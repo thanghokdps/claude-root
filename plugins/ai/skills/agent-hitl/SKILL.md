@@ -12,6 +12,8 @@ when_to_use: agent action that writes data, "confirm before saving", confirm car
 
 A mutation is decided by a human, executed once, and reported truthfully. Interrupt rules: `${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` (A/B) or `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md` (M); tool rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`; stream rules: `${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md`.
 
+**Precondition.** No assistant in the repo yet (no agent framework dependency, no agent entry point, no ADR) → stop and say so: a new assistant starts with `/agent-architect`, which writes the ADR this skill builds inside. Never scaffold the app from here; come back once the ADR exists.
+
 ---
 
 ## Step 1 — Detect the existing gate

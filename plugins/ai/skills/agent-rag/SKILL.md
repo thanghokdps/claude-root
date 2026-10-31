@@ -12,6 +12,8 @@ when_to_use: RAG, "thêm RAG cho chatbot", "chatbot trả lời từ tài liệu
 
 Retrieval is a read tool whose filter is an authorisation check, fed by an ingest pipeline that is versioned like a schema. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`, plus `${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` or `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md`. Framework APIs and the official layouts are in `${CLAUDE_SKILL_DIR}/references/rag-pipeline.md`.
 
+**Precondition.** No assistant in the repo yet (no agent framework dependency, no agent entry point, no ADR) → stop and say so: a new assistant starts with `/agent-architect`, which writes the ADR this skill builds inside. Never scaffold the app from here; come back once the ADR exists.
+
 ---
 
 ## Step 1 — Detect and decide what kind of retrieval

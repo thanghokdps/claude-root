@@ -12,6 +12,8 @@ when_to_use: add an agent, routing, "agent nào làm việc này", supervisor or
 
 Prompt rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-prompts.md`. Graph rules: `${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` (shapes A/B) or `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md` (shape M).
 
+**Precondition.** No assistant in the repo yet (no agent framework dependency, no agent entry point, no ADR) → stop and say so: a new assistant starts with `/agent-architect`, which writes the ADR this skill builds inside. Never scaffold the app from here; come back once the ADR exists.
+
 ---
 
 ## Step 1 — Detect and map

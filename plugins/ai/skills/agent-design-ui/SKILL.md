@@ -14,6 +14,8 @@ The generic part — getting the design, tokens, primitives, building from fixtu
 
 Everything goes in the same `docs/design/ui-map.md`.
 
+**Precondition.** No assistant in the repo yet (no agent framework dependency, no agent entry point, no ADR) → stop and say so: a new assistant starts with `/agent-architect`, which writes the ADR this skill builds inside. Never scaffold the app from here; come back once the ADR exists.
+
 ---
 
 ## At design-ui Step 1 — Chat states
