@@ -82,14 +82,7 @@ echo "  plugins: $(for f in "$KIT"/plugins/*/.claude-plugin/plugin.json; do
   python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(f\"{d['name']} {d['version']}\", end=' ')" "$f"; done)"
 
 # A kit kept on two remotes (GitHub + GitLab) can drift: say so before the user installs a stale copy.
-if git -C "$KIT" rev-parse --git-dir >/dev/null 2>&1 && [ "$(git -C "$KIT" remote | wc -l)" -ge 2 ]; then
-  heads=$(for r in $(git -C "$KIT" remote); do
-    printf '%s %s\n' "$r" "$(git -C "$KIT" ls-remote "$r" HEAD 2>/dev/null | cut -c1-12)"; done)
-  if [ "$(printf '%s\n' "$heads" | awk '$2 != "" {print $2}' | sort -u | wc -l)" -gt 1 ]; then
-    echo "  ⚠️  the kit's remotes point at different commits:"; printf '%s\n' "$heads" | sed 's/^/    /'
-    echo "     Bring them in line with /sync-remote (ship) before installing on another machine."
-  fi
-fi
+bash "$KIT/scripts/remote-drift.sh" "$KIT" "$SOURCE"
 
 # 4. Migrate old copies: plugin skills would otherwise show up twice.
 for d in "$KIT"/plugins/*/skills/*/; do
