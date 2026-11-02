@@ -23,7 +23,10 @@ Build and fix the way the repo already does it, whatever your role: a lane route
 | `ticket-ledger` | prompt expansion; after Skill, Agent and Task calls | Records which skills and subagents ran on each branch, for `ticket-gate` |
 | `ticket-gate` | before `git commit`, `git push` and PR creation | A ticket's code commit waits for the skills its `plan.md` names and for every `blocking` concern in `spec.md` to have a decision; its PR waits for `/verify-done` and `/review-checklist`. A skipped step is waived in writing: `skip /<skill>: <reason>` in `plan.md` |
 | `test-lock` | before Edit, Write and Bash | While `/fix-bug` has locked the test that reproduces a bug, edits to that test are blocked, so the fix changes the code, not the test |
-| `weakened-check` | before Bash | A commit that lowers the bar (a deleted test, a loosened assertion or validation) asks the user first |
+| `weakened-check` | before Bash | A commit that lowers the bar (a deleted test, a loosened assertion or validation, a loosened row in `CONSTRAINTS.md`) asks the user first |
+| `ask-once` | prompt; after Edit and Write; before AskUserQuestion; on stop | Every question is asked before the first edit. Once the build has started, a question is turned into a `/resolve-question` debate and the choice is listed under **Decided for you**; a confirmation no rollback undoes (push, merge, deploy, delete) still reaches the user |
+| `plan-recall` | prompt | An active `specs/*/PLAN.md` is recalled every turn (its next open task and recent status), so `/clear` or a compaction never loses the slice |
+| `plan-gate` | on stop | A turn cannot end silently while an active `PLAN.md` still has an open task; set `**Status:** paused` to set a plan aside |
 | `auto-decisions` | on stop | On a high-risk ticket worked without the user, every choice Claude made alone is listed for review |
 
 ## Depends on

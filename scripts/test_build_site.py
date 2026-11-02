@@ -22,7 +22,10 @@ def fake_repo(d):
     for rel in ["README.md", "DESIGN.md", "HARNESS.md", "PLAYBOOK.md", "docs/USAGE.md",
                 "docs/skill-map.html", "docs/ddr/0001-a.md", "specs/x/PLAN.md", "site/index.html",
                 "plugins/README.md", "plugins/core/README.md", "plugins/core/skills/btw/SKILL.md",
-                "plugins/core/skills/compact/SKILL.md", "plugins/core/rules/git.md"]:
+                "plugins/core/skills/compact/SKILL.md", "plugins/core/rules/git.md",
+                "plugins/core/hooks/branch-guard.sh", "plugins/core/hooks/hooks.json",
+                "plugins/core/evals/asks-first/case.yaml", "plugins/core/evals/results/x/aggregate-result.json",
+                "eval/README.md", "eval/triggers/btw.json", "eval/triggers/compact.json", "scripts/test_x.py"]:
         write(root, rel)
     write(root, "plugins/core/.claude-plugin/plugin.json",
           json.dumps({"name": "core", "description": "basics", "dependencies": ["progress"]}))
@@ -48,7 +51,9 @@ def test_site_json_lists_docs_and_plugins_with_skills():
         site = json.loads((out / "site.json").read_text())
         assert "docs/USAGE.md" in site["docs"] and "docs/skill-map.html" not in site["docs"], site["docs"]
         assert site["plugins"] == [{"name": "core", "description": "basics", "dependencies": ["progress"],
-                                    "skills": ["btw", "compact"], "readme": "plugins/core/README.md"}]
+                                    "skills": ["btw", "compact"], "hooks": ["branch-guard"], "evals": 1,
+                                    "readme": "plugins/core/README.md"}]
+        assert site["triggers"] == 2 and site["tests"] == 1, site
 
 
 def test_rebuild_drops_stale_files():
