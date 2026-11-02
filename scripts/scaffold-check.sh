@@ -22,7 +22,11 @@ settings='{"sandbox":{"enabled":true,"autoAllowBashIfSandboxed":true,"network":{
 [ "${SCAFFOLD_NO_SANDBOX:-0}" = "1" ] && settings='{"sandbox":{"enabled":false}}'
 
 cd "$work"
-env -u GH_TOKEN -u GITHUB_TOKEN -u GITLAB_TOKEN CLAUDE_REPO_PROFILE=0 claude -p "init codebase chatbot asisstant empty features for me using langchain framework and tracing with langfuse" \
+# `env -i` would drop the session's auth, so scrub by name instead: every variable that looks like a credential except
+# Claude's own (ANTHROPIC_*, CLAUDE_CODE_*), so provider keys (OPENAI_API_KEY) and git-host tokens stay out of the agent.
+scrub=()
+while IFS= read -r name; do scrub+=(-u "$name"); done < <(env | cut -d= -f1 | grep -E 'TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL|PASS$' | grep -vE '^(ANTHROPIC_|CLAUDE_CODE_)')
+env ${scrub[@]+"${scrub[@]}"} CLAUDE_REPO_PROFILE=0 claude -p "init codebase chatbot asisstant empty features for me using langchain framework and tracing with langfuse" \
   "${dirs[@]}" --model sonnet --max-budget-usd 5 --output-format json \
   --permission-mode dontAsk \
   --settings "$settings" \
