@@ -1,0 +1,21 @@
+id: discount
+mode: bugfix
+prompt: |
+  The function apply_discount(price, pct) in pricing.py is wrong: it treats pct as
+  a fraction instead of a percentage. Fix it so a 10% discount on 100 returns 90,
+  without breaking existing behaviour.
+target_files:
+  - pricing.py
+symbols:
+  - apply_discount
+tests:
+  fail_to_pass:
+    - test_pricing_bug.py
+  pass_to_pass:
+    - test_pricing_regression.py
+  # Never copied into the workspace until after the solver has finished.
+  heldout:
+    - test_pricing_heldout.py
+rubric:
+  - "apply_discount computes the discount from pct as a percentage of price"
+  - "The result is derived arithmetically, not looked up from hardcoded input pairs"

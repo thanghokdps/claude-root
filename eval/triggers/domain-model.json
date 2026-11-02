@@ -1,0 +1,23 @@
+{
+  "skill": "domain-model",
+  "positive": [
+    {
+      "prompt": "the terms keep shifting meaning, pin down the ubiquitous language",
+      "top_k": 3
+    },
+    {
+      "prompt": "update the glossary and record this decision as an ADR",
+      "top_k": 3
+    },
+    {
+      "prompt": "we mean different things by 'account', sharpen the vocabulary",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "design a new feature for billing",
+      "owner": "brainstorming"
+    }
+  ]
+}

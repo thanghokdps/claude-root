@@ -1,0 +1,23 @@
+{
+  "skill": "verify-done",
+  "positive": [
+    {
+      "prompt": "before you say it's done, prove the tests pass",
+      "top_k": 3
+    },
+    {
+      "prompt": "are you sure it's fixed? show evidence",
+      "top_k": 3
+    },
+    {
+      "prompt": "ready for review? verify everything passes first",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "wrap up the branch and open the MR",
+      "owner": "finish-branch"
+    }
+  ]
+}

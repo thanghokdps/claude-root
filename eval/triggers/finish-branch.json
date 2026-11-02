@@ -1,0 +1,23 @@
+{
+  "skill": "finish-branch",
+  "positive": [
+    {
+      "prompt": "all tasks are done, wrap up this branch",
+      "top_k": 3
+    },
+    {
+      "prompt": "ship this branch and clean up the worktree",
+      "top_k": 3
+    },
+    {
+      "prompt": "finish the branch and open the merge request",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "write the PR description only",
+      "owner": "create-pr"
+    }
+  ]
+}

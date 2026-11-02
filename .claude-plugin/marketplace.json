@@ -1,0 +1,84 @@
+{
+  "name": "harness",
+  "description": "Claude Code plugins in two layers — the process every role shares (plan, dev, review, ship, lead, guards, bundled as harness) and role packs enabled per repo (frontend, backend, mobile, devops, ai, workplace domain).",
+  "owner": {
+    "name": "Thang Ho Quang"
+  },
+  "plugins": [
+    {
+      "name": "core",
+      "source": "./plugins/core",
+      "description": "Session and project basics every role uses: verify-done evidence gate, project-init bootstrap, compact/compound memory, sync-memory, btw."
+    },
+    {
+      "name": "progress",
+      "source": "./plugins/progress",
+      "description": "Shows a skill's checklist when it starts and each checkpoint as it completes (✅ 3/6), then 🏁 when all are done. Never blocks."
+    },
+    {
+      "name": "plan",
+      "source": "./plugins/plan",
+      "description": "Design before code: brainstorming, grill, domain-model, codebase-design, writing-plans → PLAN.md."
+    },
+    {
+      "name": "review",
+      "source": "./plugins/review",
+      "description": "Review a diff or PR: review-checklist, review-diff, blast-radius impact analysis, create-pr description."
+    },
+    {
+      "name": "dev",
+      "source": "./plugins/dev",
+      "description": "Build and fix, for every role: coordinator lane router, feature (dispatches slices to the role packs' engineers), ticket, fix-bug red loop, tdd, checkpoint gates."
+    },
+    {
+      "name": "frontend",
+      "source": "./plugins/frontend",
+      "description": "Frontend role pack: the frontend-engineer agent, ui-feature, design-ui (Figma to UI), React and Next.js rules. Enabled per repo by core's repo-profile hook."
+    },
+    {
+      "name": "backend",
+      "source": "./plugins/backend",
+      "description": "Backend role pack: the backend-engineer agent, api-endpoint, db-change, api-client (third-party APIs), Python, FastAPI and Prisma rules. Enabled per repo by core's repo-profile hook."
+    },
+    {
+      "name": "ship",
+      "source": "./plugins/ship",
+      "description": "Land and release: finish-branch, ci-triage, release-checklist, write-migration, incident, sync-remote; the release-gate and infra-gate hooks."
+    },
+    {
+      "name": "mobile",
+      "source": "./plugins/mobile",
+      "description": "Mobile role pack: the mobile-engineer agent, mobile-feature (React Native / Expo screens, platform states, simulator check), React Native rules. Enabled per repo by core's repo-profile hook."
+    },
+    {
+      "name": "devops",
+      "source": "./plugins/devops",
+      "description": "DevOps role pack: the devops-engineer agent, pipeline (GitHub Actions / GitLab CI), container (Dockerfile, compose), infra-change (Terraform, Kubernetes, Helm with plan, review, approval, rollback), with their rules. Enabled per repo by core's repo-profile hook; the infra-gate hook lives in ship."
+    },
+    {
+      "name": "ai",
+      "source": "./plugins/ai",
+      "description": "AI role pack: the ai-engineer agent and the agent-* skills for CopilotKit / AG-UI assistants on Mastra, LangChainJS or LangGraph — architecture from official reference repos, tools, HITL, graph, frontend, RAG, evals, security, turn verification — with their rules. Enabled per repo by core's repo-profile hook."
+    },
+    {
+      "name": "workplace",
+      "source": "./plugins/workplace",
+      "description": "Domain pack for internal workplace / HR apps (time off, approvals, balances, room and meal bookings, maintenance requests): domain rules, starter model, kickoff questions and a domain review. Enabled per repo by core's repo-profile hook."
+    },
+    {
+      "name": "lead",
+      "source": "./plugins/lead",
+      "description": "Improve the process: weekly retro, session diagnosis, authoring skills."
+    },
+    {
+      "name": "guards",
+      "source": "./plugins/guards",
+      "description": "Personal guard-rail hooks: branch guard, commit gate, scope gate, blast-radius and session handoff. Opt-in."
+    },
+    {
+      "name": "harness",
+      "source": "./plugins/harness",
+      "description": "Everything: installs all nine role plugins."
+    }
+  ]
+}

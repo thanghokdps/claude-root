@@ -1,0 +1,23 @@
+{
+  "skill": "writing-plans",
+  "positive": [
+    {
+      "prompt": "turn the approved design.md into a PLAN.md",
+      "top_k": 3
+    },
+    {
+      "prompt": "break this design into wave-organized tasks",
+      "top_k": 3
+    },
+    {
+      "prompt": "write the implementation plan from specs/billing/design.md",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "brainstorm approaches for offline mode",
+      "owner": "brainstorming"
+    }
+  ]
+}

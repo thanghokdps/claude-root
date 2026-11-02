@@ -1,0 +1,12 @@
+[
+  { "id": "src/a.py:maybe", "verdict": "probably", "axis": "bug",
+    "path": "src/a.py", "line": 3, "case": "x",
+    "commit": "0000000000000000000000000000000000000001", "run_id": 1 },
+  { "id": "src/b.py:unsettled", "verdict": "needs_validation", "axis": "risk", "severity": "must",
+    "path": "src/b.py", "line": 7, "case": "a replayed request is stored twice",
+    "missing_fact": "whether the proxy dedupes: ops",
+    "commit": "0000000000000000000000000000000000000001", "run_id": 1 },
+  { "id": "src/c.py:gone", "verdict": "rejected", "axis": "lean",
+    "path": "src/c.py", "line": 1, "case": "helper() is unused", "refuted_by": "src/d.py",
+    "commit": "0000000000000000000000000000000000000001", "run_id": 9 }
+]

@@ -1,0 +1,23 @@
+{
+  "skill": "grill",
+  "positive": [
+    {
+      "prompt": "grill me on this design, one question at a time",
+      "top_k": 3
+    },
+    {
+      "prompt": "stress-test my plan before we build it",
+      "top_k": 3
+    },
+    {
+      "prompt": "interview me relentlessly about this decision",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "turn the design into a PLAN.md",
+      "owner": "writing-plans"
+    }
+  ]
+}

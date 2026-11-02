@@ -1,0 +1,4 @@
+# Generated per-run; not part of the harness.
+reports/
+.pytest_cache/
+__pycache__/

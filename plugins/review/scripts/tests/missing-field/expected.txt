@@ -1,0 +1,7 @@
+exit 2
+coverage-ledger.json:src/billing: missing field 'axes_checked'
+findings.json:billing/close_day.py:utc-day: missing field 'case'
+findings.json:billing/close_day.py:utc-day: missing field 'fix'
+findings: confirmed 1, needs_validation 0, rejected 0 (1 total)
+units: unaudited 0, audited 1, stale 0 (1 total); covered 1/1
+runs: 1 (last run 1 on 2026-10-30)

@@ -1,0 +1,23 @@
+{
+  "skill": "tdd",
+  "positive": [
+    {
+      "prompt": "build this test-first, red green",
+      "top_k": 3
+    },
+    {
+      "prompt": "implement the task from PLAN.md with TDD",
+      "top_k": 3
+    },
+    {
+      "prompt": "write a failing test then the minimal implementation",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "debug why the upload crashes",
+      "owner": "fix-bug"
+    }
+  ]
+}

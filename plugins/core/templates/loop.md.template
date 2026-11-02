@@ -1,0 +1,12 @@
+# loop.md — recurring prompts for this repo
+
+Copy to the repo root as `loop.md`. Run with `/loop <interval> <prompt>`; it re-runs while the session is open, `Esc` stops it.
+
+## Babysit my open PR — `/loop 15m`
+Check my open PR/MR on the current branch: new review comments → address the clear ones and reply; CI red → run /ci-triage and fix if it is a regression in my diff; merge conflict → report, do not resolve without asking. Stop when CI is green and no unresolved comments remain.
+
+## Watch the deploy — `/loop 5m`
+Check the latest deploy of <service> to <env>: status, health endpoint <url>, error rate in logs. Report only on change. Stop when it is healthy for two consecutive checks or failed.
+
+## Morning maintenance — `/loop 24h`
+Pull the base branch, run the test suite, list PRs waiting on me, and flag dependency or security advisories. Summarize in five lines.

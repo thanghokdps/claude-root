@@ -1,0 +1,17 @@
+{
+  "name": "plan",
+  "version": "1.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "Design before code: kickoff (docs-first project intake), brainstorming, grill, domain-model, codebase-design, writing-plans → PLAN.md.",
+  "keywords": [
+    "design",
+    "planning"
+  ],
+  "dependencies": [
+    "progress"
+  ]
+}

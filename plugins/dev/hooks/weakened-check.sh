@@ -1,0 +1,221 @@
+#!/usr/bin/env bash
+# weakened-check.sh — a commit that lowers the bar asks the user first.
+# Trigger: PreToolUse(Bash), only for git commit. Reads the staged diff (git diff HEAD for commit -a) and asks on:
+#   - an added suppression (eslint-disable, @ts-ignore, # noqa, …) or skip (.skip(, .only(, xit(, t.Skip(, …)
+#   - a deleted test file, or a kept test file that loses more assertion lines than it gains
+#   - coverageThreshold / fail_under / --cov-fail-under lowered (also a branches|functions|lines|statements key
+#     in a jest/vitest/nyc/c8 config), max-warnings raised
+#   - CONSTRAINTS.md (written by /constraints): a numbered row loosened (≥ lowered, ≤ raised) or removed, a row added
+#     under ## Exceptions, a Floor bullet removed
+# Docs (.md, .txt, …) only mention patterns, so their added lines are not read for suppressions or skips.
+# Tightening is silent. Diff walk ported from addyosmani/agent-skills constraint-driven-development floor-guard.md.
+command -v python3 >/dev/null 2>&1 || exit 0
+INPUT="$(cat)"
+
+HOOK_INPUT="$INPUT" python3 -I - <<'PY'
+import json, os, re, subprocess, sys
+
+try:
+    ev = json.loads(os.environ.get("HOOK_INPUT") or "{}")
+except ValueError:
+    sys.exit(0)
+if ev.get("tool_name") != "Bash":
+    sys.exit(0)
+cmd = (ev.get("tool_input") or {}).get("command") or ""
+cwd = ev.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+
+AT = r"(?:^|[;&|(]|\n)\s*(?:[A-Za-z_]\w*=\S*\s+)*"
+m = re.search(AT + r"git((?:\s+(?:-[Cc]\s+\S+|--\S+))*)\s+commit\b([^;&|\n]*)", cmd)
+if not m:
+    sys.exit(0)
+for d in re.findall(r"-C\s+(\S+)", m.group(1)):
+    cwd = os.path.join(cwd, os.path.expanduser(d.strip("'\"")))
+commit_all = re.search(r"\s(?:--all\b|-[A-Za-z]*a)", m.group(2))
+
+
+def git(*args, env=None):
+    # Runs before the user approves, so a repo's own config must not get to run a command (fsmonitor, textconv).
+    r = subprocess.run(["git", "-C", cwd, "-c", "core.fsmonitor=false", *args], capture_output=True, text=True, env=env)
+    return r.stdout if r.returncode == 0 else None
+
+
+if not git("rev-parse", "--show-toplevel"):
+    sys.exit(0)
+# Diffing the work tree (commit -a) runs each file's clean filter, so every configured driver is blanked first.
+# --null keeps a value from reading as part of the name; GIT_CONFIG_KEY_n keeps a name holding `=` from
+# turning a `-c name=value` override into a command of its own.
+keys = [e.split("\n", 1)[0] for e in (git("config", "--null", "--get-regexp", r"^filter\.") or "").split("\0") if e]
+drivers = sorted({k[len("filter."):k.rindex(".")] for k in keys if k.count(".") >= 2})
+blank = [(f"filter.{d}.{k}", v) for d in drivers for k, v in (("clean", ""), ("smudge", ""), ("process", ""), ("required", "false"))]
+env = {**os.environ, "GIT_CONFIG_COUNT": str(len(blank))}
+for i, (k, v) in enumerate(blank):
+    env[f"GIT_CONFIG_KEY_{i}"], env[f"GIT_CONFIG_VALUE_{i}"] = k, v
+diff = git("diff", "HEAD" if commit_all else "--cached", "-U0", "--no-color", "--no-ext-diff", "--no-textconv", "--no-renames", "--text",
+           "--ignore-submodules=all", "--submodule=short", env=env)  # a submodule's diff would read its own config; a rename is a delete + add; --text so a `binary` attribute cannot hide a change
+if not diff:
+    sys.exit(0)
+
+# `---`/`+++` are headers only between a file's `diff` line and its first `@@`; inside a hunk they are content.
+added, removed, deleted = [], [], set()
+file = old_file = ""
+in_header, old_no, new_no = False, 0, 0
+for line in diff.split("\n"):
+    if line.startswith("diff "):
+        in_header = True
+    elif line.startswith("@@"):
+        in_header = False
+        h = re.match(r"@@ -(\d+)(?:,\d+)? \+(\d+)", line)
+        old_no, new_no = (int(h.group(1)), int(h.group(2))) if h else (0, 0)
+    elif in_header:
+        if line.startswith("--- "):
+            old_file = re.sub(r"^[ab]/", "", line[4:])
+        elif line.startswith("+++ "):
+            new_file = re.sub(r"^[ab]/", "", line[4:])
+            file = old_file if new_file == "/dev/null" else new_file
+            if new_file == "/dev/null":
+                deleted.add(file)
+    elif line.startswith("+"):
+        added.append((file, new_no, line[1:]))
+        new_no += 1
+    elif line.startswith("-"):
+        removed.append((file, old_no, line[1:]))
+        old_no += 1
+
+findings = []
+
+
+def flag(rule, f, n, text):
+    text = re.sub(r"[A-Za-z0-9_+/=-]{20,}", "<redacted>", text.strip())  # tokens, keys, hashes
+    findings.append(f"[{rule}] {f}{f':{n}' if n else ''} {text[:80] + '…' if len(text) > 80 else text}")
+
+
+def is_test(f):
+    return bool(re.search(r"\.(test|spec)\.|_test\.|^test_", os.path.basename(f)))
+
+
+SUPPRESSIONS = re.compile(r"eslint-disable|@ts-ignore|@ts-nocheck|@ts-expect-error|biome-ignore|#\s*noqa"
+                          r"|#\s*type:\s*ignore|istanbul ignore|nosemgrep")
+SKIPS = re.compile(r"\.(?:skip|only)\(|\bxit\(|\bxdescribe\(|@pytest\.mark\.skip|\bt\.Skip\(")
+ASSERT = re.compile(r"\b(?:expect|assert|should)\b")
+# (key, value) per threshold; a floor is loosened by going down, a ceiling by going up.
+THRESHOLDS = [(re.compile(r"coverageThreshold\b.*?(\d+(?:\.\d+)?)"), "floor"),
+              (re.compile(r"\bfail_under\b\D*?(\d+(?:\.\d+)?)"), "floor"),
+              (re.compile(r"--cov-fail-under\D*?(\d+(?:\.\d+)?)"), "floor"),
+              (re.compile(r"max-warnings\D*?(\d+)"), "ceiling")]
+
+# Prose only mentions a suppression or skip; it cannot apply one. Not .mdx: its JSX runs.
+DOCS = re.compile(r"\.(?:md|txt|rst|adoc)$")
+# Jest/vitest/nyc/c8 write each coverage metric on its own key, often lines below `coverageThreshold`.
+COVERAGE_FILE = re.compile(r"(?:^|/)(?:(?:jest|vitest|vite)\.config\.[cm]?[jt]s|package\.json|\.nycrc(?:\.json)?|\.c8rc(?:\.json)?)$")
+METRIC = re.compile(r"\"?\b(branches|functions|lines|statements)\"?\s*:\s*(\d+(?:\.\d+)?)")
+
+for f, n, text in added:
+    if DOCS.search(f):
+        continue
+    if SUPPRESSIONS.search(text):
+        flag("suppression", f, n, text)
+    if SKIPS.search(text):
+        flag("skip", f, n, text)
+
+for f in sorted(deleted):
+    if is_test(f):
+        flag("test-deleted", f, 0, "file deleted")
+
+# A rewritten assertion is a removed/added pair; only a net loss in a kept test file asks.
+for f in {f for f, _, _ in removed if is_test(f) and f not in deleted}:
+    gone = [(n, t) for g, n, t in removed if g == f and ASSERT.search(t)]
+    if len(gone) > sum(1 for g, _, t in added if g == f and ASSERT.search(t)):
+        for n, t in gone:
+            flag("assertion-removed", f, n, t)
+
+for key, kind in THRESHOLDS:
+    for f, n, text in removed:
+        was = key.search(text)
+        now = next((key.search(t) for g, _, t in added if g == f and key.search(t)), None)
+        if was and now:
+            a, b = float(was.group(1)), float(now.group(1))
+            if (b < a) if kind == "floor" else (b > a):
+                flag("threshold-loosened", f, n, f"{was.group(1)} -> {now.group(1)}: {text}")
+
+for f, n, text in removed:
+    if not COVERAGE_FILE.search(f) or THRESHOLDS[0][0].search(text):  # a one-line coverageThreshold is above
+        continue
+    for metric, was in METRIC.findall(text):
+        now = next((v for g, _, t in added if g == f for k, v in METRIC.findall(t) if k == metric), None)
+        if now is not None and float(now) < float(was):
+            flag("threshold-loosened", f, n, f"{metric} {was} -> {now}: {text}")
+
+# CONSTRAINTS.md is the bar itself: loosening it is the cheapest road to green, so it asks like a config threshold.
+CONSTRAINTS = re.compile(r"(?:^|/)CONSTRAINTS\.md$")
+ROW = re.compile(r"^\s*\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|")  # first two cells: Dimension/Metric/ID, Rule/Today/Rule
+NUMBER = re.compile(r"(\d+(?:\.\d+)?)")
+
+
+def section_of(f, n, lines):
+    # the nearest ## heading above the line, read from the file as it was before the commit
+    for i in range(min(n, len(lines)) - 1, -1, -1):
+        h = re.match(r"^#{1,6}\s+(.+)", lines[i])
+        if h:
+            return h.group(1).strip().lower()
+    return ""
+
+
+def worktree_text(f):
+    # commit -a reads the work tree; only a regular file under 1 MB, never a symlink (O_NOFOLLOW), so the hook stays cheap
+    p = os.path.join(cwd, f)
+    try:
+        if not os.path.isfile(p) or os.path.islink(p) or os.lstat(p).st_size > 1_000_000:
+            return None
+        fd = os.open(p, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+        with os.fdopen(fd, encoding="utf-8", errors="replace") as fh:
+            return fh.read()
+    except OSError:
+        return None
+
+
+for f in {f for f, _, _ in removed + added if CONSTRAINTS.search(f)}:
+    if f in deleted:
+        flag("constraint-removed", f, 0, "file deleted or renamed")
+        continue
+    old = (git("show", f"HEAD:{f}") or "").split("\n")
+    cur = worktree_text(f) if commit_all else git("show", f":{f}", env=env)
+    if cur is None:  # unreadable is not clean: the bar cannot be checked, so the commit asks
+        flag("constraint-unreadable", f, 0, "could not read the new CONSTRAINTS.md (symlink, over 1 MB, or unreadable)")
+        continue
+    cur = cur.split("\n")
+    new_lines = [(n, t) for g, n, t in added if g == f]
+    new_rows = {ROW.match(t).group(1).lower(): ROW.match(t).group(2) for _, t in new_lines if ROW.match(t)}
+    for g, n, text in removed:
+        if g != f:
+            continue
+        sec = section_of(f, n, old)
+        row = ROW.match(text)
+        if row and "enforced" in sec:
+            key, rule = row.group(1).lower(), row.group(2)
+            if key not in new_rows:
+                flag("constraint-removed", f, n, text)
+                continue
+            was_n, now_n = NUMBER.search(rule), NUMBER.search(new_rows[key])
+            if was_n and now_n and was_n.group(1) != now_n.group(1):
+                a, b = float(was_n.group(1)), float(now_n.group(1))
+                floor = bool(re.search(r"≥|>=|\bmin\b|at least", rule))
+                ceiling = bool(re.search(r"≤|<=|\bmax\b|at most|\b0\b", rule))
+                if (floor and b < a) or (ceiling and not floor and b > a) or not (floor or ceiling):
+                    flag("constraint-loosened", f, n, f"{was_n.group(1)} -> {now_n.group(1)}: {text}")
+        elif "floor" in sec and re.match(r"^\s*[-*]\s+\S", text) and text.strip() not in {t.strip() for _, t in new_lines}:
+            flag("constraint-removed", f, n, text)
+    for n, text in new_lines:
+        row = ROW.match(text)
+        if not row or set(row.group(1)) <= set("-: ") or row.group(1).lower() in ("id", "dimension", "metric"):
+            continue
+        if "exception" in section_of(f, n, cur) and text.strip() not in {t.strip() for t in old}:
+            flag("constraint-exception-added", f, n, text)
+
+if findings:
+    shown = findings[:10] + ([f"… and {len(findings) - 10} more"] if len(findings) > 10 else [])
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "PreToolUse", "permissionDecision": "ask",
+        "permissionDecisionReason": "weakened-check: this commit lowers the bar:\n" + "\n".join(shown)
+        + "\nApprove only if each one is intended; otherwise fix the code instead."}}))
+sys.exit(0)
+PY

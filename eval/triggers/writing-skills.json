@@ -1,0 +1,23 @@
+{
+  "skill": "writing-skills",
+  "positive": [
+    {
+      "prompt": "add a new skill to the kit",
+      "top_k": 3
+    },
+    {
+      "prompt": "this skill has grown stale, rewrite it",
+      "top_k": 3
+    },
+    {
+      "prompt": "should this be a skill or a rule",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "set up the .claude workspace for this repo",
+      "owner": "project-init"
+    }
+  ]
+}

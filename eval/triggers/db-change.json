@@ -1,0 +1,23 @@
+{
+  "skill": "db-change",
+  "positive": [
+    {
+      "prompt": "thêm cột archived_at vào bảng conversations và tạo migration",
+      "top_k": 3
+    },
+    {
+      "prompt": "add a feedback table with a foreign key to messages and a drizzle migration",
+      "top_k": 3
+    },
+    {
+      "prompt": "the repository query is slow with an N+1 on messages, fix it",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "rename a column on a 50M-row production table with a backfill and zero downtime",
+      "owner": "write-migration"
+    }
+  ]
+}

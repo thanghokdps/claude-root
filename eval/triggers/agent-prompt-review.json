@@ -1,0 +1,27 @@
+{
+  "skill": "agent-prompt-review",
+  "positive": [
+    {
+      "prompt": "review the system prompt change in this diff before I open the PR",
+      "top_k": 3
+    },
+    {
+      "prompt": "soát lại tool description và output schema vừa sửa cho agent",
+      "top_k": 3
+    },
+    {
+      "prompt": "I edited the agent's prompt and now answers changed, check the prompt for problems",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "threat model the agent for prompt injection through tool results",
+      "owner": "agent-security"
+    },
+    {
+      "prompt": "a request lands on the wrong agent, fix the routing",
+      "owner": "agent-graph"
+    }
+  ]
+}

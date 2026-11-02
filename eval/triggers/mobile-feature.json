@@ -1,0 +1,27 @@
+{
+  "skill": "mobile-feature",
+  "positive": [
+    {
+      "prompt": "làm màn hình đặt phòng họp trên app React Native, có form và trạng thái loading, lỗi",
+      "top_k": 3
+    },
+    {
+      "prompt": "build an Expo screen that lists my requests with pull to refresh and an empty state",
+      "top_k": 3
+    },
+    {
+      "prompt": "the keyboard covers the input on Android only, fix the mobile form screen",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "build a React page that lists invoices with search and pagination",
+      "owner": "ui-feature"
+    },
+    {
+      "prompt": "cut the production release of the mobile app with EAS",
+      "owner": "release-checklist"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "skill": "compact",
+  "positive": [
+    {
+      "prompt": "the conversation is getting long, compact it and write the handoff",
+      "top_k": 3
+    },
+    {
+      "prompt": "summarize this session into HANDOFF.md before I stop",
+      "top_k": 3
+    },
+    {
+      "prompt": "compact the context and save memory",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "crystallize learnings from this session into docs/solutions",
+      "owner": "compound"
+    }
+  ]
+}

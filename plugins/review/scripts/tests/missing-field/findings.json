@@ -1,0 +1,6 @@
+[
+  { "id": "billing/close_day.py:utc-day", "verdict": "confirmed", "axis": "bug", "severity": "must",
+    "path": "src/billing/close_day.py", "line": 40,
+    "cost_of_skipping": "late orders carry the wrong date",
+    "commit": "0000000000000000000000000000000000000001", "run_id": 1 }
+]

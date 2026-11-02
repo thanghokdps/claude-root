@@ -1,0 +1,27 @@
+{
+  "skill": "infra-change",
+  "positive": [
+    {
+      "prompt": "thêm bucket S3 cho upload bằng terraform, apply lên staging trước",
+      "top_k": 3
+    },
+    {
+      "prompt": "increase the api deployment to 3 replicas and add an HPA in the k8s manifests",
+      "top_k": 3
+    },
+    {
+      "prompt": "roll back the helm release of the api on staging to the previous revision",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "add a column to the orders table and write the migration",
+      "owner": "db-change"
+    },
+    {
+      "prompt": "cut the production release of the mobile app",
+      "owner": "release-checklist"
+    }
+  ]
+}

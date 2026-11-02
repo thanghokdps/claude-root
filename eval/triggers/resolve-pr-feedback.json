@@ -1,0 +1,23 @@
+{
+  "skill": "resolve-pr-feedback",
+  "positive": [
+    {
+      "prompt": "address the review comments on my PR",
+      "top_k": 3
+    },
+    {
+      "prompt": "the reviewer requested changes on PR 51, go through every thread and reply",
+      "top_k": 3
+    },
+    {
+      "prompt": "resolve the open MR discussions and fix what they ask",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "review this PR for bugs before I merge",
+      "owner": "review-checklist"
+    }
+  ]
+}

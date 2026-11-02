@@ -1,0 +1,23 @@
+{
+  "skill": "retro",
+  "positive": [
+    {
+      "prompt": "run a weekly retro on what we shipped",
+      "top_k": 3
+    },
+    {
+      "prompt": "end of sprint retro, what hurt and what should we standardize",
+      "top_k": 3
+    },
+    {
+      "prompt": "after the incident, do a retro",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "summarize this session into a handoff",
+      "owner": "compact"
+    }
+  ]
+}

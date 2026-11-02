@@ -1,0 +1,23 @@
+{
+  "skill": "btw",
+  "positive": [
+    {
+      "prompt": "quick question while you work: what does the --frozen-lockfile flag do",
+      "top_k": 3
+    },
+    {
+      "prompt": "fast lookup without interrupting, which port does vite use",
+      "top_k": 3
+    },
+    {
+      "prompt": "btw what is the node version here",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "fix the failing login test",
+      "owner": "fix-bug"
+    }
+  ]
+}

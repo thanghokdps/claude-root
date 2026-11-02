@@ -1,0 +1,23 @@
+{
+  "skill": "workplace-review",
+  "positive": [
+    {
+      "prompt": "review the time off approval flow I changed before the PR",
+      "top_k": 3
+    },
+    {
+      "prompt": "check my room booking change, two people can still book the same slot",
+      "top_k": 3
+    },
+    {
+      "prompt": "does the leave balance logic in this diff hold up",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "review my diff before I open the PR",
+      "owner": "review-checklist"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+# Session state — changes every session; anchored so eval fixtures (plugins/*/evals/*/repo/specs/) stay tracked
+/specs/
+
+# User-specific local permissions
+.claude/settings.local.json
+
+# lessons the core learn-capture hook writes per machine
+.claude/docs/solutions/
+
+# macOS Finder metadata
+.DS_Store
+
+# plugin eval reports (claude plugin eval)
+plugins/*/evals/results/
+# cases with their `plugins:` filled in (scripts/eval-build.py)
+plugins/*/evals-build/
+
+.playwright-mcp
+# private names for lint-kit's denylist; committed on the company branch only
+.denylist
+__pycache__/
+
+# docs site build output (scripts/build-site.py)
+dist/
+.vercel
+
+# screenshots taken while checking docs/skill-map.html
+docs/.skill-map-check/

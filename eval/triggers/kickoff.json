@@ -1,0 +1,27 @@
+{
+  "skill": "kickoff",
+  "positive": [
+    {
+      "prompt": "bắt đầu dự án mới, đây là PRD và ERD của team",
+      "top_k": 3
+    },
+    {
+      "prompt": "kick off a new project from our requirements docs and tech stack",
+      "top_k": 3
+    },
+    {
+      "prompt": "init dự án từ đầu, tôi có requirement và tech stack rồi, thiếu gì thì hỏi tôi",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "I want to build a notification system, let's design it first",
+      "owner": "brainstorming"
+    },
+    {
+      "prompt": "chọn kiến trúc agent cho chatbot mới, createAgent hay StateGraph",
+      "owner": "agent-architect"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "skill": "coordinator",
+  "positive": [
+    {
+      "prompt": "/coordinator add rate limiting to the API",
+      "top_k": 3
+    },
+    {
+      "prompt": "route this request to the right workflow: users report a slow dashboard",
+      "top_k": 3
+    },
+    {
+      "prompt": "not sure which workflow fits, classify this request and dispatch",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "quick question, what does this flag do",
+      "owner": "btw"
+    }
+  ]
+}

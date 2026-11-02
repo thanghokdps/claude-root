@@ -1,0 +1,27 @@
+{
+  "skill": "docs-sync",
+  "positive": [
+    {
+      "prompt": "the feature is done, update .claude/docs and CLAUDE.md for the new routes before the PR",
+      "top_k": 3
+    },
+    {
+      "prompt": "our project docs are stale after the last few features, sync them with the code",
+      "top_k": 3
+    },
+    {
+      "prompt": "cập nhật docs trong .claude sau khi làm xong feature này",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "bootstrap the .claude workspace for this new repo",
+      "owner": "project-init"
+    },
+    {
+      "prompt": "save this session into memory and HANDOFF before I stop",
+      "owner": "compact"
+    }
+  ]
+}

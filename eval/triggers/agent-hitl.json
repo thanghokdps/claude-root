@@ -1,0 +1,27 @@
+{
+  "skill": "agent-hitl",
+  "positive": [
+    {
+      "prompt": "agent action that deletes a user needs a confirm card before saving",
+      "top_k": 3
+    },
+    {
+      "prompt": "add a confirm or cancel human-in-the-loop flow with interrupt and resume",
+      "top_k": 3
+    },
+    {
+      "prompt": "confirm resume double-executes the pending action",
+      "top_k": 3
+    },
+    {
+      "prompt": "Agent xóa user qua chat, cần confirm trước khi lưu",
+      "top_k": 1
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "add a dark mode toggle feature to the settings page",
+      "owner": "feature"
+    }
+  ]
+}

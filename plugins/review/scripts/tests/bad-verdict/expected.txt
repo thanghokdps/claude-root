@@ -1,0 +1,8 @@
+exit 2
+findings.json:src/a.py:maybe: verdict must be one of confirmed, needs_validation, rejected
+findings.json:src/b.py:unsettled: field 'severity' is not allowed with verdict 'needs_validation'
+findings.json:src/c.py:gone: refuted_by must be path:line
+findings.json:src/c.py:gone: run_id 9 is not in the ledger's runs
+findings: confirmed 0, needs_validation 1, rejected 1 (3 total)
+units: unaudited 0, audited 1, stale 0 (1 total); covered 1/1
+runs: 1 (last run 1 on 2026-10-30)

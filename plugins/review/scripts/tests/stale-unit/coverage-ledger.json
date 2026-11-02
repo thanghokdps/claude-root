@@ -1,0 +1,14 @@
+{
+  "scope": ".",
+  "runs": [
+    { "run_id": 1, "date": "2026-10-01", "commit": "0000000000000000000000000000000000000001", "units_audited": 2 }
+  ],
+  "units": [
+    { "id": "src/billing", "kind": "folder", "path": "src/billing", "status": "stale",
+      "last_commit": "0000000000000000000000000000000000000001", "axes_checked": ["bug", "risk"], "run_id": 1 },
+    { "id": "src/api", "kind": "folder", "path": "src/api", "status": "stale",
+      "last_commit": null, "axes_checked": [], "run_id": 1 },
+    { "id": "src/jobs", "kind": "folder", "path": "src/jobs", "status": "unaudited",
+      "last_commit": "0000000000000000000000000000000000000001", "axes_checked": [], "run_id": null }
+  ]
+}

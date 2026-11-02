@@ -1,0 +1,23 @@
+{
+  "skill": "design-ui",
+  "positive": [
+    {
+      "prompt": "đây là link figma trang settings, code UI giống design giúp tôi",
+      "top_k": 3
+    },
+    {
+      "prompt": "build the pricing page to match this Figma mockup",
+      "top_k": 3
+    },
+    {
+      "prompt": "the dashboard page does not match the design, spacing and buttons look different",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "theme the CopilotKit chat to match this Figma mockup",
+      "owner": "agent-design-ui"
+    }
+  ]
+}

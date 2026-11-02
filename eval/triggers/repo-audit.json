@@ -1,0 +1,27 @@
+{
+  "skill": "repo-audit",
+  "positive": [
+    {
+      "prompt": "audit this whole codebase, I just inherited it",
+      "top_k": 3
+    },
+    {
+      "prompt": "do a health check of the entire repo before we scale it up: bugs, risks, what can be deleted",
+      "top_k": 3
+    },
+    {
+      "prompt": "rà soát toàn bộ repo này giúp tôi, tìm bug và code thừa",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "review my diff before I open the PR",
+      "owner": "review-checklist"
+    },
+    {
+      "prompt": "what callers does this change break before I merge",
+      "owner": "blast-radius"
+    }
+  ]
+}

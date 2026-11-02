@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: change-password-screen
+context:
+  scaffold_script: scaffold.sh

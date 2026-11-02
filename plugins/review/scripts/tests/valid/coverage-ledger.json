@@ -1,0 +1,16 @@
+{
+  "scope": ".",
+  "runs": [
+    { "run_id": 1, "date": "2026-10-01", "commit": "0000000000000000000000000000000000000001", "units_audited": 1 },
+    { "run_id": 2, "date": "2026-10-30", "commit": "0000000000000000000000000000000000000002", "units_audited": 1 }
+  ],
+  "units": [
+    { "id": "src/billing", "kind": "folder", "path": "src/billing", "status": "audited",
+      "last_commit": "0000000000000000000000000000000000000001",
+      "axes_checked": ["bug", "risk", "scale", "missing_test", "speed", "lean"], "run_id": 1 },
+    { "id": "src/api/routes.ts#POST /orders", "kind": "entry_point", "path": "src/api/routes.ts", "status": "audited",
+      "last_commit": "0000000000000000000000000000000000000002", "axes_checked": ["bug", "risk"], "run_id": 2 },
+    { "id": "worker->db", "kind": "trust_boundary", "path": "src/worker/consume.ts", "status": "unaudited",
+      "last_commit": null, "axes_checked": [], "run_id": null }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "skill": "debt-ledger",
+  "positive": [
+    {
+      "prompt": "list all the shortcut comments we left in the code",
+      "top_k": 3
+    },
+    {
+      "prompt": "what did we defer as tech debt in this repo, show me the ledger",
+      "top_k": 3
+    },
+    {
+      "prompt": "before the release, which deliberate shortcuts have no upgrade trigger",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "review my diff for bugs before the PR",
+      "owner": "review-checklist"
+    }
+  ]
+}
