@@ -30,7 +30,7 @@ Build an AI assistant end to end on **CopilotKit · AG-UI** with **Mastra, LangC
 | `/agent-security` | A new tool, data source or client; before shipping; a compliance question. Injection through tool results, context and memory; confused deputy; exfiltration through rendered output; PII in traces; SOC 2 mapping | "client gửi cả lịch sử chat, có an toàn không?" |
 | `/agent-prompt-review` | A diff touches a system prompt, tool description or output schema. Read as the model reads it: injection openings, promised capabilities that do not exist, ambiguity, fragile formats, token waste, with an eval per must-fix | "soát prompt trước khi mở PR" |
 
-Skills fire on their own from what you type; the slash command is optional. When another installed plugin has a skill of the same name, name this one: `/agent:agent-tool`.
+Skills fire on their own from what you type; the slash command is optional. When another installed plugin has a skill of the same name, name this one: `/ai:agent-tool`.
 
 ## Rules the skills follow
 
@@ -61,7 +61,7 @@ None of its own. The always-on gates come from `core` and `dev` (secret guard, b
 `evals/` holds one case per demo prompt plus behaviour cases, for example `greenfield-problem-first` (the problem is asked before any technology), `skeleton-no-questions` (a named stack asks nothing and builds), `feature-conflicts-adr` (a feature the ADR rules out is raised, not built), `hitl-standard-interrupt`, `rag-tenant-filter` and `security-forged-history`. From a clone of the kit, with a real model (paid):
 
 ```bash
-bash scripts/eval-plugin.sh agent
+bash scripts/eval-plugin.sh ai
 ```
 
 Add `--runs 3 --ablation with-without` for a with/without-plugin comparison.
