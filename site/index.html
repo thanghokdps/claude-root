@@ -86,9 +86,28 @@ h2 { font-size: clamp(26px, 3.4vw, 36px); letter-spacing: -.025em; margin: 0 0 1
 .sub { color: var(--muted); margin: 0 0 32px; max-width: 44em; }
 
 /* cards */
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
-.card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; transition: transform .25s, border-color .25s; overflow: hidden; color: var(--text); display: block; }
-a.card:hover { text-decoration: none; transform: translateY(-3px); border-color: var(--accent); }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; transition: transform .25s, border-color .25s, background .25s; overflow: hidden; color: var(--text); display: flex; flex-direction: column; }
+a.card:hover { text-decoration: none; transform: translateY(-3px); border-color: color-mix(in srgb, var(--c, var(--accent)) 60%, var(--line)); background: color-mix(in srgb, var(--c, var(--accent)) 4%, var(--surface)); }
+.card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.card-head h3 { margin: 0; font-size: 16px; line-height: 1.25; display: block; }
+.card-head small { display: block; font-size: 12.5px; color: var(--dim); margin-top: 2px; }
+.badge { flex: none; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font: 700 12.5px "JetBrains Mono", monospace; letter-spacing: -.02em;
+  color: var(--c, var(--muted)); background: color-mix(in srgb, var(--c, var(--muted)) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c, var(--muted)) 28%, transparent); }
+.card .desc { margin: 0 0 18px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+.card-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--dim); }
+.meta b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.meta .ev b { color: var(--accent-3); }
+.meta .go { margin-left: auto; color: var(--c, var(--accent)); opacity: 0; transform: translateX(-4px); transition: opacity .2s, transform .2s; }
+a.card:hover .meta .go { opacity: 1; transform: none; }
+.c-fe { --c: #5aa9ff; } .c-be { --c: #45c49f; } .c-mo { --c: #e9b949; } .c-op { --c: #ff7a90; } .c-ai { --c: #9a8cff; } .c-wp { --c: #e8875b; } .c-sv { --c: #e8875b; }
+.docs-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.doc-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--text); transition: border-color .2s, transform .2s; }
+.doc-row:hover { text-decoration: none; border-color: var(--accent); transform: translateY(-2px); }
+.doc-row .badge { width: 34px; height: 34px; }
+.doc-row b { display: block; font-size: 15px; } .doc-row div > span { display: block; font-size: 13px; color: var(--muted); }
+.doc-row i { margin-left: auto; font-style: normal; color: var(--dim); } .doc-row:hover i { color: var(--accent); }
 .card::after { content: ""; position: absolute; inset: 0; background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%), var(--glow), transparent 60%); opacity: 0; transition: opacity .3s; pointer-events: none; }
 a.card:hover::after { opacity: 1; }
 .card h3 { margin: 0 0 6px; font-size: 17px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -96,11 +115,11 @@ a.card:hover::after { opacity: 1; }
 .card p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
 .card p:last-child { margin-bottom: 0; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.card-foot .chips { flex-wrap: nowrap; overflow: hidden; }
+.card-foot .chip { white-space: nowrap; }
 .chip { font: 12px "JetBrains Mono", monospace; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
-.chip.dep { background: transparent; border: 1px dashed var(--line-2); }
-.chip.ev { color: var(--accent-3); }
-.card.featured { grid-column: span 2; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--surface)); }
-h3.group { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 32px 0 12px; }
+h3.group { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 40px 0 14px; display: flex; align-items: center; gap: 12px; }
+h3.group::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 h3.group:first-of-type { margin-top: 0; }
 
 /* before / after */
@@ -212,8 +231,15 @@ article th { background: var(--surface-2); }
 article blockquote { margin: 0; padding: 4px 16px; border-left: 3px solid var(--accent); color: var(--muted); }
 article img { max-width: 100%; }
 
+.layer .when, .behave .who-ran { align-self: flex-start; }
+@media (max-width: 1080px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 960px) {
-  .behave, .layers { grid-template-columns: repeat(2, 1fr); }
+  .behave, .layers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .docs-list { grid-template-columns: 1fr; }
 }
 @media (max-width: 860px) {
   .hero { padding-top: 56px; }
@@ -221,13 +247,13 @@ article img { max-width: 100%; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .pipe { grid-template-columns: repeat(2, 1fr); row-gap: 28px; }
   .pipe::before, .pulse { display: none; }
-  .card.featured { grid-column: auto; }
   .steps3 { grid-template-columns: 1fr; }
   .before > div { grid-template-columns: 1fr; gap: 4px; } .before > div:first-child { display: none; }
   nav .links a.opt { display: none; }
 }
 @media (max-width: 560px) {
-  .behave, .layers { grid-template-columns: 1fr; }
+  .behave, .layers, .cards { grid-template-columns: 1fr; }
+  .card-foot .chips { flex-wrap: wrap; }
   .g-row { grid-template-columns: 1fr; gap: 2px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -371,12 +397,12 @@ Tôi muốn làm chatbot tra cứu đơn hàng</pre></div>
     <h2 class="reveal">The right engineer for each slice</h2>
     <p class="sub reveal">You never call a role by hand. Opus writes the plan and gives each slice to the engineer of the pack that owns its contract, on a cheaper model, then reviews the diff before it lands.</p>
     <div class="cards">
-      <a class="card reveal" href="#/doc/plugins/backend/README.md"><h3>backend-engineer<em>backend</em></h3><p>Tables, queries, endpoints, third-party APIs. Owner-scoped queries and a route matrix of 200 · 400 · 401 · 404.</p><div class="chips"><span class="chip">/db-change</span><span class="chip">/api-endpoint</span><span class="chip">/api-client</span></div></a>
-      <a class="card reveal" href="#/doc/plugins/frontend/README.md"><h3>frontend-engineer<em>frontend</em></h3><p>A web screen from a fixture: every state, shared primitives, Testing Library, checked in the browser at each viewport.</p><div class="chips"><span class="chip">/ui-feature</span><span class="chip">/design-ui</span></div></a>
-      <a class="card reveal" href="#/doc/plugins/mobile/README.md"><h3>mobile-engineer<em>mobile</em></h3><p>A React Native / Expo screen: navigation, per-platform state, verified on the iOS Simulator or Android emulator.</p><div class="chips"><span class="chip">/mobile-feature</span></div></a>
-      <a class="card reveal" href="#/doc/plugins/devops/README.md"><h3>devops-engineer<em>devops</em></h3><p>One CI, container or infrastructure change: plan → review → apply when you agree → verify, with rollback ready.</p><div class="chips"><span class="chip">/pipeline</span><span class="chip">/container</span><span class="chip">/infra-change</span></div></a>
-      <a class="card reveal" href="#/doc/plugins/ai/README.md"><h3>ai-engineer<em>ai</em></h3><p>Tools, graphs, prompts and the chat UI on CopilotKit · AG-UI with Mastra, LangChainJS or LangGraph, traced and evaluated.</p><div class="chips"><span class="chip">/agent-architect</span><span class="chip">/agent-tool</span><span class="chip">/agent-frontend</span><span class="chip">+9</span></div></a>
-      <a class="card reveal" href="#/doc/plugins/dev/README.md"><h3>supervisor<em>dev · Opus</em></h3><p>Asks, plans, picks the lane, briefs each engineer so nothing is left to decide, reviews every diff, then opens the PR.</p><div class="chips"><span class="chip">/feature</span><span class="chip">/ticket</span><span class="chip">/fix-bug</span></div></a>
+      <a class="card reveal c-sv" href="#/doc/plugins/dev/README.md"><div class="card-head"><span class="badge">SV</span><div><h3>Supervisor</h3><small>dev · Opus</small></div></div><p class="desc">Asks, plans, picks the lane, briefs each engineer so nothing is left to decide, reviews every diff, then opens the PR.</p><div class="card-foot"><div class="chips"><span class="chip">/feature</span><span class="chip">/ticket</span><span class="chip">/fix-bug</span></div></div></a>
+      <a class="card reveal c-fe" href="#/doc/plugins/frontend/README.md"><div class="card-head"><span class="badge">FE</span><div><h3>Frontend engineer</h3><small>frontend pack · Sonnet</small></div></div><p class="desc">A web screen from a fixture: every state, shared primitives, Testing Library, checked in the browser at each viewport.</p><div class="card-foot"><div class="chips"><span class="chip">/ui-feature</span><span class="chip">/design-ui</span></div></div></a>
+      <a class="card reveal c-be" href="#/doc/plugins/backend/README.md"><div class="card-head"><span class="badge">BE</span><div><h3>Backend engineer</h3><small>backend pack · Sonnet</small></div></div><p class="desc">Tables, queries, endpoints and third-party APIs. Owner-scoped queries and a route matrix of 200 · 400 · 401 · 404.</p><div class="card-foot"><div class="chips"><span class="chip">/db-change</span><span class="chip">/api-endpoint</span><span class="chip">/api-client</span></div></div></a>
+      <a class="card reveal c-mo" href="#/doc/plugins/mobile/README.md"><div class="card-head"><span class="badge">MO</span><div><h3>Mobile engineer</h3><small>mobile pack · Sonnet</small></div></div><p class="desc">A React Native / Expo screen: navigation, per-platform state, verified on the iOS Simulator or Android emulator.</p><div class="card-foot"><div class="chips"><span class="chip">/mobile-feature</span></div></div></a>
+      <a class="card reveal c-op" href="#/doc/plugins/devops/README.md"><div class="card-head"><span class="badge">OP</span><div><h3>DevOps engineer</h3><small>devops pack · Sonnet</small></div></div><p class="desc">One CI, container or infrastructure change: plan, review, apply when you agree, verify, with rollback ready.</p><div class="card-foot"><div class="chips"><span class="chip">/pipeline</span><span class="chip">/container</span><span class="chip">/infra-change</span></div></div></a>
+      <a class="card reveal c-ai" href="#/doc/plugins/ai/README.md"><div class="card-head"><span class="badge">AI</span><div><h3>AI engineer</h3><small>ai pack · Sonnet</small></div></div><p class="desc">Tools, graphs, prompts and the chat UI on CopilotKit · AG-UI with Mastra, LangChainJS or LangGraph, traced and evaluated.</p><div class="card-foot"><div class="chips"><span class="chip">/agent-architect</span><span class="chip">+11 more</span></div></div></a>
     </div>
   </section>
 
@@ -439,7 +465,7 @@ bash scripts/eval-plugin.sh dev --runs 3 --ablation with-without</pre>
     <p class="kicker reveal">Plugins</p>
     <h2 class="reveal">Process plugins and role packs</h2>
     <p class="sub reveal">Process plugins are always on and stack-free. Role packs share one shape (an engineer agent, deliverable-named skills, stack rules read on demand) and are turned on per repo from what it contains. Click a plugin to read its README.</p>
-    <h3 class="group reveal">Role packs · turned on per repo</h3>
+    <h3 class="group reveal">Role packs · turned on per repo, each runs on dev</h3>
     <div class="cards" id="pack-cards"></div>
     <h3 class="group reveal">Process plugins · always on</h3>
     <div class="cards" id="plugin-cards"></div>
@@ -486,7 +512,7 @@ bash scripts/eval-plugin.sh dev --runs 3 --ablation with-without</pre>
     <p class="kicker reveal">Docs</p>
     <h2 class="reveal">Read the docs</h2>
     <p class="sub reveal">Guides, the design rationale, the eval harness and every recorded design decision.</p>
-    <div class="cards" id="doc-cards"></div>
+    <div class="docs-list" id="doc-cards"></div>
   </section>
 </div>
 
@@ -502,13 +528,31 @@ bash scripts/eval-plugin.sh dev --runs 3 --ablation with-without</pre>
 const REPO = "https://github.com/thanghokdps/claude-root/blob/main/";
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const DOC_LABELS = {
-  "README.md": ["📘", "README", "Quickstart, install and every plugin"],
-  "docs/USAGE.md": ["🧪", "Usage", "Day-to-day workflows step by step"],
-  "DESIGN.md": ["🧩", "Design", "How the kit is shaped, and why"],
-  "HARNESS.md": ["⚙️", "Harness", "The control model: lanes, gates, evidence"],
-  "eval/README.md": ["📊", "Evals", "Grading code an agent writes, in five tiers"],
-  "plugins/README.md": ["📦", "Plugins", "How the marketplace is laid out"],
-  "docs/ddr/README.md": ["📜", "Design decisions", "The decision log"],
+  "README.md": ["RM", "README", "Quickstart, install and every plugin"],
+  "docs/USAGE.md": ["US", "Usage", "Day-to-day workflows, step by step"],
+  "DESIGN.md": ["DS", "Design", "How the kit is shaped, and why"],
+  "HARNESS.md": ["HN", "Harness", "The control model: lanes, gates, evidence"],
+  "eval/README.md": ["EV", "Evals", "Grading code an agent writes, in five tiers"],
+  "plugins/README.md": ["PL", "Plugins", "How the marketplace is laid out"],
+  "docs/ddr/README.md": ["DR", "Design decisions", "The decision log"],
+};
+// plugin.json descriptions are written for skill routing; the cards need one plain sentence.
+const PLUGIN_INFO = {
+  frontend: ["FE", "c-fe", "Web screens from a fixture: every state, shared primitives, tests, checked in the browser."],
+  backend: ["BE", "c-be", "Schema, migrations, endpoints and third-party clients, owner-scoped and route-tested."],
+  mobile: ["MO", "c-mo", "React Native and Expo screens: navigation, platform states, verified on a simulator."],
+  devops: ["OP", "c-op", "CI, containers and infrastructure: plan, review, apply with approval, rollback ready."],
+  ai: ["AI", "c-ai", "AI assistants on CopilotKit · AG-UI with Mastra or LangGraph: tools, graphs, RAG, evals."],
+  workplace: ["WP", "c-wp", "HR and workplace apps: approval rules, balances, bookings, cutoffs, and a domain review."],
+  dev: ["DV", "c-sv", "Build and fix for every role: lane router, feature supervisor, tickets, bug loop, TDD."],
+  core: ["CO", "", "Session basics: evidence before done, project setup, quality bar, docs sync, memory."],
+  plan: ["PN", "", "Design before code: project kickoff, requirement breakdown, brainstorming, plans."],
+  review: ["RV", "", "Review diffs and PRs, impact analysis, PR descriptions, debt ledger, repo audits."],
+  ship: ["SH", "", "Land and release: finish a branch, CI triage, release checklist, migrations, incidents."],
+  guards: ["GD", "", "Opt-in guard rails: commit quality, scope and blast-radius gates, session handoff."],
+  lead: ["LD", "", "Improve the process: weekly retro, session diagnosis, authoring new skills."],
+  progress: ["PG", "", "A live checklist of each skill's steps while it runs."],
+  harness: ["HS", "", "The bundle: installs the eight process plugins in one command."],
 };
 let site = { docs: [], plugins: [] };
 
@@ -581,29 +625,41 @@ const PACK_ORDER = ["frontend", "backend", "mobile", "devops", "ai", "workplace"
 const PROCESS_ORDER = ["dev", "core", "plan", "review", "ship", "guards", "lead", "progress", "harness"];
 const byOrder = order => (a, b) => (order.indexOf(a.name) + 99) % 99 - (order.indexOf(b.name) + 99) % 99;
 
-function pluginCard(p) {
-  const skills = p.skills.slice(0, 6).map(s => `<span class="chip">/${esc(s)}</span>`).join("");
-  const more = p.skills.length > 6 ? `<span class="chip">+${p.skills.length - 6}</span>` : "";
-  const evals = p.evals ? `<span class="chip ev">${p.evals} evals</span>` : "";
-  const deps = p.dependencies.map(d => `<span class="chip dep">→ ${esc(d)}</span>`).join("");
+const plural = (n, word) => `<b>${n}</b> ${word}${n === 1 ? "" : "s"}`;
+
+function pluginCard(p, pack) {
+  const [mono, color, blurb] = PLUGIN_INFO[p.name] || [p.name.slice(0, 2).toUpperCase(), "", p.description];
+  // Keep the chip row on one line so every card's footer lines up.
+  const picked = [];
+  for (const s of p.skills) { if (picked.length === 2 || (picked.length && picked.join("").length + s.length > 24)) break; picked.push(s); }
+  const shown = picked.map(s => `<span class="chip">/${esc(s)}</span>`).join("");
+  const more = p.skills.length > picked.length ? `<span class="chip">+${p.skills.length - picked.length} more</span>` : "";
+  const bundle = !p.skills.length && !p.hooks?.length;
+  const meta = [
+    p.skills.length && plural(p.skills.length, "skill"),
+    p.hooks?.length && plural(p.hooks.length, "hook"),
+    p.evals && `<span class="ev">${plural(p.evals, "eval")}</span>`,
+    bundle && plural(p.dependencies.length, "plugin"),
+  ].filter(Boolean).map(m => `<span>${m}</span>`).join("");
+  const needs = !p.dependencies.length ? "process plugin" : `needs ${p.dependencies.map(esc).join(", ")}`;
+  const sub = pack ? "role pack" : bundle ? "bundle" : needs;
   const href = p.readme ? `#/doc/${p.readme}` : REPO + "plugins/" + p.name;
-  const parts = [p.skills.length && `${p.skills.length} skills`, p.hooks?.length && `${p.hooks.length} hooks`].filter(Boolean);
-  const count = parts.length ? parts.join(" · ") : "bundle";
-  return `<a class="card reveal${p.name === "dev" ? " featured" : ""}" href="${esc(href)}">
-    <h3>${esc(p.name)}<em>${count}</em></h3><p>${esc(p.description)}</p>
-    <div class="chips">${skills}${more}${evals}${deps}</div></a>`;
+  return `<a class="card reveal ${color}" href="${esc(href)}">
+    <div class="card-head"><span class="badge">${esc(mono)}</span><div><h3>${esc(p.name)}</h3><small>${sub}</small></div></div>
+    <p class="desc">${esc(blurb)}</p>
+    <div class="card-foot">${shown ? `<div class="chips">${shown}${more}</div>` : ""}<div class="meta">${meta}<span class="go">README →</span></div></div></a>`;
 }
 
 function renderCards() {
   const packs = site.plugins.filter(p => isPack(p) || p.name === "workplace").sort(byOrder(PACK_ORDER));
   const process = site.plugins.filter(p => !packs.includes(p)).sort(byOrder(PROCESS_ORDER));
-  document.getElementById("pack-cards").innerHTML = packs.map(pluginCard).join("");
-  document.getElementById("plugin-cards").innerHTML = process.map(pluginCard).join("");
+  document.getElementById("pack-cards").innerHTML = packs.map(p => pluginCard(p, true)).join("");
+  document.getElementById("plugin-cards").innerHTML = process.map(p => pluginCard(p, false)).join("");
   const docs = Object.keys(DOC_LABELS).filter(d => site.docs.includes(d));
-  document.getElementById("doc-cards").innerHTML = docs.map(d => {
-    const [icon, title, blurb] = DOC_LABELS[d];
-    return `<a class="card reveal" href="#/doc/${esc(d)}"><h3>${icon} ${esc(title)}</h3><p>${esc(blurb)}</p><span class="chip">${esc(d)}</span></a>`;
-  }).join("");
+  const docRow = (href, [mono, title, blurb]) =>
+    `<a class="doc-row reveal" href="${esc(href)}"><span class="badge">${mono}</span><div><b>${esc(title)}</b><span>${esc(blurb)}</span></div><i>→</i></a>`;
+  document.getElementById("doc-cards").innerHTML = docs.map(d => docRow(`#/doc/${d}`, DOC_LABELS[d])).join("")
+    + docRow("docs/skill-map.html", ["MP", "Skill map", "Every plugin, skill and hook on one interactive map"]);
 
   const withEvals = site.plugins.filter(p => p.evals).sort((a, b) => b.evals - a.evals);
   const top = Math.max(1, ...withEvals.map(p => p.evals));
