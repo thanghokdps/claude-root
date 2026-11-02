@@ -9,7 +9,7 @@ allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh *)
 
 # agent-architect
 
-**Invoke:** `/agent-architect [greenfield | skeleton | audit]`
+**Invoke:** `/ai:agent-architect [greenfield | skeleton | audit]`
 
 Picking the wrong shape is the most expensive mistake in an assistant: every later skill builds on it. This skill makes that choice explicit, writes it down, and only then scaffolds.
 

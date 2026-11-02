@@ -8,7 +8,7 @@ when_to_use: agent action that writes data, "confirm before saving", confirm car
 
 # agent-hitl
 
-**Invoke:** `/agent-hitl <the write the agent should perform>`
+**Invoke:** `/ai:agent-hitl <the write the agent should perform>`
 
 A mutation is decided by a human, executed once, and reported truthfully. Interrupt rules: `${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` (A/B) or `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md` (M); tool rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`; stream rules: `${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md`.
 

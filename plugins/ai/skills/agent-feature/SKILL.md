@@ -8,7 +8,7 @@ when_to_use: add a feature to the chatbot, "thêm tính năng cho chatbot", "là
 
 # agent-feature
 
-**Invoke:** `/agent-feature <what the user should be able to do>`
+**Invoke:** `/ai:agent-feature <what the user should be able to do>`
 
 A feature built without reading the architecture creates a second way of doing what the repo already does. This skill decides *where* each piece goes and *what it reuses*; the layer skills do the building. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md`, `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`.
 

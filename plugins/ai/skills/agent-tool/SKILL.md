@@ -8,7 +8,7 @@ when_to_use: add a tool, "thêm tool cho agent", "chỉ giữ 2 tool này", tool
 
 # agent-tool
 
-**Invoke:** `/agent-tool <what the tool should do>`
+**Invoke:** `/ai:agent-tool <what the tool should do>`
 
 The invariants live in `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`; this skill is the order of work.
 

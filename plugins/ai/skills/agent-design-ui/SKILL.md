@@ -8,7 +8,7 @@ when_to_use: Figma or mockup of the chatbot, "làm UI chat theo design", chatbot
 
 # agent-design-ui
 
-**Invoke:** `/agent-design-ui <figma link | design folder> [state]`
+**Invoke:** `/ai:agent-design-ui <figma link | design folder> [state]`
 
 The generic part — getting the design, tokens, primitives, building from fixtures, the screenshot diff — is `/design-ui` (frontend, if installed); follow its steps in order and add the chat-specific work below at the step it names. Wiring (provider, headers, tool renderers) is `/agent-frontend`; the confirm card's contract is `/agent-hitl`. Read `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md` before the ladder and `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md` before building.
 

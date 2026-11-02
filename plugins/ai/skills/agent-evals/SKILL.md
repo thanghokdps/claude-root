@@ -8,7 +8,7 @@ when_to_use: write evals for the agent, eval dataset, golden cases, evaluate the
 
 # agent-evals
 
-**Invoke:** `/agent-evals [unit | dataset | suite | observability | compare-models] <behaviour or candidate models>`
+**Invoke:** `/ai:agent-evals [unit | dataset | suite | observability | compare-models] <behaviour or candidate models>`
 
 Unit tests prove code paths with no model. Evals prove behaviour with a real model. Keep them in separate trees and separate commands; never let evals run inside `test`.
 

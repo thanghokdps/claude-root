@@ -8,7 +8,7 @@ when_to_use: still broken after a fix ("vẫn bị"), verify the agent turn, rea
 
 # agent-verify-turn
 
-**Invoke:** `/agent-verify-turn [local | prod-trace] <prompt or trace/thread id>`
+**Invoke:** `/ai:agent-verify-turn [local | prod-trace] <prompt or trace/thread id>`
 
 A green unit suite does not prove a turn. The stream is the evidence: no "fixed" without it.
 

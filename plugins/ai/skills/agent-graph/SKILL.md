@@ -8,7 +8,7 @@ when_to_use: add an agent, routing, "agent nào làm việc này", supervisor or
 
 # agent-graph
 
-**Invoke:** `/agent-graph <the scope or routing change>`
+**Invoke:** `/ai:agent-graph <the scope or routing change>`
 
 Prompt rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-prompts.md`. Graph rules: `${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` (shapes A/B) or `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md` (shape M).
 
