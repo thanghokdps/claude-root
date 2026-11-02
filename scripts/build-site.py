@@ -16,6 +16,7 @@ PUBLISHED = [
     "docs/USAGE.md",
     "docs/skill-map.html",
     "docs/ddr/*.md",
+    "eval/README.md",
     "plugins/README.md",
     "plugins/*/README.md",
 ]
@@ -32,6 +33,8 @@ def plugin_entries(root):
             "description": meta.get("description", ""),
             "dependencies": meta.get("dependencies", []),
             "skills": skills,
+            "hooks": sorted(p.stem for p in plugin_dir.glob("hooks/*.sh")),
+            "evals": len(list(plugin_dir.glob("evals/*/case.yaml"))),
             "readme": f"plugins/{plugin_dir.name}/README.md" if (plugin_dir / "README.md").exists() else None,
         })
     return entries
@@ -50,7 +53,12 @@ def build(root, out):
             if rel.endswith(".md"):
                 docs.append(rel)
     shutil.copy2(root / "site/index.html", out / "index.html")
-    site = {"docs": docs, "plugins": plugin_entries(root)}
+    site = {
+        "docs": docs,
+        "plugins": plugin_entries(root),
+        "triggers": len(list(root.glob("eval/triggers/*.json"))),
+        "tests": len(list(root.glob("scripts/test_*.py"))),
+    }
     (out / "site.json").write_text(json.dumps(site, indent=1))
     return site
 

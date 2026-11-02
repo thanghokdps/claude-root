@@ -14,6 +14,7 @@ Session and project basics every role uses: the evidence gate before "done", the
 | `/compact` | The conversation is getting long, or you are ending the session. Writes `specs/HANDOFF.md` and merges learnings into memory so the next session resumes | `/compact` |
 | `/compound` | A session found a hard bug, a mistake or a pattern worth keeping. Writes it to `docs/solutions/` | `/compound` |
 | `/sync-memory` | Starting a session on a shared repo, or after a teammate pushed. Pulls and rebuilds memory from your own commits | `/sync-memory` |
+| `/constraints` | A repo has no written quality bar, or "tests pass" is the only gate. Writes `CONSTRAINTS.md` with numbers (changed-line coverage, type and lint errors, vulnerabilities, budgets), each row naming the command that produces the verdict | "coverage phải bao nhiêu?" |
 | `/btw` | A quick question mid-task, with no tasks, specs or side effects | `/btw which file handles auth?` |
 
 ## Hooks (always on)
