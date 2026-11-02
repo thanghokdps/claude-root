@@ -18,5 +18,6 @@ paths:
 - A budget test measures the assembled system prompt per agent, and each section in it, in tokens; growth over the budget fails CI, so trimming is a decision, not an accident.
 - No real people's names or real customer data in prompts or examples.
 - Static instructions first, dynamic context (date, user, memory) last — keeps the prefix cacheable.
+- A system prompt is organised in named sections, in this order: `OVERVIEW` (role, one sentence), `RESPONSE` (how to answer), `OUT OF SCOPE` (the "not mine" list and the refusal line), `CONTEXT` (date and time in the caller's zone, caller id and name from the trusted context reader). Each a few bullets; CONTEXT is the only dynamic one and is appended per run, never baked into the constant.
 - An interpolated value that can be empty (a report not produced, no prior turn, no memory) is replaced by a marker that says so ("(no news report: the news step did not run)"), never an empty string: a prompt that says "refute the argument below" over nothing gets an invented argument.
 - Tests and evals assert on outcomes (tool chosen, data written, refusal given), never on exact wording.

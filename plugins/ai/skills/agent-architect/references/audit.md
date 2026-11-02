@@ -18,6 +18,8 @@ For each concern, find the repo's implementation and the stock equivalent from `
 | Checkpoints | own `BaseCheckpointSaver` subclass |
 | Agent loop | hand-built `agent → tools → agent` graph with no other nodes |
 | Patches | `patches/*.patch` against agent packages |
+| Deprecated imports | `@copilotkit/runtime/langgraph` (v1 `LangGraphAgent`, `LangGraphHttpAgent` → `@ag-ui/langgraph`), `hono/vercel` (→ `@hono/vercel`), `.network()`; the proof is `npx eslint <agent folder>` with `@typescript-eslint/no-deprecated` on, not a grep of these names |
+| Prompt shape | one prose blob, dynamic values (date, user) interpolated into the static text, no "not mine" list — against the four sections of `rules/agent-prompts.md` |
 
 ## Output table
 

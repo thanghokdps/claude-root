@@ -34,4 +34,4 @@ evals/                      # agent evals (agent-evals), never run by `test`
 
 ## Tooling the scaffold sets up
 
-Prettier with a `format:check` script, ESLint with the framework preset plus `import/order` and `no-restricted-imports` for `dev/`; CI runs format → typecheck → lint → tests, and evals in their own job.
+Prettier with a `format:check` script, ESLint with the framework preset plus `import/order`, `no-restricted-imports` for `dev/`, and `@typescript-eslint/no-deprecated` (type-aware: `requiresTypeChecking: true` at typescript-eslint 8.72.1 `dist/rules/no-deprecated.js:47`, so `parserOptions.projectService` is on) so any `@deprecated` symbol from CopilotKit, Hono, LangChain or Mastra fails lint; one config at the package root whose `files` include the agent folder (`src/langchain/`, `src/langgraph/` or `src/mastra/`), never a web-only config. CI runs format → typecheck → lint → tests, and evals in their own job.
