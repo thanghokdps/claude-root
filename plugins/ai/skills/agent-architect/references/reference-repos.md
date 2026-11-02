@@ -2,7 +2,7 @@
 
 The scaffold follows the framework vendor's own example, not a layout invented by the kit. Pick the row from the ADR card (Framework × Transport × Layout). Each row splits into **core**, always mirrored; **satellites**, added only when the named ADR answer asks for them; and **never copy**.
 
-Last checked 2026-10-23; R3, R8 and R10 on 2026-11-02. The SHA shown is the one read on that date, not a pin.
+Last checked 2026-10-23; R3, R4, R8 and R10 on 2026-11-02. The SHA shown is the one read on that date, not a pin.
 
 ## Rows
 
