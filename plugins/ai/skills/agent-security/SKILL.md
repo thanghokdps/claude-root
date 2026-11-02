@@ -8,7 +8,7 @@ when_to_use: prompt injection, agent threat model, "agent có an toàn không", 
 
 # agent-security
 
-**Invoke:** `/agent-security [scope: whole agent | <tool, source or client>]`
+**Invoke:** `/ai:agent-security [scope: whole agent | <tool, source or client>]`
 
 Complements the built-in `/security-review` (code-level vulnerabilities in a diff). This skill asks what the *model* can be made to do.
 

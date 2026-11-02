@@ -8,7 +8,7 @@ when_to_use: RAG, "thêm RAG cho chatbot", "chatbot trả lời từ tài liệu
 
 # agent-rag
 
-**Invoke:** `/agent-rag <what the assistant must answer from, or remember>`
+**Invoke:** `/ai:agent-rag <what the assistant must answer from, or remember>`
 
 Retrieval is a read tool whose filter is an authorisation check, fed by an ingest pipeline that is versioned like a schema. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`, plus `${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` or `${CLAUDE_PLUGIN_ROOT}/rules/mastra.md`. Framework APIs and the official layouts are in `${CLAUDE_SKILL_DIR}/references/rag-pipeline.md`.
 

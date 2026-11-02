@@ -8,7 +8,7 @@ when_to_use: review the prompt, "soát prompt", prompt diff before PR, tool desc
 
 # agent-prompt-review
 
-**Invoke:** `/agent-prompt-review [path | diff]`
+**Invoke:** `/ai:agent-prompt-review [path | diff]`
 
 The code review checks the code around the prompt; this reads the prompt the way the model will. Rules it checks against: `${CLAUDE_PLUGIN_ROOT}/rules/agent-prompts.md`. Who can inject what is `/agent-security`; this skill only flags where the prompt lets it in.
 
