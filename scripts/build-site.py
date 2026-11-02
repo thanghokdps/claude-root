@@ -5,6 +5,7 @@ Only the files in PUBLISHED reach dist/: the repo holds personal notes (PLAYBOOK
 specs/ that must never be served. Paths keep their repo layout so relative links still resolve.
 """
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -40,6 +41,50 @@ def plugin_entries(root):
     return entries
 
 
+def registered_hooks(root):
+    hooks = {}
+    for hooks_json in sorted(root.glob("plugins/*/hooks/hooks.json")):
+        plugin = hooks_json.parent.parent.name
+        for event, matchers in json.loads(hooks_json.read_text())["hooks"].items():
+            for m in matchers:
+                for h in m["hooks"]:
+                    script = re.search(r"hooks/([\w.-]+\.(?:sh|py))", h["command"])
+                    if not script:
+                        continue
+                    name = script.group(1).rsplit(".", 1)[0]
+                    entry = hooks.setdefault(name, {"plugin": plugin, "source": f"plugins/{plugin}/hooks/{script.group(1)}", "on": []})
+                    on = f"{event} · {m['matcher']}" if m.get("matcher") else event
+                    if on not in entry["on"]:
+                        entry["on"].append(on)
+    return hooks
+
+
+def flow(root):
+    """site/flow.json, checked against the repo: every cited file exists and every hook is registered, so the
+    walk-through cannot describe a skill or hook the kit no longer has. A step's "*" entry fills the lanes it omits."""
+    data = json.loads((root / "site/flow.json").read_text())
+    hooks = registered_hooks(root)
+    used = {}
+    lanes = [lane["id"] for lane in data["lanes"]]
+    for step in data["steps"]:
+        given = step.pop("lanes")
+        step["lanes"] = {}
+        for lane in lanes:
+            entry = dict(given.get(lane) or given.get("*") or {})
+            if not entry:
+                raise ValueError(f"site/flow.json: step {step['id']} says nothing for lane {lane}")
+            entry.setdefault("source", step["source"])
+            if not (root / entry["source"]).is_file():
+                raise ValueError(f"site/flow.json: step {step['id']} cites {entry['source']}, which does not exist")
+            for hook in entry.get("hooks", []):
+                if hook["name"] not in hooks:
+                    raise ValueError(f"site/flow.json: step {step['id']} names hook {hook['name']}, not in any hooks.json")
+                used[hook["name"]] = hooks[hook["name"]]
+            step["lanes"][lane] = entry
+    data["hooks"] = used
+    return data
+
+
 def build(root, out):
     if out.exists():
         shutil.rmtree(out)
@@ -58,6 +103,7 @@ def build(root, out):
         "plugins": plugin_entries(root),
         "triggers": len(list(root.glob("eval/triggers/*.json"))),
         "tests": len(list(root.glob("scripts/test_*.py"))),
+        "flow": flow(root),
     }
     (out / "site.json").write_text(json.dumps(site, indent=1))
     return site
