@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # preflight.sh — what a blank machine is missing before an agent repo can be scaffolded and run one real turn.
 # Reports only: never installs, never prints a key's value. Always exits 0; the report is the result.
-#   bash preflight.sh [project-dir]
+#   bash preflight.sh [project-dir] [openai|anthropic|google|azure]   (provider defaults to openai)
 dir="${1:-.}"
+provider="${2:-openai}"
 missing=0
 os="$(uname -s)"
 
@@ -42,16 +43,19 @@ done
 if [ -n "$pm" ] && command -v "$pm" >/dev/null 2>&1; then row "package manager" ok "$pm $("$pm" --version 2>/dev/null)"
 else row "package manager" MISSING "$(hint pnpm)"; missing=$((missing + 1)); fi
 
-# A real turn needs one model key. Presence only — the value is never read into output.
+# A real turn needs the chosen provider's key in the project's own .env. Presence only — the value is never
+# read into output. The shell env is not read: Claude Code's own ANTHROPIC_API_KEY must not pick the app's provider.
+case "$provider" in
+  openai) k=OPENAI_API_KEY ;; anthropic) k=ANTHROPIC_API_KEY ;; google) k=GOOGLE_API_KEY ;; azure) k=AZURE_OPENAI_API_KEY ;;
+  *) k="" ;;
+esac
 key=""
-for k in ANTHROPIC_API_KEY OPENAI_API_KEY GOOGLE_API_KEY AZURE_OPENAI_API_KEY; do
-  if [ -n "${!k:-}" ]; then key="$k (env)"; break; fi
-  for f in "$dir/.env" "$dir/.env.local"; do
-    [ -f "$f" ] && grep -qE "^${k}=.+" "$f" && { key="$k ($(basename "$f"))"; break 2; }
-  done
+for f in "$dir/.env" "$dir/.env.local"; do
+  [ -n "$k" ] && [ -f "$f" ] && grep -qE "^${k}=.+" "$f" && { key="$k ($(basename "$f"))"; break; }
 done
-if [ -n "$key" ]; then row "model key" ok "$key"
-else row "model key" MISSING "set ANTHROPIC_API_KEY or OPENAI_API_KEY in .env (gitignored) — needed for the first real turn"; missing=$((missing + 1)); fi
+if [ -z "$k" ]; then row "model key" MISSING "unknown provider '$provider' — use openai, anthropic, google or azure"; missing=$((missing + 1))
+elif [ -n "$key" ]; then row "model key" ok "$key"
+else row "model key" MISSING "set $k in .env (gitignored) — needed for the first real turn"; missing=$((missing + 1)); fi
 
 if [ -d "$dir/.git" ] || git -C "$dir" rev-parse --git-dir >/dev/null 2>&1; then row "git repo" ok "initialised"
 else row "git repo" MISSING "git init (scaffold commits need a repo)"; missing=$((missing + 1)); fi

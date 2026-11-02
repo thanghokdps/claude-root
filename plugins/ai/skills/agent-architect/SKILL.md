@@ -19,7 +19,7 @@ Rules that apply throughout: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md` 
 
 ## Step 0 — Preflight (blank machine)
 
-Run `bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh .` and show its table. It checks git, Node ≥ 20, a package manager, a model key (presence only) and a git repo, with the install command for this OS.
+Run `bash ${CLAUDE_SKILL_DIR}/scripts/preflight.sh . <provider>` and show its table. The provider is `openai` unless the request names another (`anthropic`, `google`, `azure`); a key that happens to be set never chooses it. The script checks git, Node ≥ 20, a package manager, that provider's key in the project's `.env` (presence only, never the shell's own keys) and a git repo, with the install command for this OS.
 
 - Anything `MISSING` → show it in the table with what it blocks, and go straight on to the interview: the turn ends on the P1 question (skeleton: on the scaffold, or on Q-F when no framework is named), never on a setup question. A turn that ends on a question carries no setup notice: no install command, no `.env` step, no key warning, since the user's answer would be read as answering it. A missing model key or git repo blocks only scaffolding and Step 4's real turn. Give the install commands and ask about installs once the interview is done; never run one without a yes, since installing system software is the user's call.
 - Never ask for the key's value in chat; it goes in `.env`, which stays gitignored. The secret guard blocks you from creating or reading `.env`: before the real turn, ask the user to run `! cp .env.example .env` and fill the key.
