@@ -7,6 +7,7 @@ python3 scripts/test_lint_kit.py
 python3 scripts/test_skill_progress.py
 python3 scripts/test_branch_guard.py
 python3 scripts/test_edit_guard.py
+python3 scripts/test_remote_drift.py
 python3 scripts/test_ticket_gate.py
 python3 scripts/test_secret_guard.py
 python3 scripts/test_repo_profile.py
