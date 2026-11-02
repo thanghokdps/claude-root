@@ -231,6 +231,57 @@ article th { background: var(--surface-2); }
 article blockquote { margin: 0; padding: 4px 16px; border-left: 3px solid var(--accent); color: var(--muted); }
 article img { max-width: 100%; }
 
+/* watch it run */
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px; }
+.flow-lanes { display: flex; flex-wrap: wrap; gap: 8px; }
+.flow-lanes button { --lc: var(--muted); font: 600 13px "JetBrains Mono", monospace; padding: 7px 14px; border-radius: 99px; cursor: pointer;
+  background: var(--surface-2); color: var(--muted); border: 1px solid var(--line-2); transition: color .2s, border-color .2s, background .2s; }
+.flow-lanes button[aria-selected="true"] { color: var(--lc); border-color: var(--lc); background: color-mix(in srgb, var(--lc) 12%, transparent); }
+.l-tiny { --lc: var(--accent-3) !important; } .l-normal { --lc: var(--accent-2) !important; } .l-high-risk { --lc: #ff7a90 !important; }
+.flow-req { margin: 14px 0 18px; display: grid; gap: 4px; }
+.flow-req code { justify-self: start; max-width: 100%; overflow-wrap: anywhere; font-size: 14px; color: var(--term-text); background: var(--term-bg); border: 1px solid var(--line); padding: 6px 10px; border-radius: 8px; }
+.flow-req code::before { content: "❯ "; color: var(--accent); }
+.flow-req span { color: var(--muted); font-size: 14px; }
+.flow-body { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 20px; }
+.flow-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; position: relative; }
+.flow-steps button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; border: 1px solid transparent;
+  background: none; color: var(--text); font: 14px Inter, sans-serif; text-align: left; cursor: pointer; transition: background .2s, border-color .2s, opacity .2s; }
+.flow-steps button:hover { background: var(--surface-2); }
+.flow-steps .dot { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 600 11px "JetBrains Mono", monospace;
+  background: var(--surface-2); border: 1px solid var(--line-2); color: var(--muted); transition: background .3s, color .3s, border-color .3s; }
+.flow-steps .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flow-steps .done .dot { background: color-mix(in srgb, var(--lc) 18%, transparent); border-color: var(--lc); color: var(--lc); }
+.flow-steps .skip { opacity: .4; } .flow-steps .skip .t { text-decoration: line-through; }
+.flow-steps [aria-current="step"] { background: color-mix(in srgb, var(--lc) 9%, transparent); border-color: color-mix(in srgb, var(--lc) 40%, transparent); opacity: 1; }
+.flow-steps [aria-current="step"] .dot { background: var(--lc); color: #0b0c0e; border-color: var(--lc); animation: ring 1.6s infinite; }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lc) 50%, transparent); } 100% { box-shadow: 0 0 0 9px transparent; } }
+.flow-panel { min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 20px; min-height: 340px; }
+.flow-panel > * { animation: rise .4s ease both; }
+.fp-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+.fp-n { flex: none; font: 700 13px "JetBrains Mono", monospace; color: var(--lc); padding-top: 3px; }
+.fp-head h3 { margin: 0; font-size: 19px; line-height: 1.3; }
+.fp-head h3 code { font-size: 13px; color: var(--lc); background: none; padding: 0; margin-left: 6px; }
+.fp-src { display: inline-block; font: 12px "JetBrains Mono", monospace; overflow-wrap: anywhere; margin-top: 2px; }
+.flow-panel > p { color: var(--muted); margin: 0 0 16px; font-size: 15px; }
+.flow-panel > p.skipped { color: var(--dim); font-style: italic; }
+.fp-hooks { display: grid; gap: 8px; }
+.fp-hooks > b { font: 600 11px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+.hk { --hc: var(--accent-2); display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+  border-left: 3px solid var(--hc); background: var(--surface); animation: rise .4s ease both; }
+.hk a { font: 600 13px "JetBrains Mono", monospace; color: var(--text); overflow-wrap: anywhere; }
+.hk em { justify-self: end; font: 600 11px "JetBrains Mono", monospace; font-style: normal; text-transform: uppercase; letter-spacing: .06em; color: var(--hc); }
+.hk small { grid-column: 1 / -1; font: 11.5px "JetBrains Mono", monospace; color: var(--dim); overflow-wrap: anywhere; }
+.hk span { grid-column: 1 / -1; font-size: 13.5px; color: var(--muted); }
+.hk.s-blocks { --hc: #ff7a90; box-shadow: 0 0 24px -10px #ff7a90; } .hk.s-asks { --hc: var(--warn); } .hk.s-fires, .hk.s-records { --hc: var(--accent-3); }
+.hk.s-watching { --hc: var(--accent-2); } .hk.s-idle { --hc: var(--line-2); opacity: .7; }
+.flow-ctrl { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.flow-ctrl button { background: var(--surface-2); border: 1px solid var(--line-2); color: var(--text); border-radius: 8px; padding: 6px 12px; cursor: pointer; font: 600 14px Inter, sans-serif; }
+.flow-ctrl button:hover { border-color: var(--accent); }
+.flow-ctrl button.play { min-width: 92px; }
+.flow-ctrl span { font: 12.5px "JetBrains Mono", monospace; color: var(--muted); font-variant-numeric: tabular-nums; }
+.flow-bar { flex: 1 1 120px; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.flow-bar i { display: block; height: 100%; background: var(--lc, var(--accent)); transform-origin: left; transform: scaleX(0); }
+
 .layer .when, .behave .who-ran { align-self: flex-start; }
 @media (max-width: 1080px) {
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -248,6 +299,12 @@ article img { max-width: 100%; }
   .pipe { grid-template-columns: repeat(2, 1fr); row-gap: 28px; }
   .pipe::before, .pulse { display: none; }
   .steps3 { grid-template-columns: 1fr; }
+  .flow { padding: 14px; }
+  .flow-body { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .flow-steps { display: flex; flex-wrap: wrap; gap: 6px; }
+  .flow-steps button { width: auto; padding: 4px; }
+  .flow-steps .t { display: none; }
+  .flow-panel { padding: 16px; min-height: 0; }
   .before > div { grid-template-columns: 1fr; gap: 4px; } .before > div:first-child { display: none; }
   nav .links a.opt { display: none; }
 }
@@ -270,6 +327,7 @@ article img { max-width: 100%; }
     <div class="links">
       <a href="#start">Start</a>
       <a class="opt" href="#how">How it works</a>
+      <a class="opt" href="#flow">Watch it run</a>
       <a class="opt" href="#guardrails">Guardrails</a>
       <a class="opt" href="#evals">Evals</a>
       <a class="opt" href="#plugins">Plugins</a>
@@ -389,6 +447,27 @@ Tôi muốn làm chatbot tra cứu đơn hàng</pre></div>
       <div class="panel reveal"><h3>Always know where you are</h3><p>The status line shows the model, branch, ticket, plan progress and how full the context is.</p>
 <pre class="sample">Opus · feat/412-reminders <span class="k">#412</span> · plan 3/5 <span class="d">add due-soon query</span> · ctx 41% · <span class="g">normal</span></pre>
 <p style="margin:14px 0 0">The lane picks the ceremony: <b>tiny</b> just does it, <b>normal</b> plans first, <b>high-risk</b> (auth, migrations, security, providers, public contracts) writes a spec and waits for your OK.</p></div>
+    </div>
+  </section>
+
+  <section id="flow">
+    <p class="kicker reveal">Watch it run</p>
+    <h2 class="reveal">One request, three lanes, every gate</h2>
+    <p class="sub reveal">Pick a lane and follow a request from the prompt to the PR. Each step names the skill that runs it and the hooks standing guard, with a link to the file that says so.</p>
+    <div class="flow reveal" id="flow-player">
+      <div class="flow-lanes" role="tablist" aria-label="Lane" id="flow-lanes"></div>
+      <p class="flow-req"><code id="flow-req"></code><span id="flow-why"></span></p>
+      <div class="flow-body">
+        <ol class="flow-steps" id="flow-steps"></ol>
+        <div class="flow-panel" id="flow-panel" aria-live="polite"></div>
+      </div>
+      <div class="flow-ctrl">
+        <button type="button" id="flow-prev" aria-label="Previous step">←</button>
+        <button type="button" id="flow-play" class="play">▶ Play</button>
+        <button type="button" id="flow-next" aria-label="Next step">→</button>
+        <span id="flow-count"></span>
+        <div class="flow-bar"><i id="flow-bar"></i></div>
+      </div>
     </div>
   </section>
 
@@ -735,9 +814,88 @@ viewer.addEventListener("scroll", () => {
 });
 window.addEventListener("hashchange", route);
 
+// Watch it run: site.flow comes from site/flow.json, checked against the repo's files and hooks.json by build-site.py.
+const HOOK_DWELL = 900, STEP_DWELL = 3800, SKIP_DWELL = 1400;
+function initFlow(flow) {
+  const $ = id => document.getElementById(id);
+  const player = $("flow-player");
+  let lane = 1, step = 0, timer = null, playing = false, touched = false;
+
+  const entry = (s, l = lane) => flow.steps[s].lanes[flow.lanes[l].id];
+  const dwell = () => entry(step).skip ? SKIP_DWELL : STEP_DWELL + (entry(step).hooks?.length || 0) * HOOK_DWELL;
+
+  $("flow-lanes").innerHTML = flow.lanes.map((l, i) =>
+    `<button type="button" role="tab" class="l-${esc(l.id)}" data-lane="${i}">${esc(l.id)}</button>`).join("");
+  $("flow-lanes").onclick = e => { const b = e.target.closest("[data-lane]"); if (b) { stop(); show(Number(b.dataset.lane), 0); } };
+  $("flow-steps").innerHTML = flow.steps.map((s, i) =>
+    `<li><button type="button" data-step="${i}"><span class="dot">${i + 1}</span><span class="t">${esc(s.title)}</span></button></li>`).join("");
+  $("flow-steps").onclick = e => { const b = e.target.closest("[data-step]"); if (b) { stop(); show(lane, Number(b.dataset.step)); } };
+  $("flow-prev").onclick = () => { stop(); move(-1); };
+  $("flow-next").onclick = () => { stop(); move(1); };
+  $("flow-play").onclick = () => { touched = true; playing ? stop() : play(); };
+
+  function hookCard(h, i) {
+    const meta = flow.hooks[h.name];
+    return `<div class="hk s-${esc(h.state)}" style="animation-delay:${reduced ? 0 : 120 + i * 140}ms"><a href="${esc(REPO + meta.source)}" target="_blank" rel="noopener">${esc(h.name)}</a><em>${esc(h.state)}</em>
+      <small>${esc(meta.plugin)} · ${meta.on.map(esc).join(" · ")}</small><span>${esc(h.note)}</span></div>`;
+  }
+
+  function show(l, s) {
+    lane = l; step = s;
+    const ln = flow.lanes[lane], st = flow.steps[step], en = entry(step);
+    player.className = `flow reveal in l-${ln.id}`;
+    $("flow-lanes").querySelectorAll("[data-lane]").forEach((b, i) => b.setAttribute("aria-selected", String(i === lane)));
+    $("flow-req").textContent = ln.request;
+    $("flow-why").textContent = ln.why;
+    $("flow-steps").querySelectorAll("[data-step]").forEach((b, i) => {
+      b.classList.toggle("skip", Boolean(entry(i).skip));
+      b.classList.toggle("done", i < step && !entry(i).skip);
+      i === step ? b.setAttribute("aria-current", "step") : b.removeAttribute("aria-current");
+    });
+    const body = en.skip ? `<p class="skipped">Skipped in this lane. ${esc(en.skip)}</p>` : `<p>${esc(en.text)}</p>`;
+    const hooks = en.hooks?.length
+      ? `<div class="fp-hooks"><b>Hooks on this step</b>${en.hooks.map(hookCard).join("")}</div>`
+      : "";
+    $("flow-panel").innerHTML = `<div class="fp-head"><span class="fp-n">${String(step + 1).padStart(2, "0")}</span><div>
+      <h3>${esc(st.title)}<code>${esc(st.label)}</code></h3>
+      <a class="fp-src" href="${esc(REPO + en.source)}" target="_blank" rel="noopener">${esc(en.source)} ↗</a></div></div>${body}${hooks}`;
+    $("flow-count").textContent = `${step + 1} / ${flow.steps.length}`;
+    if (playing) schedule();
+  }
+
+  function move(by) {
+    let s = step + by, l = lane;
+    if (s >= flow.steps.length) { s = 0; l = (lane + 1) % flow.lanes.length; }
+    if (s < 0) { l = (lane + flow.lanes.length - 1) % flow.lanes.length; s = flow.steps.length - 1; }
+    show(l, s);
+  }
+
+  function schedule() {
+    clearTimeout(timer);
+    const bar = $("flow-bar"), ms = dwell();
+    bar.style.transition = "none"; bar.style.transform = "scaleX(0)"; bar.offsetWidth;
+    bar.style.transition = `transform ${ms}ms linear`; bar.style.transform = "scaleX(1)";
+    timer = setTimeout(() => move(1), ms);
+  }
+  function play() { playing = true; $("flow-play").textContent = "❚❚ Pause"; schedule(); }
+  function stop() {
+    touched = true; playing = false; clearTimeout(timer);
+    $("flow-play").textContent = "▶ Play";
+    const bar = $("flow-bar"); bar.style.transition = "none"; bar.style.transform = "scaleX(0)";
+  }
+
+  show(lane, 0);
+  // Autoplay only while on screen and until the reader takes over; reduced motion never autoplays.
+  if (!reduced) new IntersectionObserver(([e]) => {
+    if (touched) return;
+    if (e.isIntersecting && !playing) play();
+    else if (!e.isIntersecting && playing) { playing = false; clearTimeout(timer); $("flow-play").textContent = "▶ Play"; }
+  }, { threshold: 0.35 }).observe(player);
+}
+
 document.querySelectorAll(".reveal").forEach(observe);
 typeTerminal();
-fetch("site.json").then(r => r.json()).then(data => { site = data; renderCards(); route(); });
+fetch("site.json").then(r => r.json()).then(data => { site = data; renderCards(); if (site.flow) initFlow(site.flow); route(); });
 </script>
 </body>
 </html>

@@ -29,6 +29,11 @@ def fake_repo(d):
         write(root, rel)
     write(root, "plugins/core/.claude-plugin/plugin.json",
           json.dumps({"name": "core", "description": "basics", "dependencies": ["progress"]}))
+    write(root, "plugins/core/hooks/hooks.json", json.dumps({"hooks": {"PreToolUse": [
+        {"matcher": "Bash", "hooks": [{"type": "command", "command": '"${CLAUDE_PLUGIN_ROOT}"/hooks/branch-guard.sh'}]}]}}))
+    write(root, "site/flow.json", json.dumps({"lanes": [{"id": "tiny"}], "steps": [
+        {"id": "commit", "source": "plugins/core/hooks/branch-guard.sh",
+         "lanes": {"*": {"text": "x", "hooks": [{"name": "branch-guard", "state": "blocks", "note": "n"}]}}}]}))
     return root
 
 
@@ -54,6 +59,8 @@ def test_site_json_lists_docs_and_plugins_with_skills():
                                     "skills": ["btw", "compact"], "hooks": ["branch-guard"], "evals": 1,
                                     "readme": "plugins/core/README.md"}]
         assert site["triggers"] == 2 and site["tests"] == 1, site
+        assert site["flow"]["hooks"] == {"branch-guard": {"plugin": "core", "source": "plugins/core/hooks/branch-guard.sh",
+                                                          "on": ["PreToolUse · Bash"]}}, site["flow"]
 
 
 def test_rebuild_drops_stale_files():
