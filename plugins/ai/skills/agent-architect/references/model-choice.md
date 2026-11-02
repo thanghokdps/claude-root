@@ -15,8 +15,10 @@ The ADR names exact models (Q7), but never from habit. The names come out of thr
 Every assistant has three model roles, set in `.env` and read by `models.ts`:
 
 - `MODEL_PRIMARY` answers the user. Use the cheapest tier that passes the must-pass evals (Q9) for the hardest task.
-- `MODEL_FALLBACK` serves rate limits and outages. Use another provider when a second key exists, otherwise the next tier down from the same provider.
+- `MODEL_FALLBACK` serves rate limits and outages. Use the next tier down from the same provider; another provider only when the user names a second one. A key that happens to be set in the shell never adds a provider.
 - `MODEL_CHEAP` runs background jobs where quality barely matters: chat titles, routing, summaries and the eval judge. Use the provider's smallest tier. The judge must not be the primary model.
+
+The provider is OpenAI unless the user names another. It is never inferred from which key is set: two runs on one machine must not pick two providers.
 
 ## Tier rule
 

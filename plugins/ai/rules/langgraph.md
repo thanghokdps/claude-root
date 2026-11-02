@@ -23,7 +23,7 @@ return { messages: [...state.messages, aiResponse] }; // duplicates history
 - Declare `contextSchema` (zod) on `createAgent` / `StateGraph` and pass `{ context }` at invoke. Tools read `runtime.context` (`ToolRuntime`), nodes and middleware read `runtime.context`. `config.configurable` is the older path.
 - Once a graph declares `contextSchema`, `@ag-ui/langgraph` moves only the schema's keys from `configurable` into `context` and **drops the rest** with a console warning. Put every trusted key in the schema; a test asserts a tool sees the caller's id through the adapter.
 - The adapter copies the client's `x-*` request headers into `configurable.copilotkit_forwarded_headers`. They are client-controlled: never read identity from them unless the server replaced them after verifying the token.
-- **Exception, served by the LangGraph server:** `@langchain/langgraph-api` (checked 1.5.6) publishes no context schema for a graph built on a `StateSchema` (`createAgent`, or any graph with `CopilotKitStateSchema`) and runs it with an empty `context`, so a `contextSchema` on it rejects every run (`userId: Required`). There the trusted channel is `configurable`: the web server sets `LangGraphAgent({ assistantConfig: { configurable: { userId } } })` and the graph reads it with a fail-closed reader. Check `GET /assistants/<id>/schemas` first; a non-empty `context_schema` means `contextSchema` works.
+- **Exception, served by the LangGraph server:** `@langchain/langgraph-api` (checked 1.5.6) publishes no context schema for a graph built on a `StateSchema` (`createAgent`, or any graph with `CopilotKitStateSchema`) and runs it with an empty `context`, so a `contextSchema` on it rejects every run (`userId: Required`). There the trusted channel is `configurable`: the CopilotKit runtime route sets `LangGraphAgent({ assistantConfig: { configurable: { userId } } })` and the graph reads it with a fail-closed reader. Check `GET /assistants/<id>/schemas` first; a non-empty `context_schema` means `contextSchema` works.
 - `@ag-ui/langgraph` (checked 0.0.44) merges the browser's `forwardedProps.config` **over** `assistantConfig`, so a client can overwrite a server-set key. The CopilotKit route drops `forwardedProps.config` in `beforeRequestMiddleware` before any run.
 - Per-turn values (trace callbacks, the caller) come through a graph factory in `langgraph.json` (`export const graph = (config, runtime) => …`; `runtime.executionRuntime` is null on schema reads). Return `agent.graph.withConfig({ callbacks })` on the agent compiled once; `ReactAgent.withConfig()` recompiles it.
 
@@ -53,6 +53,13 @@ return { messages: [...state.messages, aiResponse] }; // duplicates history
 - Every conditional edge driven by one router maps every target that router can return, from one shared constant, including its fall-through; a test calls the router with an unexpected value and asserts the target is in the map.
 - Compile it once at module level with the checkpointer, and expose it to the agent as one tool or a subgraph node.
 - A step that waits for a human uses `interrupt()` per § Interrupts; code before it runs again on resume, so make it idempotent.
+
+## Transport (CopilotKit runtime)
+
+- The runtime is a route on the LangGraph server itself, never a server written for the web app. `langgraph.json` registers it with `"http": { "app": "./src/<langchain|langgraph>/copilotkit.ts:app" }`. Custom routes must be a Hono app, work under `langgraph dev` and `langgraph up`, and take priority over the built-in endpoints (docs.langchain.com/langsmith/custom-routes), so Hono lives only in the agent folder.
+- `copilotkit.ts` exports a Hono app mounting `createCopilotHonoHandler({ runtime, basePath: "/api/copilotkit" })` from `@copilotkit/runtime/v2/hono` (CopilotKit `examples/v2/runtime/hono`). The runtime holds `new LangGraphAgent({ deploymentUrl, graphId: AGENT_ID })` from `@copilotkit/runtime/langgraph`, with `deploymentUrl` this same server (`LANGGRAPH_DEPLOYMENT_URL`, `http://localhost:2024` under `langgraph dev`).
+- CORS on the route is limited to the web origin, never `*`. Identity follows § Run context: the route verifies the caller, sets `assistantConfig.configurable`, and drops `forwardedProps.config`.
+- The Vite client calls `${VITE_LANGGRAPH_BASE_URL}/api/copilotkit`. Only when the user names Next.js does the runtime move to a Next.js route beside an `agent/` package (R4).
 
 ## Streaming
 

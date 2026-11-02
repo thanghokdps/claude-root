@@ -45,5 +45,5 @@ Checked against mastra.ai docs on 2026-10-23. Confirm each option on the **insta
 
 ## Transport
 
-- In-process with Next.js: `MastraAgent.getLocalAgents({ mastra })` from `@ag-ui/mastra` behind the CopilotKit route.
-- Separate server: `server.apiRoutes: [registerCopilotKit({ path, resourceId })]`, CORS limited to the web origin (never `*`), and `@copilotkit/runtime` kept out of the `mastra build` bundle (`bundler.externals`).
+- Default (the Dojo, `mastra-ai/ui-dojo`): the runtime is a route on the Mastra server, `server.apiRoutes: [registerCopilotKit({ path, resourceId })]` from `@ag-ui/mastra/copilotkit`, CORS limited to the web origin (never `*`), and `@copilotkit/runtime` kept out of the `mastra build` bundle (`bundler.externals`). The Vite client calls `${VITE_MASTRA_BASE_URL}/<path>`; it never hosts a runtime server of its own.
+- Only when the user names Next.js: in-process, `MastraAgent.getLocalAgents({ mastra })` from `@ag-ui/mastra` behind the Next.js CopilotKit route.

@@ -10,15 +10,17 @@ A request that describes what the assistant helps with ("…hỗ trợ khách tr
 
 ## 2. Map the named stack (never re-ask a named piece)
 
-| The user says | Shape | Reference row (`reference-repos.md`) | Framework core (one copy) |
-|---|---|---|---|
-| "LangChain", "createAgent", or "LangGraph" with no custom graph mentioned | **A** | R4 (L1) · R6 (L2 monorepo) | `@langchain/core`, `@langchain/langgraph`, `langchain` |
-| "custom LangGraph graph", "StateGraph", or a Workers/edge host | **B** | R5 agent + R7 emitter | `@langchain/core`, `@langchain/langgraph` |
-| "Mastra" | **M** | R2 (in-process CopilotKit) · R1 (own Mastra server) | `@mastra/core` |
-| no stack named at all | ask the stack, see § 3 | — | — |
+| The user says | Shape | Agent folder | Reference row (`reference-repos.md`) | Framework core (one copy) |
+|---|---|---|---|---|
+| "LangChain", "createAgent", or "LangGraph" with no custom graph mentioned | **A** | `src/langchain/` | R10 (L1) · R6 (L2 monorepo) | `@langchain/core`, `@langchain/langgraph`, `langchain` |
+| "custom LangGraph graph", "StateGraph" | **B** | `src/langgraph/` | R10 on R5's graph files | `@langchain/core`, `@langchain/langgraph` |
+| a Workers/edge host | **B** | `src/langgraph/` | R5 agent + R7 emitter | `@langchain/core`, `@langchain/langgraph` |
+| "Mastra" | **M** | `src/mastra/` | R3 (the Dojo) | `@mastra/core` |
+| "Next.js" named with any of the above | as above | R4 `agent/` (A/B) · `src/mastra/` (M) | R4 (A/B) · R2 (M) | as above |
+| no stack named at all | ask the stack, see § 3 | — | — | — |
 
 - Plain "LangGraph" means shape A: `createAgent` runs on the LangGraph runtime. If the user then mentions fixed steps, an edge host or their own graph, switch to B and say why in one line.
-- **Frontend:** Next.js App Router by default. Another named React app (Vite, React Router) keeps its own setup, with the CopilotKit runtime in a small Node server.
+- **Frontend:** Vite + React Router in the same package as the agent, as `mastra-ai/ui-dojo` does (`layouts.md` L1). The web side is the CopilotKit client only: `<CopilotKit runtimeUrl={`${BASE_URL}/<route>`} agent=…>` with the base URL from a `VITE_*_BASE_URL` var. The CopilotKit runtime lives in the framework's own server, never in a server written for the web app: Mastra's `registerCopilotKit` route (`rules/mastra.md` § Transport), or the LangGraph server's `http.app` route (`rules/langgraph.md` § Transport). Next.js only when the user names it.
 - **Chat UI:** stock `CopilotChat` (v2) with theme tokens. A design link is noted on the card for `/agent-design-ui` later; nothing is built from it now.
 - **Database / ORM:** use the named one (Postgres + Drizzle, Prisma, SQLAlchemy, SQLite). None named → no database. Add one only when Q6 keeps durable chat history, and say so on the card.
 - **Auth:** use the named one (Better Auth, Clerk, NextAuth, the company SSO). None named → not asked: a fixed dev user behind a flag (`DEV_USER_ID`, refused when `NODE_ENV=production`), read through the same trusted-context reader a real login will fill. Shown on the card; real auth comes later as a feature.
@@ -26,7 +28,7 @@ A request that describes what the assistant helps with ("…hỗ trợ khách tr
 - **Tracing:** a named provider ("tracing with Langfuse", LangSmith) is wired behind the `TRACING_PROVIDER` switch with masking on, still `none` by default so the app runs without its keys. Wire it the chosen framework's way, verified on the installed packages:
   - shape A/B: the provider's LangChain callback handler, built per turn in the `langgraph.json` graph factory (`rules/langgraph.md` § Run context); for Langfuse, `@langfuse/langchain` `CallbackHandler` + `@langfuse/otel` `LangfuseSpanProcessor` with `mask`.
   - shape M: `observability: new Observability({ configs })` on `new Mastra`, with the provider's exporter and `SensitiveDataFilter` kept in `spanOutputProcessors` (`production.md` row 7).
-- **Model provider:** the one whose key the user has (preflight shows which is set, or the user names it), with the `model-choice.md` tiers for that provider; `.env.example` lists the other provider commented out.
+- **Model provider:** OpenAI unless the request names another, with the `model-choice.md` tiers for it. A key found in the shell or `.env` never chooses the provider. `.env.example` holds `OPENAI_API_KEY` (or the named provider's key) and lists the others commented out.
 
 Speak only the chosen framework from here on (`shapes.md`).
 
@@ -35,7 +37,7 @@ Speak only the chosen framework from here on (`shapes.md`).
 - **The request names a stack** (any framework, or a frontend with an agent framework): ask nothing. Build on it, and default every piece it leaves open.
 - **The request names no stack at all** ("init chatbot empty features"): ask the stack once, in at most two `AskUserQuestion` turns, the recommended option first:
   1. Framework (Q-F), as *How should the assistant work?*: *Chat that calls a few tools (Recommended)* (→ LangChain `createAgent`) / *A fixed step-by-step process* (→ custom LangGraph graph) / *All-in-one TypeScript with workflows and memory built in* (→ Mastra).
-  2. Frontend and database in one question, as *Does it remember conversations between visits?*: *No (Recommended)* (→ Next.js, no database) / *Yes* (→ Next.js + Postgres + Drizzle) / *Another stack (type it)*.
+  2. Frontend and database in one question, as *Does it remember conversations between visits?*: *No (Recommended)* (→ Vite, no database) / *Yes* (→ Vite + Postgres + Drizzle) / *Another stack (type it)*.
 - Never ask P1–P4, Q4, Q-D, auth, host, clients or layout, and never ask the user to accept the card. P1 is "A general chat assistant".
 
 Show the card below in the reply as information, then build. The user changes a row later by saying so.
@@ -70,9 +72,10 @@ Not built: tools, HITL, RAG, feature screens, design work and domain data.
 ## 5. Done when (show each with its evidence)
 
 - [ ] `format:check`, typecheck, lint and tests pass (paste the command output). Tests or evals the user defers are marked deferred on the ADR; the other boxes still apply
-- [ ] a model key is in `.env` (the user ran `! cp .env.example .env` and filled it); without one the skeleton is not done, say so and stop before the real turn
+- [ ] the web code (outside the agent folder) imports no `hono`, `@hono/node-server`, `express` or `@copilotkit/runtime`: no server was written for the web app (`grep -rln` over `src/` minus the agent folder, output shown)
+- [ ] the chosen provider's key (OpenAI unless named) is in `.env` (the user ran `! cp .env.example .env` and filled it); without one the skeleton is not done, say so and stop before the real turn
 - [ ] the app boots with `.env` filled from `.env.example`, and fails with a clear message when a required var is missing
-- [ ] `/agent-verify-turn` with "hello" streams a real answer end to end through the web route (AG-UI events shown, ending `RUN_FINISHED` with no `RUN_ERROR`). Thread and run ids are UUIDs; the LangGraph server answers 400 to any other id
+- [ ] `/agent-verify-turn` with "hello" streams a real answer end to end through the runtime route on the agent's server, called from the web page (AG-UI events shown, ending `RUN_FINISHED` with no `RUN_ERROR`). Thread and run ids are UUIDs; the LangGraph server answers 400 to any other id
 - [ ] the chat page renders that answer at 375 px and at desktop width
 - [ ] `docs/adr/<NNNN>-agent-architecture.md` lists the stack, the card and the deferred rows
 - [ ] the smoke eval passes

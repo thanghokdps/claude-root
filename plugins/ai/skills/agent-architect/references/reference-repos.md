@@ -2,23 +2,24 @@
 
 The scaffold follows the framework vendor's own example, not a layout invented by the kit. Pick the row from the ADR card (Framework × Transport × Layout). Each row splits into **core**, always mirrored; **satellites**, added only when the named ADR answer asks for them; and **never copy**.
 
-Last checked 2026-10-23. The SHA shown is the one read on that date, not a pin.
+Last checked 2026-10-23; R3, R8 and R10 on 2026-11-02. The SHA shown is the one read on that date, not a pin.
 
 ## Rows
 
 | # | Card | Repo · path | Core (mirror) |
 |---|------|-------------|---------------|
 | R1 | Mastra · own server · L1/L2 | `mastra-ai/mastra` · `templates/template-starter-agent` (@35806cb) | `src/mastra/index.ts` (one `new Mastra({ agents, tools, workflows, storage, logger, observability })`), `src/mastra/{agents,tools,workflows}/`, `.env.example`, `AGENTS.md` |
-| R2 | Mastra · in-process CopilotKit · L1 | `CopilotKit/CopilotKit` · `examples/integrations/mastra` (@0b264f4) | `src/mastra/{index.ts,model.ts,agents/,tools/}`, `src/agent.ts` (`MastraAgent.getLocalAgents({ mastra })` from `@ag-ui/mastra`), `src/app/api/copilotkit/` route, `src/{components,lib}` |
-| R3 | Mastra · web UI conventions | `mastra-ai/ui-dojo` (@7f98937) | `src/components/ui/` (primitives), `src/components/ai-elements/` (chat parts), `src/{lib,hooks,pages}`, `@/*` alias, kebab-case files, `cn()` + cva variants |
-| R4 | LangChain `createAgent` or LangGraph · CopilotKit · L1 | `CopilotKit/CopilotKit` · `examples/integrations/langgraph-js` (@0b264f4) | `agent/` as its own package (`package.json`, `langgraph.json`, `src/`) beside the Next.js `src/` with the runtime route |
+| R2 | Mastra · in-process CopilotKit · L1 · **only when Next.js is named** | `CopilotKit/CopilotKit` · `examples/integrations/mastra` (@0b264f4) | `src/mastra/{index.ts,model.ts,agents/,tools/}`, `src/agent.ts` (`MastraAgent.getLocalAgents({ mastra })` from `@ag-ui/mastra`), `src/app/api/copilotkit/` route, `src/{components,lib}` |
+| R3 | Mastra · Vite · one package (the Dojo) — the default for shape M | `mastra-ai/ui-dojo` (@7f98937) | one `package.json` whose `dev` is `concurrently "mastra dev" "vite"`; `vite.config.ts` with the `@/*` alias; `src/{main.tsx,App.tsx,pages,hooks,lib}`; `src/components/ui/` (primitives) and `src/components/ai-elements/` (chat parts), kebab-case files, `cn()` + cva variants; `src/constants.ts` (`MASTRA_BASE_URL` from `VITE_MASTRA_BASE_URL`); `src/mastra/index.ts` with the runtime as a route, `server.apiRoutes: [registerCopilotKit({ path: "/copilotkit", resourceId })]` (`@ag-ui/mastra/copilotkit`), and `bundler.externals` for `@copilotkit/runtime*` and `@ag-ui/*`; pages use `<CopilotKit runtimeUrl={`${MASTRA_BASE_URL}/copilotkit`} agent=…>` with the v2 `CopilotChat` |
+| R4 | LangChain `createAgent` or LangGraph · CopilotKit · L1 · **only when Next.js is named** | `CopilotKit/CopilotKit` · `examples/integrations/langgraph-js` (@0b264f4) | `agent/` as its own package (`package.json`, `langgraph.json`, `src/`) beside the Next.js `src/` with the runtime route |
 | R5 | Custom LangGraph graph · agent only | `langchain-ai/react-agent-js` (siblings: `memory-agent-js`, `retrieval-agent-template-js`) | `src/<graph>/{graph.ts,state.ts,tools.ts,prompts.ts,configuration.ts}`, `langgraph.json`, tests beside the graph |
 | R6 | LangGraph · L2 monorepo | `langchain-ai/js-langgraph-monorepo-example` (@fe2cf06) | `apps/<agent>/{langgraph.json,src/graph.ts,src/state.ts}`, `libs/shared`, root `turbo.json` |
 | R7 | Own AG-UI emitter (shape B) | `ag-ui-protocol/ag-ui` · `integrations/{langgraph,langchain,mastra,server-starter}` | the emitter class and its server entry for the chosen framework |
-| R8 | CopilotKit v2 client or runtime | `CopilotKit/CopilotKit` · `examples/v2/{react,node,node-express,runtime,interrupts-langgraph}` | provider + `agent` prop, runtime route, interrupt render pattern |
+| R8 | CopilotKit v2 client or runtime | `CopilotKit/CopilotKit` · `examples/v2/{react,node,node-express,runtime,interrupts-langgraph}` | provider + `agent` prop, the runtime handler for a framework server (`runtime/hono` → R10), interrupt render pattern. Its standalone servers (`node` on `@hono/node-server`, `node-express`) are never mirrored as a server for the web app: the runtime belongs in the agent's server |
 | R9 | RAG (any framework, when P3 lists documents) | `langchain-ai/retrieval-agent-template-js` · `src/retrieval_graph/`; `mastra-ai/mastra` · `templates/template-chat-with-pdf` | ingest apart from retrieval: `index_graph.ts` + `graph.ts` + `retrieval.ts`, or `workflows/` (ingest) + `tools/` (retrieval). Built through `/agent-rag` |
+| R10 | LangChain `createAgent` or LangGraph · Vite · one package — the default for shapes A and B | R3 for the Vite side; R5 for one package with `langgraph.json` at the root; `CopilotKit/CopilotKit` · `examples/v2/runtime/hono/src/index.ts` (@c5616c8) for the handler; LangGraph custom routes, docs.langchain.com/langsmith/custom-routes | one `package.json` whose `dev` is `concurrently "langgraph dev" "vite"`; the R3 Vite tree; the agent folder `src/langchain/` (A: `agent.ts` exporting `graph = createAgent({…})`, as R4's `agent/src/agent.ts` does) or `src/langgraph/` (B: R5's `graph.ts`, `state.ts`, `tools.ts`, `prompts.ts`, `configuration.ts`); `langgraph.json` at the root with `"graphs": { "<AGENT_ID>": "./src/<folder>/<file>.ts:graph" }`, `"dependencies": ["."]` and `"http": { "app": "./src/<folder>/copilotkit.ts:app" }`; `copilotkit.ts` exports a Hono app (the custom-routes doc requires Hono) mounting `createCopilotHonoHandler({ runtime, basePath: "/api/copilotkit" })` from `@copilotkit/runtime/v2/hono`, whose runtime holds `new LangGraphAgent({ deploymentUrl, graphId })` from `@copilotkit/runtime/langgraph` pointing at this same server |
 
-A web client is picked with the agent: R2 or R4 for the route, plus R3 conventions when the chat is built from a design (Q-D) on shadcn/Tailwind.
+The web client is the Vite SPA of R3 (shape M) or R10 (shapes A/B), in the same package as the agent; the CopilotKit runtime is a route on the framework's own server, never a server written for the web app. R2 and R4 replace them only when the user names Next.js.
 
 ## Satellites — only when the card asks
 
@@ -33,7 +34,7 @@ A web client is picked with the agent: R2 or R4 for the route, plus R3 conventio
 
 ## Never copy
 
-Demo pages and showcase data (`showcase.json`, `welcome.ts` seeds), lockfiles (the scaffold resolves its own), `@ts-expect-error` workarounds in the reference, `cors: { origin: '*' }`, and any hard-coded agent id that is not the card's.
+Demo pages and showcase data (`showcase.json`, `welcome.ts` seeds, the Dojo's demo agents, workflows and `src/pages/*`), lockfiles (the scaffold resolves its own), `@ts-expect-error` workarounds in the reference, `cors: { origin: '*' }`, and any hard-coded agent id that is not the card's.
 
 ## Procedure (Step 4.0)
 
