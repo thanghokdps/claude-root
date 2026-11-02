@@ -12,6 +12,7 @@ Checked against mastra.ai docs on 2026-10-23. Confirm each option on the **insta
 - One `new Mastra({ agents, tools, workflows, storage, logger, observability })` in `src/mastra/index.ts`. Every agent, workflow and shared tool is registered there and nowhere else.
 - The key in `agents` is the agent id: it is the client's `agent` prop and the `resourceId` in `registerCopilotKit`. Define it once (`ids.ts`) and import it in all three places.
 - Build the instance once at module level. Never construct `Mastra`, `Agent` or storage per request.
+- `mastra dev` serves Studio at `http://localhost:4111`: agents to chat with, workflows rendered as a graph, traces (mastra `docs/src/content/en/docs/studio/overview.mdx`). The closing message shows that URL as the CLI printed it.
 
 ## Agents
 
