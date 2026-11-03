@@ -10,7 +10,7 @@
 # user config both lack into .claude/rules/ (a plugin cannot ship always-loaded rules), and leaves both uncommitted.
 # An opted-out repo gets the packs in .claude/settings.local.json (personal, excluded from git) instead.
 # Packs, effective after /reload-plugins or a new session: frontend@harness for a web UI framework (not React Native alone),
-# backend@harness for a server framework, an ORM, go or rust, mobile@harness for react-native / expo / eas.json,
+# backend@harness for a server framework, an ORM, go, rust or an AI assistant, mobile@harness for react-native / expo / eas.json,
 # devops@harness for a Dockerfile, compose file, CI workflow, *.tf, k8s/ or Chart.yaml, ai@harness for an AI
 # assistant, workplace@harness for a
 # `Domain: workplace` line in docs/requirements.md or .claude/docs/index.md, or two or more HR/workplace module
@@ -180,7 +180,10 @@ for name, label in (("go.mod", "go"), ("Cargo.toml", "rust")):
         manifests.append(label)
 if not manifests:
     # Nothing to detect from yet, and a pack enabled now loads only after a reload: say so before a stack is scaffolded.
-    added = setup_repo([])
+    # An assistant is a web chat page plus an agent server, so ai brings frontend and backend into the team file.
+    companions = ([p for p in ("frontend@harness", "backend@harness") if not is_on(p)]
+                  if is_on("ai@harness") else [])
+    added = setup_repo(companions)
     off = [p for p in ("frontend@harness", "backend@harness", "mobile@harness", "devops@harness", "ai@harness")
            if not is_on(p)]
     # .claude/settings.json is a guarded path (sensitive-path), so the CLI enables the pack, never an Edit by the model.
@@ -203,14 +206,21 @@ if not manifests:
                      "vector store → /agent-rag, a tool → /agent-tool, routing → /agent-graph. Invoke the skill "
                      "before asking questions or planning; never plan or build the layer by hand.")
     user_note = ""
-    if is_on("ai@harness") and not is_on("frontend@harness"):
-        # /agent-architect's chat page is a web UI: asked mid-scaffold, the pack cost the user a stop and a reload.
-        pack_cmd = enable.split("`")[1].replace("<pack>", "frontend@harness")
-        lines.append("REPO PROFILE: ai@harness is on but frontend@harness is off, and /agent-architect builds a web "
-                     f"chat page. In your first reply, before any skill, preflight or plan, ask the user to run "
-                     f"`{pack_cmd}` and type /reload-plugins, unless they asked for no web UI.")
-        user_note = (f"New repo with ai@harness: the chat page needs frontend@harness. Run `! {pack_cmd}`, then "
-                     "/reload-plugins, before asking for a scaffold.")
+    if companions:
+        # Asked mid-scaffold, a missing pack cost the user a stop and a reload; ask before anything starts.
+        names = " and ".join(companions)
+        if added is not None:
+            step = "type /reload-plugins (or start a new session)"
+            done = f"{names} {'are' if len(companions) > 1 else 'is'} now enabled in .claude/settings.json but not loaded"
+        else:
+            cmds = [f"`claude plugin enable {p} --scope local`" for p in companions]
+            step = f"run {' and '.join(cmds)}, then type /reload-plugins"
+            done = f"{names} {'are' if len(companions) > 1 else 'is'} off"
+        lines.append(f"REPO PROFILE: ai@harness is on and {done}; /agent-architect builds a web chat page and an "
+                     f"agent server, which need them. In your first reply, before any skill, preflight or plan, ask "
+                     f"the user to {step}.")
+        user_note = (f"New repo with ai@harness: the assistant needs {names}. Before asking for a scaffold, "
+                     f"{step.replace('`claude', '`! claude')}.")
     if setup_note(added or []):
         lines.append(setup_note(added or []))
     if lines:
@@ -278,7 +288,8 @@ workplace = domain_marked("workplace") or sum(1 for m in modules if re.search(
     r"time-?off|leave|booking|reservation|approval|maintenance|meal|lunch|attendance", m)) >= 2
 # Role and domain packs stay off at user scope (install.sh) and are turned on here for the repos that need them.
 frontend = web
-backend_pack = backend or bool(db) or "go" in manifests or "rust" in manifests
+# An AI repo runs an agent server even with no web framework or ORM (LangGraph's own server, Mastra).
+backend_pack = backend or bool(db) or "go" in manifests or "rust" in manifests or ai
 devops = bool(glob.glob(at("Dockerfile*")) or glob.glob(at("docker-compose*")) or glob.glob(at("compose.y*ml"))
              or glob.glob(at(".github", "workflows", "*.y*ml")) or os.path.exists(at(".gitlab-ci.yml"))
              or glob.glob(at("*.tf")) or glob.glob(at("*", "*.tf")) or os.path.isdir(at("k8s"))
