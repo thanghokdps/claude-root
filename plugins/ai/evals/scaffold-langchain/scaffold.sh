@@ -12,12 +12,7 @@ cache-dir=$HOME/.pnpm-cache
 offline=true
 manage-package-manager-versions=false
 EOF
-# /usr/bin/git is the xcrun shim, which fails in the sandbox (exit 72). The sandbox takes no shell snapshot, so .zshrc
-# is never read: every zsh reads .zshenv, and a login zsh reads .zprofile after /etc/zprofile's path_helper, which
-# puts /usr/bin back in front. Bash scripts the agent runs (preflight.sh) inherit that PATH.
-path_line="export PATH=\"$(dirname "$(xcrun --find git)"):\$PATH\""
-echo "$path_line" >"$HOME/.zshenv"
-echo "$path_line" >"$HOME/.zprofile"
+# Identity for the scaffold's commits; git itself must already be ahead of /usr/bin on PATH (scripts/eval-plugin.sh).
 cat >"$HOME/.gitconfig" <<'EOF'
 [user]
 	name = Eval Run
