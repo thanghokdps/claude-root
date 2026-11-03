@@ -64,6 +64,7 @@ Deploy the docs site to Vercel production (`deploy prod`, `release site`): `bash
 `main` → `origin` (GitHub, public). `company` → `gitlab` `main`. Code flows one way, `main` → `company`: never merge, cherry-pick or push `company` into `main` or to `origin` (the local `pre-push` hook refuses it). Company-only details (internal hosts, team names, VPN install steps) are committed on `company` only, in their own files where possible so merges don't conflict. Write new work on `main`, never on `company`.
 
 On `sync`:
+
 1. Stop if the tree is dirty. `git fetch origin && git fetch gitlab`. `main` must equal `origin/main`; if `gitlab/main` has commits `company` lacks, stop and show them — a teammate's change reaches `main` only as a cherry-pick the user approves, with no company detail.
 2. `git switch company && git merge --no-ff main`. The Vercel files stay deleted on `company`: `vercel.json`, `package.json`, `middleware.js`, `scripts/release-site.sh`, `scripts/test_release_site.py`, `scripts/test_site_auth.py`, their `scripts/check.sh` lines, and the Vercel lines in `CLAUDE.md`, `README.md`, `.gitignore` and `scripts/build-site.py`. On a modify/delete conflict keep the deletion (`git rm`); a new Vercel file from `main` is removed in the merge commit.
 3. `bash scripts/check.sh` on `company`; on red, stop with the output.
@@ -94,29 +95,29 @@ Always-loaded context is the budget: add `paths:` frontmatter unless the rule ap
 
 ## Skill frontmatter fields
 
-| Field | Purpose |
-|-------|---------|
-| `name` | Slash command name — `/name` |
-| `description` | Trigger condition — what makes the model invoke this |
-| `model` | `opus` on skills that decide (plan, architecture, review, security, migration, root cause); omitted on light, mechanical skills so they run on the session's model. The work a skill dispatches follows `plugins/core/rules/model-cost.md` |
-| `effort` | `high` / `medium` / `low` |
-| `when_to_use` | Phrase patterns that trigger auto-invocation |
-| `context` / `agent` / `background` | `context: fork` runs it in a subagent; `background: false` waits for the result |
-| `allowed-tools` / `arguments` / `paths` | Pre-approved tools · named `$args` · globs gating auto-load |
+| Field                                   | Purpose                                                                                                                                                                                                                                    |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`                                  | Slash command name — `/name`                                                                                                                                                                                                               |
+| `description`                           | Trigger condition — what makes the model invoke this                                                                                                                                                                                       |
+| `model`                                 | `opus` on skills that decide (plan, architecture, review, security, migration, root cause); omitted on light, mechanical skills so they run on the session's model. The work a skill dispatches follows `plugins/core/rules/model-cost.md` |
+| `effort`                                | `high` / `medium` / `low`                                                                                                                                                                                                                  |
+| `when_to_use`                           | Phrase patterns that trigger auto-invocation                                                                                                                                                                                               |
+| `context` / `agent` / `background`      | `context: fork` runs it in a subagent; `background: false` waits for the result                                                                                                                                                            |
+| `allowed-tools` / `arguments` / `paths` | Pre-approved tools · named `$args` · globs gating auto-load                                                                                                                                                                                |
 
 Any other key is silently ignored by Claude Code (`color`, `isolation` belong to agents) — lint fails on it. Full list: `SKILL_FIELDS` in `scripts/lint-kit.py`.
 
 ## Agent frontmatter fields
 
-| Field | Purpose |
-|-------|---------|
-| `model` | by role, per `plugins/core/rules/model-cost.md`: `opus` for architect and reviewer, `sonnet` for agents that write code |
-| `permissionMode` | `bypassPermissions` for automation |
-| `maxTurns` | Max agentic turns |
-| `background` | `true` = background dispatch |
-| `color` | Visual identifier in task list |
-| `effort` | Effort override |
-| `isolation` | `worktree` for safe parallel |
+| Field            | Purpose                                                                                                                 |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `model`          | by role, per `plugins/core/rules/model-cost.md`: `opus` for architect and reviewer, `sonnet` for agents that write code |
+| `permissionMode` | `bypassPermissions` for automation                                                                                      |
+| `maxTurns`       | Max agentic turns                                                                                                       |
+| `background`     | `true` = background dispatch                                                                                            |
+| `color`          | Visual identifier in task list                                                                                          |
+| `effort`         | Effort override                                                                                                         |
+| `isolation`      | `worktree` for safe parallel                                                                                            |
 
 ---
 

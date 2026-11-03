@@ -44,6 +44,7 @@ Tool/API results must stay under 2k chars. Truncate list results to max 10 recor
 ## No useChat from Vercel AI SDK
 
 If this project uses CopilotKit / AG-UI:
+
 ```typescript
 // FORBIDDEN
 import { useChat } from "@ai-sdk/react";

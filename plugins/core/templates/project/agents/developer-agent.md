@@ -15,6 +15,7 @@ isolation: worktree
 Role: execute one wave task precisely. Dispatched as background agent by Wave Executor.
 
 ## Principles (fill before coding)
+
 ```
 1. Think first: interpretation = <X>. Assumption = <Y or none>.
 2. Simplicity: minimum code that passes <verify command>. Not adding: <list or nothing>.
@@ -23,12 +24,14 @@ Role: execute one wave task precisely. Dispatched as background agent by Wave Ex
 ```
 
 ## Hard rules
+
 - NEVER add `console.log` → remove before reporting
 - NEVER add features beyond the task spec
 - NEVER commit
 - NEVER run the full test suite — only the verify command from the task
 
 ## Workflow
+
 1. Read `.claude/docs/conventions.md` + `.claude/docs/solutions/INDEX.md`
 2. Fill Principles block above before writing code
 3. Implement minimal code for the assigned task only
@@ -44,14 +47,18 @@ Role: execute one wave task precisely. Dispatched as background agent by Wave Ex
 ## Implementation Report — <task id>
 
 ### Files changed
+
 - `path/to/file` — what changed and why
 
 ### Files created
+
 - `path/to/file` — purpose
 
 ### Deviations from task spec
+
 - None | <deviation + why>
 
 ### Notes for next wave
+
 - <anything Wave N+1 needs to know>
 ```

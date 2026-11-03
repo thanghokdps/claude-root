@@ -25,16 +25,16 @@ Uncommitted work counts too: add `git status --short`.
 
 ## Step 2 — Map each change to its doc
 
-| The diff adds, moves or removes | Update |
-|---|---|
-| A route, screen, handler, job, cron, webhook, CLI command | `entry-points.md` |
-| A module, layer, service boundary, external system, data flow; a key decision | `architecture.md` (and the ADR if the decision has one) |
-| A dependency, runtime or tool version, a dev/test/build/deploy command, an env var | `stack.md`, and Common Commands in `CLAUDE.md` |
-| A naming or file-layout pattern the change sets for later code; an anti-pattern it removed | `conventions.md` |
-| A test location, fixture, marker, test command | `test-strategy.md` |
-| A table, column or relation | `docs/erd.md` when the repo keeps one (`/db-change` owns it — backend, if installed) |
-| A constraint every agent must respect | `index.md` constraints, and Key Rules in `CLAUDE.md` |
-| A domain term | `glossary.md` via `/domain-model` (plan, if installed) |
+| The diff adds, moves or removes                                                            | Update                                                                               |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| A route, screen, handler, job, cron, webhook, CLI command                                  | `entry-points.md`                                                                    |
+| A module, layer, service boundary, external system, data flow; a key decision              | `architecture.md` (and the ADR if the decision has one)                              |
+| A dependency, runtime or tool version, a dev/test/build/deploy command, an env var         | `stack.md`, and Common Commands in `CLAUDE.md`                                       |
+| A naming or file-layout pattern the change sets for later code; an anti-pattern it removed | `conventions.md`                                                                     |
+| A test location, fixture, marker, test command                                             | `test-strategy.md`                                                                   |
+| A table, column or relation                                                                | `docs/erd.md` when the repo keeps one (`/db-change` owns it — backend, if installed) |
+| A constraint every agent must respect                                                      | `index.md` constraints, and Key Rules in `CLAUDE.md`                                 |
+| A domain term                                                                              | `glossary.md` via `/domain-model` (plan, if installed)                               |
 
 A change that maps to no row (an internal fix, a refactor inside one file) needs no doc edit. Say so and stop.
 
@@ -62,6 +62,7 @@ On a feature branch, before the PR, so the reviewer sees code and docs together.
 
 ```markdown
 Docs sync — <branch>
+
 - entry-points.md: added `POST /api/orders/:id/refund` → `src/routes/orders.ts:88`
 - stack.md: `pnpm test:e2e` added
 - No doc impact: src/lib/format.ts (internal refactor)

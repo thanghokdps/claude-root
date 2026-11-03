@@ -10,20 +10,20 @@ None. This plugin is hooks only.
 
 ## Hooks
 
-| Hook | Event | Does |
-|---|---|---|
-| `session-resume` | session start, resume, clear, compact | Injects `specs/HANDOFF.md` (written by `session-handoff`) so a new session continues where the last one stopped |
-| `scope-gate` | every prompt | Flags implementation-intent prompts for the Auto-Coordinator: high-risk patterns, stale memory |
-| `commit-quality-gate` | before `git commit` | Blocks a commit with secrets, debug artifacts or failing tests |
-| `risk-corroboration` | before `git commit` | Blocks a commit whose staged diff trips a hard-gate signal (auth, migration, security, provider, contract) above the declared lane |
-| `push-evidence` | before a push, PR or MR | Asks the user when no test, lint or build ran after the last change |
-| `blast-radius-check` | after Edit, Write | Flags an edit to a file outside the active `PLAN.md` file set |
-| `format-on-edit` | after Edit, Write | Formats the edited file with the project's own formatter |
-| `headroom-compress` | after Bash | A soft hint to compress very large output when headroom is installed |
-| `run-log` | after Bash | Records each command to `.git/claude-run-log.jsonl`, so a PR's Witness line is filled from what ran, never typed |
-| `session-handoff` | on stop | Writes a comprehensive `specs/HANDOFF.md` at session end |
-| `state-breadcrumb` | on stop | Appends a session breadcrumb to memory |
-| `notify-on-finish` | on stop | A macOS notification when Claude finishes a turn, so long runs need no watching |
+| Hook                  | Event                                 | Does                                                                                                                               |
+| --------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `session-resume`      | session start, resume, clear, compact | Injects `specs/HANDOFF.md` (written by `session-handoff`) so a new session continues where the last one stopped                    |
+| `scope-gate`          | every prompt                          | Flags implementation-intent prompts for the Auto-Coordinator: high-risk patterns, stale memory                                     |
+| `commit-quality-gate` | before `git commit`                   | Blocks a commit with secrets, debug artifacts or failing tests                                                                     |
+| `risk-corroboration`  | before `git commit`                   | Blocks a commit whose staged diff trips a hard-gate signal (auth, migration, security, provider, contract) above the declared lane |
+| `push-evidence`       | before a push, PR or MR               | Asks the user when no test, lint or build ran after the last change                                                                |
+| `blast-radius-check`  | after Edit, Write                     | Flags an edit to a file outside the active `PLAN.md` file set                                                                      |
+| `format-on-edit`      | after Edit, Write                     | Formats the edited file with the project's own formatter                                                                           |
+| `headroom-compress`   | after Bash                            | A soft hint to compress very large output when headroom is installed                                                               |
+| `run-log`             | after Bash                            | Records each command to `.git/claude-run-log.jsonl`, so a PR's Witness line is filled from what ran, never typed                   |
+| `session-handoff`     | on stop                               | Writes a comprehensive `specs/HANDOFF.md` at session end                                                                           |
+| `state-breadcrumb`    | on stop                               | Appends a session breadcrumb to memory                                                                                             |
+| `notify-on-finish`    | on stop                               | A macOS notification when Claude finishes a turn, so long runs need no watching                                                    |
 
 Two more scripts live in the folder but are not registered here: `save-commit-memory.sh` and `agent-progress.sh` are copied into a project only by the standalone mode of `scripts/init.sh` (core).
 

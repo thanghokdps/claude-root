@@ -2,10 +2,10 @@
 
 ## Risk lanes
 
-| Lane | Flags | Process |
-|------|-------|---------|
-| tiny | 0–1 | Direct edit, no plan, hooks are safety net |
-| normal | 2–3 | Research brief + plan before coding |
+| Lane      | Flags           | Process                                                     |
+| --------- | --------------- | ----------------------------------------------------------- |
+| tiny      | 0–1             | Direct edit, no plan, hooks are safety net                  |
+| normal    | 2–3             | Research brief + plan before coding                         |
 | high-risk | 4+ or hard gate | Full chain: research → plan → user confirm → build → review |
 
 Hard gates (always high-risk, cannot self-downgrade):
@@ -21,13 +21,13 @@ Hard gates (always high-risk, cannot self-downgrade):
 
 ## Orchestration modes — choosing the right primitive
 
-| Mode | What holds the plan | Scale | Resumable | When to use |
-|------|---------------------|-------|-----------|-------------|
-| **Parallel sessions** (git worktrees) | One session per ticket | 2–4 tickets | Yes (resume) | Independent tickets in flight at once — zero crosstalk, separate PRs |
-| **Subagents** (Agent tool) | Claude's context | A few per turn | No | Independent research, parallel review |
-| **Skills** | Instructions Claude follows | Same as subagents | No | Structured task flows |
-| **Agent teams** | Shared task list | Handful of long-running peers | Teammates keep running | Long parallel workstreams |
-| **Dynamic workflows** | A JS script the runtime executes | 16 concurrent, 1000 total per run | Yes (same session) | Codebase audits, large migrations, adversarial cross-check |
+| Mode                                  | What holds the plan              | Scale                             | Resumable              | When to use                                                          |
+| ------------------------------------- | -------------------------------- | --------------------------------- | ---------------------- | -------------------------------------------------------------------- |
+| **Parallel sessions** (git worktrees) | One session per ticket           | 2–4 tickets                       | Yes (resume)           | Independent tickets in flight at once — zero crosstalk, separate PRs |
+| **Subagents** (Agent tool)            | Claude's context                 | A few per turn                    | No                     | Independent research, parallel review                                |
+| **Skills**                            | Instructions Claude follows      | Same as subagents                 | No                     | Structured task flows                                                |
+| **Agent teams**                       | Shared task list                 | Handful of long-running peers     | Teammates keep running | Long parallel workstreams                                            |
+| **Dynamic workflows**                 | A JS script the runtime executes | 16 concurrent, 1000 total per run | Yes (same session)     | Codebase audits, large migrations, adversarial cross-check           |
 
 **Rule:** If task scope is ≥ 10 files independently changed, codebase-wide, or the orchestration is worth saving/rerunning → use a **dynamic workflow** instead of in-context wave agents.
 
@@ -44,12 +44,12 @@ A dynamic workflow is a **JavaScript script** Claude writes; the runtime execute
 
 ### When to reach for a workflow
 
-| Use it when | Don't use it when |
-|-------------|-------------------|
-| 10+ files need independent parallel changes | A wave of 2–6 agents handles it |
-| Codebase-wide audit or migration | Changes are localized to 1–2 modules |
-| Cross-checking results adversarially | Single linear pipeline suffices |
-| Orchestration is worth saving and rerunning | One-off in-session coordination |
+| Use it when                                 | Don't use it when                    |
+| ------------------------------------------- | ------------------------------------ |
+| 10+ files need independent parallel changes | A wave of 2–6 agents handles it      |
+| Codebase-wide audit or migration            | Changes are localized to 1–2 modules |
+| Cross-checking results adversarially        | Single linear pipeline suffices      |
+| Orchestration is worth saving and rerunning | One-off in-session coordination      |
 
 ### Trigger methods
 
@@ -63,12 +63,12 @@ The keyword only works in a prompt typed by a human — not via `claude -p`, CI 
 
 ### Don't confuse the "ultra" family
 
-| You want | Use | Scope |
-|----------|-----|-------|
-| Think harder on one gnarly problem | `ultrathink` in the prompt | One prompt |
-| Change reasoning depth for the session | `/effort low…max` | Session |
-| Fan out many agents from a script | `ultracode` keyword / `/effort ultracode` | One task / session |
-| Multi-agent review of a risky branch | `/code-review ultra` | One review (cloud) |
+| You want                               | Use                                       | Scope              |
+| -------------------------------------- | ----------------------------------------- | ------------------ |
+| Think harder on one gnarly problem     | `ultrathink` in the prompt                | One prompt         |
+| Change reasoning depth for the session | `/effort low…max`                         | Session            |
+| Fan out many agents from a script      | `ultracode` keyword / `/effort ultracode` | One task / session |
+| Multi-agent review of a risky branch   | `/code-review ultra`                      | One review (cloud) |
 
 Default to `ultrathink` for depth; reach for `ultracode` only when the task is fan-out shaped.
 
@@ -84,17 +84,17 @@ s                    save script as reusable command
 
 ### Save for reuse
 
-| Path | Scope |
-|------|-------|
-| `.claude/workflows/<name>.js` | Project — shared with team via git |
+| Path                            | Scope                                |
+| ------------------------------- | ------------------------------------ |
+| `.claude/workflows/<name>.js`   | Project — shared with team via git   |
 | `~/.claude/workflows/<name>.js` | Personal — available in all projects |
 
 Saved workflows become `/<name>` slash commands in autocomplete.
 
 ### Bundled workflows
 
-| Command | What it does |
-|---------|-------------|
+| Command                     | What it does                                                                 |
+| --------------------------- | ---------------------------------------------------------------------------- |
 | `/deep-research <question>` | Fan-out web research → cross-check sources → adversarial vote → cited report |
 
 ### Limits
@@ -108,11 +108,11 @@ Saved workflows become `/<name>` slash commands in autocomplete.
 
 When context is getting large, use headroom to compress before handing off:
 
-| Context state | Action |
-|---|---|
-| Bash output > ~20KB in a long session | Optional: `headroom_compress` (hook hints once per session) — never on text you must edit verbatim |
-| Session ending with failures | `headroom learn` — mines failures into corrections |
-| Starting a new task after long session | `/compact` first, then continue |
+| Context state                          | Action                                                                                             |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Bash output > ~20KB in a long session  | Optional: `headroom_compress` (hook hints once per session) — never on text you must edit verbatim |
+| Session ending with failures           | `headroom learn` — mines failures into corrections                                                 |
+| Starting a new task after long session | `/compact` first, then continue                                                                    |
 
 Install once: `bash scripts/setup-headroom.sh` — wraps Claude CLI transparently (60–95% fewer tokens).
 

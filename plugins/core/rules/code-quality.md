@@ -10,11 +10,13 @@
 - Bug fix: grep every caller of the function first, then fix the root cause once in the shared code. Code you move or merge keeps its error handling and validation.
 
 ## Shortcuts
+
 - A deliberate shortcut with a known limit gets one comment: `shortcut: <the limit>, <when to upgrade>` (e.g. `// shortcut: in-memory, fine for one process; move to Redis when we scale out`). `/debt-ledger` lists them.
 - A marked shortcut is a decision, not a review finding, unless the expected load already crosses its limit. An unmarked one is a finding.
 - Never take a shortcut on validation at trust boundaries, error handling that prevents data loss, security or accessibility.
 
 ## Comments
+
 - Explain WHY, never WHAT. Default 1 line; exported symbol with a real constraint 2–3; subtle invariant ≤6; more than that belongs in docs.
 - Say it once per file; don't restate the line below or the identifier.
 - Keep the facts (numbers, error codes, ticket refs, why the obvious approach was rejected); cut the narrative.

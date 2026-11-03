@@ -7,15 +7,6 @@
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
   "description": "DevOps role pack: the devops-engineer agent /feature dispatches CI, container and infrastructure slices to, pipeline (GitHub Actions / GitLab CI), container (Dockerfile, compose), infra-change (Terraform, Kubernetes, Helm: plan, review, apply with approval, rollback), with their rules. Enabled per repo by core's repo-profile hook; the infra-gate hook lives in ship.",
-  "keywords": [
-    "devops",
-    "ci",
-    "docker",
-    "terraform",
-    "kubernetes"
-  ],
-  "dependencies": [
-    "progress",
-    "dev"
-  ]
+  "keywords": ["devops", "ci", "docker", "terraform", "kubernetes"],
+  "dependencies": ["progress", "dev"]
 }

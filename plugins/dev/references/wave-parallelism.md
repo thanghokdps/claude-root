@@ -4,13 +4,13 @@ How to organize and execute tasks in parallel waves.
 
 ## Waves vs. dynamic workflows
 
-| | Wave parallelism (Agent tool) | Dynamic workflows (`ultracode`) |
-|---|---|---|
-| Who holds the plan | Claude's context window | A JS script the runtime executes |
-| Scale | 2–8 parallel agents | Up to 16 concurrent, 1000 total per run |
-| Intermediate results | Land in Claude's context | Stay in script variables |
-| Resumable | No | Yes (same session) |
-| When to use | In-session, results needed in context | Codebase-wide, worth saving/rerunning |
+|                      | Wave parallelism (Agent tool)         | Dynamic workflows (`ultracode`)         |
+| -------------------- | ------------------------------------- | --------------------------------------- |
+| Who holds the plan   | Claude's context window               | A JS script the runtime executes        |
+| Scale                | 2–8 parallel agents                   | Up to 16 concurrent, 1000 total per run |
+| Intermediate results | Land in Claude's context              | Stay in script variables                |
+| Resumable            | No                                    | Yes (same session)                      |
+| When to use          | In-session, results needed in context | Codebase-wide, worth saving/rerunning   |
 
 If the task needs more agents than fit in one context window, or the orchestration is worth rerunning → use a dynamic workflow with the `ultracode` trigger instead.
 
@@ -49,6 +49,7 @@ Single-task waves skip parallel machinery. Run directly in the main thread — n
 ## Abort Condition
 
 If any task in a wave returns FAIL:
+
 1. Do not advance to the next wave
 2. Fix the failing task
 3. Re-verify the entire wave before proceeding

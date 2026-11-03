@@ -14,7 +14,7 @@ paths:
 - Values written once at graph entry (identity, model choice) are never mutated by later nodes.
 
 ```typescript
-return { messages: [aiResponse] };                    // delta — correct
+return { messages: [aiResponse] }; // delta — correct
 return { messages: [...state.messages, aiResponse] }; // duplicates history
 ```
 

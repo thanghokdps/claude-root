@@ -31,6 +31,7 @@ Memory layout and what to save: `${CLAUDE_PLUGIN_ROOT}/references/memory.md`.
 Read `.claude/memory/MEMORY.md` and `.claude/memory/commits/last-sync.txt`.
 
 Report:
+
 - Last sync date
 - Last commit by you that was recorded
 - Whether memory is stale (> 2 days old)
@@ -69,6 +70,7 @@ git log ${LAST}..HEAD --not --author="$(git config user.name)" --format="%H|%an|
 ## Stage 4 — Write memory
 
 Write to `.claude/memory/commits/YYYY-MM-DD.md`:
+
 ```markdown
 ---
 name: commits-YYYY-MM-DD
@@ -80,12 +82,15 @@ metadata:
 # Commits — YYYY-MM-DD
 
 ## Your commits (N)
+
 - `<hash>` — <message> [files: ...]
 
-## Team commits (N)  
+## Team commits (N)
+
 - `<hash>` [<author>] — <message>
 
 ## Re-check (files with overlapping changes)
+
 - <file> — you + <teammate> both modified
 ```
 
@@ -95,6 +100,7 @@ Save latest hash to `.claude/memory/commits/last-sync.txt`.
 ## Stage 5 — Report
 
 Print to user:
+
 - N commits by you since last sync
 - N commits by team
 - Any overlap files to re-check
@@ -114,6 +120,7 @@ Print to user:
 ## Script shortcut
 
 Instead of running stages manually:
+
 ```bash
 .claude/harness/scripts/sync-team.sh
 ```

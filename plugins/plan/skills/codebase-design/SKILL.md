@@ -16,17 +16,17 @@ This is a reference skill — mostly vocabulary. Use these terms exactly. Consis
 
 ## Glossary
 
-**Module** — anything with an interface and an implementation. Deliberately scale-agnostic: a function, a class, a package, a tier-spanning slice. *Avoid:* unit, component, service.
+**Module** — anything with an interface and an implementation. Deliberately scale-agnostic: a function, a class, a package, a tier-spanning slice. _Avoid:_ unit, component, service.
 
-**Interface** — everything a caller must know to use the module correctly. The type signature, yes, but also invariants, ordering constraints, error modes, required configuration, and performance characteristics. *Avoid:* API, signature — both are too narrow, covering only the type-level surface.
+**Interface** — everything a caller must know to use the module correctly. The type signature, yes, but also invariants, ordering constraints, error modes, required configuration, and performance characteristics. _Avoid:_ API, signature — both are too narrow, covering only the type-level surface.
 
 **Implementation** — what is inside a module.
 
 **Depth** — leverage at the interface: how much behaviour a caller or a test can exercise per unit of interface they must learn. **Deep** = large behaviour behind a small interface. **Shallow** = the interface is nearly as complex as the implementation.
 
-**Seam** *(Michael Feathers)* — a place where you can alter behaviour without editing in that place; the *location* where a module's interface lives. Where the seam goes is its own decision, distinct from what sits behind it. *Avoid:* boundary — overloaded with DDD's bounded context.
+**Seam** _(Michael Feathers)_ — a place where you can alter behaviour without editing in that place; the _location_ where a module's interface lives. Where the seam goes is its own decision, distinct from what sits behind it. _Avoid:_ boundary — overloaded with DDD's bounded context.
 
-**Adapter** — a concrete thing satisfying an interface at a seam. Names a *role* (which slot it fills), not substance (what is inside it).
+**Adapter** — a concrete thing satisfying an interface at a seam. Names a _role_ (which slot it fills), not substance (what is inside it).
 
 **Leverage** — what callers get from depth: more capability per unit of interface learned. One implementation pays back across N call sites and M tests.
 
@@ -60,7 +60,7 @@ When designing an interface, ask:
 
 - **Depth is a property of the interface, not the implementation.** A deep module can be internally composed of small, swappable parts — they just are not part of its interface. A module can have **internal seams** (private, used by its own tests) as well as the **external seam** at its interface.
 - **The deletion test.** Imagine deleting the module. If complexity vanishes, it was a pass-through. If complexity reappears across N callers, it was earning its keep.
-- **The interface is the test surface.** Callers and tests cross the same seam. Wanting to test *past* the interface means the module is the wrong shape — that is the signal `/tdd` (dev, if installed) produces and this skill answers.
+- **The interface is the test surface.** Callers and tests cross the same seam. Wanting to test _past_ the interface means the module is the wrong shape — that is the signal `/tdd` (dev, if installed) produces and this skill answers.
 - **One adapter is a hypothetical seam. Two adapters is a real one.** Introduce a seam when something actually varies across it, not before.
 
 ---
@@ -70,15 +70,19 @@ When designing an interface, ask:
 **Accept dependencies, don't create them.**
 
 ```typescript
-function processOrder(order, paymentGateway) {}          // testable
-function processOrder(order) { new StripeGateway(); }    // not
+function processOrder(order, paymentGateway) {} // testable
+function processOrder(order) {
+  new StripeGateway();
+} // not
 ```
 
 **Return results, don't produce side effects.**
 
 ```typescript
-function calculateDiscount(cart): Discount {}            // testable
-function applyDiscount(cart): void { cart.total -= d; }  // not
+function calculateDiscount(cart): Discount {} // testable
+function applyDiscount(cart): void {
+  cart.total -= d;
+} // not
 ```
 
 **Small surface area.** Fewer methods, fewer tests. Fewer parameters, simpler setup.
@@ -97,12 +101,12 @@ function applyDiscount(cart): void { cart.total -= d; }  // not
 
 Reference, not a stage. It supplies vocabulary to:
 
-| Skill | What it borrows |
-|-------|-----------------|
-| `/brainstorming` | depth, seam placement when shaping the approach |
-| `/tdd` (dev, if installed) | seams — the agreed test surface |
-| `/code-review` | shallow-module and leaky-interface findings |
-| `/simplify` | the deletion test, for whether an abstraction earns its keep |
-| `/blast-radius` (review, if installed) | seams as the boundary a change stops at |
+| Skill                                  | What it borrows                                              |
+| -------------------------------------- | ------------------------------------------------------------ |
+| `/brainstorming`                       | depth, seam placement when shaping the approach              |
+| `/tdd` (dev, if installed)             | seams — the agreed test surface                              |
+| `/code-review`                         | shallow-module and leaky-interface findings                  |
+| `/simplify`                            | the deletion test, for whether an abstraction earns its keep |
+| `/blast-radius` (review, if installed) | seams as the boundary a change stops at                      |
 
 `rules/code-quality.md` governs readability inside a module. This skill governs the shape of the module itself.

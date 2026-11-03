@@ -10,8 +10,8 @@ None. This plugin is hooks only.
 
 ## Hooks
 
-| Hook | Event | Does |
-|---|---|---|
+| Hook             | Event                                                                       | Does                                                                                                                                                                            |
+| ---------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `skill-progress` | after a Skill call; prompt expansion; task created; task completed; on stop | Reads the skill's `## Step` / `## Stage` / `## Phase` headings or `**Done when:**` lines and shows the checklist, each completed checkpoint, and a tally at the end of the turn |
 
 What you see:

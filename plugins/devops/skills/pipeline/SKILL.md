@@ -16,13 +16,13 @@ Rules: `${CLAUDE_PLUGIN_ROOT}/rules/ci.md`, `security.md` from core. A red build
 
 ## Step 1 — Detect
 
-| Piece | Look for |
-|-------|----------|
-| Platform | `.github/workflows/*.yml`, `.gitlab-ci.yml`, `.circleci/` |
-| The gate | the one script CI runs that developers also run locally (`scripts/check.sh`, `pnpm check`, `make test`) |
-| Existing jobs | triggers, matrix, caches, reusable workflows / templates, environments and their protection rules |
-| Secrets | names referenced as `${{ secrets.X }}` / CI variables; where they are set (repo, environment, org) |
-| Runners | hosted vs self-hosted, OS, versions pinned in the workflow |
+| Piece         | Look for                                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------------------- |
+| Platform      | `.github/workflows/*.yml`, `.gitlab-ci.yml`, `.circleci/`                                               |
+| The gate      | the one script CI runs that developers also run locally (`scripts/check.sh`, `pnpm check`, `make test`) |
+| Existing jobs | triggers, matrix, caches, reusable workflows / templates, environments and their protection rules       |
+| Secrets       | names referenced as `${{ secrets.X }}` / CI variables; where they are set (repo, environment, org)      |
+| Runners       | hosted vs self-hosted, OS, versions pinned in the workflow                                              |
 
 **Done when:** each row names a path. The change is stated as: trigger → jobs → what each job proves → where it deploys.
 

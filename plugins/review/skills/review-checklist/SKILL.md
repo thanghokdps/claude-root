@@ -28,14 +28,14 @@ Find the expected load (README, deploy config): one person running a script, or 
 
 Do not skip ahead: a correctness bug outranks every readability note.
 
-| # | Check | Ask |
-|---|-------|-----|
-| 1 | **Correctness** | Does it do what the ticket says? Wrong conditions, off-by-one, null paths, error paths, races. A fix applied in one caller while the shared function stays broken. Shared code (`packages/*`, `libs/*`, shared hooks/components) → check its other call sites. |
-| 2 | **Tests** | Is there a test that fails without this change? Happy + error path? Run them — don't trust they pass. |
-| 3 | **Scale** | Fine for one user, wrong at the expected load: check-then-write races, a query per item, memory or lists that only grow, the same work done by every process, per-process state that must be shared. |
-| 4 | **Readability** | Would the next person understand it without the author? Misleading names, deep nesting, dead code, comments that restate code. Did it re-implement something the shared layer already provides? |
-| 5 | **Security basics** | Unvalidated input at a boundary, secrets, injection, authz on mutating paths, logging PII. |
-| 6 | **Scope** | Every changed line traces to the ticket? Unrelated refactors, drive-by fixes, missing pieces of the ask. Over-engineering: a new function, class, module, dependency or option nobody asked for, or new code where the codebase, stdlib or an installed dependency already does it — the finding names what to reuse or delete. |
+| #   | Check               | Ask                                                                                                                                                                                                                                                                                                                             |
+| --- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Correctness**     | Does it do what the ticket says? Wrong conditions, off-by-one, null paths, error paths, races. A fix applied in one caller while the shared function stays broken. Shared code (`packages/*`, `libs/*`, shared hooks/components) → check its other call sites.                                                                  |
+| 2   | **Tests**           | Is there a test that fails without this change? Happy + error path? Run them — don't trust they pass.                                                                                                                                                                                                                           |
+| 3   | **Scale**           | Fine for one user, wrong at the expected load: check-then-write races, a query per item, memory or lists that only grow, the same work done by every process, per-process state that must be shared.                                                                                                                            |
+| 4   | **Readability**     | Would the next person understand it without the author? Misleading names, deep nesting, dead code, comments that restate code. Did it re-implement something the shared layer already provides?                                                                                                                                 |
+| 5   | **Security basics** | Unvalidated input at a boundary, secrets, injection, authz on mutating paths, logging PII.                                                                                                                                                                                                                                      |
+| 6   | **Scope**           | Every changed line traces to the ticket? Unrelated refactors, drive-by fixes, missing pieces of the ask. Over-engineering: a new function, class, module, dependency or option nobody asked for, or new code where the codebase, stdlib or an installed dependency already does it — the finding names what to reuse or delete. |
 
 A shortcut marked `shortcut: <limit>, <when to upgrade>` is a decision, not a finding — unless the expected load already crosses its limit. An unmarked shortcut with a real limit is a finding.
 
@@ -45,7 +45,7 @@ Before you report, send every candidate finding through `${CLAUDE_PLUGIN_ROOT}/r
 
 ## Step 3 — PR description check
 
-Answer: *could someone review or reimplement this from the description alone?* It needs what / why / how tested (/ screenshots for UI). Name what is missing.
+Answer: _could someone review or reimplement this from the description alone?_ It needs what / why / how tested (/ screenshots for UI). Name what is missing.
 
 ## Output
 
@@ -53,6 +53,7 @@ Number findings across all checks, so the author can say "fix 2 and 5".
 
 ```markdown
 ## Review — <branch or PR>
+
 What this change does: <two or three sentences>. Load assumed: <one line>.
 
 1. **[Correctness] Orders land on the wrong day** (`billing/close_day.py:40`)
@@ -62,11 +63,13 @@ What this change does: <two or three sentences>. Load assumed: <one line>.
 2. **[Tests] ...**
 
 ### Needs validation
+
 - **Retry may double-charge** (`payments/retry.py:22`). Missing fact: whether the provider dedupes on `idempotency_key`. Who answers: the provider's API docs or the payments owner.
 
 Rejected: 1 (`api/orders.py:88` null order: `load_order` at `api/orders.py:61` already returns 404)
 
 ### Description
+
 <self-contained? what's missing>
 
 Verdict: approve | fix 1 and 3 first

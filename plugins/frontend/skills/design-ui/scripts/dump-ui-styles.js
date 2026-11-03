@@ -3,9 +3,15 @@
 //   const ui = await page.evaluate(dumpUiStyles);            // or dumpUiStyles("main") for one region
 // Colours go through a 1×1 canvas so oklch(), color-mix() and named colours all arrive as sRGB.
 function dumpUiStyles(rootSelector) {
-  const root = rootSelector ? document.querySelector(rootSelector) : document.body;
-  const ctx = Object.assign(document.createElement("canvas"), { width: 1, height: 1 }).getContext("2d", { willReadFrequently: true });
-  const INTERACTIVE = 'a[href], button, input:not([type=hidden]), select, textarea, summary, [role=button], [role=link], [role=checkbox], [role=radio], [role=switch], [role=tab], [role=menuitem], [tabindex]:not([tabindex="-1"])';
+  const root = rootSelector
+    ? document.querySelector(rootSelector)
+    : document.body;
+  const ctx = Object.assign(document.createElement("canvas"), {
+    width: 1,
+    height: 1,
+  }).getContext("2d", { willReadFrequently: true });
+  const INTERACTIVE =
+    'a[href], button, input:not([type=hidden]), select, textarea, summary, [role=button], [role=link], [role=checkbox], [role=radio], [role=switch], [role=tab], [role=menuitem], [tabindex]:not([tabindex="-1"])';
 
   const rgba = (c) => {
     ctx.clearRect(0, 0, 1, 1);
@@ -27,14 +33,25 @@ function dumpUiStyles(rootSelector) {
       if (c[3] === 1 || image) break;
     }
     let out = [255, 255, 255];
-    for (const [r, g, b, a] of layers.reverse()) out = [r, g, b].map((v, i) => Math.round(v * a + out[i] * (1 - a)));
+    for (const [r, g, b, a] of layers.reverse())
+      out = [r, g, b].map((v, i) => Math.round(v * a + out[i] * (1 - a)));
     return { background: `rgb(${out.join(", ")})`, bgImage: image };
   };
   const selector = (el) => {
     const parts = [];
-    for (let n = el; n && n !== document.body && parts.length < 3; n = n.parentElement) {
-      if (n.id) { parts.unshift(`#${n.id}`); break; }
-      const cls = [...n.classList].slice(0, 2).map((c) => `.${CSS.escape(c)}`).join("");
+    for (
+      let n = el;
+      n && n !== document.body && parts.length < 3;
+      n = n.parentElement
+    ) {
+      if (n.id) {
+        parts.unshift(`#${n.id}`);
+        break;
+      }
+      const cls = [...n.classList]
+        .slice(0, 2)
+        .map((c) => `.${CSS.escape(c)}`)
+        .join("");
       parts.unshift(n.tagName.toLowerCase() + cls);
     }
     return parts.join(" > ");
@@ -45,8 +62,18 @@ function dumpUiStyles(rootSelector) {
   for (const el of root.querySelectorAll("*")) {
     const cs = getComputedStyle(el);
     const box = el.getBoundingClientRect();
-    if (!box.width || !box.height || cs.visibility !== "visible" || +cs.opacity === 0) continue;
-    const text = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(" ").trim();
+    if (
+      !box.width ||
+      !box.height ||
+      cs.visibility !== "visible" ||
+      +cs.opacity === 0
+    )
+      continue;
+    const text = [...el.childNodes]
+      .filter((n) => n.nodeType === 3)
+      .map((n) => n.textContent)
+      .join(" ")
+      .trim();
     const [r, g, b, a] = rgba(cs.color);
     elements.push({
       selector: selector(el),
@@ -59,8 +86,12 @@ function dumpUiStyles(rootSelector) {
       ...background(el),
       fontSize: parseFloat(cs.fontSize),
       fontWeight: parseInt(cs.fontWeight, 10),
-      padding: ["Top", "Right", "Bottom", "Left"].map((s) => parseFloat(cs[`padding${s}`])),
-      margin: ["Top", "Right", "Bottom", "Left"].map((s) => parseFloat(cs[`margin${s}`])),
+      padding: ["Top", "Right", "Bottom", "Left"].map((s) =>
+        parseFloat(cs[`padding${s}`]),
+      ),
+      margin: ["Top", "Right", "Bottom", "Left"].map((s) =>
+        parseFloat(cs[`margin${s}`]),
+      ),
       gap: [px(cs.rowGap), px(cs.columnGap)],
       box: [+box.width.toFixed(1), +box.height.toFixed(1)],
     });

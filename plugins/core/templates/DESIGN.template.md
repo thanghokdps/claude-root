@@ -4,22 +4,22 @@
 
 ## Tokens
 
-| Role | Token | Value |
-|------|-------|-------|
-| text | `--color-fg` | #… |
-| text, muted | `--color-fg-muted` | #… |
-| surface | `--color-bg` | #… |
-| primary action | `--color-primary` | #… |
-| danger | `--color-danger` | #… |
-| radius | `--radius` | …px |
+| Role           | Token              | Value |
+| -------------- | ------------------ | ----- |
+| text           | `--color-fg`       | #…    |
+| text, muted    | `--color-fg-muted` | #…    |
+| surface        | `--color-bg`       | #…    |
+| primary action | `--color-primary`  | #…    |
+| danger         | `--color-danger`   | #…    |
+| radius         | `--radius`         | …px   |
 
 ## Type scale
 
-| Step | Size / line height | Weight | Used for |
-|------|--------------------|--------|----------|
-| display | …px / …px | … | page title |
-| body | …px / …px | 400 | body text |
-| small | …px / …px | 400 | captions, help |
+| Step    | Size / line height | Weight | Used for       |
+| ------- | ------------------ | ------ | -------------- |
+| display | …px / …px          | …      | page title     |
+| body    | …px / …px          | 400    | body text      |
+| small   | …px / …px          | 400    | captions, help |
 
 Max distinct sizes per view: <number of steps>
 

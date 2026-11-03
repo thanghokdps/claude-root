@@ -53,6 +53,7 @@ Order inside the mutation:
 4. Below the interrupt (runs once, on resume): load the record by id, check it is still `pending` and not expired; on approve perform the upstream write; return an outcome `{ status: completed | cancelled | not_applied, actionType, summary }` built from the upstream response.
 
 Resume:
+
 - The client answers with `RunAgentInput.resume: [{ interruptId, status, payload }]` — approve is `resolved` + `{ approved: true }`, decline `resolved` + `{ approved: false }`, abandon `cancelled`. Shapes A/B turn it into `Command({ resume })`; shape M approves on `true` / `{ approved: true }` only.
 - Claim the record atomically (`pending → applying`): a second resume with the same answer replays the stored outcome instead of writing again.
 - Cancel → mark cancelled and write nothing.

@@ -65,6 +65,6 @@ Follow `${CLAUDE_PLUGIN_ROOT}/rules/agent-tracing-privacy.md`. A new assistant g
 3. Check option compatibility (for example reasoning options with bound tools) on each candidate.
 
 | Candidate | Pass % | Refusals | Tool accuracy | Cost/turn | TTFT p50/p95 | Errors |
-|---|---|---|---|---|---|---|
+| --------- | ------ | -------- | ------------- | --------- | ------------ | ------ |
 
 **Done when:** the table is filled from real runs and a recommendation names the winner per role (router, answerer, summary), with the cases it loses.

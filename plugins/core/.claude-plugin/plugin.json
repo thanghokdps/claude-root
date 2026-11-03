@@ -7,11 +7,6 @@
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
   "description": "Session and project basics every role uses: verify-done evidence gate, project-init bootstrap, docs-sync after each feature, compact/compound memory, sync-memory, btw.",
-  "keywords": [
-    "memory",
-    "bootstrap"
-  ],
-  "dependencies": [
-    "progress"
-  ]
+  "keywords": ["memory", "bootstrap"],
+  "dependencies": ["progress"]
 }

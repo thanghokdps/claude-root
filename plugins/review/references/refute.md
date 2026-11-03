@@ -17,11 +17,11 @@ Run it on every candidate finding, unless there are none. Run it again on a find
 
 ## Verdicts in the report
 
-| Verdict | Goes in | Carries |
-|---------|---------|---------|
-| `confirmed` | the numbered findings | its severity, case, fix and skip cost |
-| `needs_validation` | a separate list | the exact missing fact plus who or what answers it, with **no severity**. It never parks a vague worry: a candidate with no concrete fact to check is rejected |
-| `rejected` | one line each under `Rejected:` | the refuting `path:line`, so the next run does not raise it again |
+| Verdict            | Goes in                         | Carries                                                                                                                                                        |
+| ------------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `confirmed`        | the numbered findings           | its severity, case, fix and skip cost                                                                                                                          |
+| `needs_validation` | a separate list                 | the exact missing fact plus who or what answers it, with **no severity**. It never parks a vague worry: a candidate with no concrete fact to check is rejected |
+| `rejected`         | one line each under `Rejected:` | the refuting `path:line`, so the next run does not raise it again                                                                                              |
 
 ## Degraded mode
 

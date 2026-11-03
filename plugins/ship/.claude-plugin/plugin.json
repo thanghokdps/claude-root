@@ -7,11 +7,6 @@
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
   "description": "Land and release: finish-branch, ci-triage, release-checklist, write-migration, incident, sync-remote (GitHub ↔ GitLab).",
-  "keywords": [
-    "release",
-    "ci"
-  ],
-  "dependencies": [
-    "core"
-  ]
+  "keywords": ["release", "ci"],
+  "dependencies": ["core"]
 }

@@ -11,6 +11,7 @@ when_to_use: end of a session with a tricky fix or a mistake that cost time, "sa
 Extract what was learned in this session and write it to `docs/solutions/` so future agents start with this knowledge already loaded.
 
 **Run when:**
+
 - A session involved a significant bug fix or tricky problem
 - An agent made a mistake that cost time
 - A better pattern or approach was discovered
@@ -25,14 +26,14 @@ It also drains the lessons the background reflector queued: run `python3 -I "${C
 
 Scan the current conversation for:
 
-| Signal | What to capture |
-|--------|----------------|
-| Agent made a wrong assumption | → lesson: "always check X before assuming Y" |
-| Mistake repeated > once | → critical pattern: "never do Z" |
-| Approach that worked well | → solution: "use A instead of B for this case" |
-| Architectural decision made | → decision: "we chose X because Y" |
-| Surprising constraint discovered | → constraint: "X doesn't work when Y" |
-| Discussion that ended in consensus | → pattern: "agreed approach is X" |
+| Signal                             | What to capture                                |
+| ---------------------------------- | ---------------------------------------------- |
+| Agent made a wrong assumption      | → lesson: "always check X before assuming Y"   |
+| Mistake repeated > once            | → critical pattern: "never do Z"               |
+| Approach that worked well          | → solution: "use A instead of B for this case" |
+| Architectural decision made        | → decision: "we chose X because Y"             |
+| Surprising constraint discovered   | → constraint: "X doesn't work when Y"          |
+| Discussion that ended in consensus | → pattern: "agreed approach is X"              |
 
 Ignore: routine implementation details, boilerplate, things already in docs.
 
@@ -114,18 +115,23 @@ Format:
 ## By category
 
 ### mistakes
+
 - [slug](mistakes/slug.md) — one-line summary
 
 ### patterns
+
 - [slug](patterns/slug.md) — one-line summary
 
 ### decisions
+
 - [slug](decisions/slug.md) — one-line summary
 
 ### constraints
+
 - [slug](constraints/slug.md) — one-line summary
 
 ### solutions
+
 - [slug](solutions/slug.md) — one-line summary
 ```
 

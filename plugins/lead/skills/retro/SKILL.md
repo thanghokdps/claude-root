@@ -22,11 +22,11 @@ Also read: `specs/*/ESCALATIONS.md` touched in the window, `specs/STATE.md`, `do
 
 ## Step 2 — Summarize
 
-| Section | Content |
-|---------|---------|
-| Shipped | Merged PRs/MRs, one line each, user-facing first |
-| Hurt | Reverts, red builds, rework (same file changed in 3+ commits), escalations |
-| Worked | Workflows worth repeating — with the evidence |
+| Section   | Content                                                                                                                                                                                                                                                                                         |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shipped   | Merged PRs/MRs, one line each, user-facing first                                                                                                                                                                                                                                                |
+| Hurt      | Reverts, red builds, rework (same file changed in 3+ commits), escalations                                                                                                                                                                                                                      |
+| Worked    | Workflows worth repeating — with the evidence                                                                                                                                                                                                                                                   |
 | Estimates | Per shipped ticket: estimate → actual and the note. The ratio over the window (actual ÷ estimate midpoint) becomes the calibration line in `.claude/docs/team.md` § Estimation that the next `/breakdown` (plan, if installed) reads; a ticket off by more than ×2 is a Hurt row with its cause |
 
 ## Step 2b — Settle the decisions agents made

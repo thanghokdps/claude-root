@@ -19,14 +19,14 @@
 
 ## When to save
 
-| Trigger | Type | Where |
-|---------|------|-------|
-| User corrects your approach | feedback | `feedback/YYYY-MM-DD.md` |
-| User confirms non-obvious approach worked | feedback | `feedback/YYYY-MM-DD.md` |
-| Learn project goal / deadline / decision | project | `project/context.md` |
-| `git commit` succeeds | project | `commits/YYYY-MM-DD.md` (auto via hook) |
-| Session ends | project | `sessions/YYYY-MM-DD.md` (auto via hook) |
-| Learn user role / preference | user | `user.md` |
+| Trigger                                   | Type     | Where                                    |
+| ----------------------------------------- | -------- | ---------------------------------------- |
+| User corrects your approach               | feedback | `feedback/YYYY-MM-DD.md`                 |
+| User confirms non-obvious approach worked | feedback | `feedback/YYYY-MM-DD.md`                 |
+| Learn project goal / deadline / decision  | project  | `project/context.md`                     |
+| `git commit` succeeds                     | project  | `commits/YYYY-MM-DD.md` (auto via hook)  |
+| Session ends                              | project  | `sessions/YYYY-MM-DD.md` (auto via hook) |
+| Learn user role / preference              | user     | `user.md`                                |
 
 ## Feedback memory format
 
@@ -62,6 +62,7 @@ metadata:
 ## Team sync memory
 
 When working in a team:
+
 - Run `/sync-memory` at the start of each session
 - Memory in `commits/` tracks YOUR commits — team commits are context-only
 - `commits/last-sync.txt` stores the hash of your last synced commit

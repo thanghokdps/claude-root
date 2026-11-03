@@ -1,6 +1,6 @@
 # HARNESS — the control layer
 
-The skills answer *"how do I build this?"*. The harness answers *"how careful should I be, and who needs to approve?"*. This page is the control model: lanes, hard gates, what the hooks enforce, and what the session remembers. How the kit is packaged is in [`DESIGN.md`](DESIGN.md); the install and daily use in [`docs/USAGE.md`](docs/USAGE.md).
+The skills answer _"how do I build this?"_. The harness answers _"how careful should I be, and who needs to approve?"_. This page is the control model: lanes, hard gates, what the hooks enforce, and what the session remembers. How the kit is packaged is in [`DESIGN.md`](DESIGN.md); the install and daily use in [`docs/USAGE.md`](docs/USAGE.md).
 
 ## The one principle
 
@@ -15,11 +15,11 @@ High risk and unambiguous runs on its own through heavy proof. Low risk and ambi
 
 The Auto-Coordinator in the global `CLAUDE.md` (full logic in `dev:coordinator`) classifies every request silently and shows `Intent · Lane · Routing` for anything above tiny.
 
-| Lane | When | Ceremony |
-|---|---|---|
-| **tiny** | one file, reversible | just do it; the hooks are the safety net |
-| **normal** | several files, internal | plan mode → approve → implement → `/verify-done` |
-| **high-risk** | a hard gate is hit | `specs/<slug>/` with SUMMARY, PLAN, TEST_MATRIX and ESCALATIONS (or `docs/tickets/<id>/` for a ticket) → the user confirms → build → review including `/security-review` |
+| Lane          | When                    | Ceremony                                                                                                                                                                 |
+| ------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **tiny**      | one file, reversible    | just do it; the hooks are the safety net                                                                                                                                 |
+| **normal**    | several files, internal | plan mode → approve → implement → `/verify-done`                                                                                                                         |
+| **high-risk** | a hard gate is hit      | `specs/<slug>/` with SUMMARY, PLAN, TEST_MATRIX and ESCALATIONS (or `docs/tickets/<id>/` for a ticket) → the user confirms → build → review including `/security-review` |
 
 **Hard gates**, always high-risk and never self-downgraded: auth or authorisation, data migration, security or audit, external providers, public contracts, weakening validation, `.claude/` config. A hard gate discovered mid-task escalates the lane regardless of where it started. Stopping rules: three turns still broken → stop patching, name the assumption that may be wrong, ask one diagnostic question.
 
@@ -27,23 +27,23 @@ The Auto-Coordinator in the global `CLAUDE.md` (full logic in `dev:coordinator`)
 
 A skill's text is read once and forgotten under pressure, so what must happen is checked by a hook ([DDR 0005](docs/ddr/0005-hooks-enforce-the-process.md)). Hooks exit 0 (allow) or 2 (block), never 1; a hint that should not block uses `additionalContext` or a permission `ask`.
 
-| Arrives with | Hook | Guarantees |
-|---|---|---|
-| every role (`core`) | `branch-guard` | no push to `main` or an environment branch; no force, delete or mirror push to a protected branch |
-| | `secret-guard` | `.env*`, keys, keystores and service accounts are never read, printed, copied or edited |
-| | `sensitive-path` | an edit to secrets, CI/deploy config or `.claude/settings*.json` asks a person first |
-| | `edit-guard` | repo files change through Edit/Write, so the per-edit lint and format hooks always run |
-| | `step-limit` | a subagent past 90 tool calls stops and reports, instead of looping |
-| | `repo-profile`, `compact-advisor`, `learn-capture` | the session knows what the repo is; `/compact` is suggested when the context is large; lessons are captured and promoted without a model in the loop |
-| developers (`dev`) | `ticket-ledger` + `ticket-gate` | a ticket's commit waits for the skills its `plan.md` names and for every blocking concern to have a decision; its PR waits for `/verify-done` and `/review-checklist` |
-| | `test-lock` | the test that reproduces a bug stays as written while the fix is made |
-| | `weakened-check` | a commit that lowers the bar (deleted test, loosened assertion or validation) asks first |
-| | `auto-decisions` | on a high-risk ticket worked without the user, every choice Claude made alone is listed |
-| release owners (`ship`) | `release-gate` | a production mobile release ships only the exact commit of an approved `release/<version>` PR/MR; Claude never approves its own |
-| opt-in (`guards`) | `commit-quality-gate`, `risk-corroboration`, `push-evidence` | no secrets or debug artifacts in a commit; a diff that trips a hard gate cannot ship as a lower lane; no push without a check after the last change |
-| | `scope-gate`, `blast-radius-check`, `format-on-edit` | risk flags on every prompt; edits outside the plan's file set are flagged; edited files are formatted |
-| | `run-log`, `session-handoff`, `session-resume`, `state-breadcrumb`, `notify-on-finish` | the command log behind the PR's Witness line; a handoff written at the end and read at the start; a breadcrumb per session; a notification when a long turn ends |
-| every role (`progress`) | `skill-progress` | a skill's checklist and live ✅ progress; never blocks |
+| Arrives with            | Hook                                                                                   | Guarantees                                                                                                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| every role (`core`)     | `branch-guard`                                                                         | no push to `main` or an environment branch; no force, delete or mirror push to a protected branch                                                                     |
+|                         | `secret-guard`                                                                         | `.env*`, keys, keystores and service accounts are never read, printed, copied or edited                                                                               |
+|                         | `sensitive-path`                                                                       | an edit to secrets, CI/deploy config or `.claude/settings*.json` asks a person first                                                                                  |
+|                         | `edit-guard`                                                                           | repo files change through Edit/Write, so the per-edit lint and format hooks always run                                                                                |
+|                         | `step-limit`                                                                           | a subagent past 90 tool calls stops and reports, instead of looping                                                                                                   |
+|                         | `repo-profile`, `compact-advisor`, `learn-capture`                                     | the session knows what the repo is; `/compact` is suggested when the context is large; lessons are captured and promoted without a model in the loop                  |
+| developers (`dev`)      | `ticket-ledger` + `ticket-gate`                                                        | a ticket's commit waits for the skills its `plan.md` names and for every blocking concern to have a decision; its PR waits for `/verify-done` and `/review-checklist` |
+|                         | `test-lock`                                                                            | the test that reproduces a bug stays as written while the fix is made                                                                                                 |
+|                         | `weakened-check`                                                                       | a commit that lowers the bar (deleted test, loosened assertion or validation) asks first                                                                              |
+|                         | `auto-decisions`                                                                       | on a high-risk ticket worked without the user, every choice Claude made alone is listed                                                                               |
+| release owners (`ship`) | `release-gate`                                                                         | a production mobile release ships only the exact commit of an approved `release/<version>` PR/MR; Claude never approves its own                                       |
+| opt-in (`guards`)       | `commit-quality-gate`, `risk-corroboration`, `push-evidence`                           | no secrets or debug artifacts in a commit; a diff that trips a hard gate cannot ship as a lower lane; no push without a check after the last change                   |
+|                         | `scope-gate`, `blast-radius-check`, `format-on-edit`                                   | risk flags on every prompt; edits outside the plan's file set are flagged; edited files are formatted                                                                 |
+|                         | `run-log`, `session-handoff`, `session-resume`, `state-breadcrumb`, `notify-on-finish` | the command log behind the PR's Witness line; a handoff written at the end and read at the start; a breadcrumb per session; a notification when a long turn ends      |
+| every role (`progress`) | `skill-progress`                                                                       | a skill's checklist and live ✅ progress; never blocks                                                                                                                |
 
 Every gate has a written waiver (`skip /<skill>: <reason>` in `plan.md`), so a skipped step is a recorded decision. What a hook does not check is convention: commit message quality, branch naming, filling in `CLAUDE.md`, writing plan docs. **Rule:** what can be mechanised is a hook; convention is the residue.
 

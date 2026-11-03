@@ -1,6 +1,9 @@
 # Session state — changes every session; anchored so eval fixtures (plugins/*/evals/*/repo/specs/) stay tracked
 /specs/
 
+# Prettier, installed by `npm ci`
+node_modules/
+
 # User-specific local permissions
 .claude/settings.local.json
 

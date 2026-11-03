@@ -12,6 +12,10 @@
     "plugins/ai/skills/agent-rag/references/rag-pipeline.md",
     "plugins/ai/skills/agent-tool/references/api-to-tools.md"
   ],
-  "@copilotkit/runtime": ["plugins/ai/skills/agent-tool/references/api-to-tools.md"],
-  "@copilotkit/channels": ["plugins/ai/skills/agent-frontend/references/chat-channels.md"]
+  "@copilotkit/runtime": [
+    "plugins/ai/skills/agent-tool/references/api-to-tools.md"
+  ],
+  "@copilotkit/channels": [
+    "plugins/ai/skills/agent-frontend/references/chat-channels.md"
+  ]
 }

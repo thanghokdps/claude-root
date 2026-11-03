@@ -13,11 +13,11 @@ argument-hint: "<task description>"
 
 Before triggering a workflow, confirm the task warrants it:
 
-| Workflow | Wave agents (in-context) |
-|----------|--------------------------|
-| 10+ files changed independently | < 8 files |
-| Codebase-wide audit or migration | Changes in 1–2 modules |
-| Adversarial cross-check of results | Single linear pipeline |
+| Workflow                             | Wave agents (in-context)        |
+| ------------------------------------ | ------------------------------- |
+| 10+ files changed independently      | < 8 files                       |
+| Codebase-wide audit or migration     | Changes in 1–2 modules          |
+| Adversarial cross-check of results   | Single linear pipeline          |
 | Orchestration worth saving/rerunning | One-off in-session coordination |
 
 If wave agents suffice → use `/coordinator` instead.
@@ -27,15 +27,18 @@ If wave agents suffice → use `/coordinator` instead.
 ## Trigger
 
 **Prompt keyword:**
+
 ```
 ultracode: $ARGUMENTS
 ```
 
 **Natural language** (also works):
+
 > "Use a workflow to audit all endpoints for missing auth checks"
 > "Run a workflow for this migration"
 
 **Whole session:**
+
 ```
 /effort ultracode
 ```
@@ -46,8 +49,8 @@ Claude Code highlights the `ultracode` keyword. Press `Option+W` (macOS) / `Alt+
 
 ## Built-in workflows
 
-| Command | What it does |
-|---------|-------------|
+| Command                     | What it does                                                                                       |
+| --------------------------- | -------------------------------------------------------------------------------------------------- |
 | `/deep-research <question>` | Fan-out web searches → fetch & cross-check sources → adversarial vote on each claim → cited report |
 
 ---
@@ -72,6 +75,7 @@ A one-line progress summary also appears in the task panel below the input box. 
 ## Save for reuse
 
 After a run completes:
+
 1. Run `/workflows` → select the run → press `s`
 2. Choose save location:
    - `.claude/workflows/` — shared with team (commit to git)
@@ -79,6 +83,7 @@ After a run completes:
 3. The workflow becomes `/<name>` in slash-command autocomplete
 
 Saved workflows accept arguments via `args`:
+
 ```
 > Run /my-workflow with targets src/routes, src/api
 ```
@@ -87,13 +92,13 @@ Saved workflows accept arguments via `args`:
 
 ## Limits and cost
 
-| Constraint | Value |
-|-----------|-------|
-| Concurrent agents | 16 max |
-| Total agents per run | 1,000 max |
-| Mid-run user input | Not supported — split sign-off into sequential workflows |
-| Session scope | Resumable within same Claude Code session only |
-| Token cost | Meaningfully higher than single-session work — test on a slice first |
+| Constraint           | Value                                                                |
+| -------------------- | -------------------------------------------------------------------- |
+| Concurrent agents    | 16 max                                                               |
+| Total agents per run | 1,000 max                                                            |
+| Mid-run user input   | Not supported — split sign-off into sequential workflows             |
+| Session scope        | Resumable within same Claude Code session only                       |
+| Token cost           | Meaningfully higher than single-session work — test on a slice first |
 
 To gauge cost before a large run: scope to one directory or a narrow question, then scale up.
 

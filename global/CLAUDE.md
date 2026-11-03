@@ -3,6 +3,7 @@
 Source of truth: the kit checkout (`claude plugin marketplace list` shows its path; marketplace `harness`: role plugins `<role>` under `plugins/` + `scripts/install.sh` for this file and `rules/`). Edit the kit, not `~/.claude`.
 
 ## Principles (every task)
+
 1. **Ask once, up front** — state the interpretation, then before the first edit ask every open question, as many rounds as it takes (`AskUserQuestion`, up to 4 per call), until nothing is unclear. Once building starts, never ask: settle a new choice with `/resolve-question` (subagents debate the options, you judge), and end every build's report with a **Decided for you** list the user reviews or rolls back — every choice you made that the user did not, one line each, labels verbatim: `<choice> → <pick> · why: <fact, file:line> · challenged: <if debated> · revert: <what to change>` (`- none` when every choice was the user's). Still confirm actions no rollback undoes (push, merge, deploy, delete, force-push).
 2. **Simplicity** — nothing beyond the ask; no single-use abstractions.
 3. **Surgical** — every changed line traces to the request; note adjacent issues, don't fix them.
@@ -12,18 +13,20 @@ Source of truth: the kit checkout (`claude plugin marketplace list` shows its pa
 7. **Answer shape** — more than one step → numbered, fewest steps that work; work spanning turns → say where it stands ("step 3 of 5 done: …"). Show at most ~5 items per group, most relevant first (presentation only, never drop a relevant one). Estimates in units ("~15 min", "an afternoon"), never "a bit". Errors: cause and fix, no "uh oh". Three turns still broken → stop patching, name the assumption that may be wrong, ask one diagnostic question. Before sending: the first and last line alone must say what happened and what to do next.
 
 ## Auto-Coordinator
+
 Action intent → classify lane silently (`/coordinator` holds the full logic):
 
-| Lane | When | Ceremony |
-|------|------|----------|
-| tiny | 1 file, reversible | Just do it |
-| normal | multi-file, internal | Built-in **plan mode** → approve → implement → verify |
-| high-risk | hard gate hit | `specs/<slug>/` (SUMMARY, PLAN, TEST_MATRIX, ESCALATIONS), or `docs/tickets/<id>/` when working a ticket with `/ticket` → user confirms → build → review incl. `/security-review` |
+| Lane      | When                 | Ceremony                                                                                                                                                                          |
+| --------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tiny      | 1 file, reversible   | Just do it                                                                                                                                                                        |
+| normal    | multi-file, internal | Built-in **plan mode** → approve → implement → verify                                                                                                                             |
+| high-risk | hard gate hit        | `specs/<slug>/` (SUMMARY, PLAN, TEST_MATRIX, ESCALATIONS), or `docs/tickets/<id>/` when working a ticket with `/ticket` → user confirms → build → review incl. `/security-review` |
 
 Hard gates (always high-risk): auth/authz, data migration, security/audit, external providers, public contracts, weakening validation (`weakened-check` asks on commit), `.claude/` config.
 Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the tool exists; never block on it.
 
 ## Daily loop
+
 - Work arrives as a requirement → `/breakdown` (tasks with criteria and estimates on the tracker), then `/ticket <id>` per task; as a ticket id → `/ticket <id>` straight away.
 - One topic per session; resume instead of re-explaining. Bad edit → `Esc Esc` to rewind.
 - Parallel tickets → separate sessions in git worktrees, not one session juggling both.
@@ -34,9 +37,11 @@ Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the 
 - Verify the running app, not just the code: Playwright MCP / Claude in Chrome / iOS Simulator.
 
 ## Rules and references
+
 - Always loaded: `~/.claude/rules/` `git` · `security` · `code-quality` · `model-cost`. Path-scoped: `typescript`, `testing`, `api-contract`, `app-structure`, `data-access`.
 - On demand (skills read them): each plugin's `references/` — dev `orchestration` · `wave-parallelism` · `plan-format` · `auto-correct-scope` · `spec-templates` · `agent-prompts`; core `memory`.
 
 ## Gotchas
+
 - `specs/` is gitignored. `settings.local.json` overrides `settings.json`.
 - Personal playbook: `PLAYBOOK.md` in the kit checkout.
