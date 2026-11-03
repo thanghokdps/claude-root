@@ -3,7 +3,7 @@ type: regex
 target:
   source: file
   path: .env.example
-pattern: '^PII_REDACTION=on\s*$'
+pattern: '^PII_REDACTION="?on"?\s*$'
 flags: m
 ---
 

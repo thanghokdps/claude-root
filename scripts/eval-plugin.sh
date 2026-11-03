@@ -18,7 +18,7 @@ shift
 [ -d "plugins/$plugin/evals" ] || { echo "plugins/$plugin has no evals/ suite" >&2; exit 1; }
 build="$(python3 scripts/eval-build.py "$plugin")"
 
-# --real-scaffold: run only the scaffold-* cases (a real project; 900 s per case in prompt.md), paid ~$1-3 per case.
+# --real-scaffold: run only the scaffold-* cases (a real project; 1800 s per case in prompt.md), paid ~$5-9 per case.
 # Without it those cases are dropped, so the cheap pass never grants the shell. The confined sandbox refuses every
 # network host (CLAUDE_CODE_EVAL_CONFINED forces allowedDomains to []), so gh api fails there; it reads only the
 # PATH bin dirs, so npm (a link into lib/) and `pnpm view` do not load. pnpm works offline: each case's
