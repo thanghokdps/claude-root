@@ -1,11 +1,10 @@
 ---
-type: llm
-focus:
+type: regex
+target:
   source: file
   path: docs/design/ui-map.md
+pattern: '^(?=[\s\S]*^\|[^\n]*\blibrary primitive\b)(?=[\s\S]*^\|[^\n]*\bdesign primitive\b)(?=[\s\S]*components/ui/)'
+flags: mi
 ---
 
-Judge docs/design/ui-map.md for a component inventory.
-
-PASS if the map has a primitives table derived from the frame — every reusable element it shows (buttons, input, cards, chips, icons and anything else drawn), each with a class (library primitive, design primitive or feature component) and, for library primitives, the library component it maps to — and states that screens are built from these primitives in `components/ui/`.
-FAIL if the map only lists chat states and theme tokens, with no reusable components, or if each element is planned as its own one-off markup.
+The map has a primitives table: rows classed as library and design primitives, built in `components/ui/` (agent-design-ui Step 3). A regex, since an LLM judge on the whole map split votes run to run.
