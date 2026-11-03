@@ -13,16 +13,11 @@ One package, as `mastra-ai/ui-dojo` (R3) does: a Vite SPA and the agent side by 
   vite.config.ts  index.html
   tsconfig.app.json       # the web code; excludes the agent folder so DOM types never reach it
   tsconfig.node.json      # the agent folder and vite.config.ts
-  langgraph.json          # shapes A/B: graphs → ./src/<folder>/<file>.ts:graph · http.app → ./src/<folder>/copilotkit.ts:app
+  langgraph.json          # shapes A/B: graphs → ./src/<folder>/<file>.ts:graph · http.app → ./src/<folder>/server/copilotkit.ts:app
   src/
     main.tsx  App.tsx  pages/  hooks/  lib/  constants.ts      # web: the CopilotKit client only
     components/ui/  components/ai-elements/                    # R3 conventions
-    <agent folder>/       # src/mastra/ (M) · src/langchain/ (A) · src/langgraph/ (B), trees below
-      ids.ts              # AGENT_ID — the single definition
-      env.ts              # zod env schema, fails at boot
-      identity.ts         # verify token → trusted context
-      models.ts           # model factory + fallback + cheap router model
-      tools/<tool>.ts     # one file per tool; its test at the chosen test location (Q-T)
+    <agent folder>/       # src/mastra/ (M) · src/langchain/ (A) · src/langgraph/ (B): vendor files at its root, kit files grouped (trees below)
   evals/                  # agent evals, separate from unit tests
 ```
 
@@ -32,22 +27,38 @@ The rest of the app (features, shared UI, server aggregates, tokens, dev fixture
 
 ### The agent tree per framework
 
-The folder is named after the framework and keeps its vendor's files (`reference-repos.md`), with the four kit files beside them:
+The folder is named after the framework. Its root holds only the vendor's own files, as the reference repo lays them out (`reference-repos.md`), plus `prompts.ts`. Every file the kit adds goes in a folder per concern, with the same names in all three shapes:
+
+```
+config/          env.ts (zod env schema, fails at boot) · ids.ts (AGENT_ID, the single definition) · models.ts (primary + fallback + cheap roles)
+auth/            identity.ts (verify token → trusted context reader) · auth.ts (A/B only: LangGraph custom auth, `langgraph.json` auth.path)
+guardrails/      pii.ts (A/B). Shape M calls this folder processors/, Mastra's term for input/output processors
+observability/   tracing.ts (the TRACING_PROVIDER switch, masking on)
+server/          A/B only: copilotkit.ts (the `createCopilotHonoHandler` app `http.app` points at) and its helpers (route builder, stream filter)
+```
+
+A new kit file joins the group it belongs to. A new concern gets its own folder, never a loose file at the root. Mastra is unopinionated beyond its own folders, but the docs ask for a structure kept consistent (mastra.ai/docs/getting-started/project-structure). LangGraph's application-structure example keeps only the graph entry at `src/` and moves the rest one folder down (docs.langchain.com/oss/javascript/langgraph/application-structure).
 
 ```
 src/mastra/               # shape M (R3)
   index.ts                # the one `new Mastra({ agents, tools, workflows, storage, server: { apiRoutes: [registerCopilotKit(…)] }, … })`
-  agents/<name>.ts  tools/<tool>.ts  workflows/<name>.ts
+  agents/<name>.ts  tools/<tool>.ts  workflows/<name>.ts      # vendor folders; scorers/ and mcp/ when used
+  prompts.ts
+  config/  auth/  processors/  observability/
 
 src/langchain/            # shape A (R10)
   agent.ts                # export const graph = createAgent({ … })
   prompts.ts  tools/<tool>.ts
-  copilotkit.ts           # Hono app: createCopilotHonoHandler({ runtime, basePath: "/api/copilotkit" })
+  config/  auth/  guardrails/  observability/
+  server/copilotkit.ts    # export const app = createCopilotHonoHandler({ runtime, basePath: "/api/copilotkit", cors, hooks }); no `hono` dependency
 
 src/langgraph/            # shape B (R10 on R5)
   graph.ts  state.ts  tools.ts  prompts.ts  configuration.ts
-  copilotkit.ts           # as in src/langchain/
+  config/  auth/  guardrails/  observability/
+  server/copilotkit.ts    # as in src/langchain/
 ```
+
+Tests follow the groups. With `__tests__/` (Q-T), a group's unit tests sit in its own `__tests__/` (`config/__tests__/env.test.ts`, `guardrails/__tests__/pii.test.ts`). Tests that span groups stay in `src/<agent folder>/__tests__/`: the prompt tests, the deprecated-import lint test and its `fixtures/`, and the shared `helpers/` and fakes. With `tests/`, the same groups are mirrored under it.
 
 Only when the user names Next.js: R2 keeps `src/mastra/` and adds `src/agent.ts` (`MastraAgent.getLocalAgents({ mastra })`) behind `src/app/api/copilotkit/route.ts`; R4 puts LangChain/LangGraph in its own `agent/` package beside the Next app.
 

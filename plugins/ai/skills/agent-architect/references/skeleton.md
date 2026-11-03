@@ -55,7 +55,7 @@ Show the card below in the reply as information, then build. The user changes a 
 | Q8 tracing | the switch, off by default, masking on |
 | Q-P PII | input redaction wired behind `PII_REDACTION`, off; trace masking on |
 | Q9 evals | `evals/datasets/baseline.jsonl`, seeded with 4 cases |
-| Q2v viewports · Q-T tests | 375 px + desktop · tests beside the file |
+| Q2v viewports · Q-T tests | 375 px + desktop · `__tests__/` per group, cross-group tests in `src/<agent folder>/__tests__/` (`layouts.md`) |
 
 ## 4. What gets built
 
@@ -79,7 +79,7 @@ Not built: tools, HITL, RAG, feature screens, design work and domain data.
 - [ ] `format:check`, typecheck, lint and tests pass (paste the command output), **and lint is proven on the agent folder by its own run**: `npx eslint src/<agent folder> --max-warnings=0` and `npx prettier --check src/<agent folder>` both exit 0 with output pasted, with `@typescript-eslint/no-deprecated` on and the deprecated-import fixture test red-then-green (a config that merely exists is not evidence). Tests or evals the user defers are marked deferred on the ADR; the other boxes still apply
 - [ ] the graph UI opens: `langgraph dev` opened LangGraph Studio (`--no-browser` skips it; `--studio-url` defaults to smith.langchain.com) or `mastra dev` serves Studio at `http://localhost:4111` with the workflow graph; the URL **as the CLI printed it** is shown, and the "hello" run appears there. LangGraph Studio needs a LangSmith sign-in (its API answers 403 without one) and Claude never signs in, so on LangGraph the evidence is the server's own view of the same graph and run, `GET /assistants/<id>/graph` (nodes and edges) and `POST /threads/search` (the "hello" thread), with the Studio URL handed to the user to open signed in. The desktop browser pane cannot reach `localhost` from smith.langchain.com at all (`net::ERR_BLOCKED_BY_CLIENT`)
 - [ ] the prompt's four CONTEXT tests pass (byte-stable prefix, injected date, A/B isolation under concurrency, missing-caller marker); `PII_REDACTION=off` with its off / on / detection-failure / trace tests passing per shape (§ 4 PII)
-- [ ] the web code (outside the agent folder) imports no `hono`, `@hono/node-server`, `express` or `@copilotkit/runtime`: no server was written for the web app (`grep -rln` over `src/` minus the agent folder, output shown)
+- [ ] the web code (outside the agent folder) imports no `hono`, `@hono/node-server`, `express` or `@copilotkit/runtime`: no server was written for the web app (`grep -rln` over `src/` minus the agent folder, output shown). `package.json` lists no `hono`, `@hono/node-server` or `express` on any shape: the CopilotKit route is the framework's own (`grep -nE '"(hono|@hono/node-server|express)"' package.json` prints nothing)
 - [ ] the chosen provider's key (OpenAI unless named) is in `.env` (the user ran `! cp .env.example .env` and filled it); without one the skeleton is not done, say so and stop before the real turn
 - [ ] the app boots with `.env` filled from `.env.example`, and fails with a clear message when a required var is missing
 - [ ] `/agent-verify-turn` with "hello" streams a real answer end to end through the runtime route on the agent's server, called from the web page (AG-UI events shown, ending `RUN_FINISHED` with no `RUN_ERROR`). Thread and run ids are UUIDs; the LangGraph server answers 400 to any other id. The captured stream contains no `RAW` event, no `rawEvent` field, and neither the prompt canary nor the caller id (counts shown)
