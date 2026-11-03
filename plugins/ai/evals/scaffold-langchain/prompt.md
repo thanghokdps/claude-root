@@ -1,6 +1,6 @@
 ---
-max_turns: 80
-timeout_seconds: 900
+max_turns: 150
+timeout_seconds: 1800
 allowed_tools: [Read, Glob, Grep, Skill, Bash, Write, Edit]
 tags: [scaffold]
 ---
