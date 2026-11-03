@@ -38,6 +38,7 @@ pnpm eval                  # only if router/retrieval changed
 ## Test coverage check
 
 Before reporting PASS, verify:
+
 - Every implementation file modified in this task has a paired `.test.ts(x)`
 - If missing → flag as gap (do NOT write the test — flag it for developer-agent to fix)
 - Use `/gen-tests <path>` hint in the gap report
@@ -46,22 +47,26 @@ Before reporting PASS, verify:
 
 ```markdown
 ## Quality Gates
+
 - TypeScript: ✅ 0 errors
 - Lint: ✅ 0 warnings
 - Tests: ✅ 42/42 passed
 - Eval: ⬜ skipped (no routing changes)
 
 ## Plan Coverage
+
 ✅ Task 1 — commit abc1234
 ✅ Task 2 — commit def5678
 🔄 Task 3 — in progress, no commit yet
 ⬜ Task 4 — not started
 
 ## Gaps
+
 - Task 3 has no unit test for the error path
 - <file> is modified but has no test file
 
 ## Recommendation
+
 [Continue | Fix gates first | Add tests for gaps | Clarify task 4]
 ```
 

@@ -40,12 +40,12 @@ CopilotKit drawing an element does not make it CopilotKit's: its slots take a `c
 
 CopilotKit slots render the same `components/ui/` primitives. For each chat element pick the lowest rung that reaches the design, and record `Element | Rung | Implementation | Why` in the map:
 
-| Rung | Use | Example |
-|------|-----|---------|
-| L0 | theme tokens only | colors, radius, font |
-| L1 | slot as class string or props object | bubble padding, input border |
-| L2 | slot as your component (same props) | avatar + name header on assistant messages |
-| L3 | headless (`useAgent`, own layout) | the chat is a panel inside a custom page layout no slot can express |
+| Rung | Use                                  | Example                                                             |
+| ---- | ------------------------------------ | ------------------------------------------------------------------- |
+| L0   | theme tokens only                    | colors, radius, font                                                |
+| L1   | slot as class string or props object | bubble padding, input border                                        |
+| L2   | slot as your component (same props)  | avatar + name header on assistant messages                          |
+| L3   | headless (`useAgent`, own layout)    | the chat is a panel inside a custom page layout no slot can express |
 
 An element outside the chat component (a page header above an embedded `CopilotChat`, which has no header slot) is rung **app** — plain markup, with that reason. Slot names are in `copilotkit-v2-ui.md`; confirm each exists in the installed version before using it. Backend tool calls render through `useRenderTool` (`/agent-frontend`), the confirm card through the HITL contract (`/agent-hitl`).
 

@@ -9,6 +9,7 @@ argument-hint: "[#issue-number] brief task description"
 
 Parse the argument: extract the issue number and task description.
 If no argument was given, use the AskUserQuestion tool to ask:
+
 - Issue number (if applicable)
 - Task type: `feat` | `fix` | `refactor` | `chore` | `docs` | `test`
 - Brief description of what needs to be done
@@ -29,11 +30,13 @@ Mark the first sub-task `in_progress` immediately.
 ## Step 3 — Implement
 
 Work through each sub-task:
+
 - Mark it `in_progress` when you start
 - Mark it `completed` when done
 - Move to the next
 
 Rules:
+
 - Edit existing files, do not create unnecessary new ones
 - No comments unless the WHY is non-obvious
 - Use TypeScript strictly — no `any` unless unavoidable

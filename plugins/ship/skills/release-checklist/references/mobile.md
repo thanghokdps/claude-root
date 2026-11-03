@@ -8,7 +8,7 @@ The `ship` hook `release-gate.sh` runs on every Bash command in an `eas.json` re
 
 The gate guards this session only. The real lock is on the server: protect `v*` tags (GitHub ruleset or GitLab protected tags) so only release managers can create them, and limit who can run production builds and submits on EAS and the stores.
 
-GitLab's approvals API does not say which commit was approved, so on GitLab the gate trusts the MR's current approvals: turn on *Settings → Merge requests → Remove all approvals when commits are added* so a push after approval resets them.
+GitLab's approvals API does not say which commit was approved, so on GitLab the gate trusts the MR's current approvals: turn on _Settings → Merge requests → Remove all approvals when commits are added_ so a push after approval resets them.
 
 ## 1. Choose the route
 
@@ -53,6 +53,7 @@ Tag the shipped commit and push only that tag: `git tag -a v<version> -m "Releas
 ## What people do
 
 Say these in the hand-off; this skill does not do them:
+
 - App Store Connect: attach the build to the version, add for review, submit; pick manual or phased release.
 - Play Console: promote the internal-testing build to production with a staged rollout and raise it.
 - Merge the release PR/MR so the version and `CHANGELOG` reach the base branch.

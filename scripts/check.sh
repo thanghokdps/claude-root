@@ -3,6 +3,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+if [ -x node_modules/.bin/prettier ]; then
+  node_modules/.bin/prettier --check . --log-level warn
+else
+  echo "prettier skipped: npm ci" >&2
+fi
+
 python3 scripts/test_lint_kit.py
 python3 scripts/test_skill_progress.py
 python3 scripts/test_branch_guard.py

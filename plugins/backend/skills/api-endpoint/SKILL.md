@@ -18,14 +18,14 @@ Rules: `api-contract.md`, `data-access.md` and `app-structure.md` from core (in 
 
 Find the existing pieces before writing any. **Reuse them**, because a second error wrapper or auth helper is a defect:
 
-| Piece | Look for |
-|-------|----------|
-| Route location and style | `app/api/**/route.ts` (Next), `routes/` + `router.` (Express/Hono), `APIRouter` (FastAPI) |
-| Wrapper and errors | `route(`, `HttpError`, `errorHandler`, `HTTPException`, exception middleware |
-| Auth | `requireUser`, `getSession`, `Depends(get_current_user)`, auth middleware |
-| Validation | `parseJson`, `z.object`, pydantic models |
-| Aggregate | `server/<aggregate>/{schema,repository,service}.ts` or `app/<domain>/` |
-| Test helpers | the route test helpers (`signInAs`, `request`, `params`), the test DB (PGlite, testcontainers, test client) |
+| Piece                    | Look for                                                                                                    |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| Route location and style | `app/api/**/route.ts` (Next), `routes/` + `router.` (Express/Hono), `APIRouter` (FastAPI)                   |
+| Wrapper and errors       | `route(`, `HttpError`, `errorHandler`, `HTTPException`, exception middleware                                |
+| Auth                     | `requireUser`, `getSession`, `Depends(get_current_user)`, auth middleware                                   |
+| Validation               | `parseJson`, `z.object`, pydantic models                                                                    |
+| Aggregate                | `server/<aggregate>/{schema,repository,service}.ts` or `app/<domain>/`                                      |
+| Test helpers             | the route test helpers (`signInAs`, `request`, `params`), the test DB (PGlite, testcontainers, test client) |
 
 Read one existing endpoint and its test end to end, and copy its shape.
 

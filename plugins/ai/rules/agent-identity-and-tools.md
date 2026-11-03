@@ -17,14 +17,14 @@ paths:
 
 ## Where a tool lives — agent or frontend
 
-| The tool… | Define it | Skill |
-|---|---|---|
-| reads or writes server data, needs the caller's identity, a secret or an audit entry | agent tool (backend) | `/agent-tool`; writes add `/agent-hitl` |
-| only changes the browser: navigate, open a panel, fill a form, read the selection, highlight | frontend tool, `useFrontendTool` | `/agent-frontend` |
-| reads server data and shows the result **inside the chat** (a card under the answer) | backend tool + `useRenderTool` card; the card only draws the result, it is not a tool | `/agent-tool` then `/agent-frontend` |
-| asks the user a question mid-turn (choose, clarify) | `useHumanInTheLoop` | `/agent-frontend` |
-| proposes a change the user applies (a new title, a draft): the agent never writes | read-only backend tool returning the proposal + `useRenderTool` card whose Confirm calls the app's existing route, as the user, exactly like the UI button | `/agent-tool` then `/agent-frontend` |
-| reads server data, then changes the page **outside the chat** (opens a side panel, highlights a row) | two tools the model calls in a row: a backend read, then a frontend tool that receives the data; never one browser tool calling the API with the user's token | both |
+| The tool…                                                                                            | Define it                                                                                                                                                     | Skill                                   |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| reads or writes server data, needs the caller's identity, a secret or an audit entry                 | agent tool (backend)                                                                                                                                          | `/agent-tool`; writes add `/agent-hitl` |
+| only changes the browser: navigate, open a panel, fill a form, read the selection, highlight         | frontend tool, `useFrontendTool`                                                                                                                              | `/agent-frontend`                       |
+| reads server data and shows the result **inside the chat** (a card under the answer)                 | backend tool + `useRenderTool` card; the card only draws the result, it is not a tool                                                                         | `/agent-tool` then `/agent-frontend`    |
+| asks the user a question mid-turn (choose, clarify)                                                  | `useHumanInTheLoop`                                                                                                                                           | `/agent-frontend`                       |
+| proposes a change the user applies (a new title, a draft): the agent never writes                    | read-only backend tool returning the proposal + `useRenderTool` card whose Confirm calls the app's existing route, as the user, exactly like the UI button    | `/agent-tool` then `/agent-frontend`    |
+| reads server data, then changes the page **outside the chat** (opens a side panel, highlights a row) | two tools the model calls in a row: a backend read, then a frontend tool that receives the data; never one browser tool calling the API with the user's token | both                                    |
 
 - The two read rows differ only in where the result goes: in the chat → one backend tool and a card; on the page → add a frontend tool, because only the browser can open a panel.
 - A frontend tool never writes server data and never decides authorisation: anything it can do, the user could do by clicking.

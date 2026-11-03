@@ -16,14 +16,14 @@ Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT
 
 ## Step 1 — Detect
 
-| Piece | Look for |
-|-------|----------|
-| Feature folders | `src/features/<f>/{components,hooks,api.ts,index.ts}` or the repo's equivalent |
-| Primitives | `src/components/ui/`, the UI library (shadcn/Radix, MUI…), `cn()` / cva variants, the icon set |
-| Tokens | `styles/tokens.css`, Tailwind theme |
-| Data fetching | `fetchJson`-style helper, TanStack Query/SWR, Server Components, the `api.ts` pattern |
-| Tests | Testing Library + jsdom config, existing component tests, a `/design-states` or Storybook page |
-| Viewports | the ADR, the design doc, or the existing breakpoints |
+| Piece           | Look for                                                                                       |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| Feature folders | `src/features/<f>/{components,hooks,api.ts,index.ts}` or the repo's equivalent                 |
+| Primitives      | `src/components/ui/`, the UI library (shadcn/Radix, MUI…), `cn()` / cva variants, the icon set |
+| Tokens          | `styles/tokens.css`, Tailwind theme                                                            |
+| Data fetching   | `fetchJson`-style helper, TanStack Query/SWR, Server Components, the `api.ts` pattern          |
+| Tests           | Testing Library + jsdom config, existing component tests, a `/design-states` or Storybook page |
+| Viewports       | the ADR, the design doc, or the existing breakpoints                                           |
 
 **Done when:** each row names a path. The screen's states are listed: default, loading, empty, error, and for writes saving, saved and failed (the value before the write is back on screen), plus any role-specific views. A form that edits an existing value (a profile name, a setting) loads that value first; "" is not a previous value.
 

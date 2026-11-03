@@ -22,7 +22,7 @@ From the diff or plan, list each request type, booking type, balance and side ef
 
 ## Step 2 — Check each invariant section that applies
 
-Walk `invariants.md` §§ 1–7 for the objects from Step 1. For every rule, find the line that enforces it **on the server**, or the case that breaks it. Client-only enforcement counts as missing. Check every *Seen* line explicitly.
+Walk `invariants.md` §§ 1–7 for the objects from Step 1. For every rule, find the line that enforces it **on the server**, or the case that breaks it. Client-only enforcement counts as missing. Check every _Seen_ line explicitly.
 
 **Done when:** each applicable rule is marked held (`file:line`) or broken (the failing case).
 

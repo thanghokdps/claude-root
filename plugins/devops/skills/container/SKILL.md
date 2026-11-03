@@ -16,12 +16,12 @@ Rules: `${CLAUDE_PLUGIN_ROOT}/rules/container.md`, `security.md` from core. The 
 
 ## Step 1 — Detect
 
-| Piece | Look for |
-|-------|----------|
+| Piece           | Look for                                                                                       |
+| --------------- | ---------------------------------------------------------------------------------------------- |
 | Existing images | `Dockerfile*`, `docker-compose*.yml`, `.dockerignore`, a base-image convention across services |
-| Runtime | the start command, port, the env the app reads at boot (its env schema), writable paths |
-| Build | package manager and lockfile, build vs runtime dependencies, native modules |
-| Registry | where images go, tag scheme, how CI builds them |
+| Runtime         | the start command, port, the env the app reads at boot (its env schema), writable paths        |
+| Build           | package manager and lockfile, build vs runtime dependencies, native modules                    |
+| Registry        | where images go, tag scheme, how CI builds them                                                |
 
 **Done when:** each row names a path, and the image's contract is stated: base, port, start command, env it needs, volumes.
 

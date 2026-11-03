@@ -23,10 +23,10 @@ Read by `/project-init` (Step 1b) for any repo with `tsconfig.json` or TypeScrip
 
 ## Severity
 
-| Repo | Rules start as | Then |
-|------|----------------|------|
-| New (scaffold, no source yet) | `error` | — |
-| Existing code | Run once, report violations per rule, and ask: `error` now and fix (Recommended when under ~30), or `warn` with a dated ratchet in `.claude/docs/conventions.md` | Each rule moves to `error` once its count is 0 |
+| Repo                          | Rules start as                                                                                                                                                   | Then                                           |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| New (scaffold, no source yet) | `error`                                                                                                                                                          | —                                              |
+| Existing code                 | Run once, report violations per rule, and ask: `error` now and fix (Recommended when under ~30), or `warn` with a dated ratchet in `.claude/docs/conventions.md` | Each rule moves to `error` once its count is 0 |
 
 Never silence a rule inline without a comment saying why; `require-safety-comment-for-type-assertion` enforces it for assertions.
 

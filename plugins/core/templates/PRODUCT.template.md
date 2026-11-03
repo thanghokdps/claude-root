@@ -12,8 +12,8 @@
 
 ## Words
 
-| Say | Not |
-|-----|-----|
+| Say               | Not                 |
+| ----------------- | ------------------- |
 | <the users' term> | <the system's term> |
 
 ## Tone

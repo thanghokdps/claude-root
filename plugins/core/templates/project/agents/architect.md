@@ -32,20 +32,25 @@ isolation: worktree
 **Why this over alternatives:** <1–2 sentences>
 
 ### Files to create
+
 - `src/path/to/new.ts` — <purpose>
 
 ### Files to modify
+
 - `src/path/to/existing.ts:42` — <what changes>
 
 ### Public contract changes
+
 - [ ] None / <what changes>
 
 ### Plan
+
 1. <atomic step 1>
 2. <atomic step 2>
-...
+   ...
 
 ### Risks
+
 - <risk 1> — mitigation: <mitigation>
 ```
 

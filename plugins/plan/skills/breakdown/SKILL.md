@@ -28,8 +28,9 @@ A ticket id goes to `/ticket` (dev, if installed). This skill is the step before
 One task = one PR a reviewer can accept alone, ordered so each lands on a green main. Split by **contract**, not by file: a table change, an endpoint, a screen, a pipeline, an agent tool are separate tasks when they can ship separately; a vertical slice is one task when the pieces are useless apart.
 
 For each task:
+
 - **Title** — verb + object, under 70 characters.
-- **Acceptance criteria** — Given / When / Then, one per behaviour, copied from the requirement where it states them; marked *proposed* where it does not.
+- **Acceptance criteria** — Given / When / Then, one per behaviour, copied from the requirement where it states them; marked _proposed_ where it does not.
 - **Role** — the pack that owns the contract (backend, frontend, mobile, devops, ai) so `/feature` (dev, if installed) dispatches it to that engineer. A task touching two roles is split, or owned by the pack of the contract it implements.
 - **Depends on** — the task ids it needs merged first.
 - **Risk** — `high` when it touches auth, data writes, migrations, external providers or public contracts; the kit's high-risk lane then applies.
@@ -41,6 +42,7 @@ Keep the list short: a requirement that yields more than ~8 tasks is an epic; pr
 Ask once which unit the team uses (hours, days or story points) and whether estimates include review and QA; remember the answer in `.claude/docs/team.md` under `## Estimation` for the next run. Read the calibration line `/retro` (lead, if installed) leaves there (actual ÷ estimate over the last window) and apply it before showing the table.
 
 Estimate per task from evidence, never from the title:
+
 - Count the files and tests the task touches (Step 1's search tells you), the migrations, the new contracts, the UI states.
 - Compare with the last merged PRs of the same shape (`git log --stat`, `gh pr list --state merged --search <keyword>`): their size is the calibration.
 - Give a **range**, not a point (`4–6 h`, `2–3 pts`), and one line of why. A task whose range is wider than ×2 is not understood yet: split it or add a spike task of fixed length.

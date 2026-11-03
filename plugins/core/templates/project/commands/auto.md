@@ -8,6 +8,7 @@ argument-hint: "[#issue] task description"
 Immediately invoke the `auto-dev` agent with the full task description.
 
 Use the Agent tool:
+
 - subagent_type: auto-dev
 - description: the task from the argument
 - prompt: the full argument passed to this command

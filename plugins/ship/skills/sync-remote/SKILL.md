@@ -25,15 +25,15 @@ A repo pushed to GitHub and GitLab by different people drifts: a branch exists o
 
 Run per repo: `bash ${CLAUDE_SKILL_DIR}/scripts/sync-remote.sh <repo-dir> [<a> <b>]`. It fetches both remotes into `refs/sync-remote/<remote>/…` (your local branches and tags are untouched) and prints one row per ref:
 
-| Kind | Meaning | Action |
-|---|---|---|
-| `same` | both sides at one commit | none |
-| `push` | one side is ahead (fast-forward), or the branch exists on one side only | Step 3 runs its command |
-| `tag-push` | tag exists on one side only | Step 3 runs its command |
-| `protected` | `main`/`master` or an environment branch (`HARNESS_ENV_BRANCHES`) | never pushed by Claude; the user runs the printed command or sets up mirroring |
-| `diverged` | each side has commits the other lacks | never pushed; merge through a PR/MR on one side, then sync |
-| `tag-conflict` | same tag name, different commits | never pushed; a person picks the right one |
-| `summary` | last row: the count of each kind above for this repo | the per-repo line of the Step 2 table |
+| Kind           | Meaning                                                                 | Action                                                                         |
+| -------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `same`         | both sides at one commit                                                | none                                                                           |
+| `push`         | one side is ahead (fast-forward), or the branch exists on one side only | Step 3 runs its command                                                        |
+| `tag-push`     | tag exists on one side only                                             | Step 3 runs its command                                                        |
+| `protected`    | `main`/`master` or an environment branch (`HARNESS_ENV_BRANCHES`)       | never pushed by Claude; the user runs the printed command or sets up mirroring |
+| `diverged`     | each side has commits the other lacks                                   | never pushed; merge through a PR/MR on one side, then sync                     |
+| `tag-conflict` | same tag name, different commits                                        | never pushed; a person picks the right one                                     |
+| `summary`      | last row: the count of each kind above for this repo                    | the per-repo line of the Step 2 table                                          |
 
 Exit 3 → fewer than two matching remotes; exit 4 → not a repo or the fetch failed (auth, network). Report it and go on with the next repo.
 
@@ -41,7 +41,7 @@ Show one table for all repos: repo · in sync · to push · protected · diverge
 
 ## Step 3 — Confirm, then push one ref per command
 
-Ask once through `AskUserQuestion`: *push all listed (Recommended)* / *push all except the "only on" branches* / *report only*. Then run each chosen row's command **as its own Bash call**, exactly as printed, so the branch-guard hook checks every push. Never batch them into a script or a loop, never add `--force`, `--mirror`, `--all` or `--delete`, never edit the refspec.
+Ask once through `AskUserQuestion`: _push all listed (Recommended)_ / _push all except the "only on" branches_ / _report only_. Then run each chosen row's command **as its own Bash call**, exactly as printed, so the branch-guard hook checks every push. Never batch them into a script or a loop, never add `--force`, `--mirror`, `--all` or `--delete`, never edit the refspec.
 
 - A push rejected as non-fast-forward → someone pushed meanwhile; re-run Step 2 for that repo once.
 - A push blocked by the branch-guard hook or by server protection → leave it; it moves to the user's list.

@@ -28,14 +28,14 @@ One run finds about half of what repeated runs find, so each run starts from the
 
 ## Step 2 — Look for
 
-| # | Kind | What it looks like |
-|---|------|--------------------|
-| 1 | **Bug** | Wrong result or crash; a missed edge case (empty, zero, last item, rounding, time zones); callers that disagree with what a function returns; the same rule applied differently in two places |
-| 2 | **Risk** | Injection, missing authz on a mutating path, weak randomness, secrets in code, unvalidated input at a boundary; data loss — swallowed errors, writes in the wrong order, no transaction |
-| 3 | **Scale** | Fine for one user, wrong at the expected load: check-then-write races, a query per item, lists or caches that only grow, the same work in every process, per-process state that must be shared |
-| 4 | **Missing test** | Risky logic (a branch, a parser, money, security, data writes) with no test that fails when it breaks — one good test, not coverage |
-| 5 | **Speed** | A real slowdown is a finding; a small win in a hot loop is Nice |
-| 6 | **Lean** | Dead code, unused options and config, speculative features; two helpers doing one job (name the one to keep); a dependency the platform or a few lines replace; an interface with one implementation or a wrapper that only forwards; near-copies that must change together; one function doing unrelated jobs (split by job, never by line count) |
+| #   | Kind             | What it looks like                                                                                                                                                                                                                                                                                                                                 |
+| --- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Bug**          | Wrong result or crash; a missed edge case (empty, zero, last item, rounding, time zones); callers that disagree with what a function returns; the same rule applied differently in two places                                                                                                                                                      |
+| 2   | **Risk**         | Injection, missing authz on a mutating path, weak randomness, secrets in code, unvalidated input at a boundary; data loss — swallowed errors, writes in the wrong order, no transaction                                                                                                                                                            |
+| 3   | **Scale**        | Fine for one user, wrong at the expected load: check-then-write races, a query per item, lists or caches that only grow, the same work in every process, per-process state that must be shared                                                                                                                                                     |
+| 4   | **Missing test** | Risky logic (a branch, a parser, money, security, data writes) with no test that fails when it breaks — one good test, not coverage                                                                                                                                                                                                                |
+| 5   | **Speed**        | A real slowdown is a finding; a small win in a hot loop is Nice                                                                                                                                                                                                                                                                                    |
+| 6   | **Lean**         | Dead code, unused options and config, speculative features; two helpers doing one job (name the one to keep); a dependency the platform or a few lines replace; an interface with one implementation or a wrapper that only forwards; near-copies that must change together; one function doing unrelated jobs (split by job, never by line count) |
 
 A comment `shortcut: <limit>, <when to upgrade>` is a decision, not a finding — unless the expected load already crosses its limit. `/debt-ledger` lists them.
 
@@ -67,10 +67,12 @@ Plain words; explain a technical term the first time it appears — the reader m
 
 ```markdown
 ## Repo audit — <repo or folder>
-Run N; previous runs: 1 (<date>), 2 (<date>)   ← `Run 1; no previous runs` on the first
+
+Run N; previous runs: 1 (<date>), 2 (<date>) ← `Run 1; no previous runs` on the first
 What this repo does: <two or three sentences>. Load assumed: <one line>.
 
 ### Must fix (bug, security, data loss, breaks at the expected load)
+
 1. **Orders land on the wrong day** (`billing/close_day.py:40`)
    - **What this is:** the midnight job that closes the day and bills its orders.
    - **Problem:** "today" comes from the UTC server clock, so an order at 00:30 Berlin time is billed the day before.
@@ -78,17 +80,20 @@ What this repo does: <two or three sentences>. Load assumed: <one line>.
    - **If skipped:** late orders carry the wrong date and accounting corrects them by hand.
 
 ### Should fix (risky code without a test, real slowness, duplication, code that should not exist)
+
 ### Nice to have (small speed-ups, shorter forms)
+
 ### Needs validation (the missing fact and who answers it)
 
 Rejected: <N, each with its refuting path:line>
 
 ### Coverage
+
 Units audited this run: <n> / <total> · stale units left: <m> (<ids>) · unaudited: <k>
 Carried from earlier runs: <c> confirmed findings re-checked, <d> still valid
 
 Verdict: <healthy | fix 1 and 3 first>
-Lean: -<N> lines, -<M> dependencies possible   ← only when lean findings exist
+Lean: -<N> lines, -<M> dependencies possible ← only when lean findings exist
 Not checked: <units not read or not run>
 ```
 

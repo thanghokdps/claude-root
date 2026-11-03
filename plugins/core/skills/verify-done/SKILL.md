@@ -17,13 +17,13 @@ Write the task's success criterion in one line: `Done when <observable check>`. 
 
 Run every command that proves it in **this** session — results from earlier turns or from a subagent's summary do not count.
 
-| Claim | Proof |
-|-------|-------|
-| Bug fixed | The reproduction (test or repro steps) now passes, and it failed before the fix |
-| Feature works | Its test passes **and** the running app/endpoint shows the behaviour (browser, simulator, curl) |
-| Tests pass | Full relevant suite output, with counts — not a single file |
-| Types/lint clean | Project typecheck and lint commands exit 0 |
-| Refactor safe | Same suite green before and after; no behaviour change in the diff |
+| Claim            | Proof                                                                                                                                                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bug fixed        | The reproduction (test or repro steps) now passes, and it failed before the fix                                                                                                                                                                                                       |
+| Feature works    | Its test passes **and** the running app/endpoint shows the behaviour (browser, simulator, curl)                                                                                                                                                                                       |
+| Tests pass       | Full relevant suite output, with counts — not a single file                                                                                                                                                                                                                           |
+| Types/lint clean | Project typecheck and lint commands exit 0                                                                                                                                                                                                                                            |
+| Refactor safe    | Same suite green before and after; no behaviour change in the diff                                                                                                                                                                                                                    |
 | Quality bar held | `CONSTRAINTS.md` exists at the repo root (`/constraints`): every row of **Enforced with numbers** whose `Runs at` is `every edit` or `task end` is run by its `Checked by` command and reported with its number; a **Measured** metric that moved in the wrong direction is a finding |
 
 ## Step 3 — Check what was not asked for

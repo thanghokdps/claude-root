@@ -7,14 +7,6 @@
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
   "description": "Frontend role pack: the frontend-engineer agent /feature dispatches web screens to, ui-feature (states, fetchers, tests, browser check), design-ui (Figma to UI), React and Next.js rules. Enabled per repo by core's repo-profile hook.",
-  "keywords": [
-    "frontend",
-    "react",
-    "nextjs",
-    "figma"
-  ],
-  "dependencies": [
-    "progress",
-    "dev"
-  ]
+  "keywords": ["frontend", "react", "nextjs", "figma"],
+  "dependencies": ["progress", "dev"]
 }

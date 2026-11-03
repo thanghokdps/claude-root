@@ -21,12 +21,12 @@ Read, never ask: stack (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`
 
 This is the up-front phase: ask all of them in one `AskUserQuestion` call (an unanswered one takes its default). Not in a non-interactive run (`/loop`, CI, "implement all, don't ask"): take every default, write the file, and say so.
 
-| Q | Default |
-|---|---------|
+| Q                                                                                                                                                                            | Default                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Beyond the floor, which dimensions are enforced: changed-line coverage, dependency vulnerabilities, bundle budget, page performance, accessibility, architecture boundaries? | changed-line coverage + dependency vulnerabilities; budget/perf/a11y only when the repo serves a page |
-| A red check mid-task: block or warn? | block the floor and the numbered rows; warn on "Measured" rows |
-| Target numbers, or measure today and hold the line? | measure and hold (a ratchet); invented numbers get ignored |
-| Slowest check tolerated before the agent hands work back? | ~90 s at task end, unlimited in CI |
+| A red check mid-task: block or warn?                                                                                                                                         | block the floor and the numbered rows; warn on "Measured" rows                                        |
+| Target numbers, or measure today and hold the line?                                                                                                                          | measure and hold (a ratchet); invented numbers get ignored                                            |
+| Slowest check tolerated before the agent hands work back?                                                                                                                    | ~90 s at task end, unlimited in CI                                                                    |
 
 ## Step 3 — Write `CONSTRAINTS.md` at the repo root
 
@@ -45,27 +45,28 @@ Last reviewed: <date> by <user>
 
 ## Enforced with numbers
 
-| Dimension | Rule | Checked by | Runs at |
-|-----------|------|------------|---------|
-| Types | 0 errors | `npx tsc --noEmit` | every edit |
-| Lint | 0 errors | `pnpm lint` | every edit |
-| Coverage | changed lines ≥ 80% | `pnpm test --coverage` + `git diff` | task end, CI |
-| Dependencies | nothing at high or above | `pnpm audit --audit-level high` | CI |
+| Dimension    | Rule                     | Checked by                          | Runs at      |
+| ------------ | ------------------------ | ----------------------------------- | ------------ |
+| Types        | 0 errors                 | `npx tsc --noEmit`                  | every edit   |
+| Lint         | 0 errors                 | `pnpm lint`                         | every edit   |
+| Coverage     | changed lines ≥ 80%      | `pnpm test --coverage` + `git diff` | task end, CI |
+| Dependencies | nothing at high or above | `pnpm audit --audit-level high`     | CI           |
 
 ## Measured, not yet enforced
 
-| Metric | Today | Direction |
-|--------|-------|-----------|
-| Project coverage | 62.4% | must not fall (tolerance 0.5%) |
-| Bundle (main) | 184 kB | must not grow |
+| Metric           | Today  | Direction                      |
+| ---------------- | ------ | ------------------------------ |
+| Project coverage | 62.4%  | must not fall (tolerance 0.5%) |
+| Bundle (main)    | 184 kB | must not grow                  |
 
 ## Exceptions
 
-| ID | Rule | Path | Reason | Owner | Expires |
-|----|------|------|--------|-------|---------|
+| ID  | Rule | Path | Reason | Owner | Expires |
+| --- | ---- | ---- | ------ | ----- | ------- |
 ```
 
 Rules for the file:
+
 - Every row in **Enforced with numbers** names the command that produces the verdict; a row without one goes to **Measured** instead. The command is the repo's own script (`pnpm lint`, `pytest --cov`), never a tool the repo does not have — a dimension whose tool is not installed is listed under Measured with `tool: <name> not installed` until the user installs it (name the install command once, do not run it).
 - Prove each Enforced command exists before writing its row: the script name is in `package.json` `scripts` (or the `pyproject` / `Makefile` equivalent) as read this session, or the binary is on the path. A script you would have to add (`test:coverage`, a coverage flag the test runner does not have yet) is not enforced today: it goes to Measured as `script to add: <name>`, and moves up once the user has it.
 - A dimension needs a running URL (page performance, accessibility): skip it for a CLI, library or API with no page, and say so.

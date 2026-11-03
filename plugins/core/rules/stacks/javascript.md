@@ -19,12 +19,12 @@ Universal rules for modern JavaScript (ES2020+). Applies to both browser and Nod
 
 ```js
 // Good
-const { id, name, email } = user
-const [first, ...rest] = items
+const { id, name, email } = user;
+const [first, ...rest] = items;
 
 // Bad
-var userId = user.id
-let userName = user.name
+var userId = user.id;
+let userName = user.name;
 ```
 
 ### Strings
@@ -45,12 +45,12 @@ let userName = user.name
 ```js
 // Good
 function addItem(items, newItem) {
-  return [...items, newItem]
+  return [...items, newItem];
 }
 
 // Bad
 function addItem(items, newItem) {
-  items.push(newItem)   // mutates the caller's array
+  items.push(newItem); // mutates the caller's array
 }
 ```
 
@@ -86,33 +86,33 @@ function processUser(user, options) {
 
 ```js
 // Optional chaining — short-circuit on null/undefined
-const city = user?.address?.city
-const firstTag = post?.tags?.[0]
-const result = obj?.method?.()
+const city = user?.address?.city;
+const firstTag = post?.tags?.[0];
+const result = obj?.method?.();
 
 // Nullish coalescing — only falls back on null/undefined (not 0, '', false)
-const count = response.count ?? 0
-const label = config.label ?? 'Default'
+const count = response.count ?? 0;
+const label = config.label ?? "Default";
 
 // Do NOT use || for defaults when 0 or '' are valid values
-const port = config.port ?? 3000      // correct
-const port = config.port || 3000      // wrong — 0 would be replaced
+const port = config.port ?? 3000; // correct
+const port = config.port || 3000; // wrong — 0 would be replaced
 ```
 
 ### Logical assignment
 
 ```js
 // Short-circuit assignment (readable alternatives to ternary)
-user.role ??= 'viewer'          // assign only if null/undefined
-config.debug ||= false          // assign only if falsy
-cache.data &&= normalize(cache.data)  // assign only if truthy
+user.role ??= "viewer"; // assign only if null/undefined
+config.debug ||= false; // assign only if falsy
+cache.data &&= normalize(cache.data); // assign only if truthy
 ```
 
 ### Destructuring with rename and defaults
 
 ```js
-const { name: fullName, age = 0 } = person
-const { data: { users } = {} } = response
+const { name: fullName, age = 0 } = person;
+const { data: { users } = {} } = response;
 ```
 
 ### Object methods
@@ -132,39 +132,39 @@ Object.hasOwn(obj, key)               // over obj.hasOwnProperty(key)
 
 ```js
 // Good
-await sendEmail(user)
+await sendEmail(user);
 
 // Bad — errors are swallowed silently
-sendEmail(user)   // no await, no .catch
+sendEmail(user); // no await, no .catch
 ```
 
 ### Parallel operations — `Promise.all` / `Promise.allSettled`
 
 ```js
 // Good: parallel, fail-fast
-const [user, posts] = await Promise.all([getUser(id), getPosts(id)])
+const [user, posts] = await Promise.all([getUser(id), getPosts(id)]);
 
 // Good: parallel, tolerate partial failure
-const results = await Promise.allSettled([task1(), task2()])
-results.forEach(r => {
-  if (r.status === 'fulfilled') use(r.value)
-  else logError(r.reason)
-})
+const results = await Promise.allSettled([task1(), task2()]);
+results.forEach((r) => {
+  if (r.status === "fulfilled") use(r.value);
+  else logError(r.reason);
+});
 
 // Bad: sequential when independent
-const user = await getUser(id)
-const posts = await getPosts(id)    // waits unnecessarily for getUser
+const user = await getUser(id);
+const posts = await getPosts(id); // waits unnecessarily for getUser
 ```
 
 ### Never `await` in a loop for independent items
 
 ```js
 // Good: batch
-const results = await Promise.all(ids.map(id => fetchItem(id)))
+const results = await Promise.all(ids.map((id) => fetchItem(id)));
 
 // Bad: sequential N requests
 for (const id of ids) {
-  const item = await fetchItem(id)  // each waits for the previous
+  const item = await fetchItem(id); // each waits for the previous
 }
 ```
 
@@ -190,17 +190,17 @@ async function createUser(data) {
 ### `AbortController` for cancellable operations
 
 ```js
-const controller = new AbortController()
+const controller = new AbortController();
 
 try {
-  const data = await fetch(url, { signal: controller.signal })
+  const data = await fetch(url, { signal: controller.signal });
 } catch (err) {
-  if (err.name === 'AbortError') return   // cancelled — not an error
-  throw err
+  if (err.name === "AbortError") return; // cancelled — not an error
+  throw err;
 }
 
 // Cancel when needed
-controller.abort()
+controller.abort();
 ```
 
 ---
@@ -215,9 +215,9 @@ controller.abort()
 
 ```js
 // Good import order (with blank line between groups)
-import { z } from 'zod'
-import { db } from '@/lib/db'
-import { formatDate } from '../utils/date'
+import { z } from "zod";
+import { db } from "@/lib/db";
+import { formatDate } from "../utils/date";
 ```
 
 ---
@@ -229,14 +229,14 @@ import { formatDate } from '../utils/date'
 ```js
 class AppError extends Error {
   constructor(code, message, cause) {
-    super(message, { cause })
-    this.name = 'AppError'
-    this.code = code
+    super(message, { cause });
+    this.name = "AppError";
+    this.code = code;
   }
 }
 
 // Usage
-throw new AppError('VALIDATION_FAILED', 'Email is required')
+throw new AppError("VALIDATION_FAILED", "Email is required");
 ```
 
 ### Type-check caught errors
@@ -267,16 +267,16 @@ promise.catch(console.warn)         // log but not propagate — caller doesn't 
 
 ## Naming conventions
 
-| Thing | Convention | Example |
-|-------|-----------|---------|
-| Variables, functions | `camelCase` | `getUserById`, `isLoading` |
-| Classes, constructors | `PascalCase` | `UserService`, `ApiError` |
-| Constants (true constants) | `UPPER_SNAKE_CASE` | `MAX_RETRIES`, `API_BASE_URL` |
-| Private class fields | `#fieldName` | `#cache`, `#token` |
-| Boolean variables | `is`, `has`, `can`, `should` prefix | `isValid`, `hasError` |
-| Event handlers | `handle` or `on` prefix | `handleClick`, `onClose` |
-| Factory functions | `create` prefix | `createUser`, `createConnection` |
-| Async functions | name the awaited result, not the operation | `const user = await getUser()` |
+| Thing                      | Convention                                 | Example                          |
+| -------------------------- | ------------------------------------------ | -------------------------------- |
+| Variables, functions       | `camelCase`                                | `getUserById`, `isLoading`       |
+| Classes, constructors      | `PascalCase`                               | `UserService`, `ApiError`        |
+| Constants (true constants) | `UPPER_SNAKE_CASE`                         | `MAX_RETRIES`, `API_BASE_URL`    |
+| Private class fields       | `#fieldName`                               | `#cache`, `#token`               |
+| Boolean variables          | `is`, `has`, `can`, `should` prefix        | `isValid`, `hasError`            |
+| Event handlers             | `handle` or `on` prefix                    | `handleClick`, `onClose`         |
+| Factory functions          | `create` prefix                            | `createUser`, `createConnection` |
+| Async functions            | name the awaited result, not the operation | `const user = await getUser()`   |
 
 ---
 
@@ -287,11 +287,12 @@ promise.catch(console.warn)         // log but not propagate — caller doesn't 
 ```js
 // Good
 function processOrder(order) {
-  if (!order) throw new AppError('INVALID', 'Order is required')
-  if (!order.items.length) throw new AppError('EMPTY', 'Order has no items')
-  if (order.total <= 0) throw new AppError('INVALID', 'Order total must be positive')
+  if (!order) throw new AppError("INVALID", "Order is required");
+  if (!order.items.length) throw new AppError("EMPTY", "Order has no items");
+  if (order.total <= 0)
+    throw new AppError("INVALID", "Order total must be positive");
 
-  return chargeCard(order)
+  return chargeCard(order);
 }
 
 // Bad
@@ -299,7 +300,7 @@ function processOrder(order) {
   if (order) {
     if (order.items.length) {
       if (order.total > 0) {
-        return chargeCard(order)
+        return chargeCard(order);
       }
     }
   }

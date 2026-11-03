@@ -28,6 +28,7 @@ In `docs/tickets/<id>/plan.md` for a ticket, the plan's § Decisions for `/featu
 
 ```markdown
 ## Auto decisions
+
 - Rename write path · options: user's click via PATCH /api/conversations/:id / agent write behind interrupt · chose the click because the route already checks the owner · challenged: interrupt gives an audit row → kept, the route logs the rename · revert: move the write behind the interrupt in tools/rename.ts
 - none: every choice was the user's (answered in chat)
 ```

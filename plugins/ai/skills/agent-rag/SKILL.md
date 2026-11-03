@@ -22,11 +22,11 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 
 Name which need this is. They are built differently:
 
-| Need | Built as |
-|------|----------|
-| Answer from documents or a knowledge base the team owns | Ingest pipeline + retrieval read tool (Steps 2–4) |
-| Remember a user across threads by meaning | Semantic memory (Step 5), not a document index |
-| A structured lookup by id, date, status | A normal tool via `/agent-tool`. Do not use embeddings |
+| Need                                                    | Built as                                               |
+| ------------------------------------------------------- | ------------------------------------------------------ |
+| Answer from documents or a knowledge base the team owns | Ingest pipeline + retrieval read tool (Steps 2–4)      |
+| Remember a user across threads by meaning               | Semantic memory (Step 5), not a document index         |
+| A structured lookup by id, date, status                 | A normal tool via `/agent-tool`. Do not use embeddings |
 
 **Done when:** the need, the corpus (source, size, owner, update rate, who may read what) and the existing pieces are stated with file paths. Any new store, corpus or tenant model not in the ADR → stop and ask (`/agent-feature` Step 2).
 

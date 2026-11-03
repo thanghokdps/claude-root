@@ -8,21 +8,23 @@ paths:
 ## Strict mode
 
 TypeScript strict is required. Run before every commit:
+
 ```bash
 npx tsc --noEmit
 ```
+
 Zero errors, zero warnings — no exceptions.
 
 ## Type error triage
 
-| Code | Meaning | Fix |
-|------|---------|-----|
-| TS2307 | Module not found | Check import path, barrel export |
-| TS2345 | Wrong type assigned | Align type definitions |
-| TS2531 | Possibly null | Add null guard or `!` (only if certain) |
-| TS2339 | Property doesn't exist | Add to type or fix caller |
-| TS2554 | Wrong argument count | Check function signature |
-| TS2322 | Incompatible types | Check return type matches annotation |
+| Code   | Meaning                | Fix                                     |
+| ------ | ---------------------- | --------------------------------------- |
+| TS2307 | Module not found       | Check import path, barrel export        |
+| TS2345 | Wrong type assigned    | Align type definitions                  |
+| TS2531 | Possibly null          | Add null guard or `!` (only if certain) |
+| TS2339 | Property doesn't exist | Add to type or fix caller               |
+| TS2554 | Wrong argument count   | Check function signature                |
+| TS2322 | Incompatible types     | Check return type matches annotation    |
 
 Fix in dependency order — upstream errors cascade.
 
@@ -43,16 +45,16 @@ Fix in dependency order — upstream errors cascade.
 ## Utility types — use them, don't reinvent them
 
 ```typescript
-Partial<T>              // all fields optional
-Required<T>             // all fields required
-Readonly<T>             // all fields readonly
-Pick<T, 'a' | 'b'>     // subset of fields
-Omit<T, 'password'>     // exclude fields
-Record<K, V>            // dictionary
-ReturnType<typeof fn>   // infer return type of a function
-Parameters<typeof fn>   // infer parameter tuple
-Awaited<T>              // unwrap Promise<T> → T
-NonNullable<T>          // remove null | undefined
+Partial<T>; // all fields optional
+Required<T>; // all fields required
+Readonly<T>; // all fields readonly
+Pick<T, "a" | "b">; // subset of fields
+Omit<T, "password">; // exclude fields
+Record<K, V>; // dictionary
+ReturnType<typeof fn>; // infer return type of a function
+Parameters<typeof fn>; // infer parameter tuple
+Awaited<T>; // unwrap Promise<T> → T
+NonNullable<T>; // remove null | undefined
 ```
 
 ## Discriminated unions — prefer over optional fields
@@ -84,9 +86,9 @@ function render(res: Response) {
 ## Template literal types
 
 ```typescript
-type EventName = `on${Capitalize<string>}`   // onFoo, onBar
-type CSSUnit = `${number}${'px' | 'rem' | 'em'}`
-type RouteKey = `/${string}`
+type EventName = `on${Capitalize<string>}`; // onFoo, onBar
+type CSSUnit = `${number}${"px" | "rem" | "em"}`;
+type RouteKey = `/${string}`;
 ```
 
 ## `satisfies` operator — validate without widening
@@ -94,17 +96,17 @@ type RouteKey = `/${string}`
 ```typescript
 // Bad: type assertion loses narrowing
 const config = {
-  theme: 'dark',
+  theme: "dark",
   port: 3000,
-} as Config
+} as Config;
 
 // Good: validates against Config but preserves literal types
 const config = {
-  theme: 'dark',
+  theme: "dark",
   port: 3000,
-} satisfies Config
+} satisfies Config;
 
-config.theme   // type is 'dark', not string
+config.theme; // type is 'dark', not string
 ```
 
 ## React + TypeScript patterns

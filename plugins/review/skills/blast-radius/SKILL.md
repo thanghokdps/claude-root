@@ -10,7 +10,7 @@ when_to_use: a code diff or branch exists (for a proposed change request with no
 
 Map the ripple effect of a change **before** it merges. Every claim needs a `file:line` anchor. No speculation.
 
-> **Not the same as `hooks/blast-radius-check.sh`.** That hook watches whether you edited a file outside the active `PLAN.md` `<files>` set — it polices scope creep during work. This skill analyses what a change *reaches* through the codebase. Same metaphor, different job.
+> **Not the same as `hooks/blast-radius-check.sh`.** That hook watches whether you edited a file outside the active `PLAN.md` `<files>` set — it polices scope creep during work. This skill analyses what a change _reaches_ through the codebase. Same metaphor, different job.
 
 ---
 
@@ -58,14 +58,14 @@ Follow re-exports one hop: if a barrel file (`index.ts`, `__init__.py`, `mod.rs`
 
 These do not show up in a symbol grep. Check each explicitly:
 
-| Consumer type | How to find it |
-|---|---|
-| Event / pubsub subscribers | grep the event name string, topic name, channel |
-| Queue / background jobs | grep the job name, task name, cron registration |
-| HTTP routes | is the symbol reachable from a route handler? |
-| CLI commands | grep the command registration |
-| Scheduled tasks | crontab, workflow yaml, scheduler config |
-| Feature flags | grep the flag key |
+| Consumer type               | How to find it                                         |
+| --------------------------- | ------------------------------------------------------ |
+| Event / pubsub subscribers  | grep the event name string, topic name, channel        |
+| Queue / background jobs     | grep the job name, task name, cron registration        |
+| HTTP routes                 | is the symbol reachable from a route handler?          |
+| CLI commands                | grep the command registration                          |
+| Scheduled tasks             | crontab, workflow yaml, scheduler config               |
+| Feature flags               | grep the flag key                                      |
 | Serialized/persisted shapes | is this type written to DB, cache, or a queue payload? |
 
 A changed field on a type that gets serialized into a queue is the classic silent breaker — in-flight messages have the old shape.
@@ -96,14 +96,14 @@ For each affected node, search **only** test files for the symbol:
 rg -l '\b<symbol>\b' -g '*.test.*' -g '*.spec.*' -g '*_test.*' -g 'test_*' -g '*_spec.*'
 ```
 
-| Result | Test gap factor |
-|---|---|
+| Result                                      | Test gap factor   |
+| ------------------------------------------- | ----------------- |
 | One or more test files reference the symbol | does **not** fire |
-| No test file references it | fires (`0.30`) |
+| No test file references it                  | fires (`0.30`)    |
 
 Adjust the globs to the project's own convention — read `.claude/docs/test-strategy.md` first if it exists, since a project with `tests/` mirroring `src/` or with table-driven Go tests will not match the defaults above.
 
-This is a reference check, not a coverage measurement: a test file mentioning the symbol is not proof the behaviour is covered. Treat "does not fire" as *not obviously untested*, and say so in `Not checked` when the distinction matters. If the project has a real coverage tool wired up (`stack.md` will say), prefer its output over this grep.
+This is a reference check, not a coverage measurement: a test file mentioning the symbol is not proof the behaviour is covered. Treat "does not fire" as _not obviously untested_, and say so in `Not checked` when the distinction matters. If the project has a real coverage tool wired up (`stack.md` will say), prefer its output over this grep.
 
 ---
 
@@ -111,33 +111,33 @@ This is a reference check, not a coverage measurement: a test file mentioning th
 
 Score **each affected node**, then the change overall.
 
-| Factor | Weight | Fires when |
-|---|---|---|
-| Test gap | 0.30 | Stage 2e found no test file referencing this node |
-| Flow participation | 0.25 | Node sits on a critical path (auth, payment, data write, startup), or its file is in the Stage 1 hotspot list |
-| Security surface | 0.20 | Node name or body touches auth, token, password, secret, permission, crypto, session |
-| Cross-boundary | 0.15 | Callers live in a different module/package/service |
-| High fan-in | 0.10 | 5+ distinct call sites |
+| Factor             | Weight | Fires when                                                                                                    |
+| ------------------ | ------ | ------------------------------------------------------------------------------------------------------------- |
+| Test gap           | 0.30   | Stage 2e found no test file referencing this node                                                             |
+| Flow participation | 0.25   | Node sits on a critical path (auth, payment, data write, startup), or its file is in the Stage 1 hotspot list |
+| Security surface   | 0.20   | Node name or body touches auth, token, password, secret, permission, crypto, session                          |
+| Cross-boundary     | 0.15   | Callers live in a different module/package/service                                                            |
+| High fan-in        | 0.10   | 5+ distinct call sites                                                                                        |
 
 Weights sum to exactly `1.00`, so a node score is already bounded.
 
 **Per-node level:**
 
-| Score | Level |
-|---|---|
-| `0.00–0.29` | 🟢 low |
+| Score       | Level     |
+| ----------- | --------- |
+| `0.00–0.29` | 🟢 low    |
 | `0.30–0.59` | 🟡 medium |
-| `0.60–1.00` | 🔴 high |
+| `0.60–1.00` | 🔴 high   |
 
 **Overall level — count nodes, do not take the max.**
 
-| Overall | Fires when |
-|---|---|
-| 🔴 high | An irreversible migration is in the change set · **OR** ≥1 node scores `≥0.60` **and** Stage 2c found a contract change · **OR** ≥3 nodes score `≥0.30` |
-| 🟡 medium | Any Stage 2c contract change · **OR** ≥1 node scores `≥0.30` |
-| 🟢 low | Everything else |
+| Overall   | Fires when                                                                                                                                              |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔴 high   | An irreversible migration is in the change set · **OR** ≥1 node scores `≥0.60` **and** Stage 2c found a contract change · **OR** ≥3 nodes score `≥0.30` |
+| 🟡 medium | Any Stage 2c contract change · **OR** ≥1 node scores `≥0.30`                                                                                            |
+| 🟢 low    | Everything else                                                                                                                                         |
 
-Why counting and not max: `test-gap 0.30 + flow 0.25 + security 0.20 = 0.75`, so under a max rule a **single** untested function on an auth path turns every change red. Since this skill runs mainly on `high-risk` lane changes — which are *defined* as auth, authz, migration, payment, contract — a max rule would return 🔴 almost every time, and a verdict that never varies gets ignored. Counting requires either breadth (3+ affected nodes) or a severe node **plus** a contract change before escalating.
+Why counting and not max: `test-gap 0.30 + flow 0.25 + security 0.20 = 0.75`, so under a max rule a **single** untested function on an auth path turns every change red. Since this skill runs mainly on `high-risk` lane changes — which are _defined_ as auth, authz, migration, payment, contract — a max rule would return 🔴 almost every time, and a verdict that never varies gets ignored. Counting requires either breadth (3+ affected nodes) or a severe node **plus** a contract change before escalating.
 
 Averaging is also wrong — it hides the one dangerous node in a crowd of safe ones. Report the per-node scores in full and let the counting rule decide the headline.
 
@@ -153,18 +153,18 @@ Averaging is also wrong — it hides the one dangerous node in a crowd of safe o
 
 ## Affected nodes
 
-| Risk | Node | Location | Reached via | Factors |
-|------|------|----------|-------------|---------|
-| 🔴 0.72 | `chargeCard()` | `src/billing/charge.ts:88` | direct caller of `verifySession()` | test-gap, flow, security |
-| 🟡 0.45 | `refund-worker` | `workers/refund.ts:23` | queue consumer of `payment.completed` | test-gap, cross-boundary |
-| 🟢 0.15 | `AdminPanel` | `web/admin/Panel.tsx:14` | direct caller | fan-in |
+| Risk    | Node            | Location                   | Reached via                           | Factors                  |
+| ------- | --------------- | -------------------------- | ------------------------------------- | ------------------------ |
+| 🔴 0.72 | `chargeCard()`  | `src/billing/charge.ts:88` | direct caller of `verifySession()`    | test-gap, flow, security |
+| 🟡 0.45 | `refund-worker` | `workers/refund.ts:23`     | queue consumer of `payment.completed` | test-gap, cross-boundary |
+| 🟢 0.15 | `AdminPanel`    | `web/admin/Panel.tsx:14`   | direct caller                         | fan-in                   |
 
 ## Contract changes
 
-| Surface | Change | Breaks |
-|---------|--------|--------|
-| `POST /api/session` | `expiresAt` renamed → `expires_at` | any client parsing the old key |
-| `users.role` | `varchar(20)` → enum | rows with values outside the enum |
+| Surface             | Change                             | Breaks                            |
+| ------------------- | ---------------------------------- | --------------------------------- |
+| `POST /api/session` | `expiresAt` renamed → `expires_at` | any client parsing the old key    |
+| `users.role`        | `varchar(20)` → enum               | rows with values outside the enum |
 
 ## Untested paths
 
@@ -188,12 +188,13 @@ These go red first in CI:
 
 ## Rollback
 
-| Step | Command | Reversible |
-|------|---------|-----------|
-| Code | `git revert <sha>` | yes |
+| Step      | Command                    | Reversible                         |
+| --------- | -------------------------- | ---------------------------------- |
+| Code      | `git revert <sha>`         | yes                                |
 | Migration | `<down migration command>` | **no — enum narrowing drops data** |
 
 ## Not checked
+
 - Dynamic dispatch via string keys — grep cannot see these
 - Test gap is a reference check (Stage 2e), not a coverage measurement
 - <anything else you could not resolve>

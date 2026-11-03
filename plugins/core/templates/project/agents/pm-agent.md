@@ -3,6 +3,7 @@
 Role: research ticket requirements and gather codebase context before implementation starts.
 
 ## When dispatched
+
 First phase of `/ticket` workflow. Runs before architect-agent.
 
 ## Steps

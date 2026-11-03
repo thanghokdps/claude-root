@@ -20,9 +20,9 @@ The doc set, its order and its canonical files are in `${CLAUDE_SKILL_DIR}/refer
 
 Scan before asking: `docs/`, `specs/`, `README*`, root `*.md`, `openapi.*` / `swagger.*`, `*.prisma`, Drizzle or SQL schema files, `docs/adr/*`, plus every path or link the user named. Anything found is read now and goes straight to Step 2: the first message to the user is the matrix, and a document the scan did not find is asked for as its ❌ row in Step 4 ("do you have the Stripe spec, or shall we interview?"). Only when the scan finds nothing at all, ask **once**, through `AskUserQuestion`, where the documents are:
 
-- *I'll attach or link them (Recommended)* — paths, URLs, pasted text, a Figma link
-- *Some of it, ask me the rest*
-- *Nothing written yet — interview me*
+- _I'll attach or link them (Recommended)_ — paths, URLs, pasted text, a Figma link
+- _Some of it, ask me the rest_
+- _Nothing written yet — interview me_
 
 Read every source the user gives. A link you cannot open (private Drive, Confluence) → ask for an export or paste; never guess its content. A pasted secret → tell the user to rotate it, and keep only the variable name.
 
@@ -41,7 +41,7 @@ Walk the nine items of `doc-set.md` in order (requirements → prerequisites →
 
 ## Step 3 — Coverage matrix
 
-Write `docs/kickoff.md` from the template in `doc-set.md`: one row per sub-item, status ✅ (source `path:line`), ⚠️ partial, ❌ missing, ⛔ conflict (both sources quoted), or n/a (with why: no UI, no stored data). No sub-item is folded into its neighbour: a provider the requirements name is ✅ for *system*, and its *spec or docs* sub-item stays ❌ until a spec sits under `docs/api/` — naming Stripe is not having its API. Show the matrix to the user before the first question.
+Write `docs/kickoff.md` from the template in `doc-set.md`: one row per sub-item, status ✅ (source `path:line`), ⚠️ partial, ❌ missing, ⛔ conflict (both sources quoted), or n/a (with why: no UI, no stored data). No sub-item is folded into its neighbour: a provider the requirements name is ✅ for _system_, and its _spec or docs_ sub-item stays ❌ until a spec sits under `docs/api/` — naming Stripe is not having its API. Show the matrix to the user before the first question.
 
 **Done when:** the matrix is shown, and every mandatory row has a status.
 
@@ -53,14 +53,14 @@ Order: ⛔ conflicts first (they block the most), then ❌ and ⚠️ rows in do
 - Facts you look up, decisions you ask. Never ask about a ✅ row.
 - Rows 3, 5, 8 and 9 (stack, architecture, non-functional, delivery) are asked as needs, never as tools, per `${CLAUDE_PLUGIN_ROOT}/references/need-questions.md`; the canonical file records the tech with the need it came from.
 - A weak answer ("later", "should be fine") gets one hard push, then is recorded as a decision with its risk.
-- "Use your recommendation" for the rest → take the recommended option at each remaining row, list them in one message, and mark them *defaulted* in the matrix.
+- "Use your recommendation" for the rest → take the recommended option at each remaining row, list them in one message, and mark them _defaulted_ in the matrix.
 - After each answer, update the canonical file and the matrix row.
 
 **Done when:** no row is ❌ or ⛔ without a recorded decision, deferral or risk.
 
 ## Step 5 — Readiness gate
 
-Ready when every mandatory row is ✅, *defaulted*, or deferred with what it blocks. Close `docs/kickoff.md` with:
+Ready when every mandatory row is ✅, _defaulted_, or deferred with what it blocks. Close `docs/kickoff.md` with:
 
 - **Open risks** — every deferral and pushed-back answer, one line each.
 - **Start here** — the next skill and why (Step 6).

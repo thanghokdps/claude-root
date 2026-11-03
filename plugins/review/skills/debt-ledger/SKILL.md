@@ -29,6 +29,7 @@ One row per marker, grouped by file:
 ## Debt ledger — <repo>
 
 ### `src/rate_limit.py`
+
 - `:42` in-memory counter. **Limit:** one process. **Upgrade:** when we run more than one worker.
 - `:88` fixed 60 s window. **Limit:** bursts at the window edge. **Upgrade:** — `no-trigger`
 

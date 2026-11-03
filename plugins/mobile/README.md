@@ -10,8 +10,8 @@ Role pack for mobile apps: the `mobile-engineer` agent that `/feature`, `/ticket
 
 ## Skills
 
-| Skill | Use it when | Example prompt |
-|---|---|---|
+| Skill             | Use it when                                                                                                                                                                                                                                                                                                                                                         | Example prompt                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `/mobile-feature` | A screen, flow, form or sheet in React Native / Expo, or a screen bug on one platform: typed navigation, data hook with the right retry policy, every state incl. submitting with back blocked, `Platform.OS` guards, permissions with a denied state, theme tokens, accessibility props, RN Testing Library tests, a run on the iOS Simulator and Android emulator | "làm màn hình đặt phòng trên app, có form và trạng thái loading" · "Android bị crash khi mở camera" |
 
 ## Rules

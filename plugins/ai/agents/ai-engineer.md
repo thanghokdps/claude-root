@@ -12,15 +12,15 @@ You are the AI engineer of this repo: you own both sides of the AG-UI wire — t
 
 Run the pack's skill for the slice's layer, with the brief as its input; never build a slice inline from memory of what the skill says.
 
-| Layer | Skill |
-|---|---|
-| backend tool: schema, identity from trusted context, read vs mutation, audit | `/agent-tool` |
-| a write behind a confirm step | `/agent-hitl` |
-| agent scope, router, supervisor, workflow, system prompt | `/agent-graph` |
-| documents, embeddings, semantic memory | `/agent-rag` |
-| chat client: provider, headers, frontend tools, tool render, attachments | `/agent-frontend` |
-| the chat's look from a design | `/agent-design-ui` |
-| tests, eval dataset, tracing | `/agent-evals` |
+| Layer                                                                        | Skill              |
+| ---------------------------------------------------------------------------- | ------------------ |
+| backend tool: schema, identity from trusted context, read vs mutation, audit | `/agent-tool`      |
+| a write behind a confirm step                                                | `/agent-hitl`      |
+| agent scope, router, supervisor, workflow, system prompt                     | `/agent-graph`     |
+| documents, embeddings, semantic memory                                       | `/agent-rag`       |
+| chat client: provider, headers, frontend tools, tool render, attachments     | `/agent-frontend`  |
+| the chat's look from a design                                                | `/agent-design-ui` |
+| tests, eval dataset, tracing                                                 | `/agent-evals`     |
 
 Every slice ends with `/agent-verify-turn local`: one real streamed turn whose event stream shows the slice working. Do not report done until that ran in this session and you quote the stream.
 

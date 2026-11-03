@@ -35,6 +35,7 @@ git log <baseline>..HEAD --oneline  # commits included
 ### Step 2 — Understand the change
 
 Read the affected files in full context (not just the diff hunks) to understand:
+
 - What the code did before
 - What it does now
 - What architectural components are involved
@@ -50,6 +51,7 @@ Output a Markdown document with three sections:
 C4 container-level Mermaid diagram highlighting what changed.
 
 Rules:
+
 - Node labels ≤ 25 characters (use description tables below for longer names)
 - Changed components: `style NodeId fill:#f5a623`
 - New components: `style NodeId fill:#7ed321`
@@ -63,9 +65,9 @@ graph TD
   style B fill:#f5a623
 ```
 
-| Node | Full name | Change |
-|------|-----------|--------|
-| B | UserUseCase | Modified — added refresh logic |
+| Node | Full name   | Change                         |
+| ---- | ----------- | ------------------------------ |
+| B    | UserUseCase | Modified — added refresh logic |
 
 ---
 
@@ -87,12 +89,12 @@ For each logical change chunk:
 2. **Why** — the intent (if determinable from context or commit messages)
 3. **Diff block**:
 
-~~~
+````
 ```diff
 - old line
 + new line
 ```
-~~~
+````
 
 Group related hunks together — don't show every hunk in isolation.
 

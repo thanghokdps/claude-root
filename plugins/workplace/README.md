@@ -6,8 +6,8 @@ Domain pack for internal workplace and HR apps: time off, approvals, leave balan
 
 ## Skills
 
-| Skill | Use it when | Example prompt |
-|---|---|---|
+| Skill               | Use it when                                                                                                                                                                                                                                                                                                                                                                                            | Example prompt                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
 | `/workplace-review` | Before the PR of any change to requests, approvals, balances or bookings. Checks the plan or diff against the domain invariants (state machine, approver check on every decision, balance math, server-side overlap and cutoffs, business time zone, idempotent notifications, audit, employee personal data) and returns numbered findings with the failing case, the fix and the cost of skipping it | "duyệt đơn nghỉ phép" · "đặt phòng họp bị trùng, check giúp logic" |
 
 The references the skills read: `references/invariants.md` (the rules, with failures seen in real code), `references/domain-model.md` (starter entities and ERD for `/domain-model` and `/db-change`), `references/domain-questions.md` (need questions for `/kickoff` and `/brainstorming`).

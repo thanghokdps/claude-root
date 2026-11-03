@@ -4,28 +4,35 @@ Checked against mastra.ai and docs.langchain.com on 2026-10-23. Confirm every ex
 
 ## Official layouts to mirror
 
-| Framework | Repo · path | Layout |
-|-----------|-------------|--------|
-| LangGraph | `langchain-ai/retrieval-agent-template-js` · `src/retrieval_graph/` | `index_graph.ts` (ingest graph) apart from `graph.ts` (retrieval graph), `retrieval.ts` (vector store factory), `configuration.ts`, `prompts.ts`, `state.ts`, `tests/` |
-| LangGraph (agentic RAG) | docs: `oss/javascript/langgraph/agentic-rag` | `generateQueryOrRespond` → `retrieve` (ToolNode) → `gradeDocuments` edge → `generate` or `rewrite` → back |
-| Mastra | `mastra-ai/mastra` · `templates/template-chat-with-pdf`, `template-company-knowledge` | `src/mastra/workflows/` (ingest) · `tools/` (retrieval) · `agents/` · `lib/` |
+| Framework               | Repo · path                                                                           | Layout                                                                                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LangGraph               | `langchain-ai/retrieval-agent-template-js` · `src/retrieval_graph/`                   | `index_graph.ts` (ingest graph) apart from `graph.ts` (retrieval graph), `retrieval.ts` (vector store factory), `configuration.ts`, `prompts.ts`, `state.ts`, `tests/` |
+| LangGraph (agentic RAG) | docs: `oss/javascript/langgraph/agentic-rag`                                          | `generateQueryOrRespond` → `retrieve` (ToolNode) → `gradeDocuments` edge → `generate` or `rewrite` → back                                                              |
+| Mastra                  | `mastra-ai/mastra` · `templates/template-chat-with-pdf`, `template-company-knowledge` | `src/mastra/workflows/` (ingest) · `tools/` (retrieval) · `agents/` · `lib/`                                                                                           |
 
 Ingest is always its own graph, workflow or script, never a step inside the chat turn.
 
 ## Mastra
 
 ```ts
-import { MDocument } from '@mastra/rag'
-import { ModelRouterEmbeddingModel } from '@mastra/core/llm'
-import { embedMany } from 'ai'
-import { PgVector } from '@mastra/pg'            // or LibSQLVector from '@mastra/libsql'
+import { MDocument } from "@mastra/rag";
+import { ModelRouterEmbeddingModel } from "@mastra/core/llm";
+import { embedMany } from "ai";
+import { PgVector } from "@mastra/pg"; // or LibSQLVector from '@mastra/libsql'
 
-const chunks = await MDocument.fromMarkdown(text).chunk({ strategy: 'markdown', maxSize: 512, overlap: 50 })
-const { embeddings } = await embedMany({ model: embedder, values: chunks.map(c => c.text) })
-await store.createIndex({ indexName, dimension })            // = the model's output size
-await store.upsert({ indexName, vectors: embeddings, metadata, ids })
-await store.deleteVectors({ indexName, filter: { sourceId } })   // before re-ingesting a source
-await store.query({ indexName, queryVector, topK, filter, minScore })
+const chunks = await MDocument.fromMarkdown(text).chunk({
+  strategy: "markdown",
+  maxSize: 512,
+  overlap: 50,
+});
+const { embeddings } = await embedMany({
+  model: embedder,
+  values: chunks.map((c) => c.text),
+});
+await store.createIndex({ indexName, dimension }); // = the model's output size
+await store.upsert({ indexName, vectors: embeddings, metadata, ids });
+await store.deleteVectors({ indexName, filter: { sourceId } }); // before re-ingesting a source
+await store.query({ indexName, queryVector, topK, filter, minScore });
 ```
 
 - `createVectorQueryTool({ vectorStoreName, indexName, model, enableFilter, reranker, includeSources })` exists, but its `filter` can come from the model's input or `requestContext`, and the docs do not say which wins. For tenant isolation, write the retrieval tool with `createTool` and call `store.query` with `{ ...modelFilter, tenantId }` built in `execute` from `requestContext`. Alternatively, resolve a per-tenant store or namespace on the server.

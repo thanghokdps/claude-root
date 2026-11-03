@@ -1,7 +1,7 @@
 # evalkit — evaluate code an AI agent generates
 
-A small, self-contained harness for the question *"is the code the agent produced
-actually correct and up to standard?"* It grades agent output on five tiers and
+A small, self-contained harness for the question _"is the code the agent produced
+actually correct and up to standard?"_ It grades agent output on five tiers and
 caches the expensive LLM-judge calls so debug re-runs don't burn tokens.
 
 ## Why
@@ -20,9 +20,9 @@ def apply_discount(price, pct):
 Execution alone cannot reject it — the tests it must satisfy are a finite, knowable
 set. Two mechanisms here can:
 
-- **Held-out tests** (`heldout/`) are copied into the workspace only *after* the
+- **Held-out tests** (`heldout/`) are copied into the workspace only _after_ the
   solver has finished, so they are not a set the solver can enumerate.
-- **Property tests** assert invariants over *generated* inputs, so there is no
+- **Property tests** assert invariants over _generated_ inputs, so there is no
   finite set of cases to hardcode at all.
 
 A task with no `heldout/` suite is reported as such — the run says plainly that it
@@ -30,13 +30,13 @@ cannot tell a real solution from a hardcoded one.
 
 ## Grading tiers
 
-| Tier | Grader | Signal | Counts toward `solved`? |
-|------|--------|--------|--------------------------|
-| 1 | `correctness` | pytest: FAIL_TO_PASS + PASS_TO_PASS (SWE-bench style) | yes |
-| 2 | `robustness` | held-out + property tests the solver never sees | yes |
-| 3 | `feature` | LLM-as-judge vs. the task rubric, cached via a cassette | no |
-| 4 | `quality` | ruff lint + max-nesting + test-gap probe (static) | no |
-| 5 | `security` | pattern-based SAST (static) | no |
+| Tier | Grader        | Signal                                                  | Counts toward `solved`? |
+| ---- | ------------- | ------------------------------------------------------- | ----------------------- |
+| 1    | `correctness` | pytest: FAIL_TO_PASS + PASS_TO_PASS (SWE-bench style)   | yes                     |
+| 2    | `robustness`  | held-out + property tests the solver never sees         | yes                     |
+| 3    | `feature`     | LLM-as-judge vs. the task rubric, cached via a cassette | no                      |
+| 4    | `quality`     | ruff lint + max-nesting + test-gap probe (static)       | no                      |
+| 5    | `security`    | pattern-based SAST (static)                             | no                      |
 
 `solved = correctness AND robustness`. The static tiers report but do not gate —
 they describe the code, they don't decide whether the task was done.

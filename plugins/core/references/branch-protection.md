@@ -6,10 +6,10 @@ The `branch-guard` hook and `rules/git.md` stop Claude pushing to `main` and the
 
 Templates in `${CLAUDE_PLUGIN_ROOT}/templates/github/`:
 
-| File | Covers | Rules |
-|------|--------|-------|
-| `ruleset-default-branch.json` | the default branch (`~DEFAULT_BRANCH`) | no deletion, no force-push, PR with 1 approval and resolved threads, required checks |
-| `ruleset-env-branches.json` | `dev develop stag stage staging prod production` | the same |
+| File                          | Covers                                           | Rules                                                                                |
+| ----------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `ruleset-default-branch.json` | the default branch (`~DEFAULT_BRANCH`)           | no deletion, no force-push, PR with 1 approval and resolved threads, required checks |
+| `ruleset-env-branches.json`   | `dev develop stag stage staging prod production` | the same                                                                             |
 
 Both let admins bypass **only through a PR** (`bypass_mode: pull_request`): an admin may merge without the approval, never push directly. A repo's existing env-branch names other than these are added to `include` as `refs/heads/<name>`, after asking.
 
@@ -19,7 +19,7 @@ Both let admins bypass **only through a PR** (`bypass_mode: pull_request`): an a
 2. **Existing rules** — `gh api repos/<owner>/<repo>/rulesets --jq '.[].name'` and, for the default branch, `gh api repos/<owner>/<repo>/rules/branches/<default> --jq '[.[].type]'`. A ruleset or classic protection that already blocks direct pushes there → skip that template, and report what exists.
 3. **Permission** — `gh api repos/<owner>/<repo> --jq .permissions.admin`. Not admin → print the filled JSON and the `gh api` command for an admin; do not try.
 4. **Required checks** — the check-run names on the default branch's last commit: `gh api repos/<owner>/<repo>/commits/<default>/check-runs --jq '[.check_runs[].name] | unique'`. Replace the `__CHECK__` entry with one `{"context": "<name>"}` per check. No check runs yet → drop the `required_status_checks` rule and say CI must be added to it later.
-5. **Ask** — show the filled JSON of each template still needed, then one `AskUserQuestion`: *Apply both (Recommended)* · *Only the environment branches* · *Skip*. Never apply unasked: a ruleset changes who can merge in a shared repo.
+5. **Ask** — show the filled JSON of each template still needed, then one `AskUserQuestion`: _Apply both (Recommended)_ · _Only the environment branches_ · _Skip_. Never apply unasked: a ruleset changes who can merge in a shared repo.
 6. **Apply** — `gh api -X POST repos/<owner>/<repo>/rulesets --input <filled file>` per chosen template, then confirm with `gh api repos/<owner>/<repo>/rules/branches/dev --jq '[.[].type]'` (and the default branch).
 
 **Done when:** each chosen ruleset is `active` and `rules/branches/<name>` lists `pull_request` for the default branch and `dev`; or the skip and its reason are in `.claude/docs/index.md` under Known constraints.
