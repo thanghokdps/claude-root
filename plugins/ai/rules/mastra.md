@@ -19,7 +19,8 @@ Checked against mastra.ai docs on 2026-10-23. Confirm each option on the **insta
 - `new Agent({ id, description, instructions, model, tools, memory })`. `description` is the scope line a supervisor routes by, so write it like a boundary rule.
 - Supervisor: `agents: { … }` on an `Agent`, with per-call `maxSteps`. `.network()` is deprecated, so never start on it.
 - Pre-model and post-model behaviour goes in `inputProcessors` / `outputProcessors`, and cross-tool behaviour (audit, timing) goes in `hooks.beforeToolCall` / `afterToolCall`. Their order is a contract, as middleware order is in shape A.
-- `model` takes one model, with no fallback array. Fallback and the cheap router model come from the kit's `models.ts` factory or a gateway, decided in the ADR.
+- `model` takes one model or an ordered fallback array of `{ model, maxRetries }` (`ModelWithRetries[]`, @mastra/core 1.81.0 `dist/agent/types.d.ts:452,652`). Use the array for `MODEL_PRIMARY` → `MODEL_FALLBACK`, built by the kit's `models.ts`; the cheap model stays a separate role. A core without the array uses a gateway, decided in the ADR.
+- `instructions` as a function receives `{ requestContext }` (`DynamicArgument`, `dist/agent/types.d.ts:569`); 0.x called it `runtimeContext`.
 
 ## Tools
 

@@ -24,6 +24,20 @@ def test_copied_guards_hooks_find_their_helper():
     assert "PROJECT-HANDOFF" in out.stdout and "command not found" not in out.stderr, out.stderr
 
 
+def test_prettier_project_ignores_kit_files_once():
+    project = tempfile.mkdtemp(prefix="init-prettier-")
+    subprocess.run(["git", "-C", project, "init", "-q", "-b", "feat/x"], check=True)
+    with open(os.path.join(project, "package.json"), "w") as f:
+        f.write('{"devDependencies": {"prettier": "3.6.2"}}\n')
+    with open(os.path.join(project, ".prettierignore"), "w") as f:
+        f.write("dist")
+    env = {**os.environ, "STANDALONE": "1"}
+    for _ in range(2):
+        subprocess.run(["bash", INIT, project], capture_output=True, text=True, env=env, check=True, timeout=120)
+    with open(os.path.join(project, ".prettierignore")) as f:
+        assert f.read() == "dist\n.claude\n"
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:
