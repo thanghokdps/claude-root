@@ -1,0 +1,2 @@
+{ "name": "support-assistant", "private": true, "type": "module",
+  "dependencies": { "@mastra/core": "1.81.0", "@ag-ui/mastra": "2.0.2", "@copilotkit/runtime": "1.83.0", "zod": "3.25.76" } }
