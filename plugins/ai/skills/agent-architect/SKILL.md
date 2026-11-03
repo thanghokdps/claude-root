@@ -93,7 +93,7 @@ Build the smallest working slice of the chosen shape, test first where practical
 5. Tracing switch with masking on (`${CLAUDE_PLUGIN_ROOT}/rules/agent-tracing-privacy.md`), and the PII switch `PII_REDACTION` — on from the start when P3 names real user data or the domain is health, finance or HR, off otherwise — with its per-shape behaviour tests and fail-closed detection failure (`${CLAUDE_SKILL_DIR}/references/skeleton.md` § 4 PII).
 6. Exact pins and a single copy of the framework core (`@langchain/core` or `@mastra/core`) (`${CLAUDE_PLUGIN_ROOT}/rules/agent-deps-pinning.md`).
 7. One read tool for the first P2 task, against its P3 system, through `/agent-tool` (from the user's API spec when one was given, its Step 0); then one real streamed turn with that task's example message through `/agent-verify-turn`.
-8. The P2 example messages as the first eval cases, appended to `evals/datasets/baseline.jsonl` after its four seed cases and schema-validated (`/agent-evals`; `${CLAUDE_SKILL_DIR}/references/skeleton.md` § 4 Evals).
+8. The P2 example messages as the first eval cases, appended to `evals/datasets/baseline.jsonl` after its twelve seed cases and schema-validated (`/agent-evals`; `${CLAUDE_SKILL_DIR}/references/skeleton.md` § 4 Evals).
 
 Apply `${CLAUDE_SKILL_DIR}/references/optimisation.md` as defaults, not as later work: nostream helper nodes (Mastra: `generate()` helpers, `lastMessages`, `maxSteps`), stable prompt prefix, kill switch per tool. Build in the scaffold rows of `${CLAUDE_SKILL_DIR}/references/production.md` (durable state, health, env forwarding, fallback, masked tracing).
 
@@ -116,7 +116,7 @@ Step 4's rules hold (reference repo mirrored at a resolved SHA, core only, exact
    5b. **PII switch**, `PII_REDACTION` off by default, with its behaviour tests per shape and fail-closed detection failure (`skeleton.md` § 4 PII).
 6. **Pins**: exact versions, one copy of the framework core.
 7. **One chat page**: CopilotKit's stock `CopilotChat` wired to the agent id, styled by theme tokens only, checked at the Q2v viewports. A given design goes to `/agent-design-ui` after this step; no design means the stock chat stays, unasked.
-8. **Proof**: one real streamed turn with "hello" through `/agent-verify-turn`, its stream evidence shown, the Studio URL the dev command printed, and the baseline dataset (`evals/datasets/baseline.jsonl`, 4 seed cases, schema-validated) through `/agent-evals` (`skeleton.md` § 4 Evals).
+8. **Proof**: one real streamed turn with "hello" through `/agent-verify-turn`, its stream evidence shown, the graph map (Mastra Studio's URL, or `docs/graph.md` from `pnpm graph` on LangGraph), and the baseline dataset (`evals/datasets/baseline.jsonl`, 12 seed cases, schema-validated) through `/agent-evals` (`skeleton.md` § 4 Evals).
 
 Never in skeleton mode: a tool (backend or frontend), a HITL confirm, a domain table or ERD, a RAG index, a second agent or a router, a feature screen. Each is a feature and goes through `/agent-feature`.
 

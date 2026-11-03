@@ -5,7 +5,7 @@ target:
   path: evals/datasets/baseline.jsonl
 pattern: '^\{.*\}\s*$'
 flags: m
-match: "count:4"
+match: "count:12"
 ---
 
-The baseline dataset has four seed cases, one JSON object per line.
+The baseline dataset has twelve seed cases, one JSON object per line.
