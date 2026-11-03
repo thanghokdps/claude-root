@@ -1,14 +1,15 @@
 ---
 type: llm
-focus: trace
+focus:
+  source: file
+  path: src/agent/tools/cancel-order.ts
 ---
 
-The ADR now allows cancelling pending orders behind a confirm card. The repo has an Orders API client, an order-code schema and read tools that forward the caller's token.
+Judge the cancel tool in src/agent/tools/cancel-order.ts. The repo already has `ordersApi` (orders-client.ts) and `OrderCode` (order-schema.ts); the read tools forward the caller's token from the tool config.
 
-Judge the cancel the run wrote, or planned if it stopped for approval first.
 PASS if all hold:
-- The cancel goes through the existing `ordersApi` client and `OrderCode`, not a new HTTP client or schema.
-- The run pauses before the cancel call and cancels only on the customer's approve; reject or no answer cancels nothing.
-- "Not yet shipped" is checked against the order's status read from the API, not trusted from the model or the card.
-- The confirm card shows the order read from the API, and the ADR's "none built yet" is updated or flagged once built.
-FAIL if the cancel can run before the decision, the status check relies on the model, or a second client or schema is added.
+- Every Orders API call goes through `ordersApi` and the order code is validated with `OrderCode`; the file has no `fetch`, HTTP client or order-code regex of its own.
+- The order is read from the API with the caller's token, and "not yet shipped" is decided from that response's status, not from the tool's arguments.
+- The run pauses (an interrupt or the repo's confirm gate) before the cancel call, and the confirm payload shows the order read from the API.
+- The cancel call runs only on the customer's approve; reject, no answer or an expired confirm cancels nothing.
+FAIL if the cancel can run before the decision, the status comes from the model, or a second client or schema is added.
