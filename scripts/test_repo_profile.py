@@ -298,23 +298,40 @@ def raw_output(cwd, cfg):
     return json.loads(r.stdout)
 
 
-def test_new_repo_with_ai_on_asks_for_frontend_before_the_scaffold():
-    out = raw_output(repo(), config_dir({"ai@harness": True}))
+def test_new_repo_with_ai_on_writes_frontend_and_backend_and_asks_for_a_reload():
+    cwd = repo()
+    out = raw_output(cwd, config_dir({"ai@harness": True}))
     ctx = out["hookSpecificOutput"]["additionalContext"]
-    assert "frontend@harness is off" in ctx and "In your first reply" in ctx, ctx
-    assert "claude plugin enable frontend@harness --scope project" in ctx, ctx
-    assert "claude plugin enable frontend@harness --scope project" in out["systemMessage"], out
+    assert "frontend@harness and backend@harness are now enabled" in ctx and "In your first reply" in ctx, ctx
+    assert "/reload-plugins" in out["systemMessage"] and "claude plugin enable" not in out["systemMessage"], out
+    enabled = shared_settings(cwd)["enabledPlugins"]
+    assert enabled["frontend@harness"] is True and enabled["backend@harness"] is True, enabled
 
 
-def test_new_non_git_folder_with_ai_on_asks_for_frontend_locally():
+def test_new_non_git_folder_with_ai_on_asks_to_enable_both_locally():
     path = tempfile.mkdtemp(prefix="repo-profile-nogit-")
-    out = raw_output(path, config_dir({"ai@harness": True}))
-    assert "claude plugin enable frontend@harness --scope local" in out["systemMessage"], out
+    msg = raw_output(path, config_dir({"ai@harness": True}))["systemMessage"]
+    assert "`! claude plugin enable frontend@harness --scope local`" in msg, msg
+    assert "`! claude plugin enable backend@harness --scope local`" in msg, msg
+    assert shared_settings(path) is None
 
 
-def test_new_repo_with_ai_and_frontend_on_asks_nothing():
-    out = raw_output(repo(), config_dir({"ai@harness": True, "frontend@harness": True}))
-    assert "systemMessage" not in out and "frontend@harness is off" not in json.dumps(out), out
+def test_new_repo_with_ai_and_frontend_on_asks_only_for_backend():
+    cwd = repo()
+    out = raw_output(cwd, config_dir({"ai@harness": True, "frontend@harness": True}))
+    assert "the assistant needs backend@harness." in out["systemMessage"], out
+    assert "frontend@harness" not in shared_settings(cwd)["enabledPlugins"]
+
+
+def test_new_repo_with_all_three_packs_on_asks_nothing():
+    out = raw_output(repo(), config_dir({"ai@harness": True, "frontend@harness": True, "backend@harness": True}))
+    assert "systemMessage" not in out, out
+
+
+def test_ai_repo_without_a_server_framework_gets_backend():
+    cwd = repo({"package.json": {"dependencies": {"@langchain/langgraph": "1", "vite": "6", "react": "19"}}})
+    run(cwd)
+    assert {"ai", "backend", "frontend"} <= shared_packs(cwd), shared_packs(cwd)
 
 
 def test_new_opted_out_repo_enables_packs_locally():
@@ -479,7 +496,9 @@ def test_workplace_opt_out_is_respected_and_agent_still_enabled():
     cwd = repo(files)
     ctx = run(cwd)
     assert "Domain: workplace" in ctx and "AI assistant" in ctx, ctx
-    assert local_settings(cwd)["enabledPlugins"] == {"mobile@harness": True, "ai@harness": True}  # RN apps: mobile, not frontend
+    # RN apps: mobile, not frontend; the assistant's agent server: backend.
+    assert local_settings(cwd)["enabledPlugins"] == {"backend@harness": True, "mobile@harness": True,
+                                                     "ai@harness": True}
 
 
 def test_ticket_folder_is_mentioned():
