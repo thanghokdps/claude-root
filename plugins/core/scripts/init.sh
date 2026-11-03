@@ -311,6 +311,15 @@ if ! grep -qxF ".claude/memory/user.md" "$GITIGNORE" 2>/dev/null; then
   echo "   .gitignore: added .claude/memory/user.md (personal, not committed)"
 fi
 
+# The copied rules and templates are not formatted to the app's Prettier config: keep them out of `prettier --check .`.
+PRETTIERIGNORE="$PROJECT_DIR/.prettierignore"
+if { grep -qs '"prettier"' "$PROJECT_DIR/package.json" || ls "$PROJECT_DIR"/.prettierrc* >/dev/null 2>&1; } \
+  && ! grep -qxF ".claude" "$PRETTIERIGNORE" 2>/dev/null; then
+  [ -s "$PRETTIERIGNORE" ] && [ -n "$(tail -c1 "$PRETTIERIGNORE")" ] && echo >> "$PRETTIERIGNORE"
+  echo ".claude" >> "$PRETTIERIGNORE"
+  echo "   .prettierignore: added .claude (kit files, not app code)"
+fi
+
 # ─── Generate project CLAUDE.md ──────────────────────────────────────────────
 
 # A re-run must not wipe a CLAUDE.md that /project-init or the team already finalized.
