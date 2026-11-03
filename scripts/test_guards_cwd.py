@@ -139,6 +139,18 @@ def test_a_folder_outside_the_project_is_not_trusted():
     assert not os.path.exists(log)  # the project has no prettier config, so nothing ran
 
 
+def test_format_on_edit_leaves_a_file_outside_the_project_alone():
+    # The session sits in a project with Prettier and edits a file in another checkout (e.g. the kit).
+    root, other = repo("main"), repo("feat/x")
+    write(root, ".prettierrc", "{}\n")
+    write(other, "a.md", "x\n")
+    bin_dir, log = tempfile.mkdtemp(), os.path.join(tempfile.mkdtemp(), "npx.log")
+    write(bin_dir, "npx", f'#!/bin/sh\npwd > "{log}"\n')
+    os.chmod(os.path.join(bin_dir, "npx"), 0o755)
+    run("format-on-edit.sh", root, root, {"tool_input": {"file_path": os.path.join(other, "a.md")}}, path=bin_dir)
+    assert not os.path.exists(log)  # the project's formatter never rewrites another repo's file
+
+
 def test_without_a_cwd_the_project_dir_still_works():
     root = repo("feat/y")
     write(root, "specs/HANDOFF.md", "ROOT-HANDOFF\n")
