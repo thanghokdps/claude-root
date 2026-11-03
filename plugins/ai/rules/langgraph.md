@@ -63,9 +63,6 @@ return { messages: [...state.messages, aiResponse] }; // duplicates history
 - `copilotkit.ts` exports a Hono app mounting `createCopilotHonoHandler({ runtime, basePath: "/api/copilotkit" })` from `@copilotkit/runtime/v2/hono` (CopilotKit `examples/v2/runtime/hono`). The runtime holds `new LangGraphAgent({ deploymentUrl, graphId: AGENT_ID })` from **`@ag-ui/langgraph`** (0.0.45, `dist/index.d.ts:128` `LangGraphAgentConfig { deploymentUrl, graphId, assistantConfig?, … }`), passed to the v2 `CopilotRuntime({ agents })`, with `deploymentUrl` this same server (`LANGGRAPH_DEPLOYMENT_URL`, `http://localhost:2024` under `langgraph dev`). `@copilotkit/runtime/langgraph` (`LangGraphAgent`, `LangGraphHttpAgent`) is the v1 entry, `@deprecated Since 1.68.2` (@copilotkit/runtime 1.83.0, `dist/langgraph.d.mts:6`); CopilotKit's own examples still import it, so never copy that line from them — `@typescript-eslint/no-deprecated` fails it.
 - CORS on the route is limited to the web origin, never `*`. Identity follows § Run context: the route verifies the caller, sends it with the server secret through `headerFactory`, and keeps only the allowlisted `forwardedProps`.
 - Construct the agent with `emitRawEvents: false`. The default (`true`, 0.0.45 `dist/index.d.ts:182-185`) forwards every LangGraph stream event as `RAW` and attaches it as `rawEvent` on typed events, so the system prompt and the run's context reach the browser: one "hello" on a shape B skeleton carried the prompt canary 5× and the caller id 5×, and 0 of each with the flag off (`STATE_SNAPSHOT` held neither). The client reads neither field. Never write an AG-UI middleware for this; the flag is stock.
-
-> > > > > > > origin/main
-
 - The Vite client calls `${VITE_LANGGRAPH_BASE_URL}/api/copilotkit`. Only when the user names Next.js does the runtime move to a Next.js route beside an `agent/` package (R4).
 
 ## Streaming
