@@ -290,6 +290,33 @@ def test_new_repo_with_ai_on_routes_layer_requests_to_their_skill():
     assert "even with no code yet" in ctx, ctx
 
 
+def raw_output(cwd, cfg):
+    payload = json.dumps({"hook_event_name": "SessionStart", "source": "startup", "cwd": cwd})
+    e = {**os.environ, "CLAUDE_CONFIG_DIR": cfg, "GIT_CONFIG_GLOBAL": os.devnull,
+         "XDG_CONFIG_HOME": tempfile.mkdtemp(prefix="repo-profile-xdg-")}
+    r = subprocess.run([HOOK], input=payload, capture_output=True, text=True, env=e)
+    return json.loads(r.stdout)
+
+
+def test_new_repo_with_ai_on_asks_for_frontend_before_the_scaffold():
+    out = raw_output(repo(), config_dir({"ai@harness": True}))
+    ctx = out["hookSpecificOutput"]["additionalContext"]
+    assert "frontend@harness is off" in ctx and "In your first reply" in ctx, ctx
+    assert "claude plugin enable frontend@harness --scope project" in ctx, ctx
+    assert "claude plugin enable frontend@harness --scope project" in out["systemMessage"], out
+
+
+def test_new_non_git_folder_with_ai_on_asks_for_frontend_locally():
+    path = tempfile.mkdtemp(prefix="repo-profile-nogit-")
+    out = raw_output(path, config_dir({"ai@harness": True}))
+    assert "claude plugin enable frontend@harness --scope local" in out["systemMessage"], out
+
+
+def test_new_repo_with_ai_and_frontend_on_asks_nothing():
+    out = raw_output(repo(), config_dir({"ai@harness": True, "frontend@harness": True}))
+    assert "systemMessage" not in out and "frontend@harness is off" not in json.dumps(out), out
+
+
 def test_new_opted_out_repo_enables_packs_locally():
     cwd = repo({".claude/settings.local.json": {"enabledPlugins": {"ai@harness": False}}})
     ctx = run(cwd)
