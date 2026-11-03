@@ -1,0 +1,6 @@
+{
+  "node_version": "22",
+  "dependencies": ["."],
+  "graphs": { "orders": "./src/agent/orders-agent.ts:graph" },
+  "env": ".env"
+}

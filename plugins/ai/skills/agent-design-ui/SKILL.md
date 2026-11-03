@@ -14,6 +14,8 @@ The generic part — getting the design, tokens, primitives, building from fixtu
 
 Everything goes in the same `docs/design/ui-map.md`.
 
+**Design you cannot read** (Figma MCP failing or rate-limited, no browser tools) — offer the ways in that `/design-ui` (frontend, if installed) names, even without it: Claude in Chrome (`/chrome` or `claude --chrome`, the user's logged-in browser), PNG exports per frame plus the variables/styles, or a working MCP. Never design from a link you cannot read.
+
 **Precondition.** No assistant in the repo yet (no agent framework dependency, no agent entry point, no ADR) → stop and say so: a new assistant starts with `/agent-architect`, which writes the ADR this skill builds inside. Never scaffold the app from here; come back once the ADR exists.
 
 ---
