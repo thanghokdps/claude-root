@@ -10,6 +10,10 @@ FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null
 PROJECT_DIR=$(project_dir "$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)")
 cd "$PROJECT_DIR" || exit 0
 
+# Only the project's own files: its formatter must not rewrite a file in another checkout the session edits.
+FILE_DIR=$(cd "$(dirname "$FILE")" 2>/dev/null && pwd -P) || exit 0
+case "$FILE_DIR/" in "$(pwd -P)"/*) ;; *) exit 0 ;; esac
+
 case "$FILE" in
   *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.json|*.css|*.scss|*.md|*.astro|*.vue)
     if compgen -G '.prettierrc*' >/dev/null || compgen -G 'prettier.config.*' >/dev/null || grep -q '"prettier"' package.json 2>/dev/null; then

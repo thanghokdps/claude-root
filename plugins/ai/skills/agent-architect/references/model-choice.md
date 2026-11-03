@@ -36,13 +36,13 @@ The tiers resolve to names at setup, not from memory. List the models the key ca
 
 `Q7 — primary <name> (tier, why), fallback <name>, cheap <name>; ≈ $<n>/month at <turns>/day (<in>/<out> tokens per turn).`
 
-The models that resolved on 27 Oct 2026, as a starting point to verify:
+The models that resolved on 27 Oct 2026 (OpenAI re-checked against the models endpoint and developers.openai.com/api/docs/pricing on 3 Nov 2026), as a starting point to verify:
 
 | Tier | OpenAI | Anthropic |
 |---|---|---|
-| top | `gpt-5` | `claude-opus-5-5` |
-| mid | `gpt-5-mini` | `claude-sonnet-5-5` |
-| small | `gpt-5-nano` | `claude-haiku-5-5` |
+| top | `gpt-5.5` ($5.00 / $30.00 per 1M in/out) | `claude-opus-5-5` |
+| mid | `gpt-5.4-mini` ($0.75 / $4.50) | `claude-sonnet-5-5` |
+| small | `gpt-5.4-nano` ($0.20 / $1.25); `gpt-5-nano` ($0.05 / $0.40) is the older, cheaper option for `MODEL_CHEAP` | `claude-haiku-5-5` |
 
 ## Changing later
 
