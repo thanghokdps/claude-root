@@ -33,6 +33,7 @@ Within a wave, parallelize independent sub-tasks where possible.
 ### Phase 3 — Verify before commit
 
 Always run before committing:
+
 ```bash
 # Stack-appropriate checks, e.g.:
 npx tsc --noEmit

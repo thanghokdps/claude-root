@@ -12,6 +12,7 @@ Answer quickly and return. No tasks. No specs. No side effects.
 **Usage:** `/btw <question>`
 
 Examples:
+
 - `/btw what does Effect.tryPromise do?`
 - `/btw which file handles auth middleware?`
 - `/btw what's the pnpm filter syntax for running one package?`

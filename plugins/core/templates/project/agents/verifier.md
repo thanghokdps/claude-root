@@ -18,6 +18,7 @@ Role: confirm that changes are correct and all checks pass before merge.
 9. Confirm commit message matches project convention
 
 ## Output
+
 `PASS` or `FAIL` with evidence for each step.
 
 On FAIL: exact command output + which step failed → hand back to Implementer with specific failure.

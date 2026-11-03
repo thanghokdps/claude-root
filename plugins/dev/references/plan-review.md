@@ -25,6 +25,7 @@ Rounds: 2/2
 Plan: docs/tickets/412/plan.md @ 3f9a1c2
 
 ## Round 1 — REVISE
+
 - T2 `src/api/rename.ts:14` — route checks `ownerId`, plan assumed `teamId` → plan T2 contract changed to ownerId
 - T3 — `verify` command `pnpm test rename` matches no test file → renamed to `pnpm test -- rename.spec`
 - dropped: "T1 migration locks the table" — `prisma/migrations/…/migration.sql:3` adds a nullable column, no lock
@@ -32,6 +33,7 @@ Plan: docs/tickets/412/plan.md @ 3f9a1c2
 ## Round 2 — APPROVED
 
 ## Open
+
 - none
 ```
 
@@ -43,14 +45,15 @@ Each slice an engineer returns (Stage 3) is reviewed twice, sequentially, by fre
 
 Record `BASE=$(git rev-parse HEAD)` before dispatching the engineer. Hand each reviewer a file, not pasted text: `git diff -U10 $BASE..HEAD > <specs or ticket dir>/review-<slice>.diff` (plus `git diff --stat`), so the diff never enters this session's context.
 
-| Tier | Model | Gets | Asks | Returns |
-|------|-------|------|------|---------|
-| 1 — spec | `opus` | the slice's brief (contract, files, test, done check) and the diff file | does the diff do exactly what the brief says — nothing missing, nothing extra; does the done check pass for the reason the brief names | `SPEC ✅` or `SPEC ❌` + each gap as `brief says … / diff does …` with `path:line` |
-| 2 — quality | `opus` | the diff file and the repo's rules (`.claude/rules/`, `CLAUDE.md`) | correctness bugs, error handling lost or added, validation at boundaries, tests that assert behaviour not implementation, dead code | findings as `path:line — Critical/Important/Minor — case that fails — fix` |
+| Tier        | Model  | Gets                                                                    | Asks                                                                                                                                   | Returns                                                                            |
+| ----------- | ------ | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 1 — spec    | `opus` | the slice's brief (contract, files, test, done check) and the diff file | does the diff do exactly what the brief says — nothing missing, nothing extra; does the done check pass for the reason the brief names | `SPEC ✅` or `SPEC ❌` + each gap as `brief says … / diff does …` with `path:line` |
+| 2 — quality | `opus` | the diff file and the repo's rules (`.claude/rules/`, `CLAUDE.md`)      | correctness bugs, error handling lost or added, validation at boundaries, tests that assert behaviour not implementation, dead code    | findings as `path:line — Critical/Important/Minor — case that fails — fix`         |
 
 Both stay on `opus` (`model-cost.md`: review of a cheaper model's diff stays on Opus). A one-file mechanical slice may skip tier 2 when tier 1 passed and the slice's `verify` ran green; say so in the status table.
 
 Rules:
+
 - Never tell a reviewer what not to flag ("the plan chose", "at most Minor"): that is pre-judging. Let it raise the finding and arbitrate with the cited line.
 - `SPEC ❌`, or any Critical or Important finding: the engineer that wrote the slice fixes it (resume that agent), then the same tier re-reviews the fix diff only. Cap: 3 fix rounds per slice; past the cap the slice goes back to this session to re-plan, not to a fourth retry (`model-cost.md`).
 - A finding on code the slice did not touch is not the slice's: note it under `## Adjacent` in the plan, never fix it in the slice.

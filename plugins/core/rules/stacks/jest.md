@@ -17,16 +17,16 @@ Universal rules for Jest-based test suites. Applies to both JavaScript and TypeS
 ### Arrange → Act → Assert (always in this order)
 
 ```ts
-it('returns null when user is not found', async () => {
+it("returns null when user is not found", async () => {
   // Arrange
-  const repo = new UserRepository(mockDb)
+  const repo = new UserRepository(mockDb);
 
   // Act
-  const result = await repo.findById('non-existent-id')
+  const result = await repo.findById("non-existent-id");
 
   // Assert
-  expect(result).toBeNull()
-})
+  expect(result).toBeNull();
+});
 ```
 
 Never mix concerns across these three phases. If setup is complex, extract to `beforeEach`.
@@ -55,14 +55,14 @@ describe('UserService', () => {
 
 ```ts
 // Good — describes what the system does
-it('sends a welcome email after successful registration')
-it('returns 401 when the token is expired')
-it('does not exceed the rate limit for the same IP')
+it("sends a welcome email after successful registration");
+it("returns 401 when the token is expired");
+it("does not exceed the rate limit for the same IP");
 
 // Bad — describes implementation details
-it('calls sendEmail')
-it('throws an error')
-it('test auth middleware')
+it("calls sendEmail");
+it("throws an error");
+it("test auth middleware");
 ```
 
 ---
@@ -103,29 +103,31 @@ it('creates a user and sends an email', async () => {
 
 ```ts
 // Good — clear failure messages
-expect(result).toEqual({ id: 1, name: 'Alice' })
-expect(items).toHaveLength(3)
-expect(fn).toThrow(ValidationError)
-expect(str).toMatch(/^[a-z]+$/)
-expect(num).toBeGreaterThan(0)
-expect(obj).toMatchObject({ status: 'active' })  // partial match
+expect(result).toEqual({ id: 1, name: "Alice" });
+expect(items).toHaveLength(3);
+expect(fn).toThrow(ValidationError);
+expect(str).toMatch(/^[a-z]+$/);
+expect(num).toBeGreaterThan(0);
+expect(obj).toMatchObject({ status: "active" }); // partial match
 
 // Bad — vague, hard to debug
-expect(result).toBeTruthy()
-expect(items.length).toBe(3)
-expect(!!err).toBe(true)
+expect(result).toBeTruthy();
+expect(items.length).toBe(3);
+expect(!!err).toBe(true);
 ```
 
 ### Testing thrown errors
 
 ```ts
 // Sync
-expect(() => parseJson('bad json')).toThrow(SyntaxError)
-expect(() => validateAge(-1)).toThrow('Age must be positive')
+expect(() => parseJson("bad json")).toThrow(SyntaxError);
+expect(() => validateAge(-1)).toThrow("Age must be positive");
 
 // Async
-await expect(fetchUser('bad-id')).rejects.toThrow(NotFoundError)
-await expect(createUser({})).rejects.toMatchObject({ code: 'VALIDATION_FAILED' })
+await expect(fetchUser("bad-id")).rejects.toThrow(NotFoundError);
+await expect(createUser({})).rejects.toMatchObject({
+  code: "VALIDATION_FAILED",
+});
 ```
 
 ---
@@ -141,55 +143,55 @@ await expect(createUser({})).rejects.toMatchObject({ code: 'VALIDATION_FAILED' }
 ### `jest.fn()` — mock a function
 
 ```ts
-const mockSendEmail = jest.fn()
-mockSendEmail.mockResolvedValue({ messageId: 'abc123' })
+const mockSendEmail = jest.fn();
+mockSendEmail.mockResolvedValue({ messageId: "abc123" });
 
 // Assert calls
-expect(mockSendEmail).toHaveBeenCalledTimes(1)
+expect(mockSendEmail).toHaveBeenCalledTimes(1);
 expect(mockSendEmail).toHaveBeenCalledWith(
-  expect.objectContaining({ to: 'alice@example.com' })
-)
+  expect.objectContaining({ to: "alice@example.com" }),
+);
 ```
 
 ### `jest.spyOn()` — spy on a real method
 
 ```ts
 // Spy without changing behavior
-const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+const spy = jest.spyOn(console, "error").mockImplementation(() => {});
 
 // Spy and replace for this test only
-jest.spyOn(userRepo, 'findById').mockResolvedValue(null)
+jest.spyOn(userRepo, "findById").mockResolvedValue(null);
 
 // Always restore after the test
-afterEach(() => jest.restoreAllMocks())
+afterEach(() => jest.restoreAllMocks());
 ```
 
 ### `jest.mock()` — mock an entire module
 
 ```ts
 // Mock the module — runs before imports (jest hoists this)
-jest.mock('@/lib/mailer', () => ({
-  sendEmail: jest.fn().mockResolvedValue({ messageId: 'test-id' }),
-}))
+jest.mock("@/lib/mailer", () => ({
+  sendEmail: jest.fn().mockResolvedValue({ messageId: "test-id" }),
+}));
 
 // Import AFTER jest.mock (or TypeScript will complain)
-import { sendEmail } from '@/lib/mailer'
-import { UserService } from './user-service'
+import { sendEmail } from "@/lib/mailer";
+import { UserService } from "./user-service";
 
 // Access the mock in tests
-const mockSendEmail = sendEmail as jest.MockedFunction<typeof sendEmail>
+const mockSendEmail = sendEmail as jest.MockedFunction<typeof sendEmail>;
 ```
 
 **TypeScript: use `jest.Mocked<T>` for typed mocks**
 
 ```ts
-import type { UserRepository } from './user-repository'
+import type { UserRepository } from "./user-repository";
 
 const mockRepo = {
   findById: jest.fn(),
   create: jest.fn(),
   delete: jest.fn(),
-} satisfies jest.Mocked<UserRepository>
+} satisfies jest.Mocked<UserRepository>;
 ```
 
 ### Reset mocks between tests
@@ -197,15 +199,15 @@ const mockRepo = {
 ```ts
 // In jest.config.ts — preferred: automatic reset
 export default {
-  clearMocks: true,       // clears mock.calls and mock.instances
-  resetMocks: true,       // resets implementations too
-  restoreMocks: true,     // restores spied methods
-}
+  clearMocks: true, // clears mock.calls and mock.instances
+  resetMocks: true, // resets implementations too
+  restoreMocks: true, // restores spied methods
+};
 
 // OR per-test in beforeEach
 beforeEach(() => {
-  jest.clearAllMocks()
-})
+  jest.clearAllMocks();
+});
 ```
 
 **Rule:** Never rely on mock state from a previous test. Tests must be independent.
@@ -213,10 +215,10 @@ beforeEach(() => {
 ### Partial mocks with `jest.requireActual`
 
 ```ts
-jest.mock('@/lib/config', () => ({
-  ...jest.requireActual('@/lib/config'),   // keep real implementation
-  featureFlags: { newDashboard: true },    // override only what you need
-}))
+jest.mock("@/lib/config", () => ({
+  ...jest.requireActual("@/lib/config"), // keep real implementation
+  featureFlags: { newDashboard: true }, // override only what you need
+}));
 ```
 
 ---
@@ -227,36 +229,36 @@ jest.mock('@/lib/config', () => ({
 
 ```ts
 // Good
-it('fetches the user', async () => {
-  const user = await getUser('123')
-  expect(user.name).toBe('Alice')
-})
+it("fetches the user", async () => {
+  const user = await getUser("123");
+  expect(user.name).toBe("Alice");
+});
 
 // Bad — test passes even if the Promise rejects
-it('fetches the user', () => {
-  getUser('123').then(user => {
-    expect(user.name).toBe('Alice')    // this assertion may never run
-  })
-})
+it("fetches the user", () => {
+  getUser("123").then((user) => {
+    expect(user.name).toBe("Alice"); // this assertion may never run
+  });
+});
 ```
 
 ### Fake timers for `setTimeout`, `setInterval`, `Date`
 
 ```ts
 beforeEach(() => {
-  jest.useFakeTimers()
-  jest.setSystemTime(new Date('2026-01-01'))
-})
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date("2026-01-01"));
+});
 
 afterEach(() => {
-  jest.useRealTimers()
-})
+  jest.useRealTimers();
+});
 
-it('expires the session after 30 minutes', () => {
-  const session = createSession()
-  jest.advanceTimersByTime(30 * 60 * 1000)
-  expect(session.isExpired()).toBe(true)
-})
+it("expires the session after 30 minutes", () => {
+  const session = createSession();
+  jest.advanceTimersByTime(30 * 60 * 1000);
+  expect(session.isExpired()).toBe(true);
+});
 ```
 
 **Rule:** Never `await new Promise(r => setTimeout(r, N))` in tests — always use fake timers.
@@ -265,22 +267,22 @@ it('expires the session after 30 minutes', () => {
 
 ```ts
 // Resolve — use async/await
-it('resolves with user data', async () => {
-  const result = await fetchUser('123')
-  expect(result).toEqual({ id: '123', name: 'Alice' })
-})
+it("resolves with user data", async () => {
+  const result = await fetchUser("123");
+  expect(result).toEqual({ id: "123", name: "Alice" });
+});
 
 // Reject — use rejects.toThrow
-it('rejects with NotFoundError', async () => {
-  await expect(fetchUser('missing')).rejects.toThrow(NotFoundError)
-})
+it("rejects with NotFoundError", async () => {
+  await expect(fetchUser("missing")).rejects.toThrow(NotFoundError);
+});
 
 // Multiple assertions on rejection
-it('rejects with correct error details', async () => {
-  const error = await fetchUser('missing').catch(e => e)
-  expect(error).toBeInstanceOf(NotFoundError)
-  expect(error.message).toContain('missing')
-})
+it("rejects with correct error details", async () => {
+  const error = await fetchUser("missing").catch((e) => e);
+  expect(error).toBeInstanceOf(NotFoundError);
+  expect(error.message).toContain("missing");
+});
 ```
 
 ---
@@ -314,6 +316,7 @@ describe('UserRepository', () => {
 ```
 
 **Rules:**
+
 - `beforeAll` / `afterAll`: expensive resources (DB connections, servers)
 - `beforeEach` / `afterEach`: reset state, clear mocks
 - Always clean up in `afterAll` even when tests fail — use try/finally if needed
@@ -330,20 +333,20 @@ describe('UserRepository', () => {
 function buildUser(overrides: Partial<User> = {}): User {
   return {
     id: crypto.randomUUID(),
-    name: 'Alice Test',
-    email: 'alice@test.com',
-    role: 'viewer',
+    name: "Alice Test",
+    email: "alice@test.com",
+    role: "viewer",
     isActive: true,
-    createdAt: new Date('2026-01-01'),
+    createdAt: new Date("2026-01-01"),
     ...overrides,
-  }
+  };
 }
 
 // Test only the relevant fields
-it('blocks inactive users', () => {
-  const user = buildUser({ isActive: false })
-  expect(canLogin(user)).toBe(false)
-})
+it("blocks inactive users", () => {
+  const user = buildUser({ isActive: false });
+  expect(canLogin(user)).toBe(false);
+});
 ```
 
 ### Use `crypto.randomUUID()` for IDs in tests
@@ -396,6 +399,7 @@ coverageThreshold: {
 ## Test isolation checklist
 
 Before every test run, confirm:
+
 - [ ] No shared mutable state between tests
 - [ ] All mocks cleared/reset in `beforeEach` or via `clearMocks: true` in config
 - [ ] No file system or network I/O without mocking or in-memory substitution

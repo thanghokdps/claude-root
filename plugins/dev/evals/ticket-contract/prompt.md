@@ -8,6 +8,7 @@ Pick up GitHub issue 412 in this repo. I can't reach the tracker from this machi
 
 > #412 Export orders as CSV
 > As a shop admin I want to download the order list as a CSV so I can open it in a spreadsheet.
+>
 > - The export has one row per order.
 > - Only orders from the last 30 days are included.
 > - Admins only.

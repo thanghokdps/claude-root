@@ -8,9 +8,9 @@ when_to_use: during /brainstorming or /grill when terms keep shifting meaning, b
 
 # Domain Model
 
-Sharpen the project's language *while* designing. This is the active discipline — challenging terms, inventing edge-case scenarios, writing the glossary down the moment a term crystallises.
+Sharpen the project's language _while_ designing. This is the active discipline — challenging terms, inventing edge-case scenarios, writing the glossary down the moment a term crystallises.
 
-Merely *reading* the glossary for vocabulary is not this skill; that is a habit any skill should have. This skill is for when you are **changing** the model.
+Merely _reading_ the glossary for vocabulary is not this skill; that is a habit any skill should have. This skill is for when you are **changing** the model.
 
 ---
 
@@ -38,13 +38,13 @@ Create files lazily — only when there is something to write. No glossary yet? 
 
 When a term conflicts with what `glossary.md` already says, call it out the moment it happens:
 
-> "The glossary defines *cancellation* as the whole order being voided, but you seem to mean a single line item — which is it?"
+> "The glossary defines _cancellation_ as the whole order being voided, but you seem to mean a single line item — which is it?"
 
 ### Sharpen fuzzy language
 
 When a term is vague or overloaded, propose a precise canonical one:
 
-> "You're saying *account* — do you mean the Customer or the User? Those are different things, and the code already treats them differently."
+> "You're saying _account_ — do you mean the Customer or the User? Those are different things, and the code already treats them differently."
 
 ### Stress-test with concrete scenarios
 
@@ -88,16 +88,20 @@ Miss any one and skip the ADR. Most decisions do not need one; an `adr/` full of
 **Date:** <YYYY-MM-DD>
 
 ## Context
+
 <the forces in play — what made this a real decision>
 
 ## Decision
+
 <what was chosen>
 
 ## Alternatives considered
+
 | Option | Why not |
-|--------|---------|
+| ------ | ------- |
 
 ## Consequences
+
 <what this makes easy, what it makes hard, what it locks in>
 ```
 

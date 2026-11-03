@@ -18,13 +18,13 @@ Read `.claude/docs/stack.md` or look for `migrations/`, `prisma/`, `drizzle/`, `
 
 ## Step 2 — Shape it as expand → migrate → contract
 
-| Change | Safe shape |
-|--------|-----------|
-| Add column | Nullable or with default first; make NOT NULL in a later migration after backfill |
-| Rename column/table | Add new → dual-write → backfill → switch reads → drop old in a later release. Never a single rename while old code runs |
-| Drop column/table | Stop reading/writing in code first (one release), drop afterwards |
-| Add index on a big table | Use the DB's non-blocking form (`CONCURRENTLY` on Postgres) |
-| Backfill | Separate migration or script, batched, idempotent, resumable |
+| Change                   | Safe shape                                                                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Add column               | Nullable or with default first; make NOT NULL in a later migration after backfill                                       |
+| Rename column/table      | Add new → dual-write → backfill → switch reads → drop old in a later release. Never a single rename while old code runs |
+| Drop column/table        | Stop reading/writing in code first (one release), drop afterwards                                                       |
+| Add index on a big table | Use the DB's non-blocking form (`CONCURRENTLY` on Postgres)                                                             |
+| Backfill                 | Separate migration or script, batched, idempotent, resumable                                                            |
 
 ## Step 3 — Checklist before handing off
 

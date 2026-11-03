@@ -70,26 +70,33 @@ Format:
 # Handoff — <YYYY-MM-DD HH:MM>
 
 ## What was done
+
 <from summary>
 
 ## Key decisions
+
 <from summary>
 
 ## Discoveries
+
 <from summary>
 
 ## Current state
+
 Branch: <branch>
 Staged: <files or "none">
 WIP: <files or "none">
 
 ## Next steps
+
 <from summary>
 
 ## Open questions
+
 <from summary>
 
 ## Context to reload
+
 - .claude/docs/index.md
 - .claude/docs/solutions/INDEX.md
 - ~/.claude/docs/solutions/INDEX.md
@@ -100,6 +107,7 @@ WIP: <files or "none">
 ## Step 3 — Merge learnings into solutions
 
 For each item in "Key decisions" and "Discoveries":
+
 - Does it belong in `docs/solutions/`? (Is it surprising? Non-obvious? Would a future agent repeat the mistake?)
 - If yes → write it now (don't wait for `/compound`)
 - If no → leave it in HANDOFF.md only
@@ -109,6 +117,7 @@ For each item in "Key decisions" and "Discoveries":
 ## Step 4 — Update global memory
 
 For user-level preferences or behaviors learned this session:
+
 - Write to `~/.claude/projects/<project>/memory/` if applicable
 - Keep under 200 lines total per memory file
 

@@ -5,6 +5,7 @@ Standard format for `specs/<slug>/PLAN.md` files.
 ## When to Create a Plan
 
 Create a PLAN.md when the task meets ANY of:
+
 - Spans > 3 discrete implementation steps
 - Affects more than 2 files
 - Estimated duration > 30 minutes
@@ -32,18 +33,18 @@ Tiny-lane tasks with ≤ 3 steps do not need a PLAN.md — a SUMMARY.md is suffi
 
 ## File map
 
-| File | Action | Layer |
-|------|--------|-------|
+| File            | Action | Layer   |
+| --------------- | ------ | ------- |
 | path/to/file.py | create | service |
 
 ## Tasks
 
 \`\`\`xml
 <task id="1.1" wave="1" status="done">
-  <files>path/to/file.py</files>
-  <action>Imperative instruction — what to do</action>
-  <verify>pytest tests/test_file.py -x -q</verify>
-  <done>All tests in test_file.py pass with exit 0</done>
+<files>path/to/file.py</files>
+<action>Imperative instruction — what to do</action>
+<verify>pytest tests/test_file.py -x -q</verify>
+<done>All tests in test_file.py pass with exit 0</done>
 </task>
 
 <task id="1.2" wave="1">

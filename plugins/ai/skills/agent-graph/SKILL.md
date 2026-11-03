@@ -21,7 +21,7 @@ Prompt rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-prompts.md`. Graph rules: `${CL
 Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/shapes.md`. Then write the current map:
 
 | Agent id | Scope (one line) | Tools | Not mine → goes to |
-|---|---|---|---|
+| -------- | ---------------- | ----- | ------------------ |
 
 **Done when:** every registered agent and every tool appears in the map, from the code, not from docs.
 
@@ -31,7 +31,7 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 - Fix behaviour in the agent (routing, prompt, tool) before reaching for a client-side workaround.
 - New agent vs bigger agent: use the decision rule in `shapes.md`. Growing past ~10–15 tools or mixing unrelated scopes → split and route.
 - Shape M: routing is a supervisor `Agent` with `agents: { … }`, and each subagent's `description` is its scope line. Never start on `.network()`, which is deprecated.
-- **Agent or workflow**: steps that always run in the same order (validate → approve → write, prepare → persist → notify), or steps with no model in them, are a **workflow**, not a prompt instruction and not routing. The model decides *whether* to start it (a tool or the agent's `workflows`); the workflow decides the order.
+- **Agent or workflow**: steps that always run in the same order (validate → approve → write, prepare → persist → notify), or steps with no model in them, are a **workflow**, not a prompt instruction and not routing. The model decides _whether_ to start it (a tool or the agent's `workflows`); the workflow decides the order.
 
 **Done when:** the owning agent and the layer (router, prompt, tool, middleware) are named.
 

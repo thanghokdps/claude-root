@@ -3,8 +3,10 @@
 Every prompt starts with the Principles block from Step 5d.
 
 ### Agent: Explorer
+
 **When:** `explore` intent, or any intent where understanding the codebase is a prerequisite.
 **Prompt template:**
+
 ```
 ## Principles (non-negotiable)
 1. Think first: my interpretation is <X>. Assumption: <Y or "none">.
@@ -42,8 +44,10 @@ Stop after the report.
 ---
 
 ### Agent: Planner
+
 **When:** `new-feature`, `refactor`, or `normal`/`high-risk` bug-fix.
 **Prompt template:**
+
 ```
 ## Principles (non-negotiable)
 1. Think first: my interpretation of the request is <X>. Assumption: <Y or "none">.
@@ -85,8 +89,10 @@ Do NOT start implementing. Return the plan only.
 ---
 
 ### Agent: Implementer
+
 **When:** After Planner (for `new-feature`, `bug-fix`, `refactor`).
 **Prompt template:**
+
 ```
 ## Principles (non-negotiable)
 1. Think first: my interpretation is <X>. If anything in the plan is ambiguous, I will ask before coding.
@@ -124,8 +130,10 @@ Execute the plan. Report any deviation with justification.
 ---
 
 ### Agent: Debugger
+
 **When:** `bug-fix` intent.
 **Prompt template:**
+
 ```
 You are a debugging specialist.
 
@@ -148,8 +156,10 @@ Do not refactor beyond the fix. Commit with "fix: <short description>".
 ---
 
 ### Agent: Refactorer
+
 **When:** `refactor` intent.
 **Prompt template:**
+
 ```
 You are a refactoring specialist. Behaviour must not change — only structure.
 
@@ -168,8 +178,10 @@ Deliverable: refactored code + confirmation that tests pass.
 ---
 
 ### Agent: Reviewer
+
 **When:** `code-review` intent. Default to the `/review-checklist` order; risky branches (auth/data/migration) → recommend `/code-review ultra`.
 **Prompt template:**
+
 ```
 You are a code reviewer. Be direct, specific, and constructive.
 
@@ -189,8 +201,10 @@ Do NOT praise. Only report issues and improvements.
 ---
 
 ### Agent: Verifier
+
 **When:** `verify` intent, OR always as the **final step** after any implementation agent.
 **Prompt template:**
+
 ```
 You are a verification specialist. Your job is to confirm that the change works correctly.
 
@@ -218,8 +232,10 @@ If FAIL: describe exactly what broke and hand back to Implementer with the faile
 ---
 
 ### Agent: Security Reviewer
+
 **When:** `security` intent, OR any `high-risk` lane change.
 **Prompt template:**
+
 ```
 You are a security engineer performing a targeted review.
 
@@ -248,8 +264,10 @@ After review:
 ---
 
 ### Agent: Performance Analyst
+
 **When:** `performance` intent.
 **Prompt template:**
+
 ```
 You are a performance engineer.
 

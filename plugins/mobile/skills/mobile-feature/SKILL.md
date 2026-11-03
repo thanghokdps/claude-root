@@ -16,16 +16,16 @@ Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT
 
 ## Step 1 — Detect
 
-| Piece | Look for |
-|-------|----------|
-| Screens | `src/screens/<Flow>/`, `app/` (Expo Router), the navigator that mounts them |
-| Navigation types | the `ParamList` type, the screen-name constants, `useNavigation` / `useRoute` typing |
-| Primitives | `components/ui/` or the design-system package: `Button`, `TextInput`, `Sheet`, icons |
-| Theme | `makeStyles` / `useTheme`, NativeWind, the tokens file |
-| Data | the request helper and its retry policy, TanStack Query hooks (`useGet*`, `useCreate*`), the backend's exported types |
-| Platform handling | `Platform.OS` guards, safe-area provider, keyboard-avoiding pattern, permissions library |
-| Tests | `@testing-library/react-native` setup, navigation mocks in `moduleNameMapper`, existing screen tests |
-| Platforms | which of iOS / Android the app ships to (`app.json`, `eas.json`, `ios/`, `android/`) |
+| Piece             | Look for                                                                                                              |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Screens           | `src/screens/<Flow>/`, `app/` (Expo Router), the navigator that mounts them                                           |
+| Navigation types  | the `ParamList` type, the screen-name constants, `useNavigation` / `useRoute` typing                                  |
+| Primitives        | `components/ui/` or the design-system package: `Button`, `TextInput`, `Sheet`, icons                                  |
+| Theme             | `makeStyles` / `useTheme`, NativeWind, the tokens file                                                                |
+| Data              | the request helper and its retry policy, TanStack Query hooks (`useGet*`, `useCreate*`), the backend's exported types |
+| Platform handling | `Platform.OS` guards, safe-area provider, keyboard-avoiding pattern, permissions library                              |
+| Tests             | `@testing-library/react-native` setup, navigation mocks in `moduleNameMapper`, existing screen tests                  |
+| Platforms         | which of iOS / Android the app ships to (`app.json`, `eas.json`, `ios/`, `android/`)                                  |
 
 **Done when:** each row names a path. The screen's states are listed: default, loading, empty, error, and for writes submitting, succeeded and failed, plus any platform-specific state (permission denied, offline).
 

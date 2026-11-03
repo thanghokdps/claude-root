@@ -10,11 +10,11 @@ Role pack for CI/CD, containers and infrastructure: the `devops-engineer` agent 
 
 ## Skills
 
-| Skill | Use it when | Example prompt |
-|---|---|---|
-| `/pipeline` | A CI job, workflow or deploy step in GitHub Actions / GitLab CI: the same gate script as local, actions pinned by SHA, least-privilege permissions, scoped secrets, lockfile-keyed caches, deploy only from the protected branch; proven green on the branch | "thêm job chạy test cho mỗi PR" · "pipeline chậm, cache node_modules" |
-| `/container` | A Dockerfile or compose service: multi-stage, pinned base by digest, non-root, no secret in a layer, healthcheck, small context; proven by building, running and passing the healthcheck | "viết Dockerfile cho service này" · "image 1.2 GB, thu nhỏ lại" |
-| `/infra-change` | A Terraform, Kubernetes or Helm change: plan → review → apply where allowed → verify, rollback named first; production applied by a person under `ship`'s `infra-gate` | "thêm bucket S3 cho upload" · "tăng replicas cho api trên staging" |
+| Skill           | Use it when                                                                                                                                                                                                                                                  | Example prompt                                                        |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `/pipeline`     | A CI job, workflow or deploy step in GitHub Actions / GitLab CI: the same gate script as local, actions pinned by SHA, least-privilege permissions, scoped secrets, lockfile-keyed caches, deploy only from the protected branch; proven green on the branch | "thêm job chạy test cho mỗi PR" · "pipeline chậm, cache node_modules" |
+| `/container`    | A Dockerfile or compose service: multi-stage, pinned base by digest, non-root, no secret in a layer, healthcheck, small context; proven by building, running and passing the healthcheck                                                                     | "viết Dockerfile cho service này" · "image 1.2 GB, thu nhỏ lại"       |
+| `/infra-change` | A Terraform, Kubernetes or Helm change: plan → review → apply where allowed → verify, rollback named first; production applied by a person under `ship`'s `infra-gate`                                                                                       | "thêm bucket S3 cho upload" · "tăng replicas cho api trên staging"    |
 
 ## Rules and the gate
 

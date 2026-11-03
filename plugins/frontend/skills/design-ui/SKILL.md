@@ -23,15 +23,15 @@ Everything this skill decides goes in `docs/design/ui-map.md`; frames live in `d
 - **Figma MCP missing or failing** (no tools, `403`, `429` / plan limit — the free plan caps API calls) → say which, then:
   1. Browser tools that drive the user's Chrome available (Claude in Chrome) → read the file there, per `${CLAUDE_SKILL_DIR}/references/figma-in-browser.md`.
   2. Otherwise ask for one: Claude in Chrome (`/chrome`), PNG exports per frame plus the variables/styles, or a working MCP (`figma-developer-mcp` with `FIGMA_API_KEY`, or Figma's Dev Mode MCP). Never design from a link you cannot read.
-- **Images only** → read them; any value you cannot see exactly (hex, font, size) is asked or marked *estimated* in the map. Estimate the font by calibration, not by eye. Render the screens with each of the 15–20 closest fonts swapped in (Google CSS, `document.fonts.ready` awaited). For each, measure the ink box (width × height of pixels darker than the background) of 3–4 static text lines, and rank the fonts by total box error against the frame. Pixel diffs do not rank fonts, because a 1px offset flips every glyph pixel. Then confirm the top 4 on a glyph sheet: a crop of the frame's line stacked over each candidate's. Reject a candidate whose rendered weight is visibly off, even with a close box. Record it as *estimated (calibrated, box error Npx)*. A box gap that stays after the right font is found is position or spacing, so fix it in Step 5.
+- **Images only** → read them; any value you cannot see exactly (hex, font, size) is asked or marked _estimated_ in the map. Estimate the font by calibration, not by eye. Render the screens with each of the 15–20 closest fonts swapped in (Google CSS, `document.fonts.ready` awaited). For each, measure the ink box (width × height of pixels darker than the background) of 3–4 static text lines, and rank the fonts by total box error against the frame. Pixel diffs do not rank fonts, because a 1px offset flips every glyph pixel. Then confirm the top 4 on a glyph sheet: a crop of the frame's line stacked over each candidate's. Reject a candidate whose rendered weight is visibly off, even with a close box. Record it as _estimated (calibrated, box error Npx)_. A box gap that stays after the right font is found is position or spacing, so fix it in Step 5.
 
 **Done when:** `design/frames/` holds one PNG per frame, named by state, and the source (node ids or file names) is in `ui-map.md`.
 
 ## Step 1 — Inventory the states
 
-Fill the table in `ui-map.md` from `${CLAUDE_SKILL_DIR}/references/screen-states.md` (plus any rows the calling skill adds): frame present, or the user's decision (*use default*, *skip*, *design later*). Ask for missing states with `AskUserQuestion` — up to 4 independent states in one call, each with options *use default (Recommended)* / *skip* / *design later* and a description of what the default looks like; numbered options when the tool is absent. Never invent a look the designer did not draw.
+Fill the table in `ui-map.md` from `${CLAUDE_SKILL_DIR}/references/screen-states.md` (plus any rows the calling skill adds): frame present, or the user's decision (_use default_, _skip_, _design later_). Ask for missing states with `AskUserQuestion` — up to 4 independent states in one call, each with options _use default (Recommended)_ / _skip_ / _design later_ and a description of what the default looks like; numbered options when the tool is absent. Never invent a look the designer did not draw.
 
-Record the supported viewports at the top of the map — from the ADR or spec if it has them, otherwise ask now as options (phone + desktop *(Recommended)* / desktop only / phone, tablet and desktop), stating the smallest width. Every frame being desktop-sized is not an answer.
+Record the supported viewports at the top of the map — from the ADR or spec if it has them, otherwise ask now as options (phone + desktop _(Recommended)_ / desktop only / phone, tablet and desktop), stating the smallest width. Every frame being desktop-sized is not an answer.
 
 **Done when:** every row has a frame or a recorded decision, and the viewports are recorded.
 
@@ -72,7 +72,7 @@ It writes a side-by-side + diff image per state and a PASS/FAIL table (default 3
 
 Then the widths no frame covers: shoot every state at the smallest supported width and one middle width (e.g. 390 and 768) to `design/actual/<state>@<width>.png`, and assert per shot `document.documentElement.scrollWidth <= window.innerWidth`, the primary action visible, and any drawer opening and closing. There is no frame to diff these against — check them against the Narrow width row, and show the narrow shots in the reply.
 
-**Done when:** every state passes compare-shots (and check-text-styles when it has dynamic text), or its remaining difference is listed in the map and accepted by the user; and every state at each supported narrow width has no horizontal overflow and its primary action visible (unless the map marks narrow width *skip* by the user's decision).
+**Done when:** every state passes compare-shots (and check-text-styles when it has dynamic text), or its remaining difference is listed in the map and accepted by the user; and every state at each supported narrow width has no horizontal overflow and its primary action visible (unless the map marks narrow width _skip_ by the user's decision).
 
 ## Step 6 — Quality floor and taste
 

@@ -42,15 +42,15 @@ Update later with `/plugin marketplace update harness`. The always-loaded global
 
 ## What changes for a team
 
-| Before | With the harness | Enforced by |
-|---|---|---|
-| "Done" means Claude said so | `/verify-done` re-runs the checks in the session and reports their output; a PR's Witness line is filled from the command log, never typed | `core`, `guards` |
-| Code lands on `main` or `staging` straight from a session | Pushes to `main` and environment branches are blocked; work goes through a branch and a PR | `branch-guard` hook, always on |
-| A fix "passes" by editing the test | The test that reproduces a bug is locked while the fix is written | `test-lock` hook |
-| A secret file is read into the context | `.env*`, keys and service-account files are never read, printed or edited; Claude asks you for the value | `secret-guard` hook |
-| A ticket skips review under time pressure | A ticket's commit waits for the skills its plan names; its PR waits for `/verify-done` and `/review-checklist` | `ticket-gate` hook |
-| Every step runs on the most expensive model | Opus plans, decides and reviews; Sonnet writes code from an approved plan; Haiku does mechanical work | `model-cost` rule, each skill's `model:` |
-| Each session starts from zero | `/compact` writes a handoff the next session reads; `/compound` keeps the lessons in `docs/solutions/` | `core` |
+| Before                                                    | With the harness                                                                                                                           | Enforced by                              |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| "Done" means Claude said so                               | `/verify-done` re-runs the checks in the session and reports their output; a PR's Witness line is filled from the command log, never typed | `core`, `guards`                         |
+| Code lands on `main` or `staging` straight from a session | Pushes to `main` and environment branches are blocked; work goes through a branch and a PR                                                 | `branch-guard` hook, always on           |
+| A fix "passes" by editing the test                        | The test that reproduces a bug is locked while the fix is written                                                                          | `test-lock` hook                         |
+| A secret file is read into the context                    | `.env*`, keys and service-account files are never read, printed or edited; Claude asks you for the value                                   | `secret-guard` hook                      |
+| A ticket skips review under time pressure                 | A ticket's commit waits for the skills its plan names; its PR waits for `/verify-done` and `/review-checklist`                             | `ticket-gate` hook                       |
+| Every step runs on the most expensive model               | Opus plans, decides and reviews; Sonnet writes code from an approved plan; Haiku does mechanical work                                      | `model-cost` rule, each skill's `model:` |
+| Each session starts from zero                             | `/compact` writes a handoff the next session reads; `/compound` keeps the lessons in `docs/solutions/`                                     | `core`                                   |
 
 Every gate has a written waiver, so a skipped step is a recorded decision rather than a silent omission. Hooks exit 0 or 2 and never crash the session. Anything beyond the core gates is opt-in (`guards`).
 
@@ -80,13 +80,13 @@ The lane comes from risk; a human is asked only to resolve ambiguity, never to c
 
 `/feature` is the supervisor. It writes the plan, then dispatches each slice to the engineer of the pack that owns it, on the cheaper model, with a brief that leaves nothing to decide. You never call a role by hand.
 
-| Slice | Engineer | Runs |
-|---|---|---|
-| tables, queries, contract, endpoint, third-party API | `backend-engineer` | `/db-change` `/api-endpoint` `/api-client` |
-| web screen | `frontend-engineer` | `/ui-feature` (`/design-ui` first when there is a design) |
-| mobile screen | `mobile-engineer` | `/mobile-feature` |
-| tool, graph, HITL, prompt, chat surface | `ai-engineer` | `/agent-tool` `/agent-graph` `/agent-hitl` `/agent-frontend` … |
-| CI, container, infrastructure | `devops-engineer` | `/pipeline` `/container` `/infra-change` |
+| Slice                                                | Engineer            | Runs                                                           |
+| ---------------------------------------------------- | ------------------- | -------------------------------------------------------------- |
+| tables, queries, contract, endpoint, third-party API | `backend-engineer`  | `/db-change` `/api-endpoint` `/api-client`                     |
+| web screen                                           | `frontend-engineer` | `/ui-feature` (`/design-ui` first when there is a design)      |
+| mobile screen                                        | `mobile-engineer`   | `/mobile-feature`                                              |
+| tool, graph, HITL, prompt, chat surface              | `ai-engineer`       | `/agent-tool` `/agent-graph` `/agent-hitl` `/agent-frontend` … |
+| CI, container, infrastructure                        | `devops-engineer`   | `/pipeline` `/container` `/infra-change`                       |
 
 A slice that touches two roles belongs to the pack of the **contract** it implements, not the language it is written in: a CopilotKit chat surface in a Next app is `ai` (its contract is the AG-UI event stream), the settings page beside it is `frontend`, the Prisma migration behind it is `backend`. Opus reviews every engineer's diff before it is integrated.
 
@@ -98,13 +98,13 @@ Gates live in the process plugins, never in a pack, so they hold before a pack i
 
 Five role packs with one shape: one `<role>-engineer` agent, skills named after the deliverable, the stack rules read on demand, no hooks, depending only on `progress` and `dev`.
 
-| Pack | Turned on when the repo has | Rules it carries |
-|---|---|---|
-| `frontend` | React, Next.js, Vue, Svelte or Vite without React Native | React, Next.js, taste |
-| `backend` | a server framework, a database or ORM, Go or Rust | Python, FastAPI, Prisma |
-| `mobile` | React Native or Expo, `eas.json` | React Native |
-| `devops` | a Dockerfile, CI workflows, `*.tf`, `k8s/`, a Helm chart | CI, container, infra |
-| `ai` | CopilotKit, LangGraph, LangChain, Mastra | the framework rules |
+| Pack       | Turned on when the repo has                              | Rules it carries        |
+| ---------- | -------------------------------------------------------- | ----------------------- |
+| `frontend` | React, Next.js, Vue, Svelte or Vite without React Native | React, Next.js, taste   |
+| `backend`  | a server framework, a database or ORM, Go or Rust        | Python, FastAPI, Prisma |
+| `mobile`   | React Native or Expo, `eas.json`                         | React Native            |
+| `devops`   | a Dockerfile, CI workflows, `*.tf`, `k8s/`, a Helm chart | CI, container, infra    |
+| `ai`       | CopilotKit, LangGraph, LangChain, Mastra                 | the framework rules     |
 
 `core`'s `repo-profile` hook reads the repo on session start and writes the packs into `.claude/settings.local.json`; they load from the next session. A pack that is not on is not an error: `/feature` builds that slice with the generic steps. The domain pack `workplace` (HR / workplace apps) is turned on the same way.
 
@@ -116,36 +116,36 @@ Rules load every session or only for matching paths, so the always-on context st
 
 One marketplace, `harness`, one plugin per role. Installing a role pulls in what it depends on. Nothing blocks a commit beyond the core gates unless you install `guards`.
 
-| Plugin | Who installs it | Brings | Depends on |
-|---|---|---|---|
-| [`core`](plugins/core/README.md) | everyone, through any role | `/verify-done`, `/project-init`, `/docs-sync`, `/compact`, `/compound`, `/sync-memory`, `/btw`; the always-on safety hooks | progress |
-| [`plan`](plugins/plan/README.md) | everyone who receives requirements; architects, tech leads | `/breakdown` (requirement → estimated tasks on the tracker), `/kickoff`, `/brainstorming`, `/grill`, `/domain-model`, `/codebase-design`, `/writing-plans` | progress |
-| [`review`](plugins/review/README.md) | reviewers | `/review-checklist`, `/review-diff`, `/blast-radius`, `/create-pr`, `/resolve-pr-feedback`, `/debt-ledger`, `/repo-audit` | progress |
-| [`dev`](plugins/dev/README.md) | every developer | `/feature` (dispatches slices to the role packs' engineers), `/ticket`, `/fix-bug`, `/tdd`, `/resolve-question`, `/checkpoint`, `/coordinator`; the ticket and test-lock hooks | core, plan, review, ship |
-| [`frontend`](plugins/frontend/README.md) | web UI repos, turned on per repo | the `frontend-engineer` agent, `/ui-feature`, `/design-ui`; React and Next.js rules | progress, dev |
-| [`backend`](plugins/backend/README.md) | server repos, turned on per repo | the `backend-engineer` agent, `/api-endpoint`, `/db-change`, `/api-client`; Python, FastAPI and Prisma rules | progress, dev |
-| [`ship`](plugins/ship/README.md) | release and CI owners | `/finish-branch`, `/ci-triage`, `/release-checklist`, `/write-migration`, `/incident`, `/sync-remote`; the mobile release gate | core |
-| [`mobile`](plugins/mobile/README.md) | React Native / Expo repos, turned on per repo | the `mobile-engineer` agent, `/mobile-feature`; React Native rules | progress, dev |
-| [`devops`](plugins/devops/README.md) | repos with CI, containers or infra, turned on per repo | the `devops-engineer` agent, `/pipeline`, `/container`, `/infra-change`; CI, container and infra rules | progress, dev |
-| [`ai`](plugins/ai/README.md) | AI-assistant repos, turned on per repo | the `ai-engineer` agent, `/agent-architect`, `/agent-feature`, `/agent-tool`, `/agent-hitl`, `/agent-graph`, `/agent-frontend`, `/agent-design-ui`, `/agent-rag`, `/agent-evals`, `/agent-verify-turn`, `/agent-security`, `/agent-prompt-review`; the framework rules | progress, dev |
-| [`workplace`](plugins/workplace/README.md) | teams building HR / workplace apps | `/workplace-review` and the domain invariants; turned on per repo | progress |
-| [`lead`](plugins/lead/README.md) | process owners | `/retro`, `/diagnose-session`, `/writing-skills` | core |
-| [`guards`](plugins/guards/README.md) | anyone who wants stricter rails | opt-in hooks: commit quality gate, scope gate, blast radius, run log, push evidence, session handoff | dev |
-| [`progress`](plugins/progress/README.md) | comes with every role | a skill's checklist and live ✅ progress; never blocks | — |
-| [`harness`](plugins/harness/README.md) | "give me everything" | the eight general plugins above; the role packs `frontend`, `backend`, `mobile`, `devops`, `ai` and the domain pack `workplace` stay separate so they can turn on per repo | all eight |
+| Plugin                                     | Who installs it                                            | Brings                                                                                                                                                                                                                                                                 | Depends on               |
+| ------------------------------------------ | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| [`core`](plugins/core/README.md)           | everyone, through any role                                 | `/verify-done`, `/project-init`, `/docs-sync`, `/compact`, `/compound`, `/sync-memory`, `/btw`; the always-on safety hooks                                                                                                                                             | progress                 |
+| [`plan`](plugins/plan/README.md)           | everyone who receives requirements; architects, tech leads | `/breakdown` (requirement → estimated tasks on the tracker), `/kickoff`, `/brainstorming`, `/grill`, `/domain-model`, `/codebase-design`, `/writing-plans`                                                                                                             | progress                 |
+| [`review`](plugins/review/README.md)       | reviewers                                                  | `/review-checklist`, `/review-diff`, `/blast-radius`, `/create-pr`, `/resolve-pr-feedback`, `/debt-ledger`, `/repo-audit`                                                                                                                                              | progress                 |
+| [`dev`](plugins/dev/README.md)             | every developer                                            | `/feature` (dispatches slices to the role packs' engineers), `/ticket`, `/fix-bug`, `/tdd`, `/resolve-question`, `/checkpoint`, `/coordinator`; the ticket and test-lock hooks                                                                                         | core, plan, review, ship |
+| [`frontend`](plugins/frontend/README.md)   | web UI repos, turned on per repo                           | the `frontend-engineer` agent, `/ui-feature`, `/design-ui`; React and Next.js rules                                                                                                                                                                                    | progress, dev            |
+| [`backend`](plugins/backend/README.md)     | server repos, turned on per repo                           | the `backend-engineer` agent, `/api-endpoint`, `/db-change`, `/api-client`; Python, FastAPI and Prisma rules                                                                                                                                                           | progress, dev            |
+| [`ship`](plugins/ship/README.md)           | release and CI owners                                      | `/finish-branch`, `/ci-triage`, `/release-checklist`, `/write-migration`, `/incident`, `/sync-remote`; the mobile release gate                                                                                                                                         | core                     |
+| [`mobile`](plugins/mobile/README.md)       | React Native / Expo repos, turned on per repo              | the `mobile-engineer` agent, `/mobile-feature`; React Native rules                                                                                                                                                                                                     | progress, dev            |
+| [`devops`](plugins/devops/README.md)       | repos with CI, containers or infra, turned on per repo     | the `devops-engineer` agent, `/pipeline`, `/container`, `/infra-change`; CI, container and infra rules                                                                                                                                                                 | progress, dev            |
+| [`ai`](plugins/ai/README.md)               | AI-assistant repos, turned on per repo                     | the `ai-engineer` agent, `/agent-architect`, `/agent-feature`, `/agent-tool`, `/agent-hitl`, `/agent-graph`, `/agent-frontend`, `/agent-design-ui`, `/agent-rag`, `/agent-evals`, `/agent-verify-turn`, `/agent-security`, `/agent-prompt-review`; the framework rules | progress, dev            |
+| [`workplace`](plugins/workplace/README.md) | teams building HR / workplace apps                         | `/workplace-review` and the domain invariants; turned on per repo                                                                                                                                                                                                      | progress                 |
+| [`lead`](plugins/lead/README.md)           | process owners                                             | `/retro`, `/diagnose-session`, `/writing-skills`                                                                                                                                                                                                                       | core                     |
+| [`guards`](plugins/guards/README.md)       | anyone who wants stricter rails                            | opt-in hooks: commit quality gate, scope gate, blast radius, run log, push evidence, session handoff                                                                                                                                                                   | dev                      |
+| [`progress`](plugins/progress/README.md)   | comes with every role                                      | a skill's checklist and live ✅ progress; never blocks                                                                                                                                                                                                                 | —                        |
+| [`harness`](plugins/harness/README.md)     | "give me everything"                                       | the eight general plugins above; the role packs `frontend`, `backend`, `mobile`, `devops`, `ai` and the domain pack `workplace` stay separate so they can turn on per repo                                                                                             | all eight                |
 
 Today: 11 plugins, 54 skills, 9 always-on rules, 8 recorded design decisions. The index with every skill: [`plugins/README.md`](plugins/README.md).
 
 ## Read next
 
-| You want to… | Read |
-|---|---|
-| Install step by step, bootstrap a project, fix a blocked commit | [`docs/USAGE.md`](docs/USAGE.md) |
-| Understand the control model: lanes, hard gates, what hooks enforce | [`HARNESS.md`](HARNESS.md) |
-| See why it is built this way: packaging, layers, where each AI-assistant concern lives | [`DESIGN.md`](DESIGN.md) |
-| Read one decision and its trade-off | [`docs/ddr/`](docs/ddr/README.md) |
-| Build an AI assistant | [`plugins/ai/README.md`](plugins/ai/README.md) |
-| Browse every skill and hook visually | [`docs/skill-map.html`](docs/skill-map.html) |
+| You want to…                                                                           | Read                                           |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Install step by step, bootstrap a project, fix a blocked commit                        | [`docs/USAGE.md`](docs/USAGE.md)               |
+| Understand the control model: lanes, hard gates, what hooks enforce                    | [`HARNESS.md`](HARNESS.md)                     |
+| See why it is built this way: packaging, layers, where each AI-assistant concern lives | [`DESIGN.md`](DESIGN.md)                       |
+| Read one decision and its trade-off                                                    | [`docs/ddr/`](docs/ddr/README.md)              |
+| Build an AI assistant                                                                  | [`plugins/ai/README.md`](plugins/ai/README.md) |
+| Browse every skill and hook visually                                                   | [`docs/skill-map.html`](docs/skill-map.html)   |
 
 ## For kit contributors
 

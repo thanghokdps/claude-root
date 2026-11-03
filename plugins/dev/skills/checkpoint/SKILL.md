@@ -16,6 +16,7 @@ when_to_use: midway through a PLAN.md, before a commit or PR, or when the user a
 ## Stage 1 — Load plan context
 
 Check for plan file:
+
 - `specs/<slug>/PLAN.md` — structured plan from `/feature`
 - `.claude/memory/sessions/` — recent session notes
 - `.claude/memory/commits/` — recent commits
@@ -25,6 +26,7 @@ If no plan exists → report that and skip to Stage 3.
 ## Stage 2 — Map done vs remaining
 
 For each task in the plan:
+
 - Mark `✅ Done` if there's a commit or session note covering it
 - Mark `🔄 In progress` if work started but no commit yet
 - Mark `⬜ Not started` if untouched
@@ -32,6 +34,7 @@ For each task in the plan:
 Use `git log --oneline -20` and recent session memory to verify.
 
 Report:
+
 ```
 Progress: X / Y tasks complete
 
@@ -76,6 +79,7 @@ Report each gate: ✅ pass / ❌ fail (with error count, or `<rule>: <measured> 
 ## Stage 4 — Blockers
 
 List any blockers:
+
 - Failing quality gates
 - Unresolved feedback memories that apply to current work
 - Uncommitted changes that belong to a previous task
@@ -84,6 +88,7 @@ List any blockers:
 ## Stage 5 — Recommendation
 
 One of:
+
 - `Continue` — all gates pass, next task is clear
 - `Fix gates first` — quality gate failures must be resolved before continuing
 - `Sync memory` — team project, memory is stale, run `/sync-memory` first

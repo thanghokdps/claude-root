@@ -22,7 +22,7 @@ Read `.claude/docs/architecture.md` and `.claude/docs/glossary.md` if they exist
 
 **This is the skill.** Everything after it is mechanical.
 
-With a **tight** pass/fail signal that goes **red** on *this* bug, you will find the cause — bisection, hypothesis-testing, and instrumentation all just consume that signal. Without one, no amount of staring at code will save you.
+With a **tight** pass/fail signal that goes **red** on _this_ bug, you will find the cause — bisection, hypothesis-testing, and instrumentation all just consume that signal. Without one, no amount of staring at code will save you.
 
 Spend disproportionate effort here. Be aggressive, be creative, refuse to give up.
 
@@ -42,7 +42,7 @@ In an LLM-agent repo (`@langchain/*` or `@copilotkit/*` deps), the red loop is a
 
 ### Tighten it
 
-Treat the loop as a product. Once you have *a* loop:
+Treat the loop as a product. Once you have _a_ loop:
 
 - **Faster?** Cache setup, skip unrelated init, narrow the scope.
 - **Sharper signal?** Assert the specific symptom, not "didn't crash".
@@ -56,7 +56,7 @@ A 30-second flaky loop is barely better than none. A 2-second deterministic one 
 
 Name **one command** you have **already run at least once** — paste the invocation and its output — that is:
 
-- [ ] **Red-capable** — drives the actual bug path and asserts the user's *exact* symptom, so it goes red now and green once fixed
+- [ ] **Red-capable** — drives the actual bug path and asserts the user's _exact_ symptom, so it goes red now and green once fixed
 - [ ] **Deterministic** — same verdict every run (or a pinned high repro rate)
 - [ ] **Fast** — seconds, not minutes
 - [ ] **Agent-runnable** — you can run it unattended
@@ -158,7 +158,7 @@ State the hypothesis that turned out correct in the commit body, so the next deb
 - Good: `fix: prevent double-emit of TOOL_CALL_END when parallel tool calls overlap`
 - Bad: `fix: bug in tool call handling`
 
-**Then ask: what would have prevented this bug?** If the answer is architectural — no good test seam, tangled callers, hidden coupling — say so now, with the specifics. Make that recommendation *after* the fix lands; you know more than you did at Phase 1.
+**Then ask: what would have prevented this bug?** If the answer is architectural — no good test seam, tangled callers, hidden coupling — say so now, with the specifics. Make that recommendation _after_ the fix lands; you know more than you did at Phase 1.
 
 If the root cause was genuinely non-obvious, record it via `/compound` so the class of bug does not come back.
 

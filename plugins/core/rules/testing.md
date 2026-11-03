@@ -51,11 +51,13 @@ Target: 0 errors, 0 warnings, all tests pass.
 ## Adding tests
 
 When adding a new feature:
+
 - Write failing test first (TDD) if practical
 - Test file: `{module}.test.ts` or `test_{module}.py`, at the repo's test location (§ Where tests live)
 - At minimum: one happy-path test and one error-path test
 
 When fixing a bug:
+
 - Add a test that reproduces the bug before fixing
 - The test must fail on the buggy code, pass after the fix
 
@@ -63,11 +65,11 @@ When fixing a bug:
 
 **Rule: every implementation file that is created or modified must have a paired test file.**
 
-| Scenario | Action |
-|----------|--------|
-| New component/screen/module created | Create its test file at the repo's test location immediately — use the project's test-generation skill if it has one |
-| Existing file modified | Open its test file, update affected test cases to match the change |
-| No test file exists for a modified file | Create it before handing off or committing |
+| Scenario                                | Action                                                                                                               |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| New component/screen/module created     | Create its test file at the repo's test location immediately — use the project's test-generation skill if it has one |
+| Existing file modified                  | Open its test file, update affected test cases to match the change                                                   |
+| No test file exists for a modified file | Create it before handing off or committing                                                                           |
 
 **Skip only for**: config files, type-only files, navigation wiring, constant declarations.
 

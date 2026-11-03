@@ -7,12 +7,6 @@
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
   "description": "Domain pack for internal workplace / HR apps: request and approval rules, balances, bookings and cutoffs, a starter domain model, kickoff need questions, and /workplace-review.",
-  "keywords": [
-    "domain",
-    "hr",
-    "workplace"
-  ],
-  "dependencies": [
-    "progress"
-  ]
+  "keywords": ["domain", "hr", "workplace"],
+  "dependencies": ["progress"]
 }

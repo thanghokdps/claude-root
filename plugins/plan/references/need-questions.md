@@ -13,13 +13,13 @@ Read by `/kickoff` and `/brainstorming` before any question about stack, archite
 
 ## Translation table (a starting set; add rows as projects teach you)
 
-| Need question | Options → maps to |
-|---------------|-------------------|
-| What kind of app is it? | Large enterprise: many teams, years of life, strict structure → Angular or NestJS, modular monorepo · Quick and lean: one small team, ship fast → Next.js full-stack |
-| Where are your users? | In a browser → web app · On their phone → React Native (Expo) · Both → responsive web, mobile later on the same API |
-| How many people use it? | Hundreds → one Postgres, one server · Thousands every day → Postgres + cache, horizontal app servers · Big spikes (sales, events) → queue + autoscaling |
-| Who runs it after launch? | Our developers → custom code · A non-tech team edits content → headless CMS · Nobody, set and forget → managed / serverless hosting |
-| Does it hold sensitive data? | No → baseline security · Personal data → PII rules, encryption at rest · Health or payment data → high-risk lane, compliance review |
-| What is the first milestone? | A demo in weeks → scaffold, defaults, skip non-functional rows · Production in months → full non-functional rows, CI and environments |
-| Must it be live or work offline? | Neither → request/response · Live updates → WebSockets or SSE · Works offline → local-first storage + sync |
-| Where may it run? | Anywhere cheap → Vercel, Fly · Our company cloud → that provider's managed services · Our own servers → Docker on-prem |
+| Need question                    | Options → maps to                                                                                                                                                    |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What kind of app is it?          | Large enterprise: many teams, years of life, strict structure → Angular or NestJS, modular monorepo · Quick and lean: one small team, ship fast → Next.js full-stack |
+| Where are your users?            | In a browser → web app · On their phone → React Native (Expo) · Both → responsive web, mobile later on the same API                                                  |
+| How many people use it?          | Hundreds → one Postgres, one server · Thousands every day → Postgres + cache, horizontal app servers · Big spikes (sales, events) → queue + autoscaling              |
+| Who runs it after launch?        | Our developers → custom code · A non-tech team edits content → headless CMS · Nobody, set and forget → managed / serverless hosting                                  |
+| Does it hold sensitive data?     | No → baseline security · Personal data → PII rules, encryption at rest · Health or payment data → high-risk lane, compliance review                                  |
+| What is the first milestone?     | A demo in weeks → scaffold, defaults, skip non-functional rows · Production in months → full non-functional rows, CI and environments                                |
+| Must it be live or work offline? | Neither → request/response · Live updates → WebSockets or SSE · Works offline → local-first storage + sync                                                           |
+| Where may it run?                | Anywhere cheap → Vercel, Fly · Our company cloud → that provider's managed services · Our own servers → Docker on-prem                                               |
