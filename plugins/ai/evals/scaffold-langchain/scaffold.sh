@@ -12,9 +12,12 @@ cache-dir=$HOME/.pnpm-cache
 offline=true
 manage-package-manager-versions=false
 EOF
-# /usr/bin/git is the xcrun shim, which fails in the sandbox (exit 72). zsh reads .zshrc after /etc/zprofile, whose
-# path_helper would put /usr/bin back in front of a PATH set any earlier.
-echo "export PATH=\"$(dirname "$(xcrun --find git)"):\$PATH\"" >"$HOME/.zshrc"
+# /usr/bin/git is the xcrun shim, which fails in the sandbox (exit 72). The sandbox takes no shell snapshot, so .zshrc
+# is never read: every zsh reads .zshenv, and a login zsh reads .zprofile after /etc/zprofile's path_helper, which
+# puts /usr/bin back in front. Bash scripts the agent runs (preflight.sh) inherit that PATH.
+path_line="export PATH=\"$(dirname "$(xcrun --find git)"):\$PATH\""
+echo "$path_line" >"$HOME/.zshenv"
+echo "$path_line" >"$HOME/.zprofile"
 cat >"$HOME/.gitconfig" <<'EOF'
 [user]
 	name = Eval Run
