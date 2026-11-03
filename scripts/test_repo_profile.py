@@ -328,6 +328,36 @@ def test_new_repo_with_all_three_packs_on_asks_nothing():
     assert "systemMessage" not in out, out
 
 
+def blocking_config(extra=None):
+    cfg = config_dir()
+    with open(os.path.join(cfg, "settings.json"), "w") as f:
+        json.dump({"enabledPlugins": extra or {}, "permissions": {"blockReadsOutsideWorkingDirectories": True}}, f)
+    return cfg
+
+
+def test_blocked_reads_outside_are_flagged_in_a_stack_repo():
+    cfg = blocking_config()
+    out = raw_output(repo({"package.json": AI_PKG}), cfg)
+    assert "cannot read their rules" in out["hookSpecificOutput"]["additionalContext"], out
+    assert f"/add-dir {os.path.join(cfg, 'plugins')}" in out["systemMessage"], out
+
+
+def test_blocked_reads_outside_are_flagged_in_a_new_repo_with_the_pack_note():
+    out = raw_output(repo(), blocking_config({"ai@harness": True}))
+    assert "cannot read their rules" in out["systemMessage"] and "/reload-plugins" in out["systemMessage"], out
+
+
+def test_reads_outside_allowed_adds_no_note():
+    out = raw_output(repo({"package.json": AI_PKG}), config_dir({}))
+    assert "systemMessage" not in out and "cannot read their rules" not in json.dumps(out), out
+
+
+def test_ai_repo_without_a_web_ui_still_gets_frontend():
+    cwd = repo({"pyproject.toml": "[project]\ndependencies = ['langgraph']\n"})
+    run(cwd)
+    assert {"ai", "backend", "frontend"} <= shared_packs(cwd), shared_packs(cwd)
+
+
 def test_ai_repo_without_a_server_framework_gets_backend():
     cwd = repo({"package.json": {"dependencies": {"@langchain/langgraph": "1", "vite": "6", "react": "19"}}})
     run(cwd)
@@ -496,9 +526,9 @@ def test_workplace_opt_out_is_respected_and_agent_still_enabled():
     cwd = repo(files)
     ctx = run(cwd)
     assert "Domain: workplace" in ctx and "AI assistant" in ctx, ctx
-    # RN apps: mobile, not frontend; the assistant's agent server: backend.
-    assert local_settings(cwd)["enabledPlugins"] == {"backend@harness": True, "mobile@harness": True,
-                                                     "ai@harness": True}
+    # RN apps: mobile; ai's dependencies frontend and backend come with it, or ai would not load.
+    assert local_settings(cwd)["enabledPlugins"] == {"frontend@harness": True, "backend@harness": True,
+                                                     "mobile@harness": True, "ai@harness": True}
 
 
 def test_ticket_folder_is_mentioned():

@@ -103,6 +103,13 @@ def test_role_pack_shape():
     assert len(bad) == 3 and "agents/frontend-engineer.md" in bad[0] and "dependencies" in bad[1] and "hooks" in bad[2], bad
 
 
+def test_ai_pack_also_depends_on_frontend_and_backend():
+    full = {"dependencies": ["progress", "dev", "frontend", "backend"]}
+    assert lint_kit.role_pack_errors("ai", ["ai-engineer.md"], full, False) == []
+    assert lint_kit.role_pack_errors("ai", ["ai-engineer.md"], {"dependencies": ["progress", "dev"]}, False)
+    assert lint_kit.role_pack_errors("frontend", ["frontend-engineer.md"], full, False)
+
+
 def test_eval_build_adds_dependency_closure():
     graph = {"ai": ["progress", "dev"], "dev": ["core"], "progress": [], "core": ["progress"]}
     plugins = eval_build.case_plugins("ai", graph)
