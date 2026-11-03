@@ -202,10 +202,22 @@ if not manifests:
                      "yet: a feature → /agent-feature, a write behind a confirm card → /agent-hitl, documents or a "
                      "vector store → /agent-rag, a tool → /agent-tool, routing → /agent-graph. Invoke the skill "
                      "before asking questions or planning; never plan or build the layer by hand.")
+    user_note = ""
+    if is_on("ai@harness") and not is_on("frontend@harness"):
+        # /agent-architect's chat page is a web UI: asked mid-scaffold, the pack cost the user a stop and a reload.
+        pack_cmd = enable.split("`")[1].replace("<pack>", "frontend@harness")
+        lines.append("REPO PROFILE: ai@harness is on but frontend@harness is off, and /agent-architect builds a web "
+                     f"chat page. In your first reply, before any skill, preflight or plan, ask the user to run "
+                     f"`{pack_cmd}` and type /reload-plugins, unless they asked for no web UI.")
+        user_note = (f"New repo with ai@harness: the chat page needs frontend@harness. Run `! {pack_cmd}`, then "
+                     "/reload-plugins, before asking for a scaffold.")
     if setup_note(added or []):
         lines.append(setup_note(added or []))
     if lines:
-        print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": "\n".join(lines)}}))
+        out = {"hookSpecificOutput": {"hookEventName": event, "additionalContext": "\n".join(lines)}}
+        if user_note and event == "SessionStart":
+            out["systemMessage"] = user_note
+        print(json.dumps(out))
     sys.exit(0)
 
 
