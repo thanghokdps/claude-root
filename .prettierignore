@@ -7,3 +7,6 @@ package-lock.json
 .pytest_cache/
 # Rendered by super-board's visual.py (scripts/skill-map.py), not edited by hand.
 docs/skill-map.html
+# Ignored by eval/.gitignore and Claude Code's worktree exclude; Prettier reads only the root .gitignore.
+eval/reports/
+.claude/worktrees/
