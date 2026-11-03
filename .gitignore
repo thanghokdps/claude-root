@@ -17,6 +17,8 @@ node_modules/
 plugins/*/evals/results/
 # cases with their `plugins:` filled in (scripts/eval-build.py)
 plugins/*/evals-build/
+# offline pnpm store the --real-scaffold cases clone (scripts/eval-plugin.sh)
+/.eval-cache/
 
 .playwright-mcp
 # private names for lint-kit's denylist; committed on the company branch only
