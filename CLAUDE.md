@@ -66,7 +66,7 @@ Deploy the docs site to Vercel production (`deploy prod`, `release site`): `bash
 On `sync`:
 
 1. Stop if the tree is dirty. `git fetch origin && git fetch gitlab`. `main` must equal `origin/main`; if `gitlab/main` has commits `company` lacks, stop and show them — a teammate's change reaches `main` only as a cherry-pick the user approves, with no company detail.
-2. `git switch company && git merge --no-ff main`. The Vercel files stay deleted on `company`: `vercel.json`, `package.json`, `middleware.js`, `scripts/release-site.sh`, `scripts/test_release_site.py`, `scripts/test_site_auth.py`, their `scripts/check.sh` lines, and the Vercel lines in `CLAUDE.md`, `README.md`, `.gitignore` and `scripts/build-site.py`. On a modify/delete conflict keep the deletion (`git rm`); a new Vercel file from `main` is removed in the merge commit.
+2. `git switch company && git merge --no-ff main`. The Vercel files stay deleted on `company`: `vercel.json`, `middleware.js`, `scripts/release-site.sh`, `scripts/test_release_site.py`, `scripts/test_site_auth.py`, their `scripts/check.sh` lines, and the Vercel lines in `CLAUDE.md`, `README.md`, `.gitignore` and `scripts/build-site.py`. On a modify/delete conflict keep the deletion (`git rm`); a new Vercel file from `main` is removed in the merge commit. `package.json` stays (it pins Prettier for `check.sh` and CI) without its `"type": "module"` line, which only `middleware.js` needs.
 3. `bash scripts/check.sh` on `company`; on red, stop with the output.
 4. Give the user `git push gitlab company:main` to run — never push it yourself — then `git switch main`.
 
