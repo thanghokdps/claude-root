@@ -10,21 +10,21 @@ paths:
 - Who the caller is comes from the verified request (token → server-side claims), injected by the server into the run. A tool reads it from that trusted context.
 - A tool schema never has `userId`, `actingAs`, `tenantId`, `role` or any field that selects whose data or whose authority — that is an authorisation hole the model can be talked into filling.
 - Targets the user names ("update Alex's leave") are resolved server-side and checked against the caller's permission on that specific resource. A write target's id must match a row a trusted read tool returned in this thread; an id from model text or client-sent history is refused.
-- The trusted channel is the framework's run context: LangGraph/LangChain `contextSchema` → `runtime.context` (older: `config.configurable`), Mastra `requestContext`. The server fills it after verifying the token. A `createAgent` graph served by the LangGraph server gets an empty `context` and uses `configurable` instead (`langgraph.md` § Run context).
+- The trusted channel is the framework's run context: LangGraph/LangChain `contextSchema` → `runtime.context` (older: `config.configurable`), Mastra `requestContext`. The server fills it after verifying the token. A `createAgent` graph served by the LangGraph server gets an empty `context` and reads the caller from `configurable.langgraph_auth_user`, set by the server's custom auth, never from another `configurable` key (`langgraph.md` § Run context).
 - Strip client-supplied identity keys from the run input, context and forwarded headers before injecting verified ones; `x-*` headers forwarded by an adapter are client-controlled. Keep access tokens out of context, `configurable` and state (they reach checkpoints and traces); use request scope (`AsyncLocalStorage`) instead.
 - Shared context from the frontend (`useAgentContext`) is untrusted display context: fine for greetings and phrasing, never for authorisation.
 - Missing or partial claims → refuse (fail closed), except an explicit dev-only fallback that cannot ship.
 
 ## Where a tool lives — agent or frontend
 
-| The tool… | Define it | Skill |
-|---|---|---|
-| reads or writes server data, needs the caller's identity, a secret or an audit entry | agent tool (backend) | `/agent-tool`; writes add `/agent-hitl` |
-| only changes the browser: navigate, open a panel, fill a form, read the selection, highlight | frontend tool, `useFrontendTool` | `/agent-frontend` |
-| reads server data and shows the result **inside the chat** (a card under the answer) | backend tool + `useRenderTool` card; the card only draws the result, it is not a tool | `/agent-tool` then `/agent-frontend` |
-| asks the user a question mid-turn (choose, clarify) | `useHumanInTheLoop` | `/agent-frontend` |
-| proposes a change the user applies (a new title, a draft): the agent never writes | read-only backend tool returning the proposal + `useRenderTool` card whose Confirm calls the app's existing route, as the user, exactly like the UI button | `/agent-tool` then `/agent-frontend` |
-| reads server data, then changes the page **outside the chat** (opens a side panel, highlights a row) | two tools the model calls in a row: a backend read, then a frontend tool that receives the data; never one browser tool calling the API with the user's token | both |
+| The tool…                                                                                            | Define it                                                                                                                                                     | Skill                                   |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| reads or writes server data, needs the caller's identity, a secret or an audit entry                 | agent tool (backend)                                                                                                                                          | `/agent-tool`; writes add `/agent-hitl` |
+| only changes the browser: navigate, open a panel, fill a form, read the selection, highlight         | frontend tool, `useFrontendTool`                                                                                                                              | `/agent-frontend`                       |
+| reads server data and shows the result **inside the chat** (a card under the answer)                 | backend tool + `useRenderTool` card; the card only draws the result, it is not a tool                                                                         | `/agent-tool` then `/agent-frontend`    |
+| asks the user a question mid-turn (choose, clarify)                                                  | `useHumanInTheLoop`                                                                                                                                           | `/agent-frontend`                       |
+| proposes a change the user applies (a new title, a draft): the agent never writes                    | read-only backend tool returning the proposal + `useRenderTool` card whose Confirm calls the app's existing route, as the user, exactly like the UI button    | `/agent-tool` then `/agent-frontend`    |
+| reads server data, then changes the page **outside the chat** (opens a side panel, highlights a row) | two tools the model calls in a row: a backend read, then a frontend tool that receives the data; never one browser tool calling the API with the user's token | both                                    |
 
 - The two read rows differ only in where the result goes: in the chat → one backend tool and a card; on the page → add a frontend tool, because only the browser can open a panel.
 - A frontend tool never writes server data and never decides authorisation: anything it can do, the user could do by clicking.
