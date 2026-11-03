@@ -286,6 +286,8 @@ def check_init_sources():
 # Role packs share one shape so /feature can dispatch to any of them the same way; grows one pack per PR.
 ROLE_PACKS = ("frontend", "backend", "mobile", "devops", "ai")
 ROLE_PACK_DEPS = ["progress", "dev"]
+# An assistant is a chat page plus an agent server: installing ai brings both packs, so none is enabled mid-scaffold.
+ROLE_PACK_EXTRA_DEPS = {"ai": ["frontend", "backend"]}
 
 
 def role_pack_errors(plugin, agents, manifest, has_hooks):
@@ -293,8 +295,9 @@ def role_pack_errors(plugin, agents, manifest, has_hooks):
     out = []
     if agents != [f"{plugin}-engineer.md"]:
         out.append(f"plugins/{plugin}: role pack must ship exactly agents/{plugin}-engineer.md, has {agents}")
-    if manifest.get("dependencies") != ROLE_PACK_DEPS:
-        out.append(f"plugins/{plugin}: role pack dependencies must be {ROLE_PACK_DEPS}, got {manifest.get('dependencies')}")
+    deps = ROLE_PACK_DEPS + ROLE_PACK_EXTRA_DEPS.get(plugin, [])
+    if manifest.get("dependencies") != deps:
+        out.append(f"plugins/{plugin}: role pack dependencies must be {deps}, got {manifest.get('dependencies')}")
     if has_hooks:
         out.append(f"plugins/{plugin}: a role pack carries no hooks — a gate must run before the pack is enabled, so it lives in core/dev/ship")
     return out

@@ -352,6 +352,12 @@ def test_reads_outside_allowed_adds_no_note():
     assert "systemMessage" not in out and "cannot read their rules" not in json.dumps(out), out
 
 
+def test_ai_repo_without_a_web_ui_still_gets_frontend():
+    cwd = repo({"pyproject.toml": "[project]\ndependencies = ['langgraph']\n"})
+    run(cwd)
+    assert {"ai", "backend", "frontend"} <= shared_packs(cwd), shared_packs(cwd)
+
+
 def test_ai_repo_without_a_server_framework_gets_backend():
     cwd = repo({"package.json": {"dependencies": {"@langchain/langgraph": "1", "vite": "6", "react": "19"}}})
     run(cwd)
@@ -520,9 +526,9 @@ def test_workplace_opt_out_is_respected_and_agent_still_enabled():
     cwd = repo(files)
     ctx = run(cwd)
     assert "Domain: workplace" in ctx and "AI assistant" in ctx, ctx
-    # RN apps: mobile, not frontend; the assistant's agent server: backend.
-    assert local_settings(cwd)["enabledPlugins"] == {"backend@harness": True, "mobile@harness": True,
-                                                     "ai@harness": True}
+    # RN apps: mobile; ai's dependencies frontend and backend come with it, or ai would not load.
+    assert local_settings(cwd)["enabledPlugins"] == {"frontend@harness": True, "backend@harness": True,
+                                                     "mobile@harness": True, "ai@harness": True}
 
 
 def test_ticket_folder_is_mentioned():

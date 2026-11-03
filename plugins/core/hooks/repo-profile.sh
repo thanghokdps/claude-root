@@ -196,7 +196,8 @@ for name, label in (("go.mod", "go"), ("Cargo.toml", "rust")):
         manifests.append(label)
 if not manifests:
     # Nothing to detect from yet, and a pack enabled now loads only after a reload: say so before a stack is scaffolded.
-    # An assistant is a web chat page plus an agent server, so ai brings frontend and backend into the team file.
+    # ai depends on frontend and backend; install.sh turns them off at user scope, and a dependency disabled anywhere
+    # disables ai too, so the team file must turn them on wherever ai is.
     companions = ([p for p in ("frontend@harness", "backend@harness") if not is_on(p)]
                   if is_on("ai@harness") else [])
     added = setup_repo(companions)
@@ -232,9 +233,8 @@ if not manifests:
             cmds = [f"`claude plugin enable {p} --scope local`" for p in companions]
             step = f"run {' and '.join(cmds)}, then type /reload-plugins"
             done = f"{names} {'are' if len(companions) > 1 else 'is'} off"
-        lines.append(f"REPO PROFILE: ai@harness is on and {done}; /agent-architect builds a web chat page and an "
-                     f"agent server, which need them. In your first reply, before any skill, preflight or plan, ask "
-                     f"the user to {step}.")
+        lines.append(f"REPO PROFILE: ai@harness is on and {done}; ai depends on them and does not load without them. "
+                     f"In your first reply, before any skill, preflight or plan, ask the user to {step}.")
         user_note = (f"New repo with ai@harness: the assistant needs {names}. Before asking for a scaffold, "
                      f"{step.replace('`claude', '`! claude')}.")
     if setup_note(added or []):
@@ -307,7 +307,8 @@ modules = [os.path.basename(p).lower() for parent in ("apps", "src/modules", "sr
 workplace = domain_marked("workplace") or sum(1 for m in modules if re.search(
     r"time-?off|leave|booking|reservation|approval|maintenance|meal|lunch|attendance", m)) >= 2
 # Role and domain packs stay off at user scope (install.sh) and are turned on here for the repos that need them.
-frontend = web
+# ai depends on frontend and backend, so an AI repo turns both on even with no web UI.
+frontend = web or ai
 # An AI repo runs an agent server even with no web framework or ORM (LangGraph's own server, Mastra).
 backend_pack = backend or bool(db) or "go" in manifests or "rust" in manifests or ai
 devops = bool(glob.glob(at("Dockerfile*")) or glob.glob(at("docker-compose*")) or glob.glob(at("compose.y*ml"))
