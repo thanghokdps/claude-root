@@ -158,6 +158,22 @@ def setup_note(added):
             "plugins it turns on load after /reload-plugins.") if wrote else ""
 
 
+def blocked_reads():
+    """(context line, user note) when a settings file makes the file tools refuse the kit's own rule files."""
+    for path in (local_path, shared_path, os.path.join(cfg, "settings.json")):
+        perms = (load_json(path) if os.path.exists(path) else None) or {}
+        perms = perms.get("permissions") if isinstance(perms, dict) else None
+        if isinstance(perms, dict) and perms.get("blockReadsOutsideWorkingDirectories") is True:
+            # Answering 2 to auto mode's first-read prompt writes this key; every skill then loses its rules.
+            fix = (f"remove permissions.blockReadsOutsideWorkingDirectories from {path} and restart, or type "
+                   f"/add-dir {os.path.join(cfg, 'plugins')} for this session")
+            return ("REPO PROFILE: the file tools refuse reads outside the working directories, so the kit's skills "
+                    f"cannot read their rules under {os.path.join(cfg, 'plugins')}. Before any skill, tell the user "
+                    f"to {fix}.",
+                    f"Harness skills cannot read their rules: {fix}.")
+    return None
+
+
 deps, manifests = set(), []
 for path in [at("package.json")] + sorted(glob.glob(at("apps", "*", "package.json")) +
                                           glob.glob(at("packages", "*", "package.json")))[:30]:
@@ -223,6 +239,10 @@ if not manifests:
                      f"{step.replace('`claude', '`! claude')}.")
     if setup_note(added or []):
         lines.append(setup_note(added or []))
+    blocked = blocked_reads()
+    if blocked:
+        lines.append(blocked[0])
+        user_note = " ".join(filter(None, (blocked[1], user_note)))
     if lines:
         out = {"hookSpecificOutput": {"hookEventName": event, "additionalContext": "\n".join(lines)}}
         if user_note and event == "SessionStart":
@@ -367,6 +387,12 @@ if workplace:
 for note in (enable_note, setup_note(added or [])):
     if note:
         lines.append(note)
-print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": "\n".join(lines)}}))
+blocked = blocked_reads()
+if blocked:
+    lines.append(blocked[0])
+out = {"hookSpecificOutput": {"hookEventName": event, "additionalContext": "\n".join(lines)}}
+if blocked and event == "SessionStart":
+    out["systemMessage"] = blocked[1]
+print(json.dumps(out))
 PY
 exit 0
