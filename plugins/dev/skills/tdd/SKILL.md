@@ -63,7 +63,7 @@ The implementation can change entirely; the test shouldn't.
 
 - **Implementation-coupled** — mocks internal collaborators, tests private methods, or asserts through a side channel (querying the DB instead of using the interface). The tell: it breaks on a refactor when behaviour did not change.
 - **Tautological** — the assertion recomputes the expected value the way the code does, so it passes by construction and can never disagree with the code. `expect(add(a, b)).toBe(a + b)` is the classic. Expected values must come from an independent source: a known-good literal, a worked example, the spec.
-- **Horizontal slicing** — all the tests first, then all the implementation. Bulk tests verify *imagined* behaviour: you commit to a test structure before understanding the implementation, and the tests end up insensitive to real change. Work in **vertical slices** instead — one test, one implementation, repeat.
+- **Horizontal slicing** — all the tests first, then all the implementation. Bulk tests verify _imagined_ behaviour: you commit to a test structure before understanding the implementation, and the tests end up insensitive to real change. Work in **vertical slices** instead — one test, one implementation, repeat.
 
 `rules/testing.md` owns the general rules — what to test, what not to add, granularity, the quality-gate order. This skill owns only the loop and the anti-patterns above.
 

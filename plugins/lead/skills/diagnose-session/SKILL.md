@@ -25,14 +25,14 @@ Read with `jq`, never by dumping the whole file into context.
 
 ## Step 2 — Look for these failure modes
 
-| Symptom | Where it shows |
-|---------|----------------|
-| Skill misfire / no fire | `Skill` tool calls vs user prompts that should have triggered one |
-| Plan ignored | Edits to files outside the approved plan; steps skipped |
-| Repeated work | Same file read or same command run 3+ times |
-| Hook noise | `hook` / system-reminder entries repeating; blocking errors from PostToolUse hooks |
-| Context waste | Very large tool results; whole-file reads where a grep would do |
-| Unverified "done" | A completion claim with no test/command run after the last edit |
+| Symptom                 | Where it shows                                                                     |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| Skill misfire / no fire | `Skill` tool calls vs user prompts that should have triggered one                  |
+| Plan ignored            | Edits to files outside the approved plan; steps skipped                            |
+| Repeated work           | Same file read or same command run 3+ times                                        |
+| Hook noise              | `hook` / system-reminder entries repeating; blocking errors from PostToolUse hooks |
+| Context waste           | Very large tool results; whole-file reads where a grep would do                    |
+| Unverified "done"       | A completion claim with no test/command run after the last edit                    |
 
 ## Step 3 — Report
 

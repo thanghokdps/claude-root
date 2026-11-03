@@ -15,31 +15,56 @@ python3 -I "${CLAUDE_PLUGIN_ROOT}"/scripts/validate-audit.py specs/audit --summa
 {
   "scope": ".",
   "runs": [
-    { "run_id": 1, "date": "2026-10-30", "commit": "9f42cb2…(40 hex)", "units_audited": 3 }
+    {
+      "run_id": 1,
+      "date": "2026-10-30",
+      "commit": "9f42cb2…(40 hex)",
+      "units_audited": 3
+    }
   ],
   "units": [
-    { "id": "src/billing", "kind": "folder", "path": "src/billing",
-      "status": "audited", "last_commit": "9f42cb2…(40 hex)",
-      "axes_checked": ["bug", "risk", "scale", "missing_test", "speed", "lean"], "run_id": 1 },
-    { "id": "src/api/routes.ts#POST /orders", "kind": "entry_point", "path": "src/api/routes.ts",
-      "status": "stale", "last_commit": "0224796…(40 hex)", "axes_checked": ["bug", "risk"], "run_id": 1 },
-    { "id": "worker→db", "kind": "trust_boundary", "path": "src/worker/consume.ts",
-      "status": "unaudited", "last_commit": null, "axes_checked": [], "run_id": null }
+    {
+      "id": "src/billing",
+      "kind": "folder",
+      "path": "src/billing",
+      "status": "audited",
+      "last_commit": "9f42cb2…(40 hex)",
+      "axes_checked": ["bug", "risk", "scale", "missing_test", "speed", "lean"],
+      "run_id": 1
+    },
+    {
+      "id": "src/api/routes.ts#POST /orders",
+      "kind": "entry_point",
+      "path": "src/api/routes.ts",
+      "status": "stale",
+      "last_commit": "0224796…(40 hex)",
+      "axes_checked": ["bug", "risk"],
+      "run_id": 1
+    },
+    {
+      "id": "worker→db",
+      "kind": "trust_boundary",
+      "path": "src/worker/consume.ts",
+      "status": "unaudited",
+      "last_commit": null,
+      "axes_checked": [],
+      "run_id": null
+    }
   ]
 }
 ```
 
-| Field | Rule |
-|-------|------|
-| `scope` | The folder the audit was asked for, repo-relative; `.` for the whole repo |
-| `runs[]` | Append-only. `run_id` is 1, 2, 3… in order; `date` is `YYYY-MM-DD`; `commit` is the repo `HEAD` (40 hex) when the run started; `units_audited` is how many units this run set to `audited` |
-| `units[].id` | Stable across runs: the path for a folder, `path#symbol or route` for an entry point, `from→to` for a trust boundary. Unique in the file |
-| `units[].kind` | `folder`, `entry_point` (main, route, handler, job, CLI command) or `trust_boundary` (where data crosses a process, user, service or storage line) |
-| `units[].path` | Repo-relative file or folder; the staleness check runs on it |
-| `units[].status` | `unaudited` (never read), `audited` (read on `run_id`, source unchanged since) or `stale` (read, but `git log -1 --format=%H -- <path>` no longer equals `last_commit`) |
-| `units[].last_commit` | 40-hex commit of `path` when it was last audited; `null` while `unaudited` |
-| `units[].axes_checked` | Which of `bug`, `risk`, `scale`, `missing_test`, `speed`, `lean` were checked on that unit; empty while `unaudited`. A unit checked on two axes is covered on two axes, not six |
-| `units[].run_id` | The run that last audited it, present in `runs`; `null` while `unaudited` |
+| Field                  | Rule                                                                                                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `scope`                | The folder the audit was asked for, repo-relative; `.` for the whole repo                                                                                                                  |
+| `runs[]`               | Append-only. `run_id` is 1, 2, 3… in order; `date` is `YYYY-MM-DD`; `commit` is the repo `HEAD` (40 hex) when the run started; `units_audited` is how many units this run set to `audited` |
+| `units[].id`           | Stable across runs: the path for a folder, `path#symbol or route` for an entry point, `from→to` for a trust boundary. Unique in the file                                                   |
+| `units[].kind`         | `folder`, `entry_point` (main, route, handler, job, CLI command) or `trust_boundary` (where data crosses a process, user, service or storage line)                                         |
+| `units[].path`         | Repo-relative file or folder; the staleness check runs on it                                                                                                                               |
+| `units[].status`       | `unaudited` (never read), `audited` (read on `run_id`, source unchanged since) or `stale` (read, but `git log -1 --format=%H -- <path>` no longer equals `last_commit`)                    |
+| `units[].last_commit`  | 40-hex commit of `path` when it was last audited; `null` while `unaudited`                                                                                                                 |
+| `units[].axes_checked` | Which of `bug`, `risk`, `scale`, `missing_test`, `speed`, `lean` were checked on that unit; empty while `unaudited`. A unit checked on two axes is covered on two axes, not six            |
+| `units[].run_id`       | The run that last audited it, present in `runs`; `null` while `unaudited`                                                                                                                  |
 
 **Units** come from Step 1's map: one per top-level source folder (or per package in a monorepo), one per entry point, one per trust boundary where a mistake costs the most. A big repo stays at folder granularity except on those paths. Never put a line number, a verdict or a severity in a unit.
 
@@ -51,38 +76,57 @@ A JSON array, one record per candidate that went through `${CLAUDE_PLUGIN_ROOT}/
 
 ```json
 [
-  { "id": "billing/close_day.py:utc-day", "verdict": "confirmed", "axis": "bug", "severity": "must",
-    "path": "billing/close_day.py", "line": 40,
+  {
+    "id": "billing/close_day.py:utc-day",
+    "verdict": "confirmed",
+    "axis": "bug",
+    "severity": "must",
+    "path": "billing/close_day.py",
+    "line": 40,
     "case": "an order at 00:30 Berlin time is billed the day before: today comes from the UTC server clock",
     "fix": "datetime.now(ZoneInfo(\"Europe/Berlin\")).date()",
     "cost_of_skipping": "late orders carry the wrong date and accounting corrects them by hand",
-    "commit": "9f42cb2…(40 hex)", "run_id": 1 },
-  { "id": "api/orders.ts:replay", "verdict": "needs_validation", "axis": "risk",
-    "path": "src/api/orders.ts", "line": 88,
+    "commit": "9f42cb2…(40 hex)",
+    "run_id": 1
+  },
+  {
+    "id": "api/orders.ts:replay",
+    "verdict": "needs_validation",
+    "axis": "risk",
+    "path": "src/api/orders.ts",
+    "line": 88,
     "case": "a replayed webhook creates a second order when the idempotency key is not enforced upstream",
     "missing_fact": "whether the gateway dedupes by Idempotency-Key — the payments team or the gateway dashboard",
-    "commit": "9f42cb2…(40 hex)", "run_id": 1 },
-  { "id": "lib/retry.ts:unused", "verdict": "rejected", "axis": "lean",
-    "path": "src/lib/retry.ts", "line": 1,
+    "commit": "9f42cb2…(40 hex)",
+    "run_id": 1
+  },
+  {
+    "id": "lib/retry.ts:unused",
+    "verdict": "rejected",
+    "axis": "lean",
+    "path": "src/lib/retry.ts",
+    "line": 1,
     "case": "retry() has no caller and can be deleted",
     "refuted_by": "src/jobs/sync.ts:14",
-    "commit": "9f42cb2…(40 hex)", "run_id": 1 }
+    "commit": "9f42cb2…(40 hex)",
+    "run_id": 1
+  }
 ]
 ```
 
-| Field | Rule |
-|-------|------|
-| `id` | Stable, `^[A-Za-z0-9][A-Za-z0-9._:/@+-]*$`, unique in the file; derive it from the source (`path:what`), never from the run or the verdict, so the same claim keeps its id across runs |
-| `verdict` | `confirmed`, `needs_validation` or `rejected` — from refute.md, nothing else |
-| `axis` | `bug`, `risk`, `scale`, `missing_test`, `speed`, `lean` — the row of Step 2's table |
-| `severity` | `must`, `should`, `nice`. Required when `confirmed`, forbidden otherwise: refute.md gives an unsettled finding no severity |
-| `path`, `line` | Repo-relative file and 1-based line of the cited code |
-| `case` | The concrete input or situation and the wrong result |
-| `fix`, `cost_of_skipping` | Required when `confirmed`; may be present on `needs_validation` |
-| `missing_fact` | Required when `needs_validation`: the fact and who or what answers it |
-| `refuted_by` | Required when `rejected`: the refuting `path:line` |
-| `commit` | 40-hex `git log -1 --format=%H -- <path>` at the time of the verdict: a later run compares it to decide whether to re-validate |
-| `run_id` | The run that produced this verdict; must exist in the ledger's `runs` |
+| Field                     | Rule                                                                                                                                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                      | Stable, `^[A-Za-z0-9][A-Za-z0-9._:/@+-]*$`, unique in the file; derive it from the source (`path:what`), never from the run or the verdict, so the same claim keeps its id across runs |
+| `verdict`                 | `confirmed`, `needs_validation` or `rejected` — from refute.md, nothing else                                                                                                           |
+| `axis`                    | `bug`, `risk`, `scale`, `missing_test`, `speed`, `lean` — the row of Step 2's table                                                                                                    |
+| `severity`                | `must`, `should`, `nice`. Required when `confirmed`, forbidden otherwise: refute.md gives an unsettled finding no severity                                                             |
+| `path`, `line`            | Repo-relative file and 1-based line of the cited code                                                                                                                                  |
+| `case`                    | The concrete input or situation and the wrong result                                                                                                                                   |
+| `fix`, `cost_of_skipping` | Required when `confirmed`; may be present on `needs_validation`                                                                                                                        |
+| `missing_fact`            | Required when `needs_validation`: the fact and who or what answers it                                                                                                                  |
+| `refuted_by`              | Required when `rejected`: the refuting `path:line`                                                                                                                                     |
+| `commit`                  | 40-hex `git log -1 --format=%H -- <path>` at the time of the verdict: a later run compares it to decide whether to re-validate                                                         |
+| `run_id`                  | The run that produced this verdict; must exist in the ledger's `runs`                                                                                                                  |
 
 ## Across runs
 

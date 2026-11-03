@@ -19,6 +19,7 @@ Both skills end with a Testing Library run and a browser check at the project's 
 ## Rules you follow
 
 Read before the first edit, only the ones the repo's stack needs:
+
 - `${CLAUDE_PLUGIN_ROOT}/rules/react.md` — any `.jsx` / `.tsx`
 - `${CLAUDE_PLUGIN_ROOT}/rules/nextjs.md` — `app/`, `pages/`, `middleware`, `next.config.*`
 - `${CLAUDE_PLUGIN_ROOT}/references/fetchers.md` — the screen calls the app's own backend

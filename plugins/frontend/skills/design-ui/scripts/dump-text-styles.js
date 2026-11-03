@@ -3,13 +3,22 @@
 //   const styles = await page.evaluate(dumpTextStyles, ["h1", "[data-role=answer] p"]);
 // A selector that matches nothing is left out, so the check reports it missing.
 function dumpTextStyles(selectors) {
-  const props = ["font-family", "font-size", "font-weight", "line-height", "letter-spacing", "color"];
+  const props = [
+    "font-family",
+    "font-size",
+    "font-weight",
+    "line-height",
+    "letter-spacing",
+    "color",
+  ];
   const out = {};
   for (const sel of selectors) {
     const el = document.querySelector(sel);
     if (!el) continue;
     const cs = getComputedStyle(el);
-    out[sel] = Object.fromEntries(props.map((p) => [p, cs.getPropertyValue(p)]));
+    out[sel] = Object.fromEntries(
+      props.map((p) => [p, cs.getPropertyValue(p)]),
+    );
   }
   return out;
 }

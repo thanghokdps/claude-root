@@ -10,7 +10,7 @@ when_to_use: add a feature to the chatbot, "thêm tính năng cho chatbot", "là
 
 **Invoke:** `/ai:agent-feature <what the user should be able to do>`
 
-A feature built without reading the architecture creates a second way of doing what the repo already does. This skill decides *where* each piece goes and *what it reuses*; the layer skills do the building. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md`, `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`.
+A feature built without reading the architecture creates a second way of doing what the repo already does. This skill decides _where_ each piece goes and _what it reuses_; the layer skills do the building. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md`, `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`.
 
 Everything decided here goes in `docs/features/<slug>.md`. Started from `/ticket <id>`: its `docs/tickets/<id>/plan.md` is the brief, and the decisions go there instead.
 
@@ -30,13 +30,13 @@ Read `docs/adr/*` (the agent-architecture ADR first, then later ADRs that amend 
 
 Check the feature against each line of the card and the ADR's out-of-scope list:
 
-| Conflict | Example |
-|----------|---------|
-| out of scope (P4) | the ADR excludes payments; the feature takes a payment |
-| new agent or new shape | the card has one agent; the feature "needs" a second |
-| new write path | the card says read-only, or writes go through HITL and the feature writes directly |
-| new system or credential | a system not in P3, a server key where the card says caller credentials |
-| new transport, host or client | a mobile client, an edge host |
+| Conflict                      | Example                                                                            |
+| ----------------------------- | ---------------------------------------------------------------------------------- |
+| out of scope (P4)             | the ADR excludes payments; the feature takes a payment                             |
+| new agent or new shape        | the card has one agent; the feature "needs" a second                               |
+| new write path                | the card says read-only, or writes go through HITL and the feature writes directly |
+| new system or credential      | a system not in P3, a server key where the card says caller credentials            |
+| new transport, host or client | a mobile client, an edge host                                                      |
 
 Any conflict → ask now, before the first edit: change the feature, or revisit the architecture with `/agent-architect` and a new ADR. A conflict found mid-build is not asked: `/resolve-question` (dev) debates it and records the pick. Never widen the architecture inside a feature.
 
@@ -52,23 +52,23 @@ Fill the inventory from `${CLAUDE_SKILL_DIR}/references/reuse-inventory.md`: too
 
 Split the feature into slices per layer and give each one decision:
 
-| Slice | Layer | Runs in | Decision | Existing piece | Why not reuse (for new) | Built by |
-|-------|-------|---------|----------|----------------|-------------------------|----------|
-| look up order | tool | agent | **reuse** | `tools/orders/get-order.ts` | — | — |
-| cancel order | tool + confirm | agent (backend interrupt) | **new** | — | no write tool exists for orders | `/agent-tool` → `/agent-hitl` |
-| cancel card | frontend | browser (`useInterrupt` card) | **extend** | `OrderCard` | — | `/agent-frontend` |
-| `cancelled_at` column | db | server | **new** | — | orders have no cancel state | `/feature` → backend engineer |
-| order history page | screen | browser | **new** | — | no page lists past orders | `/feature` → frontend engineer |
+| Slice                 | Layer          | Runs in                       | Decision   | Existing piece              | Why not reuse (for new)         | Built by                       |
+| --------------------- | -------------- | ----------------------------- | ---------- | --------------------------- | ------------------------------- | ------------------------------ |
+| look up order         | tool           | agent                         | **reuse**  | `tools/orders/get-order.ts` | —                               | —                              |
+| cancel order          | tool + confirm | agent (backend interrupt)     | **new**    | —                           | no write tool exists for orders | `/agent-tool` → `/agent-hitl`  |
+| cancel card           | frontend       | browser (`useInterrupt` card) | **extend** | `OrderCard`                 | —                               | `/agent-frontend`              |
+| `cancelled_at` column | db             | server                        | **new**    | —                           | orders have no cancel state     | `/feature` → backend engineer  |
+| order history page    | screen         | browser                       | **new**    | —                           | no page lists past orders       | `/feature` → frontend engineer |
 
 - **Runs in** follows `agent-identity-and-tools.md` § Where a tool lives: server data, identity, secrets or audit → agent tool; browser-only effects (navigate, open a panel, fill a form) → frontend tool; fetch-then-show → two tools. A write is always confirmed by the backend interrupt (`/agent-hitl`), never by `useHumanInTheLoop`.
 - **reuse** when an existing piece already does it; **extend** when a parameter, a field or a variant covers it; **new** only with a reason the two above cannot meet.
-- A new piece that resembles an existing one (same upstream, same entity, same card shape) is an *extend* unless the reason says otherwise.
+- A new piece that resembles an existing one (same upstream, same entity, same card shape) is an _extend_ unless the reason says otherwise.
 - Layer owners, agent side: tool `/agent-tool` · agent scope, routing, prompt `/agent-graph` · write with confirm `/agent-hitl` · documents, embeddings, semantic memory `/agent-rag` · chat client wiring `/agent-frontend` · chat look from a design `/agent-design-ui` · tests and evals `/agent-evals`.
 - Layer owners, app side: a table, column or query, an HTTP route, a third-party client, or a screen outside the chat is not built by this skill. Its row says `/feature → backend engineer` or `/feature → frontend engineer`: the supervisor dispatches it to that pack's engineer with the row as the brief (`/feature` Stage 3 table), so the app side is never built inline here.
 
 Each new or extended piece names its folder per `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md` (`features/<feature>/`, `components/ui/` only for a second consumer, `server/<aggregate>/`).
 
-Show the table, then ask through `AskUserQuestion`: *build as planned (Recommended)* / *change a slice* / *split into smaller features*. When the user already said "implement all, don't ask", take the recommended option and say so in one line.
+Show the table, then ask through `AskUserQuestion`: _build as planned (Recommended)_ / _change a slice_ / _split into smaller features_. When the user already said "implement all, don't ask", take the recommended option and say so in one line.
 
 **Done when:** every slice has a decision, a builder, and each **new** row has its reason.
 
@@ -105,9 +105,9 @@ Run `/agent-verify-turn` with each example message from Step 1 and one message t
 
 ## Step 8 — Review and land
 
-A schema change was its own `/db-change` slice (backend, if installed) in Step 5, and a destructive or long-running one went from there to `/write-migration` (expand/contract, tested down path). Re-check the rows of `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/production.md` the diff touches (kill switch for a new tool, env for the agent server, rollback for a prompt or model change, time limits for a slower tool). A diff that changes a system prompt, a tool description or a structured-output schema goes through `/agent-prompt-review` first. Then `/verify-done` for fresh evidence, `/review-checklist` on the feature's diff (fix what it finds), `/docs-sync` so the new tools, agents and routes are in `.claude/docs/`, and `/finish-branch` to open the PR. With several features queued ("implement all"), finish this step for one feature before starting the next.
+A schema change was its own `/db-change` slice (backend, if installed) in Step 5, and a destructive or long-running one went from there to `/write-migration` (expand/contract, tested down path). Re-check the rows of `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/production.md` the diff touches (kill switch for a new tool, env for the agent server, rollback for a prompt or model change, time limits for a slower tool). A diff that changes a system prompt, a tool description or a structured-output schema goes through `/agent-prompt-review` first. Then `/verify-done` for fresh evidence, `/review-checklist` on the feature's diff (fix what it finds), `/docs-sync` so the new tools, agents and routes are in `.claude/docs/`, and `/finish-branch` to open the PR. An ADR line that still calls a piece this feature built "planned" or "none built yet" is updated in the same diff, so the next Step 1 reads what is built. With several features queued ("implement all"), finish this step for one feature before starting the next.
 
-**Done when:** `/verify-done` shows its evidence, each touched `production.md` row is ✅ or n/a with its reason, `/review-checklist` has no open must-fix, and `/docs-sync` reported its edits or "no doc impact".
+**Done when:** `/verify-done` shows its evidence, each touched `production.md` row is ✅ or n/a with its reason, `/review-checklist` has no open must-fix, `/docs-sync` reported its edits or "no doc impact", and no ADR line calls a built piece unbuilt.
 
 ---
 

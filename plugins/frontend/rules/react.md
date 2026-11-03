@@ -22,8 +22,8 @@ Universal rules for React v19 projects. Applies to both Client and Server Compon
 // Good: Server Component fetches data, passes to small Client leaf
 // app/posts/page.tsx (Server Component)
 export default async function PostsPage() {
-  const posts = await fetchPosts()
-  return <PostList posts={posts} />       // Server Component
+  const posts = await fetchPosts();
+  return <PostList posts={posts} />; // Server Component
 }
 
 // components/PostList.tsx (Server Component — no interactivity needed)
@@ -32,12 +32,12 @@ export default async function PostsPage() {
 
 ### When to add `"use client"`
 
-| Reason | Example |
-|--------|---------|
-| Uses hooks (`useState`, `useEffect`, custom hooks) | Form with local state |
-| Needs browser APIs (`window`, `localStorage`, `navigator`) | Geolocation feature |
-| Uses event listeners (`onClick`, `onChange`) | Interactive controls |
-| Uses context that holds mutable state | Theme switcher |
+| Reason                                                     | Example               |
+| ---------------------------------------------------------- | --------------------- |
+| Uses hooks (`useState`, `useEffect`, custom hooks)         | Form with local state |
+| Needs browser APIs (`window`, `localStorage`, `navigator`) | Geolocation feature   |
+| Uses event listeners (`onClick`, `onChange`)               | Interactive controls  |
+| Uses context that holds mutable state                      | Theme switcher        |
 
 ---
 
@@ -46,18 +46,28 @@ export default async function PostsPage() {
 ### `use()` hook — read resources in render
 
 ```tsx
-import { use } from 'react'
+import { use } from "react";
 
 // Read a Promise (replaces await in Server Components)
-function Comments({ commentsPromise }: { commentsPromise: Promise<Comment[]> }) {
-  const comments = use(commentsPromise)   // suspends until resolved
-  return <ul>{comments.map(c => <li key={c.id}>{c.body}</li>)}</ul>
+function Comments({
+  commentsPromise,
+}: {
+  commentsPromise: Promise<Comment[]>;
+}) {
+  const comments = use(commentsPromise); // suspends until resolved
+  return (
+    <ul>
+      {comments.map((c) => (
+        <li key={c.id}>{c.body}</li>
+      ))}
+    </ul>
+  );
 }
 
 // Read Context (alternative to useContext — works inside conditionals)
 function ThemedButton() {
-  const theme = use(ThemeContext)
-  return <button className={theme.button}>Click</button>
+  const theme = use(ThemeContext);
+  return <button className={theme.button}>Click</button>;
 }
 ```
 
@@ -68,14 +78,14 @@ function ThemedButton() {
 ### `useTransition()` — mark non-urgent state updates
 
 ```tsx
-const [isPending, startTransition] = useTransition()
+const [isPending, startTransition] = useTransition();
 
 // v19: startTransition now accepts async functions
 function handleSubmit() {
   startTransition(async () => {
-    await savePost(data)        // async actions allowed in v19
-    router.push('/posts')
-  })
+    await savePost(data); // async actions allowed in v19
+    router.push("/posts");
+  });
 }
 ```
 
@@ -88,13 +98,16 @@ function handleSubmit() {
 ```tsx
 const [optimisticPosts, addOptimisticPost] = useOptimistic(
   posts,
-  (state, newPost: Post) => [...state, { ...newPost, pending: true }]
-)
+  (state, newPost: Post) => [...state, { ...newPost, pending: true }],
+);
 
 async function submitPost(formData: FormData) {
-  const newPost = { id: crypto.randomUUID(), title: formData.get('title') as string }
-  addOptimisticPost(newPost)          // instant UI update
-  await createPost(newPost)           // actual server call
+  const newPost = {
+    id: crypto.randomUUID(),
+    title: formData.get("title") as string,
+  };
+  addOptimisticPost(newPost); // instant UI update
+  await createPost(newPost); // actual server call
 }
 ```
 
@@ -105,12 +118,12 @@ async function submitPost(formData: FormData) {
 ### `useFormStatus()` — read parent form's submission state
 
 ```tsx
-"use client"
-import { useFormStatus } from 'react-dom'
+"use client";
+import { useFormStatus } from "react-dom";
 
 function SubmitButton() {
-  const { pending } = useFormStatus()
-  return <button disabled={pending}>{pending ? 'Saving…' : 'Save'}</button>
+  const { pending } = useFormStatus();
+  return <button disabled={pending}>{pending ? "Saving…" : "Save"}</button>;
 }
 
 // The component MUST be rendered inside a <form> — not next to it
@@ -118,9 +131,9 @@ function PostForm() {
   return (
     <form action={createPost}>
       <input name="title" />
-      <SubmitButton />        {/* ← inside form, can read useFormStatus */}
+      <SubmitButton /> {/* ← inside form, can read useFormStatus */}
     </form>
-  )
+  );
 }
 ```
 
@@ -130,25 +143,30 @@ function PostForm() {
 ### `useFormState()` / `useActionState()` — form + server action state
 
 ```tsx
-"use client"
-import { useActionState } from 'react'   // renamed from useFormState in React 19
+"use client";
+import { useActionState } from "react"; // renamed from useFormState in React 19
 
-async function createPost(prevState: State, formData: FormData): Promise<State> {
-  const title = formData.get('title') as string
-  if (!title) return { error: 'Title is required' }
-  await db.posts.create({ title })
-  return { success: true }
+async function createPost(
+  prevState: State,
+  formData: FormData,
+): Promise<State> {
+  const title = formData.get("title") as string;
+  if (!title) return { error: "Title is required" };
+  await db.posts.create({ title });
+  return { success: true };
 }
 
 function PostForm() {
-  const [state, action, isPending] = useActionState(createPost, { error: null })
+  const [state, action, isPending] = useActionState(createPost, {
+    error: null,
+  });
   return (
     <form action={action}>
       <input name="title" />
       {state.error && <p role="alert">{state.error}</p>}
       <button disabled={isPending}>Save</button>
     </form>
-  )
+  );
 }
 ```
 
@@ -208,13 +226,18 @@ features/posts/
 ```tsx
 // Good
 interface ButtonProps {
-  label: string
-  variant?: 'primary' | 'ghost'
-  disabled?: boolean
-  onClick: () => void
+  label: string;
+  variant?: "primary" | "ghost";
+  disabled?: boolean;
+  onClick: () => void;
 }
 
-function Button({ label, variant = 'primary', disabled = false, onClick }: ButtonProps) {
+function Button({
+  label,
+  variant = "primary",
+  disabled = false,
+  onClick,
+}: ButtonProps) {
   return (
     <button
       className={cn(styles.base, styles[variant])}
@@ -223,7 +246,7 @@ function Button({ label, variant = 'primary', disabled = false, onClick }: Butto
     >
       {label}
     </button>
-  )
+  );
 }
 ```
 
@@ -240,22 +263,22 @@ function Button({ label, variant = 'primary', disabled = false, onClick }: Butto
 ```tsx
 // Good: returns object when > 2 values
 function useAsync<T>(fn: () => Promise<T>) {
-  const [data, setData] = useState<T | null>(null)
-  const [error, setError] = useState<Error | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const run = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      setData(await fn())
+      setData(await fn());
     } catch (e) {
-      setError(e instanceof Error ? e : new Error(String(e)))
+      setError(e instanceof Error ? e : new Error(String(e)));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [fn])
+  }, [fn]);
 
-  return { data, error, loading, run }
+  return { data, error, loading, run };
 }
 ```
 
@@ -269,18 +292,20 @@ function useAsync<T>(fn: () => Promise<T>) {
 ```tsx
 // Good: single concern, proper cleanup
 useEffect(() => {
-  const controller = new AbortController()
+  const controller = new AbortController();
   fetchUser(id, { signal: controller.signal })
     .then(setUser)
-    .catch(err => { if (!controller.signal.aborted) setError(err) })
-  return () => controller.abort()
-}, [id])
+    .catch((err) => {
+      if (!controller.signal.aborted) setError(err);
+    });
+  return () => controller.abort();
+}, [id]);
 
 // Bad: multiple concerns, missing cleanup
 useEffect(() => {
-  fetchUser(id).then(setUser)    // no abort
-  document.title = `User ${id}` // unrelated concern
-}, [])                           // missing id dependency
+  fetchUser(id).then(setUser); // no abort
+  document.title = `User ${id}`; // unrelated concern
+}, []); // missing id dependency
 ```
 
 ---

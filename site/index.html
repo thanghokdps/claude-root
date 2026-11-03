@@ -1,441 +1,2040 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Claude Harness</title>
-<meta name="description" content="Claude Code plugins that make Claude follow your team's process: ask once, plan, build with role engineers, prove it, ship — with hooks that block the shortcut.">
-<meta name="color-scheme" content="dark">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js" integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a" crossorigin="anonymous"></script>
-<style>
-:root {
-  color-scheme: dark;
-  --bg: #0b0c0e; --surface: #131418; --surface-2: #1a1c21; --text: #ededef; --muted: #9a9ca5; --dim: #6c6e77;
-  --line: #24262d; --line-2: #33363f; --accent: #e8875b; --accent-2: #9a8cff; --accent-3: #45c49f; --warn: #e9b949;
-  --glow: rgba(232, 135, 91, .22); --code-bg: #17181d; --term-bg: #08090a; --term-text: #e6e3dc;
-  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.4);
-}
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 Inter, system-ui, sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
-code, pre { font-family: "JetBrains Mono", ui-monospace, monospace; }
-:not(pre) > code { font-size: .88em; background: var(--surface-2); padding: 1px 6px; border-radius: 5px; color: var(--text); }
-.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Claude Harness</title>
+    <meta
+      name="description"
+      content="Claude Code plugins that make Claude follow your team's process: ask once, plan, build with role engineers, prove it, ship — with hooks that block the shortcut."
+    />
+    <meta name="color-scheme" content="dark" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"
+      integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"
+      integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0c0e;
+        --surface: #131418;
+        --surface-2: #1a1c21;
+        --text: #ededef;
+        --muted: #9a9ca5;
+        --dim: #6c6e77;
+        --line: #24262d;
+        --line-2: #33363f;
+        --accent: #e8875b;
+        --accent-2: #9a8cff;
+        --accent-3: #45c49f;
+        --warn: #e9b949;
+        --glow: rgba(232, 135, 91, 0.22);
+        --code-bg: #17181d;
+        --term-bg: #08090a;
+        --term-text: #e6e3dc;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.4);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.6 Inter,
+          system-ui,
+          sans-serif;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      code,
+      pre {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+      }
+      :not(pre) > code {
+        font-size: 0.88em;
+        background: var(--surface-2);
+        padding: 1px 6px;
+        border-radius: 5px;
+        color: var(--text);
+      }
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
 
-/* nav */
-nav { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(12px); background: color-mix(in srgb, var(--bg) 80%, transparent); border-bottom: 1px solid var(--line); }
-nav .wrap { display: flex; align-items: center; gap: 20px; height: 56px; }
-.brand { font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; letter-spacing: -.01em; }
-.brand:hover { text-decoration: none; }
-.brand-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 var(--glow); animation: ping 2.4s infinite; }
-nav .links { margin-left: auto; display: flex; gap: 18px; font-size: 14px; align-items: center; }
-nav .links a { color: var(--muted); }
-nav .links a:hover { color: var(--text); text-decoration: none; }
-nav .links a.gh { border: 1px solid var(--line-2); border-radius: 8px; padding: 4px 10px; color: var(--text); }
-@keyframes ping { 0% { box-shadow: 0 0 0 0 var(--glow); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+      /* nav */
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(12px);
+        background: color-mix(in srgb, var(--bg) 80%, transparent);
+        border-bottom: 1px solid var(--line);
+      }
+      nav .wrap {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        height: 56px;
+      }
+      .brand {
+        font-weight: 800;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        letter-spacing: -0.01em;
+      }
+      .brand:hover {
+        text-decoration: none;
+      }
+      .brand-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 0 var(--glow);
+        animation: ping 2.4s infinite;
+      }
+      nav .links {
+        margin-left: auto;
+        display: flex;
+        gap: 18px;
+        font-size: 14px;
+        align-items: center;
+      }
+      nav .links a {
+        color: var(--muted);
+      }
+      nav .links a:hover {
+        color: var(--text);
+        text-decoration: none;
+      }
+      nav .links a.gh {
+        border: 1px solid var(--line-2);
+        border-radius: 8px;
+        padding: 4px 10px;
+        color: var(--text);
+      }
+      @keyframes ping {
+        0% {
+          box-shadow: 0 0 0 0 var(--glow);
+        }
+        70% {
+          box-shadow: 0 0 0 10px transparent;
+        }
+        100% {
+          box-shadow: 0 0 0 0 transparent;
+        }
+      }
 
-/* hero */
-.hero { position: relative; padding: 88px 0 72px; overflow: hidden; }
-.grid-bg { position: absolute; inset: 0; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 44px 44px; mask-image: radial-gradient(ellipse at 50% 30%, #000 15%, transparent 70%); opacity: .55; }
-.orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .28; animation: float 16s ease-in-out infinite alternate; }
-.orb.a { width: 380px; height: 380px; background: var(--accent); top: -120px; left: -80px; }
-.orb.b { width: 320px; height: 320px; background: var(--accent-2); top: 40px; right: -100px; animation-delay: -6s; }
-@keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(40px, 30px) scale(1.12); } }
-.hero-inner { position: relative; display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; }
-.eyebrow { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); border: 1px solid var(--line-2); background: var(--surface); padding: 4px 12px; border-radius: 99px; }
-.eyebrow b { color: var(--accent-3); font-weight: 600; }
-h1 { font-size: clamp(36px, 5.6vw, 60px); line-height: 1.06; letter-spacing: -.035em; margin: 18px 0; font-weight: 800; }
-.shimmer { background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent)); background-size: 300% 100%;
-  -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 10s linear infinite; }
-@keyframes shimmer { to { background-position: 300% 0; } }
-.lede { color: var(--muted); font-size: 18px; max-width: 32em; margin: 0; }
-.cta { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 10px; font-weight: 600; font-size: 15px; transition: transform .2s, box-shadow .2s, border-color .2s; }
-.btn:hover { text-decoration: none; transform: translateY(-2px); }
-.btn.primary { background: var(--accent); color: #1a0f08; box-shadow: 0 6px 20px var(--glow); }
-.btn.ghost { border: 1px solid var(--line-2); color: var(--text); background: var(--surface); }
-.btn.ghost:hover { border-color: var(--accent); }
-.trust { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 22px; color: var(--dim); font-size: 13px; }
-.trust span::before { content: "✓ "; color: var(--accent-3); }
+      /* hero */
+      .hero {
+        position: relative;
+        padding: 88px 0 72px;
+        overflow: hidden;
+      }
+      .grid-bg {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 44px 44px;
+        mask-image: radial-gradient(
+          ellipse at 50% 30%,
+          #000 15%,
+          transparent 70%
+        );
+        opacity: 0.55;
+      }
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.28;
+        animation: float 16s ease-in-out infinite alternate;
+      }
+      .orb.a {
+        width: 380px;
+        height: 380px;
+        background: var(--accent);
+        top: -120px;
+        left: -80px;
+      }
+      .orb.b {
+        width: 320px;
+        height: 320px;
+        background: var(--accent-2);
+        top: 40px;
+        right: -100px;
+        animation-delay: -6s;
+      }
+      @keyframes float {
+        0% {
+          transform: translate(0, 0) scale(1);
+        }
+        100% {
+          transform: translate(40px, 30px) scale(1.12);
+        }
+      }
+      .hero-inner {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1.05fr 1fr;
+        gap: 48px;
+        align-items: center;
+      }
+      .eyebrow {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 13px;
+        color: var(--muted);
+        border: 1px solid var(--line-2);
+        background: var(--surface);
+        padding: 4px 12px;
+        border-radius: 99px;
+      }
+      .eyebrow b {
+        color: var(--accent-3);
+        font-weight: 600;
+      }
+      h1 {
+        font-size: clamp(36px, 5.6vw, 60px);
+        line-height: 1.06;
+        letter-spacing: -0.035em;
+        margin: 18px 0;
+        font-weight: 800;
+      }
+      .shimmer {
+        background: linear-gradient(
+          90deg,
+          var(--accent),
+          var(--accent-2),
+          var(--accent-3),
+          var(--accent)
+        );
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shimmer 10s linear infinite;
+      }
+      @keyframes shimmer {
+        to {
+          background-position: 300% 0;
+        }
+      }
+      .lede {
+        color: var(--muted);
+        font-size: 18px;
+        max-width: 32em;
+        margin: 0;
+      }
+      .cta {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 18px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s,
+          border-color 0.2s;
+      }
+      .btn:hover {
+        text-decoration: none;
+        transform: translateY(-2px);
+      }
+      .btn.primary {
+        background: var(--accent);
+        color: #1a0f08;
+        box-shadow: 0 6px 20px var(--glow);
+      }
+      .btn.ghost {
+        border: 1px solid var(--line-2);
+        color: var(--text);
+        background: var(--surface);
+      }
+      .btn.ghost:hover {
+        border-color: var(--accent);
+      }
+      .trust {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+        margin-top: 22px;
+        color: var(--dim);
+        font-size: 13px;
+      }
+      .trust span::before {
+        content: "✓ ";
+        color: var(--accent-3);
+      }
 
-/* terminal */
-.term { background: var(--term-bg); color: var(--term-text); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow), 0 0 80px var(--glow); overflow: hidden; }
-.term-bar { display: flex; gap: 6px; align-items: center; padding: 11px 14px; background: rgba(255,255,255,.03); border-bottom: 1px solid var(--line); }
-.term-bar i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; } .term-bar i:nth-child(2) { background: #febc2e; } .term-bar i:nth-child(3) { background: #28c840; }
-.term-bar span { margin-left: auto; font: 11.5px "JetBrains Mono", monospace; color: var(--dim); }
-.term pre { margin: 0; padding: 16px 18px 22px; font-size: 13px; line-height: 1.75; min-height: 300px; white-space: pre-wrap; }
-.term .p { color: var(--accent); } .term .c { color: #7d7a72; } .term .ok { color: var(--accent-3); } .term .q { color: var(--accent-2); } .term .w { color: var(--warn); }
-.caret { display: inline-block; width: 8px; height: 1.1em; background: var(--term-text); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
-@keyframes blink { 50% { opacity: 0; } }
+      /* terminal */
+      .term {
+        background: var(--term-bg);
+        color: var(--term-text);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow:
+          var(--shadow),
+          0 0 80px var(--glow);
+        overflow: hidden;
+      }
+      .term-bar {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        padding: 11px 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border-bottom: 1px solid var(--line);
+      }
+      .term-bar i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #ff5f57;
+      }
+      .term-bar i:nth-child(2) {
+        background: #febc2e;
+      }
+      .term-bar i:nth-child(3) {
+        background: #28c840;
+      }
+      .term-bar span {
+        margin-left: auto;
+        font:
+          11.5px "JetBrains Mono",
+          monospace;
+        color: var(--dim);
+      }
+      .term pre {
+        margin: 0;
+        padding: 16px 18px 22px;
+        font-size: 13px;
+        line-height: 1.75;
+        min-height: 300px;
+        white-space: pre-wrap;
+      }
+      .term .p {
+        color: var(--accent);
+      }
+      .term .c {
+        color: #7d7a72;
+      }
+      .term .ok {
+        color: var(--accent-3);
+      }
+      .term .q {
+        color: var(--accent-2);
+      }
+      .term .w {
+        color: var(--warn);
+      }
+      .caret {
+        display: inline-block;
+        width: 8px;
+        height: 1.1em;
+        background: var(--term-text);
+        vertical-align: -2px;
+        animation: blink 1s steps(1) infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
 
-/* stats */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: -24px auto 0; position: relative; }
-.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
-.stat b { display: block; font-size: 32px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.stat span { color: var(--muted); font-size: 14px; }
+      /* stats */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin: -24px auto 0;
+        position: relative;
+      }
+      .stat {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px 20px;
+      }
+      .stat b {
+        display: block;
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+      .stat span {
+        color: var(--muted);
+        font-size: 14px;
+      }
 
-section { padding: 96px 0 0; scroll-margin-top: 40px; }
-.kicker { font: 600 12px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
-h2 { font-size: clamp(26px, 3.4vw, 36px); letter-spacing: -.025em; margin: 0 0 10px; line-height: 1.15; }
-.sub { color: var(--muted); margin: 0 0 32px; max-width: 44em; }
+      section {
+        padding: 96px 0 0;
+        scroll-margin-top: 40px;
+      }
+      .kicker {
+        font:
+          600 12px "JetBrains Mono",
+          monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 10px;
+      }
+      h2 {
+        font-size: clamp(26px, 3.4vw, 36px);
+        letter-spacing: -0.025em;
+        margin: 0 0 10px;
+        line-height: 1.15;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0 0 32px;
+        max-width: 44em;
+      }
 
-/* cards */
-.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; transition: transform .25s, border-color .25s, background .25s; overflow: hidden; color: var(--text); display: flex; flex-direction: column; }
-a.card:hover { text-decoration: none; transform: translateY(-3px); border-color: color-mix(in srgb, var(--c, var(--accent)) 60%, var(--line)); background: color-mix(in srgb, var(--c, var(--accent)) 4%, var(--surface)); }
-.card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.card-head h3 { margin: 0; font-size: 16px; line-height: 1.25; display: block; }
-.card-head small { display: block; font-size: 12.5px; color: var(--dim); margin-top: 2px; }
-.badge { flex: none; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font: 700 12.5px "JetBrains Mono", monospace; letter-spacing: -.02em;
-  color: var(--c, var(--muted)); background: color-mix(in srgb, var(--c, var(--muted)) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c, var(--muted)) 28%, transparent); }
-.card .desc { margin: 0 0 18px; color: var(--muted); font-size: 14px; line-height: 1.55; }
-.card-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
-.meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--dim); }
-.meta b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
-.meta .ev b { color: var(--accent-3); }
-.meta .go { margin-left: auto; color: var(--c, var(--accent)); opacity: 0; transform: translateX(-4px); transition: opacity .2s, transform .2s; }
-a.card:hover .meta .go { opacity: 1; transform: none; }
-.c-fe { --c: #5aa9ff; } .c-be { --c: #45c49f; } .c-mo { --c: #e9b949; } .c-op { --c: #ff7a90; } .c-ai { --c: #9a8cff; } .c-wp { --c: #e8875b; } .c-sv { --c: #e8875b; }
-.docs-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.doc-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--text); transition: border-color .2s, transform .2s; }
-.doc-row:hover { text-decoration: none; border-color: var(--accent); transform: translateY(-2px); }
-.doc-row .badge { width: 34px; height: 34px; }
-.doc-row b { display: block; font-size: 15px; } .doc-row div > span { display: block; font-size: 13px; color: var(--muted); }
-.doc-row i { margin-left: auto; font-style: normal; color: var(--dim); } .doc-row:hover i { color: var(--accent); }
-.card::after { content: ""; position: absolute; inset: 0; background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%), var(--glow), transparent 60%); opacity: 0; transition: opacity .3s; pointer-events: none; }
-a.card:hover::after { opacity: 1; }
-.card h3 { margin: 0 0 6px; font-size: 17px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.card h3 em { font-style: normal; font-size: 12px; color: var(--muted); font-weight: 500; white-space: nowrap; }
-.card p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
-.card p:last-child { margin-bottom: 0; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.card-foot .chips { flex-wrap: nowrap; overflow: hidden; }
-.card-foot .chip { white-space: nowrap; }
-.chip { font: 12px "JetBrains Mono", monospace; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
-h3.group { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 40px 0 14px; display: flex; align-items: center; gap: 12px; }
-h3.group::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-h3.group:first-of-type { margin-top: 0; }
+      /* cards */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .card {
+        position: relative;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 22px;
+        transition:
+          transform 0.25s,
+          border-color 0.25s,
+          background 0.25s;
+        overflow: hidden;
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+      }
+      a.card:hover {
+        text-decoration: none;
+        transform: translateY(-3px);
+        border-color: color-mix(
+          in srgb,
+          var(--c, var(--accent)) 60%,
+          var(--line)
+        );
+        background: color-mix(
+          in srgb,
+          var(--c, var(--accent)) 4%,
+          var(--surface)
+        );
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .card-head h3 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.25;
+        display: block;
+      }
+      .card-head small {
+        display: block;
+        font-size: 12.5px;
+        color: var(--dim);
+        margin-top: 2px;
+      }
+      .badge {
+        flex: none;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font:
+          700 12.5px "JetBrains Mono",
+          monospace;
+        letter-spacing: -0.02em;
+        color: var(--c, var(--muted));
+        background: color-mix(in srgb, var(--c, var(--muted)) 14%, transparent);
+        border: 1px solid
+          color-mix(in srgb, var(--c, var(--muted)) 28%, transparent);
+      }
+      .card .desc {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .card-foot {
+        margin-top: auto;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+        display: grid;
+        gap: 12px;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        font-size: 12.5px;
+        color: var(--dim);
+      }
+      .meta b {
+        color: var(--text);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .meta .ev b {
+        color: var(--accent-3);
+      }
+      .meta .go {
+        margin-left: auto;
+        color: var(--c, var(--accent));
+        opacity: 0;
+        transform: translateX(-4px);
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+      }
+      a.card:hover .meta .go {
+        opacity: 1;
+        transform: none;
+      }
+      .c-fe {
+        --c: #5aa9ff;
+      }
+      .c-be {
+        --c: #45c49f;
+      }
+      .c-mo {
+        --c: #e9b949;
+      }
+      .c-op {
+        --c: #ff7a90;
+      }
+      .c-ai {
+        --c: #9a8cff;
+      }
+      .c-wp {
+        --c: #e8875b;
+      }
+      .c-sv {
+        --c: #e8875b;
+      }
+      .docs-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .doc-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        color: var(--text);
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+      .doc-row:hover {
+        text-decoration: none;
+        border-color: var(--accent);
+        transform: translateY(-2px);
+      }
+      .doc-row .badge {
+        width: 34px;
+        height: 34px;
+      }
+      .doc-row b {
+        display: block;
+        font-size: 15px;
+      }
+      .doc-row div > span {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .doc-row i {
+        margin-left: auto;
+        font-style: normal;
+        color: var(--dim);
+      }
+      .doc-row:hover i {
+        color: var(--accent);
+      }
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          240px circle at var(--mx, 50%) var(--my, 0%),
+          var(--glow),
+          transparent 60%
+        );
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      a.card:hover::after {
+        opacity: 1;
+      }
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 17px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .card h3 em {
+        font-style: normal;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      .card p {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .card p:last-child {
+        margin-bottom: 0;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .card-foot .chips {
+        flex-wrap: nowrap;
+        overflow: hidden;
+      }
+      .card-foot .chip {
+        white-space: nowrap;
+      }
+      .chip {
+        font:
+          12px "JetBrains Mono",
+          monospace;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: var(--surface-2);
+        color: var(--muted);
+      }
+      h3.group {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 40px 0 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      h3.group::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+      }
+      h3.group:first-of-type {
+        margin-top: 0;
+      }
 
-/* before / after */
-.before { margin-top: 24px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; font-size: 14px; background: var(--surface); }
-.before > div { display: grid; grid-template-columns: 1.1fr 1.7fr .8fr; gap: 16px; padding: 12px 20px; border-top: 1px solid var(--line); }
-.before > div:first-child { border-top: 0; background: var(--surface-2); font-weight: 600; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.before > div > span:first-child { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line-2); }
-.before > div:first-child > span:first-child { text-decoration: none; }
-.before > div > span:last-child { font: 12.5px "JetBrains Mono", monospace; color: var(--accent-3); }
-.before > div:first-child > span:last-child { color: var(--muted); font: inherit; }
+      /* before / after */
+      .before {
+        margin-top: 24px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        font-size: 14px;
+        background: var(--surface);
+      }
+      .before > div {
+        display: grid;
+        grid-template-columns: 1.1fr 1.7fr 0.8fr;
+        gap: 16px;
+        padding: 12px 20px;
+        border-top: 1px solid var(--line);
+      }
+      .before > div:first-child {
+        border-top: 0;
+        background: var(--surface-2);
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .before > div > span:first-child {
+        color: var(--muted);
+        text-decoration: line-through;
+        text-decoration-color: var(--line-2);
+      }
+      .before > div:first-child > span:first-child {
+        text-decoration: none;
+      }
+      .before > div > span:last-child {
+        font:
+          12.5px "JetBrains Mono",
+          monospace;
+        color: var(--accent-3);
+      }
+      .before > div:first-child > span:last-child {
+        color: var(--muted);
+        font: inherit;
+      }
 
-/* start in three steps */
-.steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.steps3 .card { display: flex; flex-direction: column; }
-.num { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #1a0f08; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
-.steps3 pre, .sample { margin: auto 0 0; padding: 12px 14px; border-radius: 10px; background: var(--term-bg); border: 1px solid var(--line); color: var(--term-text); font: 12.5px/1.6 "JetBrains Mono", monospace; white-space: pre-wrap; }
-.steps3 pre.out { color: var(--muted); }
-.detect { margin-top: 20px; padding: 20px 24px; border: 1px dashed var(--line-2); border-radius: 16px; }
-.detect b { display: block; margin-bottom: 12px; }
-.detect-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px 24px; }
-.detect-grid div { display: flex; align-items: center; gap: 10px; font-size: 14px; }
-.detect-grid i { color: var(--muted); font-style: normal; }
-.detect p { margin: 14px 0 0; color: var(--muted); font-size: 14px; }
+      /* start in three steps */
+      .steps3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .steps3 .card {
+        display: flex;
+        flex-direction: column;
+      }
+      .num {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--accent);
+        color: #1a0f08;
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+      .steps3 pre,
+      .sample {
+        margin: auto 0 0;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: var(--term-bg);
+        border: 1px solid var(--line);
+        color: var(--term-text);
+        font:
+          12.5px/1.6 "JetBrains Mono",
+          monospace;
+        white-space: pre-wrap;
+      }
+      .steps3 pre.out {
+        color: var(--muted);
+      }
+      .detect {
+        margin-top: 20px;
+        padding: 20px 24px;
+        border: 1px dashed var(--line-2);
+        border-radius: 16px;
+      }
+      .detect b {
+        display: block;
+        margin-bottom: 12px;
+      }
+      .detect-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 10px 24px;
+      }
+      .detect-grid div {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+      }
+      .detect-grid i {
+        color: var(--muted);
+        font-style: normal;
+      }
+      .detect p {
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
 
-/* pipeline */
-.pipe { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
-.pipe::before { content: ""; position: absolute; left: 4%; right: 4%; top: 34px; height: 2px; background: var(--line); }
-.pulse { position: absolute; top: 29px; left: 4%; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px var(--accent); animation: travel 7s cubic-bezier(.6,0,.4,1) infinite; }
-@keyframes travel { 0% { left: 4%; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { left: 95%; opacity: 0; } }
-.step { position: relative; text-align: center; }
-.step .n { width: 68px; height: 68px; margin: 0 auto 12px; border-radius: 18px; display: grid; place-items: center; font-size: 26px; background: var(--surface); border: 1px solid var(--line); }
-.step code { display: block; margin-top: 6px; font: 11.5px "JetBrains Mono", monospace; color: var(--accent); background: none; padding: 0; }
-.step b { display: block; font-size: 14px; } .step small { color: var(--muted); font-size: 12.5px; display: block; line-height: 1.45; margin-top: 2px; }
+      /* pipeline */
+      .pipe {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 12px;
+      }
+      .pipe::before {
+        content: "";
+        position: absolute;
+        left: 4%;
+        right: 4%;
+        top: 34px;
+        height: 2px;
+        background: var(--line);
+      }
+      .pulse {
+        position: absolute;
+        top: 29px;
+        left: 4%;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 18px var(--accent);
+        animation: travel 7s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+      }
+      @keyframes travel {
+        0% {
+          left: 4%;
+          opacity: 0;
+        }
+        8% {
+          opacity: 1;
+        }
+        92% {
+          opacity: 1;
+        }
+        100% {
+          left: 95%;
+          opacity: 0;
+        }
+      }
+      .step {
+        position: relative;
+        text-align: center;
+      }
+      .step .n {
+        width: 68px;
+        height: 68px;
+        margin: 0 auto 12px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        font-size: 26px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+      }
+      .step code {
+        display: block;
+        margin-top: 6px;
+        font:
+          11.5px "JetBrains Mono",
+          monospace;
+        color: var(--accent);
+        background: none;
+        padding: 0;
+      }
+      .step b {
+        display: block;
+        font-size: 14px;
+      }
+      .step small {
+        color: var(--muted);
+        font-size: 12.5px;
+        display: block;
+        line-height: 1.45;
+        margin-top: 2px;
+      }
 
-/* behaviour */
-.behave { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; counter-reset: b; }
-.behave .card { padding-top: 46px; }
-.behave .card::before { counter-increment: b; content: "0" counter(b); position: absolute; top: 16px; left: 20px; font: 600 13px "JetBrains Mono", monospace; color: var(--accent); }
-.behave .who-ran { display: inline-block; font: 11.5px "JetBrains Mono", monospace; color: var(--dim); margin-top: 4px; }
-.split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-.sample { margin: 0; font-size: 12.5px; }
-.sample .k { color: var(--accent-2); } .sample .g { color: var(--accent-3); } .sample .d { color: #7d7a72; }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
-.panel h3 { margin: 0 0 6px; font-size: 16px; } .panel p { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+      /* behaviour */
+      .behave {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        counter-reset: b;
+      }
+      .behave .card {
+        padding-top: 46px;
+      }
+      .behave .card::before {
+        counter-increment: b;
+        content: "0" counter(b);
+        position: absolute;
+        top: 16px;
+        left: 20px;
+        font:
+          600 13px "JetBrains Mono",
+          monospace;
+        color: var(--accent);
+      }
+      .behave .who-ran {
+        display: inline-block;
+        font:
+          11.5px "JetBrains Mono",
+          monospace;
+        color: var(--dim);
+        margin-top: 4px;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .sample {
+        margin: 0;
+        font-size: 12.5px;
+      }
+      .sample .k {
+        color: var(--accent-2);
+      }
+      .sample .g {
+        color: var(--accent-3);
+      }
+      .sample .d {
+        color: #7d7a72;
+      }
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+      }
+      .panel h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+      .panel p {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0 0 14px;
+      }
 
-/* guardrails */
-.guards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-.guard-group { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 8px 20px 12px; }
-.guard-group h3 { display: flex; align-items: center; gap: 10px; font-size: 15px; margin: 12px 0 4px; }
-.guard-group h3 .dot { width: 8px; height: 8px; border-radius: 50%; }
-.guard-group > p { color: var(--muted); font-size: 13.5px; margin: 0 0 6px; }
-.g-row { display: grid; grid-template-columns: 130px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
-.g-row:first-of-type { border-top: 0; }
-.g-row code { background: none; padding: 0; color: var(--text); font-size: 12.5px; }
-.g-row span { color: var(--muted); }
+      /* guardrails */
+      .guards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      .guard-group {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 8px 20px 12px;
+      }
+      .guard-group h3 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        margin: 12px 0 4px;
+      }
+      .guard-group h3 .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .guard-group > p {
+        color: var(--muted);
+        font-size: 13.5px;
+        margin: 0 0 6px;
+      }
+      .g-row {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px;
+        padding: 10px 0;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+      }
+      .g-row:first-of-type {
+        border-top: 0;
+      }
+      .g-row code {
+        background: none;
+        padding: 0;
+        color: var(--text);
+        font-size: 12.5px;
+      }
+      .g-row span {
+        color: var(--muted);
+      }
 
-/* evals */
-.layers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.layer b.big { display: block; font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 2px; font-variant-numeric: tabular-nums; }
-.layer .when { display: inline-block; font: 11.5px "JetBrains Mono", monospace; padding: 2px 8px; border-radius: 6px; margin-bottom: 10px; }
-.when.free { background: color-mix(in srgb, var(--accent-3) 14%, transparent); color: var(--accent-3); }
-.when.paid { background: color-mix(in srgb, var(--accent-2) 16%, transparent); color: var(--accent-2); }
-.bars { margin-top: 16px; display: grid; gap: 8px; }
-.bar { display: grid; grid-template-columns: 90px 1fr 28px; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); }
-.bar i { display: block; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transform-origin: left; transform: scaleX(0); transition: transform 1s cubic-bezier(.2,.8,.2,1); }
-.in .bar i { transform: scaleX(1); }
-.bar b { color: var(--text); font-variant-numeric: tabular-nums; text-align: right; }
-.note { color: var(--dim); font-size: 13px; margin: 14px 0 0; }
+      /* evals */
+      .layers {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .layer b.big {
+        display: block;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 2px;
+        font-variant-numeric: tabular-nums;
+      }
+      .layer .when {
+        display: inline-block;
+        font:
+          11.5px "JetBrains Mono",
+          monospace;
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+      }
+      .when.free {
+        background: color-mix(in srgb, var(--accent-3) 14%, transparent);
+        color: var(--accent-3);
+      }
+      .when.paid {
+        background: color-mix(in srgb, var(--accent-2) 16%, transparent);
+        color: var(--accent-2);
+      }
+      .bars {
+        margin-top: 16px;
+        display: grid;
+        gap: 8px;
+      }
+      .bar {
+        display: grid;
+        grid-template-columns: 90px 1fr 28px;
+        gap: 10px;
+        align-items: center;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .bar i {
+        display: block;
+        height: 8px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, var(--accent-2), var(--accent));
+        transform-origin: left;
+        transform: scaleX(0);
+        transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .in .bar i {
+        transform: scaleX(1);
+      }
+      .bar b {
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+      .note {
+        color: var(--dim);
+        font-size: 13px;
+        margin: 14px 0 0;
+      }
 
-/* faq */
-.faq details { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); margin-bottom: 10px; padding: 0 18px; }
-.faq summary { cursor: pointer; padding: 14px 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
-.faq summary::after { content: "+"; color: var(--muted); font-weight: 400; } .faq details[open] summary::after { content: "–"; }
-.faq summary::-webkit-details-marker { display: none; }
-.faq p { margin: 0 0 16px; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
+      /* faq */
+      .faq details {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface);
+        margin-bottom: 10px;
+        padding: 0 18px;
+      }
+      .faq summary {
+        cursor: pointer;
+        padding: 14px 0;
+        font-weight: 600;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .faq summary::after {
+        content: "+";
+        color: var(--muted);
+        font-weight: 400;
+      }
+      .faq details[open] summary::after {
+        content: "–";
+      }
+      .faq summary::-webkit-details-marker {
+        display: none;
+      }
+      .faq p {
+        margin: 0 0 16px;
+        color: var(--muted);
+        font-size: 14.5px;
+        line-height: 1.6;
+      }
 
-.reveal { opacity: 0; transform: translateY(20px); transition: opacity .6s ease, transform .6s ease; }
-.reveal.in { opacity: 1; transform: none; }
+      .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition:
+          opacity 0.6s ease,
+          transform 0.6s ease;
+      }
+      .reveal.in {
+        opacity: 1;
+        transform: none;
+      }
 
-/* map teaser */
-.map { display: grid; grid-template-columns: 1fr 1.2fr; gap: 32px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 32px; }
-.map svg { width: 100%; height: auto; }
-.map .edge { stroke: var(--line-2); stroke-width: 2; fill: none; stroke-dasharray: 6 6; animation: dash 1.4s linear infinite; }
-@keyframes dash { to { stroke-dashoffset: -12; } }
-.map .node { fill: var(--surface-2); stroke: var(--accent); stroke-width: 1.5; }
-.map .node.hub { fill: var(--accent); }
-.map text { fill: var(--text); font: 600 12px Inter, sans-serif; text-anchor: middle; dominant-baseline: middle; }
-.map text.on-hub { fill: #1a0f08; }
+      /* map teaser */
+      .map {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 32px;
+        align-items: center;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 32px;
+      }
+      .map svg {
+        width: 100%;
+        height: auto;
+      }
+      .map .edge {
+        stroke: var(--line-2);
+        stroke-width: 2;
+        fill: none;
+        stroke-dasharray: 6 6;
+        animation: dash 1.4s linear infinite;
+      }
+      @keyframes dash {
+        to {
+          stroke-dashoffset: -12;
+        }
+      }
+      .map .node {
+        fill: var(--surface-2);
+        stroke: var(--accent);
+        stroke-width: 1.5;
+      }
+      .map .node.hub {
+        fill: var(--accent);
+      }
+      .map text {
+        fill: var(--text);
+        font:
+          600 12px Inter,
+          sans-serif;
+        text-anchor: middle;
+        dominant-baseline: middle;
+      }
+      .map text.on-hub {
+        fill: #1a0f08;
+      }
 
-footer { margin-top: 96px; padding: 28px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
-footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+      footer {
+        margin-top: 96px;
+        padding: 28px 0 40px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 14px;
+      }
+      footer .wrap {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
 
-/* doc viewer */
-#viewer { position: fixed; inset: 0; z-index: 40; background: var(--bg); overflow-y: auto; transform: translateY(100%); transition: transform .45s cubic-bezier(.2,.8,.2,1); }
-#viewer.open { transform: none; }
-#progress { position: sticky; top: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 0; z-index: 2; }
-.viewer-bar { position: sticky; top: 3px; z-index: 1; display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); font-size: 14px; }
-.viewer-bar button { background: var(--surface); border: 1px solid var(--line-2); color: var(--text); border-radius: 8px; padding: 5px 12px; cursor: pointer; font: inherit; }
-.viewer-bar code { color: var(--muted); background: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.viewer-bar a { margin-left: auto; white-space: nowrap; }
-article { max-width: 820px; margin: 0 auto; padding: 32px 16px 120px; animation: rise .5s ease; }
-@keyframes rise { from { opacity: 0; transform: translateY(16px); } }
-article h1 { font-size: 36px; } article h2 { margin-top: 2em; padding-top: .4em; border-top: 1px solid var(--line); font-size: 26px; }
-article pre { background: var(--code-bg); border: 1px solid var(--line); padding: 14px 16px; border-radius: 10px; overflow-x: auto; font-size: 13.5px; }
-article :not(pre) > code { background: var(--code-bg); }
-article table { border-collapse: collapse; display: block; overflow-x: auto; font-size: 14px; }
-article th, article td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
-article th { background: var(--surface-2); }
-article blockquote { margin: 0; padding: 4px 16px; border-left: 3px solid var(--accent); color: var(--muted); }
-article img { max-width: 100%; }
+      /* doc viewer */
+      #viewer {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: var(--bg);
+        overflow-y: auto;
+        transform: translateY(100%);
+        transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      #viewer.open {
+        transform: none;
+      }
+      #progress {
+        position: sticky;
+        top: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        width: 0;
+        z-index: 2;
+      }
+      .viewer-bar {
+        position: sticky;
+        top: 3px;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: color-mix(in srgb, var(--bg) 85%, transparent);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+        font-size: 14px;
+      }
+      .viewer-bar button {
+        background: var(--surface);
+        border: 1px solid var(--line-2);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 5px 12px;
+        cursor: pointer;
+        font: inherit;
+      }
+      .viewer-bar code {
+        color: var(--muted);
+        background: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .viewer-bar a {
+        margin-left: auto;
+        white-space: nowrap;
+      }
+      article {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 32px 16px 120px;
+        animation: rise 0.5s ease;
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+      }
+      article h1 {
+        font-size: 36px;
+      }
+      article h2 {
+        margin-top: 2em;
+        padding-top: 0.4em;
+        border-top: 1px solid var(--line);
+        font-size: 26px;
+      }
+      article pre {
+        background: var(--code-bg);
+        border: 1px solid var(--line);
+        padding: 14px 16px;
+        border-radius: 10px;
+        overflow-x: auto;
+        font-size: 13.5px;
+      }
+      article :not(pre) > code {
+        background: var(--code-bg);
+      }
+      article table {
+        border-collapse: collapse;
+        display: block;
+        overflow-x: auto;
+        font-size: 14px;
+      }
+      article th,
+      article td {
+        border: 1px solid var(--line);
+        padding: 7px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      article th {
+        background: var(--surface-2);
+      }
+      article blockquote {
+        margin: 0;
+        padding: 4px 16px;
+        border-left: 3px solid var(--accent);
+        color: var(--muted);
+      }
+      article img {
+        max-width: 100%;
+      }
 
-/* watch it run */
-.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px; }
-.flow-lanes { display: flex; flex-wrap: wrap; gap: 8px; }
-.flow-lanes button { --lc: var(--muted); font: 600 13px "JetBrains Mono", monospace; padding: 7px 14px; border-radius: 99px; cursor: pointer;
-  background: var(--surface-2); color: var(--muted); border: 1px solid var(--line-2); transition: color .2s, border-color .2s, background .2s; }
-.flow-lanes button[aria-selected="true"] { color: var(--lc); border-color: var(--lc); background: color-mix(in srgb, var(--lc) 12%, transparent); }
-.l-tiny { --lc: var(--accent-3) !important; } .l-normal { --lc: var(--accent-2) !important; } .l-high-risk { --lc: #ff7a90 !important; }
-.flow-req { margin: 14px 0 18px; display: grid; gap: 4px; }
-.flow-req code { justify-self: start; max-width: 100%; overflow-wrap: anywhere; font-size: 14px; color: var(--term-text); background: var(--term-bg); border: 1px solid var(--line); padding: 6px 10px; border-radius: 8px; }
-.flow-req code::before { content: "❯ "; color: var(--accent); }
-.flow-req span { color: var(--muted); font-size: 14px; }
-.flow-body { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 20px; }
-.flow-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; position: relative; }
-.flow-steps button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; border: 1px solid transparent;
-  background: none; color: var(--text); font: 14px Inter, sans-serif; text-align: left; cursor: pointer; transition: background .2s, border-color .2s, opacity .2s; }
-.flow-steps button:hover { background: var(--surface-2); }
-.flow-steps .dot { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 600 11px "JetBrains Mono", monospace;
-  background: var(--surface-2); border: 1px solid var(--line-2); color: var(--muted); transition: background .3s, color .3s, border-color .3s; }
-.flow-steps .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.flow-steps .done .dot { background: color-mix(in srgb, var(--lc) 18%, transparent); border-color: var(--lc); color: var(--lc); }
-.flow-steps .skip { opacity: .4; } .flow-steps .skip .t { text-decoration: line-through; }
-.flow-steps [aria-current="step"] { background: color-mix(in srgb, var(--lc) 9%, transparent); border-color: color-mix(in srgb, var(--lc) 40%, transparent); opacity: 1; }
-.flow-steps [aria-current="step"] .dot { background: var(--lc); color: #0b0c0e; border-color: var(--lc); animation: ring 1.6s infinite; }
-@keyframes ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lc) 50%, transparent); } 100% { box-shadow: 0 0 0 9px transparent; } }
-.flow-panel { min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 20px; min-height: 340px; }
-.flow-panel > * { animation: rise .4s ease both; }
-.fp-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
-.fp-n { flex: none; font: 700 13px "JetBrains Mono", monospace; color: var(--lc); padding-top: 3px; }
-.fp-head h3 { margin: 0; font-size: 19px; line-height: 1.3; }
-.fp-head h3 code { font-size: 13px; color: var(--lc); background: none; padding: 0; margin-left: 6px; }
-.fp-src { display: inline-block; font: 12px "JetBrains Mono", monospace; overflow-wrap: anywhere; margin-top: 2px; }
-.flow-panel > p { color: var(--muted); margin: 0 0 16px; font-size: 15px; }
-.flow-panel > p.skipped { color: var(--dim); font-style: italic; }
-.fp-hooks { display: grid; gap: 8px; }
-.fp-hooks > b { font: 600 11px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
-.hk { --hc: var(--accent-2); display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
-  border-left: 3px solid var(--hc); background: var(--surface); animation: rise .4s ease both; }
-.hk a { font: 600 13px "JetBrains Mono", monospace; color: var(--text); overflow-wrap: anywhere; }
-.hk em { justify-self: end; font: 600 11px "JetBrains Mono", monospace; font-style: normal; text-transform: uppercase; letter-spacing: .06em; color: var(--hc); }
-.hk small { grid-column: 1 / -1; font: 11.5px "JetBrains Mono", monospace; color: var(--dim); overflow-wrap: anywhere; }
-.hk span { grid-column: 1 / -1; font-size: 13.5px; color: var(--muted); }
-.hk.s-blocks { --hc: #ff7a90; box-shadow: 0 0 24px -10px #ff7a90; } .hk.s-asks { --hc: var(--warn); } .hk.s-fires, .hk.s-records { --hc: var(--accent-3); }
-.hk.s-watching { --hc: var(--accent-2); } .hk.s-idle { --hc: var(--line-2); opacity: .7; }
-.flow-ctrl { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-.flow-ctrl button { background: var(--surface-2); border: 1px solid var(--line-2); color: var(--text); border-radius: 8px; padding: 6px 12px; cursor: pointer; font: 600 14px Inter, sans-serif; }
-.flow-ctrl button:hover { border-color: var(--accent); }
-.flow-ctrl button.play { min-width: 92px; }
-.flow-ctrl span { font: 12.5px "JetBrains Mono", monospace; color: var(--muted); font-variant-numeric: tabular-nums; }
-.flow-bar { flex: 1 1 120px; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
-.flow-bar i { display: block; height: 100%; background: var(--lc, var(--accent)); transform-origin: left; transform: scaleX(0); }
+      /* watch it run */
+      .flow {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 20px;
+      }
+      .flow-lanes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .flow-lanes button {
+        --lc: var(--muted);
+        font:
+          600 13px "JetBrains Mono",
+          monospace;
+        padding: 7px 14px;
+        border-radius: 99px;
+        cursor: pointer;
+        background: var(--surface-2);
+        color: var(--muted);
+        border: 1px solid var(--line-2);
+        transition:
+          color 0.2s,
+          border-color 0.2s,
+          background 0.2s;
+      }
+      .flow-lanes button[aria-selected="true"] {
+        color: var(--lc);
+        border-color: var(--lc);
+        background: color-mix(in srgb, var(--lc) 12%, transparent);
+      }
+      .l-tiny {
+        --lc: var(--accent-3) !important;
+      }
+      .l-normal {
+        --lc: var(--accent-2) !important;
+      }
+      .l-high-risk {
+        --lc: #ff7a90 !important;
+      }
+      .flow-req {
+        margin: 14px 0 18px;
+        display: grid;
+        gap: 4px;
+      }
+      .flow-req code {
+        justify-self: start;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        font-size: 14px;
+        color: var(--term-text);
+        background: var(--term-bg);
+        border: 1px solid var(--line);
+        padding: 6px 10px;
+        border-radius: 8px;
+      }
+      .flow-req code::before {
+        content: "❯ ";
+        color: var(--accent);
+      }
+      .flow-req span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .flow-body {
+        display: grid;
+        grid-template-columns: 250px minmax(0, 1fr);
+        gap: 20px;
+      }
+      .flow-steps {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 2px;
+        position: relative;
+      }
+      .flow-steps button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 10px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        background: none;
+        color: var(--text);
+        font:
+          14px Inter,
+          sans-serif;
+        text-align: left;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          opacity 0.2s;
+      }
+      .flow-steps button:hover {
+        background: var(--surface-2);
+      }
+      .flow-steps .dot {
+        flex: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font:
+          600 11px "JetBrains Mono",
+          monospace;
+        background: var(--surface-2);
+        border: 1px solid var(--line-2);
+        color: var(--muted);
+        transition:
+          background 0.3s,
+          color 0.3s,
+          border-color 0.3s;
+      }
+      .flow-steps .t {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .flow-steps .done .dot {
+        background: color-mix(in srgb, var(--lc) 18%, transparent);
+        border-color: var(--lc);
+        color: var(--lc);
+      }
+      .flow-steps .skip {
+        opacity: 0.4;
+      }
+      .flow-steps .skip .t {
+        text-decoration: line-through;
+      }
+      .flow-steps [aria-current="step"] {
+        background: color-mix(in srgb, var(--lc) 9%, transparent);
+        border-color: color-mix(in srgb, var(--lc) 40%, transparent);
+        opacity: 1;
+      }
+      .flow-steps [aria-current="step"] .dot {
+        background: var(--lc);
+        color: #0b0c0e;
+        border-color: var(--lc);
+        animation: ring 1.6s infinite;
+      }
+      @keyframes ring {
+        0% {
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--lc) 50%, transparent);
+        }
+        100% {
+          box-shadow: 0 0 0 9px transparent;
+        }
+      }
+      .flow-panel {
+        min-width: 0;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px;
+        min-height: 340px;
+      }
+      .flow-panel > * {
+        animation: rise 0.4s ease both;
+      }
+      .fp-head {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 10px;
+      }
+      .fp-n {
+        flex: none;
+        font:
+          700 13px "JetBrains Mono",
+          monospace;
+        color: var(--lc);
+        padding-top: 3px;
+      }
+      .fp-head h3 {
+        margin: 0;
+        font-size: 19px;
+        line-height: 1.3;
+      }
+      .fp-head h3 code {
+        font-size: 13px;
+        color: var(--lc);
+        background: none;
+        padding: 0;
+        margin-left: 6px;
+      }
+      .fp-src {
+        display: inline-block;
+        font:
+          12px "JetBrains Mono",
+          monospace;
+        overflow-wrap: anywhere;
+        margin-top: 2px;
+      }
+      .flow-panel > p {
+        color: var(--muted);
+        margin: 0 0 16px;
+        font-size: 15px;
+      }
+      .flow-panel > p.skipped {
+        color: var(--dim);
+        font-style: italic;
+      }
+      .fp-hooks {
+        display: grid;
+        gap: 8px;
+      }
+      .fp-hooks > b {
+        font:
+          600 11px "JetBrains Mono",
+          monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .hk {
+        --hc: var(--accent-2);
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--hc);
+        background: var(--surface);
+        animation: rise 0.4s ease both;
+      }
+      .hk a {
+        font:
+          600 13px "JetBrains Mono",
+          monospace;
+        color: var(--text);
+        overflow-wrap: anywhere;
+      }
+      .hk em {
+        justify-self: end;
+        font:
+          600 11px "JetBrains Mono",
+          monospace;
+        font-style: normal;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--hc);
+      }
+      .hk small {
+        grid-column: 1 / -1;
+        font:
+          11.5px "JetBrains Mono",
+          monospace;
+        color: var(--dim);
+        overflow-wrap: anywhere;
+      }
+      .hk span {
+        grid-column: 1 / -1;
+        font-size: 13.5px;
+        color: var(--muted);
+      }
+      .hk.s-blocks {
+        --hc: #ff7a90;
+        box-shadow: 0 0 24px -10px #ff7a90;
+      }
+      .hk.s-asks {
+        --hc: var(--warn);
+      }
+      .hk.s-fires,
+      .hk.s-records {
+        --hc: var(--accent-3);
+      }
+      .hk.s-watching {
+        --hc: var(--accent-2);
+      }
+      .hk.s-idle {
+        --hc: var(--line-2);
+        opacity: 0.7;
+      }
+      .flow-ctrl {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+      .flow-ctrl button {
+        background: var(--surface-2);
+        border: 1px solid var(--line-2);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 6px 12px;
+        cursor: pointer;
+        font:
+          600 14px Inter,
+          sans-serif;
+      }
+      .flow-ctrl button:hover {
+        border-color: var(--accent);
+      }
+      .flow-ctrl button.play {
+        min-width: 92px;
+      }
+      .flow-ctrl span {
+        font:
+          12.5px "JetBrains Mono",
+          monospace;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .flow-bar {
+        flex: 1 1 120px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--line);
+        overflow: hidden;
+      }
+      .flow-bar i {
+        display: block;
+        height: 100%;
+        background: var(--lc, var(--accent));
+        transform-origin: left;
+        transform: scaleX(0);
+      }
 
-.layer .when, .behave .who-ran { align-self: flex-start; }
-@media (max-width: 1080px) {
-  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 960px) {
-  .behave, .layers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 700px) {
-  .docs-list { grid-template-columns: 1fr; }
-}
-@media (max-width: 860px) {
-  .hero { padding-top: 56px; }
-  .hero-inner, .map, .split, .guards { grid-template-columns: 1fr; }
-  .stats { grid-template-columns: repeat(2, 1fr); }
-  .pipe { grid-template-columns: repeat(2, 1fr); row-gap: 28px; }
-  .pipe::before, .pulse { display: none; }
-  .steps3 { grid-template-columns: 1fr; }
-  .flow { padding: 14px; }
-  .flow-body { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .flow-steps { display: flex; flex-wrap: wrap; gap: 6px; }
-  .flow-steps button { width: auto; padding: 4px; }
-  .flow-steps .t { display: none; }
-  .flow-panel { padding: 16px; min-height: 0; }
-  .before > div { grid-template-columns: 1fr; gap: 4px; } .before > div:first-child { display: none; }
-  nav .links a.opt { display: none; }
-}
-@media (max-width: 560px) {
-  .behave, .layers, .cards { grid-template-columns: 1fr; }
-  .card-foot .chips { flex-wrap: wrap; }
-  .g-row { grid-template-columns: 1fr; gap: 2px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
-  .reveal { opacity: 1; transform: none; }
-  .bar i { transform: none; }
-}
-</style>
-</head>
-<body>
-<nav>
-  <div class="wrap">
-    <a class="brand" href="#"><span class="brand-dot"></span>Claude Harness</a>
-    <div class="links">
-      <a href="#start">Start</a>
-      <a class="opt" href="#how">How it works</a>
-      <a class="opt" href="#flow">Watch it run</a>
-      <a class="opt" href="#guardrails">Guardrails</a>
-      <a class="opt" href="#evals">Evals</a>
-      <a class="opt" href="#plugins">Plugins</a>
-      <a class="opt" href="#faq">FAQ</a>
-      <a href="#docs">Docs</a>
-      <a class="gh" href="https://github.com/thanghokdps/claude-root">GitHub</a>
-    </div>
-  </div>
-</nav>
-
-<header class="hero">
-  <div class="grid-bg"></div><div class="orb a"></div><div class="orb b"></div>
-  <div class="wrap hero-inner">
-    <div>
-      <span class="eyebrow"><b>●</b> Claude Code plugin marketplace</span>
-      <h1>Claude Code that follows <span class="shimmer">your team's process.</span></h1>
-      <p class="lede">One install gives Claude the habits of a senior engineer: it asks every question up front, plans, hands each slice to the right engineer, proves the result, then opens the PR. Hooks block the shortcuts, so "done" means the checks actually ran.</p>
-      <div class="cta">
-        <a class="btn primary" href="#start">Get started in 3 steps →</a>
-        <a class="btn ghost" href="docs/skill-map.html">Explore the skill map</a>
+      .layer .when,
+      .behave .who-ran {
+        align-self: flex-start;
+      }
+      @media (max-width: 1080px) {
+        .cards {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 960px) {
+        .behave,
+        .layers {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 700px) {
+        .docs-list {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 860px) {
+        .hero {
+          padding-top: 56px;
+        }
+        .hero-inner,
+        .map,
+        .split,
+        .guards {
+          grid-template-columns: 1fr;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .pipe {
+          grid-template-columns: repeat(2, 1fr);
+          row-gap: 28px;
+        }
+        .pipe::before,
+        .pulse {
+          display: none;
+        }
+        .steps3 {
+          grid-template-columns: 1fr;
+        }
+        .flow {
+          padding: 14px;
+        }
+        .flow-body {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 12px;
+        }
+        .flow-steps {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .flow-steps button {
+          width: auto;
+          padding: 4px;
+        }
+        .flow-steps .t {
+          display: none;
+        }
+        .flow-panel {
+          padding: 16px;
+          min-height: 0;
+        }
+        .before > div {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+        .before > div:first-child {
+          display: none;
+        }
+        nav .links a.opt {
+          display: none;
+        }
+      }
+      @media (max-width: 560px) {
+        .behave,
+        .layers,
+        .cards {
+          grid-template-columns: 1fr;
+        }
+        .card-foot .chips {
+          flex-wrap: wrap;
+        }
+        .g-row {
+          grid-template-columns: 1fr;
+          gap: 2px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+        .reveal {
+          opacity: 1;
+          transform: none;
+        }
+        .bar i {
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="wrap">
+        <a class="brand" href="#"
+          ><span class="brand-dot"></span>Claude Harness</a
+        >
+        <div class="links">
+          <a href="#start">Start</a>
+          <a class="opt" href="#how">How it works</a>
+          <a class="opt" href="#flow">Watch it run</a>
+          <a class="opt" href="#guardrails">Guardrails</a>
+          <a class="opt" href="#evals">Evals</a>
+          <a class="opt" href="#plugins">Plugins</a>
+          <a class="opt" href="#faq">FAQ</a>
+          <a href="#docs">Docs</a>
+          <a class="gh" href="https://github.com/thanghokdps/claude-root"
+            >GitHub</a
+          >
+        </div>
       </div>
-      <div class="trust"><span>Free and open source</span><span>Works in any language</span><span>GitHub · GitLab · Jira</span></div>
-    </div>
-    <div class="term" aria-label="Example session">
-      <div class="term-bar"><i></i><i></i><i></i><span>claude · ~/shop</span></div>
-      <pre id="typed"></pre>
-    </div>
-  </div>
-</header>
+    </nav>
 
-<div class="wrap">
-  <div class="stats">
-    <div class="stat reveal"><b data-count="skills">0</b><span>skills</span></div>
-    <div class="stat reveal"><b data-count="hooks">0</b><span>hooks</span></div>
-    <div class="stat reveal"><b data-count="evals">0</b><span>behaviour eval cases</span></div>
-    <div class="stat reveal"><b data-count="plugins">0</b><span>plugins</span></div>
-  </div>
+    <header class="hero">
+      <div class="grid-bg"></div>
+      <div class="orb a"></div>
+      <div class="orb b"></div>
+      <div class="wrap hero-inner">
+        <div>
+          <span class="eyebrow"><b>●</b> Claude Code plugin marketplace</span>
+          <h1>
+            Claude Code that follows
+            <span class="shimmer">your team's process.</span>
+          </h1>
+          <p class="lede">
+            One install gives Claude the habits of a senior engineer: it asks
+            every question up front, plans, hands each slice to the right
+            engineer, proves the result, then opens the PR. Hooks block the
+            shortcuts, so "done" means the checks actually ran.
+          </p>
+          <div class="cta">
+            <a class="btn primary" href="#start">Get started in 3 steps →</a>
+            <a class="btn ghost" href="docs/skill-map.html"
+              >Explore the skill map</a
+            >
+          </div>
+          <div class="trust">
+            <span>Free and open source</span><span>Works in any language</span
+            ><span>GitHub · GitLab · Jira</span>
+          </div>
+        </div>
+        <div class="term" aria-label="Example session">
+          <div class="term-bar">
+            <i></i><i></i><i></i><span>claude · ~/shop</span>
+          </div>
+          <pre id="typed"></pre>
+        </div>
+      </div>
+    </header>
 
-  <section id="why">
-    <p class="kicker reveal">Why</p>
-    <h2 class="reveal">Fast code is easy. Trustworthy code takes a process.</h2>
-    <p class="sub reveal">Left alone, Claude Code skips the plan, stops mid-build to ask, commits to <code>main</code>, says "tests pass" without running them and forgets everything when the session ends. The kit fixes each of these, and makes the non-negotiable ones impossible to skip.</p>
-    <div class="before reveal">
-      <div><span>Without the kit</span><span>With the kit</span><span>Handled by</span></div>
-      <div><span>Questions trickle in halfway through the build</span><span>Every question is asked once, before the first edit; later choices are decided and listed for you to review</span><span>ask-once</span></div>
-      <div><span>"Done" means Claude said so</span><span><code>/verify-done</code> re-runs the checks and shows their output</span><span>core</span></div>
-      <div><span>The plan is forgotten after <code>/clear</code></span><span>The active plan is recalled every turn; a turn can't end with a task left open</span><span>plan-recall · plan-gate</span></div>
-      <div><span>A fix "passes" by editing the test</span><span>The reproducing test is locked while the fix is written</span><span>test-lock</span></div>
-      <div><span>The quality bar is "tests pass"</span><span><code>CONSTRAINTS.md</code> holds the numbers; lowering one asks you first</span><span>/constraints · weakened-check</span></div>
-      <div><span>Code lands on <code>main</code> from a session</span><span>Blocked; work goes through a branch and a PR</span><span>branch-guard</span></div>
-      <div><span>A secret file is read into the context</span><span><code>.env*</code> and keys are never read; Claude asks you</span><span>secret-guard</span></div>
-      <div><span>Every step runs on the priciest model</span><span>Opus plans and reviews; Sonnet writes; Haiku does mechanical work</span><span>model-cost rule</span></div>
-    </div>
-  </section>
+    <div class="wrap">
+      <div class="stats">
+        <div class="stat reveal">
+          <b data-count="skills">0</b><span>skills</span>
+        </div>
+        <div class="stat reveal">
+          <b data-count="hooks">0</b><span>hooks</span>
+        </div>
+        <div class="stat reveal">
+          <b data-count="evals">0</b><span>behaviour eval cases</span>
+        </div>
+        <div class="stat reveal">
+          <b data-count="plugins">0</b><span>plugins</span>
+        </div>
+      </div>
 
-  <section id="start">
-    <p class="kicker reveal">Get started</p>
-    <h2 class="reveal">Three steps, no configuration</h2>
-    <p class="sub reveal">Install once, open your repo, say what you want. The kit reads the repo and turns on the role packs it needs.</p>
-    <div class="steps3">
-      <div class="card reveal"><span class="num">1</span><h3>Install</h3><p>Inside Claude Code, add the marketplace and install the process kit.</p><pre>/plugin marketplace add thanghokdps/claude-root
+      <section id="why">
+        <p class="kicker reveal">Why</p>
+        <h2 class="reveal">
+          Fast code is easy. Trustworthy code takes a process.
+        </h2>
+        <p class="sub reveal">
+          Left alone, Claude Code skips the plan, stops mid-build to ask,
+          commits to <code>main</code>, says "tests pass" without running them
+          and forgets everything when the session ends. The kit fixes each of
+          these, and makes the non-negotiable ones impossible to skip.
+        </p>
+        <div class="before reveal">
+          <div>
+            <span>Without the kit</span><span>With the kit</span
+            ><span>Handled by</span>
+          </div>
+          <div>
+            <span>Questions trickle in halfway through the build</span
+            ><span
+              >Every question is asked once, before the first edit; later
+              choices are decided and listed for you to review</span
+            ><span>ask-once</span>
+          </div>
+          <div>
+            <span>"Done" means Claude said so</span
+            ><span
+              ><code>/verify-done</code> re-runs the checks and shows their
+              output</span
+            ><span>core</span>
+          </div>
+          <div>
+            <span>The plan is forgotten after <code>/clear</code></span
+            ><span
+              >The active plan is recalled every turn; a turn can't end with a
+              task left open</span
+            ><span>plan-recall · plan-gate</span>
+          </div>
+          <div>
+            <span>A fix "passes" by editing the test</span
+            ><span>The reproducing test is locked while the fix is written</span
+            ><span>test-lock</span>
+          </div>
+          <div>
+            <span>The quality bar is "tests pass"</span
+            ><span
+              ><code>CONSTRAINTS.md</code> holds the numbers; lowering one asks
+              you first</span
+            ><span>/constraints · weakened-check</span>
+          </div>
+          <div>
+            <span>Code lands on <code>main</code> from a session</span
+            ><span>Blocked; work goes through a branch and a PR</span
+            ><span>branch-guard</span>
+          </div>
+          <div>
+            <span>A secret file is read into the context</span
+            ><span
+              ><code>.env*</code> and keys are never read; Claude asks you</span
+            ><span>secret-guard</span>
+          </div>
+          <div>
+            <span>Every step runs on the priciest model</span
+            ><span
+              >Opus plans and reviews; Sonnet writes; Haiku does mechanical
+              work</span
+            ><span>model-cost rule</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="start">
+        <p class="kicker reveal">Get started</p>
+        <h2 class="reveal">Three steps, no configuration</h2>
+        <p class="sub reveal">
+          Install once, open your repo, say what you want. The kit reads the
+          repo and turns on the role packs it needs.
+        </p>
+        <div class="steps3">
+          <div class="card reveal">
+            <span class="num">1</span>
+            <h3>Install</h3>
+            <p>
+              Inside Claude Code, add the marketplace and install the process
+              kit.
+            </p>
+            <pre>
+/plugin marketplace add thanghokdps/claude-root
 /plugin install harness@harness
-/reload-plugins</pre></div>
-      <div class="card reveal"><span class="num">2</span><h3>Open your repo</h3><p>The first session reads your manifests, turns on the matching packs and writes <code>.claude/settings.json</code>. Commit it and your teammates get the same kit.</p><pre class="out">REPO PROFILE: Next.js, Prisma.
-Roles: frontend, backend, devops.</pre></div>
-      <div class="card reveal"><span class="num">3</span><h3>Say what you want</h3><p>In your own words, in any language. The matching skill fires on its own; slash commands are optional.</p><pre>/breakdown &lt;requirement or Jira link&gt;
+/reload-plugins</pre>
+          </div>
+          <div class="card reveal">
+            <span class="num">2</span>
+            <h3>Open your repo</h3>
+            <p>
+              The first session reads your manifests, turns on the matching
+              packs and writes <code>.claude/settings.json</code>. Commit it and
+              your teammates get the same kit.
+            </p>
+            <pre class="out">
+REPO PROFILE: Next.js, Prisma.
+Roles: frontend, backend, devops.</pre>
+          </div>
+          <div class="card reveal">
+            <span class="num">3</span>
+            <h3>Say what you want</h3>
+            <p>
+              In your own words, in any language. The matching skill fires on
+              its own; slash commands are optional.
+            </p>
+            <pre>
+/breakdown &lt;requirement or Jira link&gt;
 /ticket 412
 the upload crashes on files over 10 MB
-Tôi muốn làm chatbot tra cứu đơn hàng</pre></div>
-    </div>
-    <div class="detect reveal">
-      <b>Which role packs turn on for my repo?</b>
-      <div class="detect-grid">
-        <div><span class="chip">React · Next.js · Vue · Svelte</span><i>→</i><strong>frontend</strong></div>
-        <div><span class="chip">FastAPI · Nest · Express · Prisma · Go · Rust</span><i>→</i><strong>backend</strong></div>
-        <div><span class="chip">React Native · Expo · eas.json</span><i>→</i><strong>mobile</strong></div>
-        <div><span class="chip">Dockerfile · CI workflows · *.tf · k8s/ · Helm</span><i>→</i><strong>devops</strong></div>
-        <div><span class="chip">CopilotKit · LangGraph · LangChain · Mastra</span><i>→</i><strong>ai</strong></div>
-      </div>
-      <p>Nothing detected (a static site, a script)? The process plugins still work; force a pack with <code>/plugin install frontend@harness</code>.</p>
-    </div>
-  </section>
+Tôi muốn làm chatbot tra cứu đơn hàng</pre>
+          </div>
+        </div>
+        <div class="detect reveal">
+          <b>Which role packs turn on for my repo?</b>
+          <div class="detect-grid">
+            <div>
+              <span class="chip">React · Next.js · Vue · Svelte</span><i>→</i
+              ><strong>frontend</strong>
+            </div>
+            <div>
+              <span class="chip"
+                >FastAPI · Nest · Express · Prisma · Go · Rust</span
+              ><i>→</i><strong>backend</strong>
+            </div>
+            <div>
+              <span class="chip">React Native · Expo · eas.json</span><i>→</i
+              ><strong>mobile</strong>
+            </div>
+            <div>
+              <span class="chip"
+                >Dockerfile · CI workflows · *.tf · k8s/ · Helm</span
+              ><i>→</i><strong>devops</strong>
+            </div>
+            <div>
+              <span class="chip"
+                >CopilotKit · LangGraph · LangChain · Mastra</span
+              ><i>→</i><strong>ai</strong>
+            </div>
+          </div>
+          <p>
+            Nothing detected (a static site, a script)? The process plugins
+            still work; force a pack with
+            <code>/plugin install frontend@harness</code>.
+          </p>
+        </div>
+      </section>
 
-  <section id="how">
-    <p class="kicker reveal">How it works</p>
-    <h2 class="reveal">From the requirement to the release</h2>
-    <p class="sub reveal">Every stage has a skill, and each leaves a file the next one reads. It is the same for every role.</p>
-    <div class="pipe reveal">
-      <div class="pulse"></div>
-      <div class="step"><div class="n">🔎</div><b>Analyse</b><small>the requirement against the code</small><code>/breakdown</code></div>
-      <div class="step"><div class="n">🗂️</div><b>Tasks</b><small>criteria and estimates on your tracker</small><code>/breakdown</code></div>
-      <div class="step"><div class="n">❓</div><b>Ask once</b><small>every open question, as options</small><code>/ticket · /feature</code></div>
-      <div class="step"><div class="n">📐</div><b>Plan</b><small>reviewed by a fresh agent</small><code>PLAN.md</code></div>
-      <div class="step"><div class="n">🛠️</div><b>Build</b><small>one engineer per slice, tests first</small><code>/tdd · /fix-bug</code></div>
-      <div class="step"><div class="n">🔍</div><b>Prove</b><small>checks re-run, findings with the failing case</small><code>/verify-done</code></div>
-      <div class="step"><div class="n">🚀</div><b>Ship &amp; learn</b><small>PR, release, handoff, lessons</small><code>/finish-branch</code></div>
-    </div>
+      <section id="how">
+        <p class="kicker reveal">How it works</p>
+        <h2 class="reveal">From the requirement to the release</h2>
+        <p class="sub reveal">
+          Every stage has a skill, and each leaves a file the next one reads. It
+          is the same for every role.
+        </p>
+        <div class="pipe reveal">
+          <div class="pulse"></div>
+          <div class="step">
+            <div class="n">🔎</div>
+            <b>Analyse</b><small>the requirement against the code</small
+            ><code>/breakdown</code>
+          </div>
+          <div class="step">
+            <div class="n">🗂️</div>
+            <b>Tasks</b><small>criteria and estimates on your tracker</small
+            ><code>/breakdown</code>
+          </div>
+          <div class="step">
+            <div class="n">❓</div>
+            <b>Ask once</b><small>every open question, as options</small
+            ><code>/ticket · /feature</code>
+          </div>
+          <div class="step">
+            <div class="n">📐</div>
+            <b>Plan</b><small>reviewed by a fresh agent</small
+            ><code>PLAN.md</code>
+          </div>
+          <div class="step">
+            <div class="n">🛠️</div>
+            <b>Build</b><small>one engineer per slice, tests first</small
+            ><code>/tdd · /fix-bug</code>
+          </div>
+          <div class="step">
+            <div class="n">🔍</div>
+            <b>Prove</b
+            ><small>checks re-run, findings with the failing case</small
+            ><code>/verify-done</code>
+          </div>
+          <div class="step">
+            <div class="n">🚀</div>
+            <b>Ship &amp; learn</b><small>PR, release, handoff, lessons</small
+            ><code>/finish-branch</code>
+          </div>
+        </div>
 
-    <h3 class="group reveal" style="margin-top:56px">Inside one build</h3>
-    <div class="behave">
-      <div class="card reveal"><h3>Ask everything up front</h3><p>Before the first edit, every open point is asked as options with a recommendation. After that Claude does not stop to ask: it settles a choice with a short debate and moves on.</p><span class="who-ran">ask-once · /resolve-question</span></div>
-      <div class="card reveal"><h3>A second pair of eyes on the plan</h3><p>An agent that never saw the conversation checks the plan against the code: files exist, verify commands fail today, contracts match their callers.</p><span class="who-ran">plan review · up to 2 rounds</span></div>
-      <div class="card reveal"><h3>Each slice reviewed twice</h3><p>Opus splits the work; each slice goes to the right engineer on a cheaper model. Two fresh reviewers check it: first "does it match the brief", then code quality.</p><span class="who-ran">spec ✅ → quality ✅</span></div>
-      <div class="card reveal"><h3>A report you can roll back</h3><p>The build ends with evidence and a <b>Decided for you</b> list: every choice you did not make, why, and how to revert it.</p><span class="who-ran">/verify-done · Decided for you</span></div>
-    </div>
-    <div class="split">
-      <div class="panel reveal"><h3>What you get back</h3><p>Every choice is listed, so nothing is decided silently.</p>
-<pre class="sample"><span class="g">✓</span> pnpm test — 48 passed · tsc — 0 errors
+        <h3 class="group reveal" style="margin-top: 56px">Inside one build</h3>
+        <div class="behave">
+          <div class="card reveal">
+            <h3>Ask everything up front</h3>
+            <p>
+              Before the first edit, every open point is asked as options with a
+              recommendation. After that Claude does not stop to ask: it settles
+              a choice with a short debate and moves on.
+            </p>
+            <span class="who-ran">ask-once · /resolve-question</span>
+          </div>
+          <div class="card reveal">
+            <h3>A second pair of eyes on the plan</h3>
+            <p>
+              An agent that never saw the conversation checks the plan against
+              the code: files exist, verify commands fail today, contracts match
+              their callers.
+            </p>
+            <span class="who-ran">plan review · up to 2 rounds</span>
+          </div>
+          <div class="card reveal">
+            <h3>Each slice reviewed twice</h3>
+            <p>
+              Opus splits the work; each slice goes to the right engineer on a
+              cheaper model. Two fresh reviewers check it: first "does it match
+              the brief", then code quality.
+            </p>
+            <span class="who-ran">spec ✅ → quality ✅</span>
+          </div>
+          <div class="card reveal">
+            <h3>A report you can roll back</h3>
+            <p>
+              The build ends with evidence and a <b>Decided for you</b> list:
+              every choice you did not make, why, and how to revert it.
+            </p>
+            <span class="who-ran">/verify-done · Decided for you</span>
+          </div>
+        </div>
+        <div class="split">
+          <div class="panel reveal">
+            <h3>What you get back</h3>
+            <p>Every choice is listed, so nothing is decided silently.</p>
+            <pre
+              class="sample"
+            ><span class="g">✓</span> pnpm test — 48 passed · tsc — 0 errors
 
 <span class="k">Decided for you</span>
 - reminder time zone → user's profile zone
@@ -443,92 +2042,387 @@ Tôi muốn làm chatbot tra cứu đơn hàng</pre></div>
   <span class="d">· revert: pass tz in the request body</span>
 - "due soon" → next 24 h
   <span class="d">· why: matches the digest window, jobs/digest.ts:8</span>
-  <span class="d">· revert: change DUE_SOON_HOURS</span></pre></div>
-      <div class="panel reveal"><h3>Always know where you are</h3><p>The status line shows the model, branch, ticket, plan progress and how full the context is.</p>
-<pre class="sample">Opus · feat/412-reminders <span class="k">#412</span> · plan 3/5 <span class="d">add due-soon query</span> · ctx 41% · <span class="g">normal</span></pre>
-<p style="margin:14px 0 0">The lane picks the ceremony: <b>tiny</b> just does it, <b>normal</b> plans first, <b>high-risk</b> (auth, migrations, security, providers, public contracts) writes a spec and waits for your OK.</p></div>
-    </div>
-  </section>
+  <span class="d">· revert: change DUE_SOON_HOURS</span></pre>
+          </div>
+          <div class="panel reveal">
+            <h3>Always know where you are</h3>
+            <p>
+              The status line shows the model, branch, ticket, plan progress and
+              how full the context is.
+            </p>
+            <pre
+              class="sample"
+            >Opus · feat/412-reminders <span class="k">#412</span> · plan 3/5 <span class="d">add due-soon query</span> · ctx 41% · <span class="g">normal</span></pre>
+            <p style="margin: 14px 0 0">
+              The lane picks the ceremony: <b>tiny</b> just does it,
+              <b>normal</b> plans first, <b>high-risk</b> (auth, migrations,
+              security, providers, public contracts) writes a spec and waits for
+              your OK.
+            </p>
+          </div>
+        </div>
+      </section>
 
-  <section id="flow">
-    <p class="kicker reveal">Watch it run</p>
-    <h2 class="reveal">One request, three lanes, every gate</h2>
-    <p class="sub reveal">Pick a lane and follow a request from the prompt to the PR. Each step names the skill that runs it and the hooks standing guard, with a link to the file that says so.</p>
-    <div class="flow reveal" id="flow-player">
-      <div class="flow-lanes" role="tablist" aria-label="Lane" id="flow-lanes"></div>
-      <p class="flow-req"><code id="flow-req"></code><span id="flow-why"></span></p>
-      <div class="flow-body">
-        <ol class="flow-steps" id="flow-steps"></ol>
-        <div class="flow-panel" id="flow-panel" aria-live="polite"></div>
-      </div>
-      <div class="flow-ctrl">
-        <button type="button" id="flow-prev" aria-label="Previous step">←</button>
-        <button type="button" id="flow-play" class="play">▶ Play</button>
-        <button type="button" id="flow-next" aria-label="Next step">→</button>
-        <span id="flow-count"></span>
-        <div class="flow-bar"><i id="flow-bar"></i></div>
-      </div>
-    </div>
-  </section>
+      <section id="flow">
+        <p class="kicker reveal">Watch it run</p>
+        <h2 class="reveal">One request, three lanes, every gate</h2>
+        <p class="sub reveal">
+          Pick a lane and follow a request from the prompt to the PR. Each step
+          names the skill that runs it and the hooks standing guard, with a link
+          to the file that says so.
+        </p>
+        <div class="flow reveal" id="flow-player">
+          <div
+            class="flow-lanes"
+            role="tablist"
+            aria-label="Lane"
+            id="flow-lanes"
+          ></div>
+          <p class="flow-req">
+            <code id="flow-req"></code><span id="flow-why"></span>
+          </p>
+          <div class="flow-body">
+            <ol class="flow-steps" id="flow-steps"></ol>
+            <div class="flow-panel" id="flow-panel" aria-live="polite"></div>
+          </div>
+          <div class="flow-ctrl">
+            <button type="button" id="flow-prev" aria-label="Previous step">
+              ←
+            </button>
+            <button type="button" id="flow-play" class="play">▶ Play</button>
+            <button type="button" id="flow-next" aria-label="Next step">
+              →
+            </button>
+            <span id="flow-count"></span>
+            <div class="flow-bar"><i id="flow-bar"></i></div>
+          </div>
+        </div>
+      </section>
 
-  <section id="engineers">
-    <p class="kicker reveal">Engineers</p>
-    <h2 class="reveal">The right engineer for each slice</h2>
-    <p class="sub reveal">You never call a role by hand. Opus writes the plan and gives each slice to the engineer of the pack that owns its contract, on a cheaper model, then reviews the diff before it lands.</p>
-    <div class="cards">
-      <a class="card reveal c-sv" href="#/doc/plugins/dev/README.md"><div class="card-head"><span class="badge">SV</span><div><h3>Supervisor</h3><small>dev · Opus</small></div></div><p class="desc">Asks, plans, picks the lane, briefs each engineer so nothing is left to decide, reviews every diff, then opens the PR.</p><div class="card-foot"><div class="chips"><span class="chip">/feature</span><span class="chip">/ticket</span><span class="chip">/fix-bug</span></div></div></a>
-      <a class="card reveal c-fe" href="#/doc/plugins/frontend/README.md"><div class="card-head"><span class="badge">FE</span><div><h3>Frontend engineer</h3><small>frontend pack · Sonnet</small></div></div><p class="desc">A web screen from a fixture: every state, shared primitives, Testing Library, checked in the browser at each viewport.</p><div class="card-foot"><div class="chips"><span class="chip">/ui-feature</span><span class="chip">/design-ui</span></div></div></a>
-      <a class="card reveal c-be" href="#/doc/plugins/backend/README.md"><div class="card-head"><span class="badge">BE</span><div><h3>Backend engineer</h3><small>backend pack · Sonnet</small></div></div><p class="desc">Tables, queries, endpoints and third-party APIs. Owner-scoped queries and a route matrix of 200 · 400 · 401 · 404.</p><div class="card-foot"><div class="chips"><span class="chip">/db-change</span><span class="chip">/api-endpoint</span><span class="chip">/api-client</span></div></div></a>
-      <a class="card reveal c-mo" href="#/doc/plugins/mobile/README.md"><div class="card-head"><span class="badge">MO</span><div><h3>Mobile engineer</h3><small>mobile pack · Sonnet</small></div></div><p class="desc">A React Native / Expo screen: navigation, per-platform state, verified on the iOS Simulator or Android emulator.</p><div class="card-foot"><div class="chips"><span class="chip">/mobile-feature</span></div></div></a>
-      <a class="card reveal c-op" href="#/doc/plugins/devops/README.md"><div class="card-head"><span class="badge">OP</span><div><h3>DevOps engineer</h3><small>devops pack · Sonnet</small></div></div><p class="desc">One CI, container or infrastructure change: plan, review, apply when you agree, verify, with rollback ready.</p><div class="card-foot"><div class="chips"><span class="chip">/pipeline</span><span class="chip">/container</span><span class="chip">/infra-change</span></div></div></a>
-      <a class="card reveal c-ai" href="#/doc/plugins/ai/README.md"><div class="card-head"><span class="badge">AI</span><div><h3>AI engineer</h3><small>ai pack · Sonnet</small></div></div><p class="desc">Tools, graphs, prompts and the chat UI on CopilotKit · AG-UI with Mastra, LangChainJS or LangGraph, traced and evaluated.</p><div class="card-foot"><div class="chips"><span class="chip">/agent-architect</span><span class="chip">+11 more</span></div></div></a>
-    </div>
-  </section>
+      <section id="engineers">
+        <p class="kicker reveal">Engineers</p>
+        <h2 class="reveal">The right engineer for each slice</h2>
+        <p class="sub reveal">
+          You never call a role by hand. Opus writes the plan and gives each
+          slice to the engineer of the pack that owns its contract, on a cheaper
+          model, then reviews the diff before it lands.
+        </p>
+        <div class="cards">
+          <a class="card reveal c-sv" href="#/doc/plugins/dev/README.md"
+            ><div class="card-head">
+              <span class="badge">SV</span>
+              <div>
+                <h3>Supervisor</h3>
+                <small>dev · Opus</small>
+              </div>
+            </div>
+            <p class="desc">
+              Asks, plans, picks the lane, briefs each engineer so nothing is
+              left to decide, reviews every diff, then opens the PR.
+            </p>
+            <div class="card-foot">
+              <div class="chips">
+                <span class="chip">/feature</span
+                ><span class="chip">/ticket</span
+                ><span class="chip">/fix-bug</span>
+              </div>
+            </div></a
+          >
+          <a class="card reveal c-fe" href="#/doc/plugins/frontend/README.md"
+            ><div class="card-head">
+              <span class="badge">FE</span>
+              <div>
+                <h3>Frontend engineer</h3>
+                <small>frontend pack · Sonnet</small>
+              </div>
+            </div>
+            <p class="desc">
+              A web screen from a fixture: every state, shared primitives,
+              Testing Library, checked in the browser at each viewport.
+            </p>
+            <div class="card-foot">
+              <div class="chips">
+                <span class="chip">/ui-feature</span
+                ><span class="chip">/design-ui</span>
+              </div>
+            </div></a
+          >
+          <a class="card reveal c-be" href="#/doc/plugins/backend/README.md"
+            ><div class="card-head">
+              <span class="badge">BE</span>
+              <div>
+                <h3>Backend engineer</h3>
+                <small>backend pack · Sonnet</small>
+              </div>
+            </div>
+            <p class="desc">
+              Tables, queries, endpoints and third-party APIs. Owner-scoped
+              queries and a route matrix of 200 · 400 · 401 · 404.
+            </p>
+            <div class="card-foot">
+              <div class="chips">
+                <span class="chip">/db-change</span
+                ><span class="chip">/api-endpoint</span
+                ><span class="chip">/api-client</span>
+              </div>
+            </div></a
+          >
+          <a class="card reveal c-mo" href="#/doc/plugins/mobile/README.md"
+            ><div class="card-head">
+              <span class="badge">MO</span>
+              <div>
+                <h3>Mobile engineer</h3>
+                <small>mobile pack · Sonnet</small>
+              </div>
+            </div>
+            <p class="desc">
+              A React Native / Expo screen: navigation, per-platform state,
+              verified on the iOS Simulator or Android emulator.
+            </p>
+            <div class="card-foot">
+              <div class="chips"><span class="chip">/mobile-feature</span></div>
+            </div></a
+          >
+          <a class="card reveal c-op" href="#/doc/plugins/devops/README.md"
+            ><div class="card-head">
+              <span class="badge">OP</span>
+              <div>
+                <h3>DevOps engineer</h3>
+                <small>devops pack · Sonnet</small>
+              </div>
+            </div>
+            <p class="desc">
+              One CI, container or infrastructure change: plan, review, apply
+              when you agree, verify, with rollback ready.
+            </p>
+            <div class="card-foot">
+              <div class="chips">
+                <span class="chip">/pipeline</span
+                ><span class="chip">/container</span
+                ><span class="chip">/infra-change</span>
+              </div>
+            </div></a
+          >
+          <a class="card reveal c-ai" href="#/doc/plugins/ai/README.md"
+            ><div class="card-head">
+              <span class="badge">AI</span>
+              <div>
+                <h3>AI engineer</h3>
+                <small>ai pack · Sonnet</small>
+              </div>
+            </div>
+            <p class="desc">
+              Tools, graphs, prompts and the chat UI on CopilotKit · AG-UI with
+              Mastra, LangChainJS or LangGraph, traced and evaluated.
+            </p>
+            <div class="card-foot">
+              <div class="chips">
+                <span class="chip">/agent-architect</span
+                ><span class="chip">+11 more</span>
+              </div>
+            </div></a
+          >
+        </div>
+      </section>
 
-  <section id="guardrails">
-    <p class="kicker reveal">Guardrails</p>
-    <h2 class="reveal">Rules that run, not rules that are remembered</h2>
-    <p class="sub reveal">A skill's text can be forgotten under pressure; a hook can't. Each one says why it stopped you, and none can crash the session.</p>
-    <div class="guards">
-      <div class="guard-group reveal"><h3><span class="dot" style="background:#e5534b"></span>Never from a session</h3><p>Blocked outright.</p>
-        <div class="g-row"><code>branch-guard</code><span>No commit or push to <code>main</code> or an environment branch.</span></div>
-        <div class="g-row"><code>secret-guard</code><span><code>.env*</code>, keys and service accounts are never read or edited.</span></div>
-        <div class="g-row"><code>test-lock</code><span>The test that reproduces a bug can't be edited while it is being fixed.</span></div>
-        <div class="g-row"><code>release-gate</code><span>A production mobile release ships only an approved <code>release/&lt;version&gt;</code>.</span></div>
-        <div class="g-row"><code>infra-gate</code><span>Production <code>terraform</code>, <code>kubectl</code> or <code>helm</code> applies are a person's.</span></div>
-        <div class="g-row"><code>edit-guard</code><span>No repo edits through <code>sed -i</code> or redirects, so lint and format see every change.</span></div>
-      </div>
-      <div class="guard-group reveal"><h3><span class="dot" style="background:var(--warn)"></span>Waits for the process</h3><p>The step can't happen until the work before it has.</p>
-        <div class="g-row"><code>ticket-gate</code><span>A ticket's commit waits for its plan's skills and an approved plan review; its PR for <code>/verify-done</code> and review.</span></div>
-        <div class="g-row"><code>ask-once</code><span>No questions once the build has started; the choice is debated and listed instead.</span></div>
-        <div class="g-row"><code>plan-gate</code><span>A turn can't end quietly while the active plan has an open task.</span></div>
-      </div>
-      <div class="guard-group reveal"><h3><span class="dot" style="background:var(--accent-2)"></span>Asks you first</h3><p>Allowed, with your OK.</p>
-        <div class="g-row"><code>weakened-check</code><span>A commit that deletes a test, loosens an assertion or lowers a number in <code>CONSTRAINTS.md</code>.</span></div>
-        <div class="g-row"><code>sensitive-path</code><span>An edit to CI, deploy config or Claude's own settings that the plan didn't name.</span></div>
-      </div>
-      <div class="guard-group reveal"><h3><span class="dot" style="background:var(--accent-3)"></span>Keeps the context</h3><p>Quietly helps the next turn and the next session.</p>
-        <div class="g-row"><code>repo-profile</code><span>Tells each session what the repo is and turns on its packs.</span></div>
-        <div class="g-row"><code>plan-recall</code><span>Brings the active plan's next task back every turn, even after <code>/clear</code>.</span></div>
-        <div class="g-row"><code>learn-capture</code><span>Turns what a session learned into lessons the next one reads.</span></div>
-      </div>
-    </div>
-  </section>
+      <section id="guardrails">
+        <p class="kicker reveal">Guardrails</p>
+        <h2 class="reveal">Rules that run, not rules that are remembered</h2>
+        <p class="sub reveal">
+          A skill's text can be forgotten under pressure; a hook can't. Each one
+          says why it stopped you, and none can crash the session.
+        </p>
+        <div class="guards">
+          <div class="guard-group reveal">
+            <h3>
+              <span class="dot" style="background: #e5534b"></span>Never from a
+              session
+            </h3>
+            <p>Blocked outright.</p>
+            <div class="g-row">
+              <code>branch-guard</code
+              ><span
+                >No commit or push to <code>main</code> or an environment
+                branch.</span
+              >
+            </div>
+            <div class="g-row">
+              <code>secret-guard</code
+              ><span
+                ><code>.env*</code>, keys and service accounts are never read or
+                edited.</span
+              >
+            </div>
+            <div class="g-row">
+              <code>test-lock</code
+              ><span
+                >The test that reproduces a bug can't be edited while it is
+                being fixed.</span
+              >
+            </div>
+            <div class="g-row">
+              <code>release-gate</code
+              ><span
+                >A production mobile release ships only an approved
+                <code>release/&lt;version&gt;</code>.</span
+              >
+            </div>
+            <div class="g-row">
+              <code>infra-gate</code
+              ><span
+                >Production <code>terraform</code>, <code>kubectl</code> or
+                <code>helm</code> applies are a person's.</span
+              >
+            </div>
+            <div class="g-row">
+              <code>edit-guard</code
+              ><span
+                >No repo edits through <code>sed -i</code> or redirects, so lint
+                and format see every change.</span
+              >
+            </div>
+          </div>
+          <div class="guard-group reveal">
+            <h3>
+              <span class="dot" style="background: var(--warn)"></span>Waits for
+              the process
+            </h3>
+            <p>The step can't happen until the work before it has.</p>
+            <div class="g-row">
+              <code>ticket-gate</code
+              ><span
+                >A ticket's commit waits for its plan's skills and an approved
+                plan review; its PR for <code>/verify-done</code> and
+                review.</span
+              >
+            </div>
+            <div class="g-row">
+              <code>ask-once</code
+              ><span
+                >No questions once the build has started; the choice is debated
+                and listed instead.</span
+              >
+            </div>
+            <div class="g-row">
+              <code>plan-gate</code
+              ><span
+                >A turn can't end quietly while the active plan has an open
+                task.</span
+              >
+            </div>
+          </div>
+          <div class="guard-group reveal">
+            <h3>
+              <span class="dot" style="background: var(--accent-2)"></span>Asks
+              you first
+            </h3>
+            <p>Allowed, with your OK.</p>
+            <div class="g-row">
+              <code>weakened-check</code
+              ><span
+                >A commit that deletes a test, loosens an assertion or lowers a
+                number in <code>CONSTRAINTS.md</code>.</span
+              >
+            </div>
+            <div class="g-row">
+              <code>sensitive-path</code
+              ><span
+                >An edit to CI, deploy config or Claude's own settings that the
+                plan didn't name.</span
+              >
+            </div>
+          </div>
+          <div class="guard-group reveal">
+            <h3>
+              <span class="dot" style="background: var(--accent-3)"></span>Keeps
+              the context
+            </h3>
+            <p>Quietly helps the next turn and the next session.</p>
+            <div class="g-row">
+              <code>repo-profile</code
+              ><span
+                >Tells each session what the repo is and turns on its
+                packs.</span
+              >
+            </div>
+            <div class="g-row">
+              <code>plan-recall</code
+              ><span
+                >Brings the active plan's next task back every turn, even after
+                <code>/clear</code>.</span
+              >
+            </div>
+            <div class="g-row">
+              <code>learn-capture</code
+              ><span
+                >Turns what a session learned into lessons the next one
+                reads.</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
 
-  <section id="evals">
-    <p class="kicker reveal">Evals</p>
-    <h2 class="reveal">Every change to the kit is tested</h2>
-    <p class="sub reveal">Four layers, cheapest first. The free ones run on every change; the paid ones run a real model in a sandbox and grade what it actually did.</p>
-    <div class="layers">
-      <div class="card layer reveal"><span class="when free">free · every change</span><b class="big" data-count="triggers">0</b><h3>Routing tests</h3><p>One file per skill of plain-language prompts that must rank it in the top 3, so the right skill fires without a slash command.</p></div>
-      <div class="card layer reveal"><span class="when free">free · every change</span><b class="big" data-count="tests">0</b><h3>Hook &amp; script tests</h3><p>Each hook is fed real tool-call JSON and must allow, ask or block exactly as documented.</p></div>
-      <div class="card layer reveal"><span class="when paid">real model · before a release</span><b class="big" data-count="evals">0</b><h3>Behaviour evals</h3><p>Claude runs a real prompt on a fixture repo. Graders check which skill fired and an LLM judge checks the outcome: did it ask first, prove the command, leave the test alone.</p></div>
-      <div class="card layer reveal"><span class="when paid">real model · on demand</span><b class="big">5</b><h3>Agent-code tiers</h3><p><code>evalkit</code> grades code an agent writes: tests, held-out and property tests that catch hardcoded answers, LLM rubric, lint and security.</p></div>
-    </div>
-    <div class="split">
-      <div class="panel reveal"><h3>Behaviour eval cases per plugin</h3><p>Each case is a prompt, a fixture repo and graders.</p><div class="bars" id="eval-bars"></div></div>
-      <div class="panel reveal"><h3>Run them yourself</h3><p>From a clone of the kit.</p>
-<pre class="sample"><span class="d"># free: lint, hook tests, routing, plugin validation</span>
+      <section id="evals">
+        <p class="kicker reveal">Evals</p>
+        <h2 class="reveal">Every change to the kit is tested</h2>
+        <p class="sub reveal">
+          Four layers, cheapest first. The free ones run on every change; the
+          paid ones run a real model in a sandbox and grade what it actually
+          did.
+        </p>
+        <div class="layers">
+          <div class="card layer reveal">
+            <span class="when free">free · every change</span
+            ><b class="big" data-count="triggers">0</b>
+            <h3>Routing tests</h3>
+            <p>
+              One file per skill of plain-language prompts that must rank it in
+              the top 3, so the right skill fires without a slash command.
+            </p>
+          </div>
+          <div class="card layer reveal">
+            <span class="when free">free · every change</span
+            ><b class="big" data-count="tests">0</b>
+            <h3>Hook &amp; script tests</h3>
+            <p>
+              Each hook is fed real tool-call JSON and must allow, ask or block
+              exactly as documented.
+            </p>
+          </div>
+          <div class="card layer reveal">
+            <span class="when paid">real model · before a release</span
+            ><b class="big" data-count="evals">0</b>
+            <h3>Behaviour evals</h3>
+            <p>
+              Claude runs a real prompt on a fixture repo. Graders check which
+              skill fired and an LLM judge checks the outcome: did it ask first,
+              prove the command, leave the test alone.
+            </p>
+          </div>
+          <div class="card layer reveal">
+            <span class="when paid">real model · on demand</span
+            ><b class="big">5</b>
+            <h3>Agent-code tiers</h3>
+            <p>
+              <code>evalkit</code> grades code an agent writes: tests, held-out
+              and property tests that catch hardcoded answers, LLM rubric, lint
+              and security.
+            </p>
+          </div>
+        </div>
+        <div class="split">
+          <div class="panel reveal">
+            <h3>Behaviour eval cases per plugin</h3>
+            <p>Each case is a prompt, a fixture repo and graders.</p>
+            <div class="bars" id="eval-bars"></div>
+          </div>
+          <div class="panel reveal">
+            <h3>Run them yourself</h3>
+            <p>From a clone of the kit.</p>
+            <pre
+              class="sample"
+            ><span class="d"># free: lint, hook tests, routing, plugin validation</span>
 bash scripts/check.sh
 
 <span class="d"># paid: one plugin's behaviour evals</span>
@@ -536,366 +2430,798 @@ bash scripts/eval-plugin.sh dev
 
 <span class="d"># paid: before a demo, 3 runs, with vs without the kit</span>
 bash scripts/eval-plugin.sh dev --runs 3 --ablation with-without</pre>
-<p class="note">What these runs find becomes a kit fix: #144, #145 and #149 came straight from them.</p></div>
+            <p class="note">
+              What these runs find becomes a kit fix: #144, #145 and #149 came
+              straight from them.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="plugins">
+        <p class="kicker reveal">Plugins</p>
+        <h2 class="reveal">Process plugins and role packs</h2>
+        <p class="sub reveal">
+          Process plugins are always on and stack-free. Role packs share one
+          shape (an engineer agent, deliverable-named skills, stack rules read
+          on demand) and are turned on per repo from what it contains. Click a
+          plugin to read its README.
+        </p>
+        <h3 class="group reveal">
+          Role packs · turned on per repo, each runs on dev
+        </h3>
+        <div class="cards" id="pack-cards"></div>
+        <h3 class="group reveal">Process plugins · always on</h3>
+        <div class="cards" id="plugin-cards"></div>
+      </section>
+
+      <section id="map">
+        <div class="map reveal">
+          <div>
+            <h2>Every skill, hook and dependency on one map</h2>
+            <p class="sub">
+              An interactive diagram with zoom, search and a focus panel for
+              each node.
+            </p>
+            <a class="btn primary" href="docs/skill-map.html"
+              >Open the skill map →</a
+            >
+          </div>
+          <svg
+            viewBox="0 0 420 240"
+            role="img"
+            aria-label="The /feature supervisor dispatching to the five role packs"
+          >
+            <path class="edge" d="M210 120 L70 50" />
+            <path class="edge" d="M210 120 L350 50" />
+            <path class="edge" d="M210 120 L60 190" />
+            <path class="edge" d="M210 120 L360 190" />
+            <path class="edge" d="M210 120 L210 215" />
+            <path class="edge" d="M210 120 L210 30" />
+            <circle class="node hub" cx="210" cy="120" r="34" />
+            <text class="on-hub" x="210" y="120">/feature</text>
+            <circle class="node" cx="70" cy="50" r="28" />
+            <text x="70" y="50">frontend</text>
+            <circle class="node" cx="350" cy="50" r="28" />
+            <text x="350" y="50">backend</text>
+            <circle class="node" cx="60" cy="190" r="26" />
+            <text x="60" y="190">mobile</text>
+            <circle class="node" cx="360" cy="190" r="26" />
+            <text x="360" y="190">devops</text>
+            <circle class="node" cx="210" cy="215" r="22" />
+            <text x="210" y="215">ai</text>
+            <circle class="node" cx="210" cy="30" r="22" />
+            <text x="210" y="30">core</text>
+          </svg>
+        </div>
+      </section>
+
+      <section id="faq">
+        <p class="kicker reveal">FAQ</p>
+        <h2 class="reveal">Questions people ask first</h2>
+        <div class="faq">
+          <details class="reveal">
+            <summary>Do I have to learn the slash commands?</summary>
+            <p>
+              No. Say what you want in your own words, in any language; the
+              skill whose description matches fires. The commands are there when
+              you want a specific one, and every README lists them.
+            </p>
+          </details>
+          <details class="reveal">
+            <summary>Will it keep interrupting me with questions?</summary>
+            <p>
+              No. It asks everything it needs once, before the first edit, as
+              options with a recommendation. After that it decides the small
+              things itself and lists each one under <b>Decided for you</b> with
+              the reason and how to undo it. It still asks before anything no
+              rollback undoes: push, merge, deploy, delete.
+            </p>
+          </details>
+          <details class="reveal">
+            <summary>
+              Does it work with GitLab and Jira, or only GitHub?
+            </summary>
+            <p>
+              All three. <code>/breakdown</code> creates tasks with
+              <code>glab</code>, <code>gh</code> or the Jira connector;
+              <code>/ticket</code> reads an issue from any of them;
+              <code>/finish-branch</code> opens a PR or an MR;
+              <code>/sync-remote</code> keeps a GitHub mirror and a GitLab
+              origin in step. The team can also install the kit from GitLab.
+            </p>
+          </details>
+          <details class="reveal">
+            <summary>What can it never do on its own?</summary>
+            <p>
+              Commit or push to <code>main</code> or an environment branch, read
+              a secret file, edit the test that reproduces a bug while fixing
+              it, ship a production mobile release or apply production
+              infrastructure. Each is a hook that blocks the command and says
+              why.
+            </p>
+          </details>
+          <details class="reveal">
+            <summary>How do I set the quality bar for my repo?</summary>
+            <p>
+              Run <code>/constraints</code>. It measures where the repo is today
+              and writes <code>CONSTRAINTS.md</code>: coverage of changed lines,
+              type and lint errors, vulnerabilities, budgets, each with the
+              command that checks it. <code>/verify-done</code> reports every
+              row, and a commit that lowers a number asks you first.
+            </p>
+          </details>
+          <details class="reveal">
+            <summary>What does an estimate from the kit mean?</summary>
+            <p>
+              A range with a stated basis: the files and tests the task touches,
+              calibrated on this repo's merged PRs of the same shape. When the
+              task ships, <code>/ticket</code> records the actual next to it and
+              <code>/retro</code> turns the drift into the next calibration.
+            </p>
+          </details>
+          <details class="reveal">
+            <summary>
+              We already have a CLAUDE.md and team plugins. Do they clash?
+            </summary>
+            <p>
+              Your project's <code>CLAUDE.md</code> and the plugins that cover
+              your repo win; the kit says so in every skill that could overlap.
+              The kit adds the process and the role engineers; it does not
+              replace your conventions.
+            </p>
+          </details>
+          <details class="reveal">
+            <summary>How much does it cost to run?</summary>
+            <p>
+              Less than running everything on the strongest model. Opus plans,
+              decides and reviews; Sonnet writes code from an approved brief;
+              Haiku does mechanical work. Every skill and every dispatched agent
+              names its model, so the split is enforced, not hoped for.
+            </p>
+          </details>
+          <details class="reveal">
+            <summary>
+              I am a PM or QA, not a developer. Is there something for me?
+            </summary>
+            <p>
+              Yes: hand over the requirement and read what comes back.
+              <code>/breakdown</code> gives you tasks with Given/When/Then
+              criteria and estimates you can challenge; every PR carries the
+              ticket's intent, spec, plan review and evidence in plain text next
+              to the code.
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <section id="docs">
+        <p class="kicker reveal">Docs</p>
+        <h2 class="reveal">Read the docs</h2>
+        <p class="sub reveal">
+          Guides, the design rationale, the eval harness and every recorded
+          design decision.
+        </p>
+        <div class="docs-list" id="doc-cards"></div>
+      </section>
     </div>
-  </section>
 
-  <section id="plugins">
-    <p class="kicker reveal">Plugins</p>
-    <h2 class="reveal">Process plugins and role packs</h2>
-    <p class="sub reveal">Process plugins are always on and stack-free. Role packs share one shape (an engineer agent, deliverable-named skills, stack rules read on demand) and are turned on per repo from what it contains. Click a plugin to read its README.</p>
-    <h3 class="group reveal">Role packs · turned on per repo, each runs on dev</h3>
-    <div class="cards" id="pack-cards"></div>
-    <h3 class="group reveal">Process plugins · always on</h3>
-    <div class="cards" id="plugin-cards"></div>
-  </section>
-
-  <section id="map">
-    <div class="map reveal">
-      <div>
-        <h2>Every skill, hook and dependency on one map</h2>
-        <p class="sub">An interactive diagram with zoom, search and a focus panel for each node.</p>
-        <a class="btn primary" href="docs/skill-map.html">Open the skill map →</a>
+    <footer>
+      <div class="wrap">
+        <span>Claude Harness · MIT</span
+        ><a href="https://github.com/thanghokdps/claude-root"
+          >github.com/thanghokdps/claude-root</a
+        >
       </div>
-      <svg viewBox="0 0 420 240" role="img" aria-label="The /feature supervisor dispatching to the five role packs">
-        <path class="edge" d="M210 120 L70 50"/><path class="edge" d="M210 120 L350 50"/><path class="edge" d="M210 120 L60 190"/>
-        <path class="edge" d="M210 120 L360 190"/><path class="edge" d="M210 120 L210 215"/><path class="edge" d="M210 120 L210 30"/>
-        <circle class="node hub" cx="210" cy="120" r="34"/><text class="on-hub" x="210" y="120">/feature</text>
-        <circle class="node" cx="70" cy="50" r="28"/><text x="70" y="50">frontend</text>
-        <circle class="node" cx="350" cy="50" r="28"/><text x="350" y="50">backend</text>
-        <circle class="node" cx="60" cy="190" r="26"/><text x="60" y="190">mobile</text>
-        <circle class="node" cx="360" cy="190" r="26"/><text x="360" y="190">devops</text>
-        <circle class="node" cx="210" cy="215" r="22"/><text x="210" y="215">ai</text>
-        <circle class="node" cx="210" cy="30" r="22"/><text x="210" y="30">core</text>
-      </svg>
+    </footer>
+
+    <div id="viewer" aria-hidden="true">
+      <div id="progress"></div>
+      <div class="viewer-bar">
+        <button type="button" id="close">← Back</button
+        ><code id="doc-path"></code
+        ><a id="doc-src" target="_blank" rel="noopener">View source</a>
+      </div>
+      <article id="doc"></article>
     </div>
-  </section>
 
-  <section id="faq">
-    <p class="kicker reveal">FAQ</p>
-    <h2 class="reveal">Questions people ask first</h2>
-    <div class="faq">
-      <details class="reveal"><summary>Do I have to learn the slash commands?</summary><p>No. Say what you want in your own words, in any language; the skill whose description matches fires. The commands are there when you want a specific one, and every README lists them.</p></details>
-      <details class="reveal"><summary>Will it keep interrupting me with questions?</summary><p>No. It asks everything it needs once, before the first edit, as options with a recommendation. After that it decides the small things itself and lists each one under <b>Decided for you</b> with the reason and how to undo it. It still asks before anything no rollback undoes: push, merge, deploy, delete.</p></details>
-      <details class="reveal"><summary>Does it work with GitLab and Jira, or only GitHub?</summary><p>All three. <code>/breakdown</code> creates tasks with <code>glab</code>, <code>gh</code> or the Jira connector; <code>/ticket</code> reads an issue from any of them; <code>/finish-branch</code> opens a PR or an MR; <code>/sync-remote</code> keeps a GitHub mirror and a GitLab origin in step. The team can also install the kit from GitLab.</p></details>
-      <details class="reveal"><summary>What can it never do on its own?</summary><p>Commit or push to <code>main</code> or an environment branch, read a secret file, edit the test that reproduces a bug while fixing it, ship a production mobile release or apply production infrastructure. Each is a hook that blocks the command and says why.</p></details>
-      <details class="reveal"><summary>How do I set the quality bar for my repo?</summary><p>Run <code>/constraints</code>. It measures where the repo is today and writes <code>CONSTRAINTS.md</code>: coverage of changed lines, type and lint errors, vulnerabilities, budgets, each with the command that checks it. <code>/verify-done</code> reports every row, and a commit that lowers a number asks you first.</p></details>
-      <details class="reveal"><summary>What does an estimate from the kit mean?</summary><p>A range with a stated basis: the files and tests the task touches, calibrated on this repo's merged PRs of the same shape. When the task ships, <code>/ticket</code> records the actual next to it and <code>/retro</code> turns the drift into the next calibration.</p></details>
-      <details class="reveal"><summary>We already have a CLAUDE.md and team plugins. Do they clash?</summary><p>Your project's <code>CLAUDE.md</code> and the plugins that cover your repo win; the kit says so in every skill that could overlap. The kit adds the process and the role engineers; it does not replace your conventions.</p></details>
-      <details class="reveal"><summary>How much does it cost to run?</summary><p>Less than running everything on the strongest model. Opus plans, decides and reviews; Sonnet writes code from an approved brief; Haiku does mechanical work. Every skill and every dispatched agent names its model, so the split is enforced, not hoped for.</p></details>
-      <details class="reveal"><summary>I am a PM or QA, not a developer. Is there something for me?</summary><p>Yes: hand over the requirement and read what comes back. <code>/breakdown</code> gives you tasks with Given/When/Then criteria and estimates you can challenge; every PR carries the ticket's intent, spec, plan review and evidence in plain text next to the code.</p></details>
-    </div>
-  </section>
+    <script>
+      const REPO = "https://github.com/thanghokdps/claude-root/blob/main/";
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const DOC_LABELS = {
+        "README.md": ["RM", "README", "Quickstart, install and every plugin"],
+        "docs/USAGE.md": ["US", "Usage", "Day-to-day workflows, step by step"],
+        "DESIGN.md": ["DS", "Design", "How the kit is shaped, and why"],
+        "HARNESS.md": [
+          "HN",
+          "Harness",
+          "The control model: lanes, gates, evidence",
+        ],
+        "eval/README.md": [
+          "EV",
+          "Evals",
+          "Grading code an agent writes, in five tiers",
+        ],
+        "plugins/README.md": [
+          "PL",
+          "Plugins",
+          "How the marketplace is laid out",
+        ],
+        "docs/ddr/README.md": ["DR", "Design decisions", "The decision log"],
+      };
+      // plugin.json descriptions are written for skill routing; the cards need one plain sentence.
+      const PLUGIN_INFO = {
+        frontend: [
+          "FE",
+          "c-fe",
+          "Web screens from a fixture: every state, shared primitives, tests, checked in the browser.",
+        ],
+        backend: [
+          "BE",
+          "c-be",
+          "Schema, migrations, endpoints and third-party clients, owner-scoped and route-tested.",
+        ],
+        mobile: [
+          "MO",
+          "c-mo",
+          "React Native and Expo screens: navigation, platform states, verified on a simulator.",
+        ],
+        devops: [
+          "OP",
+          "c-op",
+          "CI, containers and infrastructure: plan, review, apply with approval, rollback ready.",
+        ],
+        ai: [
+          "AI",
+          "c-ai",
+          "AI assistants on CopilotKit · AG-UI with Mastra or LangGraph: tools, graphs, RAG, evals.",
+        ],
+        workplace: [
+          "WP",
+          "c-wp",
+          "HR and workplace apps: approval rules, balances, bookings, cutoffs, and a domain review.",
+        ],
+        dev: [
+          "DV",
+          "c-sv",
+          "Build and fix for every role: lane router, feature supervisor, tickets, bug loop, TDD.",
+        ],
+        core: [
+          "CO",
+          "",
+          "Session basics: evidence before done, project setup, quality bar, docs sync, memory.",
+        ],
+        plan: [
+          "PN",
+          "",
+          "Design before code: project kickoff, requirement breakdown, brainstorming, plans.",
+        ],
+        review: [
+          "RV",
+          "",
+          "Review diffs and PRs, impact analysis, PR descriptions, debt ledger, repo audits.",
+        ],
+        ship: [
+          "SH",
+          "",
+          "Land and release: finish a branch, CI triage, release checklist, migrations, incidents.",
+        ],
+        guards: [
+          "GD",
+          "",
+          "Opt-in guard rails: commit quality, scope and blast-radius gates, session handoff.",
+        ],
+        lead: [
+          "LD",
+          "",
+          "Improve the process: weekly retro, session diagnosis, authoring new skills.",
+        ],
+        progress: [
+          "PG",
+          "",
+          "A live checklist of each skill's steps while it runs.",
+        ],
+        harness: [
+          "HS",
+          "",
+          "The bundle: installs the eight process plugins in one command.",
+        ],
+      };
+      let site = { docs: [], plugins: [] };
 
-  <section id="docs">
-    <p class="kicker reveal">Docs</p>
-    <h2 class="reveal">Read the docs</h2>
-    <p class="sub reveal">Guides, the design rationale, the eval harness and every recorded design decision.</p>
-    <div class="docs-list" id="doc-cards"></div>
-  </section>
-</div>
+      // Terminal: one request from sentence to PR.
+      const SCRIPT = [
+        ["p", "/ticket 412  thêm nhắc việc cho task"],
+        ["c", "lane: normal · backend + frontend"],
+        ["q", "? Reminder time zone   ● user profile  ○ server"],
+        ["q", '? "Due soon" means     ● next 24 h     ○ today'],
+        ["ok", "✓ answered · plan review: APPROVED (2 rounds)"],
+        ["c", "→ db-change    backend-engineer   spec ✅ quality ✅"],
+        ["c", "→ ui-feature   frontend-engineer  spec ✅ quality ✅"],
+        ["ok", "✓ /verify-done  tests 48 passed · tsc 0 errors"],
+        ["w", "Decided for you: 1 item · revert noted"],
+        ["ok", "✓ PR #87 opened  feat/412-reminders"],
+      ];
+      async function typeTerminal() {
+        const el = document.getElementById("typed");
+        const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+        const caret = '<span class="caret"></span>';
+        let html = "";
+        for (const [cls, text] of SCRIPT) {
+          const prefix = cls === "p" ? '<span class="p">❯ </span>' : "";
+          const open = cls === "p" ? "<span>" : `<span class="${cls}">`;
+          if (reduced || cls !== "p") {
+            html += prefix + open + esc(text) + "</span>\n";
+            el.innerHTML = html + caret;
+            if (!reduced) await sleep(520);
+            continue;
+          }
+          for (let i = 1; i <= text.length; i++) {
+            el.innerHTML =
+              html + prefix + open + esc(text.slice(0, i)) + "</span>" + caret;
+            await sleep(28 + Math.random() * 40);
+          }
+          html += prefix + open + esc(text) + "</span>\n";
+          await sleep(500);
+        }
+        el.innerHTML = html + caret;
+      }
+      function esc(s) {
+        return String(s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
 
-<footer><div class="wrap"><span>Claude Harness · MIT</span><a href="https://github.com/thanghokdps/claude-root">github.com/thanghokdps/claude-root</a></div></footer>
+      // Scroll reveal, staggered within each batch.
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries
+            .filter((e) => e.isIntersecting)
+            .forEach((e, i) => {
+              e.target.style.transitionDelay = `${i * 70}ms`;
+              e.target.classList.add("in");
+              // Drop the stagger once revealed so hover effects respond instantly.
+              e.target.addEventListener(
+                "transitionend",
+                () => {
+                  e.target.style.transitionDelay = "";
+                },
+                { once: true },
+              );
+              io.unobserve(e.target);
+              e.target.querySelectorAll("[data-count]").forEach(countUp);
+            });
+        },
+        { threshold: 0.15 },
+      );
+      function observe(el) {
+        reduced ? el.classList.add("in") : io.observe(el);
+      }
 
-<div id="viewer" aria-hidden="true">
-  <div id="progress"></div>
-  <div class="viewer-bar"><button type="button" id="close">← Back</button><code id="doc-path"></code><a id="doc-src" target="_blank" rel="noopener">View source</a></div>
-  <article id="doc"></article>
-</div>
+      function countUp(el) {
+        const target = Number(el.dataset.target || 0);
+        if (reduced) {
+          el.textContent = target;
+          return;
+        }
+        const start = performance.now();
+        const tick = (now) => {
+          const t = Math.min((now - start) / 1200, 1);
+          el.textContent = Math.round(target * (1 - Math.pow(1 - t, 3)));
+          if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
 
-<script>
-const REPO = "https://github.com/thanghokdps/claude-root/blob/main/";
-const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const DOC_LABELS = {
-  "README.md": ["RM", "README", "Quickstart, install and every plugin"],
-  "docs/USAGE.md": ["US", "Usage", "Day-to-day workflows, step by step"],
-  "DESIGN.md": ["DS", "Design", "How the kit is shaped, and why"],
-  "HARNESS.md": ["HN", "Harness", "The control model: lanes, gates, evidence"],
-  "eval/README.md": ["EV", "Evals", "Grading code an agent writes, in five tiers"],
-  "plugins/README.md": ["PL", "Plugins", "How the marketplace is laid out"],
-  "docs/ddr/README.md": ["DR", "Design decisions", "The decision log"],
-};
-// plugin.json descriptions are written for skill routing; the cards need one plain sentence.
-const PLUGIN_INFO = {
-  frontend: ["FE", "c-fe", "Web screens from a fixture: every state, shared primitives, tests, checked in the browser."],
-  backend: ["BE", "c-be", "Schema, migrations, endpoints and third-party clients, owner-scoped and route-tested."],
-  mobile: ["MO", "c-mo", "React Native and Expo screens: navigation, platform states, verified on a simulator."],
-  devops: ["OP", "c-op", "CI, containers and infrastructure: plan, review, apply with approval, rollback ready."],
-  ai: ["AI", "c-ai", "AI assistants on CopilotKit · AG-UI with Mastra or LangGraph: tools, graphs, RAG, evals."],
-  workplace: ["WP", "c-wp", "HR and workplace apps: approval rules, balances, bookings, cutoffs, and a domain review."],
-  dev: ["DV", "c-sv", "Build and fix for every role: lane router, feature supervisor, tickets, bug loop, TDD."],
-  core: ["CO", "", "Session basics: evidence before done, project setup, quality bar, docs sync, memory."],
-  plan: ["PN", "", "Design before code: project kickoff, requirement breakdown, brainstorming, plans."],
-  review: ["RV", "", "Review diffs and PRs, impact analysis, PR descriptions, debt ledger, repo audits."],
-  ship: ["SH", "", "Land and release: finish a branch, CI triage, release checklist, migrations, incidents."],
-  guards: ["GD", "", "Opt-in guard rails: commit quality, scope and blast-radius gates, session handoff."],
-  lead: ["LD", "", "Improve the process: weekly retro, session diagnosis, authoring new skills."],
-  progress: ["PG", "", "A live checklist of each skill's steps while it runs."],
-  harness: ["HS", "", "The bundle: installs the eight process plugins in one command."],
-};
-let site = { docs: [], plugins: [] };
+      function spotlight(card) {
+        card.addEventListener("pointermove", (e) => {
+          const r = card.getBoundingClientRect();
+          card.style.setProperty("--mx", `${e.clientX - r.left}px`);
+          card.style.setProperty("--my", `${e.clientY - r.top}px`);
+        });
+      }
 
-// Terminal: one request from sentence to PR.
-const SCRIPT = [
-  ["p", "/ticket 412  thêm nhắc việc cho task"],
-  ["c", "lane: normal · backend + frontend"],
-  ["q", "? Reminder time zone   ● user profile  ○ server"],
-  ["q", "? \"Due soon\" means     ● next 24 h     ○ today"],
-  ["ok", "✓ answered · plan review: APPROVED (2 rounds)"],
-  ["c", "→ db-change    backend-engineer   spec ✅ quality ✅"],
-  ["c", "→ ui-feature   frontend-engineer  spec ✅ quality ✅"],
-  ["ok", "✓ /verify-done  tests 48 passed · tsc 0 errors"],
-  ["w", "Decided for you: 1 item · revert noted"],
-  ["ok", "✓ PR #87 opened  feat/412-reminders"],
-];
-async function typeTerminal() {
-  const el = document.getElementById("typed");
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const caret = '<span class="caret"></span>';
-  let html = "";
-  for (const [cls, text] of SCRIPT) {
-    const prefix = cls === "p" ? '<span class="p">❯ </span>' : "";
-    const open = cls === "p" ? "<span>" : `<span class="${cls}">`;
-    if (reduced || cls !== "p") { html += prefix + open + esc(text) + "</span>\n"; el.innerHTML = html + caret; if (!reduced) await sleep(520); continue; }
-    for (let i = 1; i <= text.length; i++) { el.innerHTML = html + prefix + open + esc(text.slice(0, i)) + "</span>" + caret; await sleep(28 + Math.random() * 40); }
-    html += prefix + open + esc(text) + "</span>\n";
-    await sleep(500);
-  }
-  el.innerHTML = html + caret;
-}
-function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
+      // A pack depends on exactly progress and dev and is enabled per repo; everything else is a process plugin.
+      const isPack = (p) =>
+        p.dependencies.length === 2 &&
+        p.dependencies.includes("progress") &&
+        p.dependencies.includes("dev");
+      const PACK_ORDER = [
+        "frontend",
+        "backend",
+        "mobile",
+        "devops",
+        "ai",
+        "workplace",
+      ];
+      const PROCESS_ORDER = [
+        "dev",
+        "core",
+        "plan",
+        "review",
+        "ship",
+        "guards",
+        "lead",
+        "progress",
+        "harness",
+      ];
+      const byOrder = (order) => (a, b) =>
+        ((order.indexOf(a.name) + 99) % 99) -
+        ((order.indexOf(b.name) + 99) % 99);
 
-// Scroll reveal, staggered within each batch.
-const io = new IntersectionObserver(entries => {
-  entries.filter(e => e.isIntersecting).forEach((e, i) => {
-    e.target.style.transitionDelay = `${i * 70}ms`;
-    e.target.classList.add("in");
-    // Drop the stagger once revealed so hover effects respond instantly.
-    e.target.addEventListener("transitionend", () => { e.target.style.transitionDelay = ""; }, { once: true });
-    io.unobserve(e.target);
-    e.target.querySelectorAll("[data-count]").forEach(countUp);
-  });
-}, { threshold: 0.15 });
-function observe(el) { reduced ? el.classList.add("in") : io.observe(el); }
+      const plural = (n, word) => `<b>${n}</b> ${word}${n === 1 ? "" : "s"}`;
 
-function countUp(el) {
-  const target = Number(el.dataset.target || 0);
-  if (reduced) { el.textContent = target; return; }
-  const start = performance.now();
-  const tick = now => {
-    const t = Math.min((now - start) / 1200, 1);
-    el.textContent = Math.round(target * (1 - Math.pow(1 - t, 3)));
-    if (t < 1) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}
-
-function spotlight(card) {
-  card.addEventListener("pointermove", e => {
-    const r = card.getBoundingClientRect();
-    card.style.setProperty("--mx", `${e.clientX - r.left}px`);
-    card.style.setProperty("--my", `${e.clientY - r.top}px`);
-  });
-}
-
-// A pack depends on exactly progress and dev and is enabled per repo; everything else is a process plugin.
-const isPack = p => p.dependencies.length === 2 && p.dependencies.includes("progress") && p.dependencies.includes("dev");
-const PACK_ORDER = ["frontend", "backend", "mobile", "devops", "ai", "workplace"];
-const PROCESS_ORDER = ["dev", "core", "plan", "review", "ship", "guards", "lead", "progress", "harness"];
-const byOrder = order => (a, b) => (order.indexOf(a.name) + 99) % 99 - (order.indexOf(b.name) + 99) % 99;
-
-const plural = (n, word) => `<b>${n}</b> ${word}${n === 1 ? "" : "s"}`;
-
-function pluginCard(p, pack) {
-  const [mono, color, blurb] = PLUGIN_INFO[p.name] || [p.name.slice(0, 2).toUpperCase(), "", p.description];
-  // Keep the chip row on one line so every card's footer lines up.
-  const picked = [];
-  for (const s of p.skills) { if (picked.length === 2 || (picked.length && picked.join("").length + s.length > 24)) break; picked.push(s); }
-  const shown = picked.map(s => `<span class="chip">/${esc(s)}</span>`).join("");
-  const more = p.skills.length > picked.length ? `<span class="chip">+${p.skills.length - picked.length} more</span>` : "";
-  const bundle = !p.skills.length && !p.hooks?.length;
-  const meta = [
-    p.skills.length && plural(p.skills.length, "skill"),
-    p.hooks?.length && plural(p.hooks.length, "hook"),
-    p.evals && `<span class="ev">${plural(p.evals, "eval")}</span>`,
-    bundle && plural(p.dependencies.length, "plugin"),
-  ].filter(Boolean).map(m => `<span>${m}</span>`).join("");
-  const needs = !p.dependencies.length ? "process plugin" : `needs ${p.dependencies.map(esc).join(", ")}`;
-  const sub = pack ? "role pack" : bundle ? "bundle" : needs;
-  const href = p.readme ? `#/doc/${p.readme}` : REPO + "plugins/" + p.name;
-  return `<a class="card reveal ${color}" href="${esc(href)}">
+      function pluginCard(p, pack) {
+        const [mono, color, blurb] = PLUGIN_INFO[p.name] || [
+          p.name.slice(0, 2).toUpperCase(),
+          "",
+          p.description,
+        ];
+        // Keep the chip row on one line so every card's footer lines up.
+        const picked = [];
+        for (const s of p.skills) {
+          if (
+            picked.length === 2 ||
+            (picked.length && picked.join("").length + s.length > 24)
+          )
+            break;
+          picked.push(s);
+        }
+        const shown = picked
+          .map((s) => `<span class="chip">/${esc(s)}</span>`)
+          .join("");
+        const more =
+          p.skills.length > picked.length
+            ? `<span class="chip">+${p.skills.length - picked.length} more</span>`
+            : "";
+        const bundle = !p.skills.length && !p.hooks?.length;
+        const meta = [
+          p.skills.length && plural(p.skills.length, "skill"),
+          p.hooks?.length && plural(p.hooks.length, "hook"),
+          p.evals && `<span class="ev">${plural(p.evals, "eval")}</span>`,
+          bundle && plural(p.dependencies.length, "plugin"),
+        ]
+          .filter(Boolean)
+          .map((m) => `<span>${m}</span>`)
+          .join("");
+        const needs = !p.dependencies.length
+          ? "process plugin"
+          : `needs ${p.dependencies.map(esc).join(", ")}`;
+        const sub = pack ? "role pack" : bundle ? "bundle" : needs;
+        const href = p.readme
+          ? `#/doc/${p.readme}`
+          : REPO + "plugins/" + p.name;
+        return `<a class="card reveal ${color}" href="${esc(href)}">
     <div class="card-head"><span class="badge">${esc(mono)}</span><div><h3>${esc(p.name)}</h3><small>${sub}</small></div></div>
     <p class="desc">${esc(blurb)}</p>
     <div class="card-foot">${shown ? `<div class="chips">${shown}${more}</div>` : ""}<div class="meta">${meta}<span class="go">README →</span></div></div></a>`;
-}
+      }
 
-function renderCards() {
-  const packs = site.plugins.filter(p => isPack(p) || p.name === "workplace").sort(byOrder(PACK_ORDER));
-  const process = site.plugins.filter(p => !packs.includes(p)).sort(byOrder(PROCESS_ORDER));
-  document.getElementById("pack-cards").innerHTML = packs.map(p => pluginCard(p, true)).join("");
-  document.getElementById("plugin-cards").innerHTML = process.map(p => pluginCard(p, false)).join("");
-  const docs = Object.keys(DOC_LABELS).filter(d => site.docs.includes(d));
-  const docRow = (href, [mono, title, blurb]) =>
-    `<a class="doc-row reveal" href="${esc(href)}"><span class="badge">${mono}</span><div><b>${esc(title)}</b><span>${esc(blurb)}</span></div><i>→</i></a>`;
-  document.getElementById("doc-cards").innerHTML = docs.map(d => docRow(`#/doc/${d}`, DOC_LABELS[d])).join("")
-    + docRow("docs/skill-map.html", ["MP", "Skill map", "Every plugin, skill and hook on one interactive map"]);
+      function renderCards() {
+        const packs = site.plugins
+          .filter((p) => isPack(p) || p.name === "workplace")
+          .sort(byOrder(PACK_ORDER));
+        const process = site.plugins
+          .filter((p) => !packs.includes(p))
+          .sort(byOrder(PROCESS_ORDER));
+        document.getElementById("pack-cards").innerHTML = packs
+          .map((p) => pluginCard(p, true))
+          .join("");
+        document.getElementById("plugin-cards").innerHTML = process
+          .map((p) => pluginCard(p, false))
+          .join("");
+        const docs = Object.keys(DOC_LABELS).filter((d) =>
+          site.docs.includes(d),
+        );
+        const docRow = (href, [mono, title, blurb]) =>
+          `<a class="doc-row reveal" href="${esc(href)}"><span class="badge">${mono}</span><div><b>${esc(title)}</b><span>${esc(blurb)}</span></div><i>→</i></a>`;
+        document.getElementById("doc-cards").innerHTML =
+          docs.map((d) => docRow(`#/doc/${d}`, DOC_LABELS[d])).join("") +
+          docRow("docs/skill-map.html", [
+            "MP",
+            "Skill map",
+            "Every plugin, skill and hook on one interactive map",
+          ]);
 
-  const withEvals = site.plugins.filter(p => p.evals).sort((a, b) => b.evals - a.evals);
-  const top = Math.max(1, ...withEvals.map(p => p.evals));
-  document.getElementById("eval-bars").innerHTML = withEvals.map(p =>
-    `<div class="bar"><span>${esc(p.name)}</span><i style="width:${(p.evals / top) * 100}%"></i><b>${p.evals}</b></div>`).join("");
+        const withEvals = site.plugins
+          .filter((p) => p.evals)
+          .sort((a, b) => b.evals - a.evals);
+        const top = Math.max(1, ...withEvals.map((p) => p.evals));
+        document.getElementById("eval-bars").innerHTML = withEvals
+          .map(
+            (p) =>
+              `<div class="bar"><span>${esc(p.name)}</span><i style="width:${(p.evals / top) * 100}%"></i><b>${p.evals}</b></div>`,
+          )
+          .join("");
 
-  document.querySelectorAll("a.card").forEach(spotlight);
-  document.querySelectorAll(".reveal:not(.in)").forEach(observe);
+        document.querySelectorAll("a.card").forEach(spotlight);
+        document.querySelectorAll(".reveal:not(.in)").forEach(observe);
 
-  const counts = {
-    plugins: site.plugins.length,
-    skills: site.plugins.reduce((n, p) => n + p.skills.length, 0),
-    hooks: site.plugins.reduce((n, p) => n + (p.hooks?.length || 0), 0),
-    evals: site.plugins.reduce((n, p) => n + (p.evals || 0), 0),
-    triggers: site.triggers || 0,
-    tests: site.tests || 0,
-  };
-  document.querySelectorAll("[data-count]").forEach(el => {
-    el.dataset.target = counts[el.dataset.count];
-    if (el.closest(".in") || reduced) countUp(el);
-  });
-}
+        const counts = {
+          plugins: site.plugins.length,
+          skills: site.plugins.reduce((n, p) => n + p.skills.length, 0),
+          hooks: site.plugins.reduce((n, p) => n + (p.hooks?.length || 0), 0),
+          evals: site.plugins.reduce((n, p) => n + (p.evals || 0), 0),
+          triggers: site.triggers || 0,
+          tests: site.tests || 0,
+        };
+        document.querySelectorAll("[data-count]").forEach((el) => {
+          el.dataset.target = counts[el.dataset.count];
+          if (el.closest(".in") || reduced) countUp(el);
+        });
+      }
 
-// Doc viewer: #/doc/<repo path>
-const viewer = document.getElementById("viewer");
-const article = document.getElementById("doc");
+      // Doc viewer: #/doc/<repo path>
+      const viewer = document.getElementById("viewer");
+      const article = document.getElementById("doc");
 
-function resolve(base, href) {
-  const parts = base.split("/").slice(0, -1);
-  for (const seg of href.split("/")) {
-    if (seg === "..") parts.pop(); else if (seg && seg !== ".") parts.push(seg);
-  }
-  return parts.join("/");
-}
+      function resolve(base, href) {
+        const parts = base.split("/").slice(0, -1);
+        for (const seg of href.split("/")) {
+          if (seg === "..") parts.pop();
+          else if (seg && seg !== ".") parts.push(seg);
+        }
+        return parts.join("/");
+      }
 
-function slug(text) { return text.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-"); }
+      function slug(text) {
+        return text
+          .toLowerCase()
+          .trim()
+          .replace(/[^\w\s-]/g, "")
+          .replace(/\s+/g, "-");
+      }
 
-async function openDoc(path) {
-  // Only fetch listed docs: the hash is attacker-controlled (#/doc//evil.example/x.md).
-  const res = site.docs.includes(path) ? await fetch(path) : null;
-  const md = res?.ok ? await res.text() : "# Not found\n\nThis document is not published on this site.";
-  article.innerHTML = DOMPurify.sanitize(marked.parse(md));
-  article.querySelectorAll("h1,h2,h3,h4").forEach(h => { h.id = slug(h.textContent); });
-  article.querySelectorAll("a[href]").forEach(a => {
-    const href = a.getAttribute("href");
-    if (/^[a-z]+:/i.test(href)) { a.target = "_blank"; a.rel = "noopener"; return; }
-    if (href.startsWith("#")) { a.onclick = e => { e.preventDefault(); document.getElementById(href.slice(1))?.scrollIntoView({ behavior: "smooth" }); }; return; }
-    const [file, anchor] = href.split("#");
-    const target = resolve(path, file);
-    if (site.docs.includes(target)) a.href = `#/doc/${target}${anchor ? "::" + anchor : ""}`;
-    else if (target === "docs/skill-map.html") a.href = target;
-    else { a.href = REPO + target; a.target = "_blank"; a.rel = "noopener"; }
-  });
-  document.getElementById("doc-path").textContent = path;
-  document.getElementById("doc-src").href = REPO + path;
-  article.style.animation = "none"; article.offsetHeight; article.style.animation = "";
-}
+      async function openDoc(path) {
+        // Only fetch listed docs: the hash is attacker-controlled (#/doc//evil.example/x.md).
+        const res = site.docs.includes(path) ? await fetch(path) : null;
+        const md = res?.ok
+          ? await res.text()
+          : "# Not found\n\nThis document is not published on this site.";
+        article.innerHTML = DOMPurify.sanitize(marked.parse(md));
+        article.querySelectorAll("h1,h2,h3,h4").forEach((h) => {
+          h.id = slug(h.textContent);
+        });
+        article.querySelectorAll("a[href]").forEach((a) => {
+          const href = a.getAttribute("href");
+          if (/^[a-z]+:/i.test(href)) {
+            a.target = "_blank";
+            a.rel = "noopener";
+            return;
+          }
+          if (href.startsWith("#")) {
+            a.onclick = (e) => {
+              e.preventDefault();
+              document
+                .getElementById(href.slice(1))
+                ?.scrollIntoView({ behavior: "smooth" });
+            };
+            return;
+          }
+          const [file, anchor] = href.split("#");
+          const target = resolve(path, file);
+          if (site.docs.includes(target))
+            a.href = `#/doc/${target}${anchor ? "::" + anchor : ""}`;
+          else if (target === "docs/skill-map.html") a.href = target;
+          else {
+            a.href = REPO + target;
+            a.target = "_blank";
+            a.rel = "noopener";
+          }
+        });
+        document.getElementById("doc-path").textContent = path;
+        document.getElementById("doc-src").href = REPO + path;
+        article.style.animation = "none";
+        article.offsetHeight;
+        article.style.animation = "";
+      }
 
-async function route() {
-  const m = location.hash.match(/^#\/doc\/([^:]+)(?:::(.+))?$/);
-  if (!m) { viewer.classList.remove("open"); viewer.setAttribute("aria-hidden", "true"); document.body.style.overflow = ""; return; }
-  await openDoc(decodeURIComponent(m[1]));
-  viewer.classList.add("open"); viewer.setAttribute("aria-hidden", "false"); document.body.style.overflow = "hidden";
-  const anchor = m[2] && document.getElementById(m[2]);
-  anchor ? anchor.scrollIntoView() : (viewer.scrollTop = 0);
-}
+      async function route() {
+        const m = location.hash.match(/^#\/doc\/([^:]+)(?:::(.+))?$/);
+        if (!m) {
+          viewer.classList.remove("open");
+          viewer.setAttribute("aria-hidden", "true");
+          document.body.style.overflow = "";
+          return;
+        }
+        await openDoc(decodeURIComponent(m[1]));
+        viewer.classList.add("open");
+        viewer.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        const anchor = m[2] && document.getElementById(m[2]);
+        anchor ? anchor.scrollIntoView() : (viewer.scrollTop = 0);
+      }
 
-document.getElementById("close").onclick = () => { history.length > 1 ? history.back() : (location.hash = ""); };
-document.addEventListener("keydown", e => { if (e.key === "Escape" && viewer.classList.contains("open")) document.getElementById("close").click(); });
-viewer.addEventListener("scroll", () => {
-  const max = viewer.scrollHeight - viewer.clientHeight;
-  document.getElementById("progress").style.width = `${max > 0 ? (viewer.scrollTop / max) * 100 : 0}%`;
-});
-window.addEventListener("hashchange", route);
+      document.getElementById("close").onclick = () => {
+        history.length > 1 ? history.back() : (location.hash = "");
+      };
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && viewer.classList.contains("open"))
+          document.getElementById("close").click();
+      });
+      viewer.addEventListener("scroll", () => {
+        const max = viewer.scrollHeight - viewer.clientHeight;
+        document.getElementById("progress").style.width =
+          `${max > 0 ? (viewer.scrollTop / max) * 100 : 0}%`;
+      });
+      window.addEventListener("hashchange", route);
 
-// Watch it run: site.flow comes from site/flow.json, checked against the repo's files and hooks.json by build-site.py.
-const HOOK_DWELL = 900, STEP_DWELL = 3800, SKIP_DWELL = 1400;
-function initFlow(flow) {
-  const $ = id => document.getElementById(id);
-  const player = $("flow-player");
-  let lane = 1, step = 0, timer = null, playing = false, touched = false;
+      // Watch it run: site.flow comes from site/flow.json, checked against the repo's files and hooks.json by build-site.py.
+      const HOOK_DWELL = 900,
+        STEP_DWELL = 3800,
+        SKIP_DWELL = 1400;
+      function initFlow(flow) {
+        const $ = (id) => document.getElementById(id);
+        const player = $("flow-player");
+        let lane = 1,
+          step = 0,
+          timer = null,
+          playing = false,
+          touched = false;
 
-  const entry = (s, l = lane) => flow.steps[s].lanes[flow.lanes[l].id];
-  const dwell = () => entry(step).skip ? SKIP_DWELL : STEP_DWELL + (entry(step).hooks?.length || 0) * HOOK_DWELL;
+        const entry = (s, l = lane) => flow.steps[s].lanes[flow.lanes[l].id];
+        const dwell = () =>
+          entry(step).skip
+            ? SKIP_DWELL
+            : STEP_DWELL + (entry(step).hooks?.length || 0) * HOOK_DWELL;
 
-  $("flow-lanes").innerHTML = flow.lanes.map((l, i) =>
-    `<button type="button" role="tab" class="l-${esc(l.id)}" data-lane="${i}">${esc(l.id)}</button>`).join("");
-  $("flow-lanes").onclick = e => { const b = e.target.closest("[data-lane]"); if (b) { stop(); show(Number(b.dataset.lane), 0); } };
-  $("flow-steps").innerHTML = flow.steps.map((s, i) =>
-    `<li><button type="button" data-step="${i}"><span class="dot">${i + 1}</span><span class="t">${esc(s.title)}</span></button></li>`).join("");
-  $("flow-steps").onclick = e => { const b = e.target.closest("[data-step]"); if (b) { stop(); show(lane, Number(b.dataset.step)); } };
-  $("flow-prev").onclick = () => { stop(); move(-1); };
-  $("flow-next").onclick = () => { stop(); move(1); };
-  $("flow-play").onclick = () => { touched = true; playing ? stop() : play(); };
+        $("flow-lanes").innerHTML = flow.lanes
+          .map(
+            (l, i) =>
+              `<button type="button" role="tab" class="l-${esc(l.id)}" data-lane="${i}">${esc(l.id)}</button>`,
+          )
+          .join("");
+        $("flow-lanes").onclick = (e) => {
+          const b = e.target.closest("[data-lane]");
+          if (b) {
+            stop();
+            show(Number(b.dataset.lane), 0);
+          }
+        };
+        $("flow-steps").innerHTML = flow.steps
+          .map(
+            (s, i) =>
+              `<li><button type="button" data-step="${i}"><span class="dot">${i + 1}</span><span class="t">${esc(s.title)}</span></button></li>`,
+          )
+          .join("");
+        $("flow-steps").onclick = (e) => {
+          const b = e.target.closest("[data-step]");
+          if (b) {
+            stop();
+            show(lane, Number(b.dataset.step));
+          }
+        };
+        $("flow-prev").onclick = () => {
+          stop();
+          move(-1);
+        };
+        $("flow-next").onclick = () => {
+          stop();
+          move(1);
+        };
+        $("flow-play").onclick = () => {
+          touched = true;
+          playing ? stop() : play();
+        };
 
-  function hookCard(h, i) {
-    const meta = flow.hooks[h.name];
-    return `<div class="hk s-${esc(h.state)}" style="animation-delay:${reduced ? 0 : 120 + i * 140}ms"><a href="${esc(REPO + meta.source)}" target="_blank" rel="noopener">${esc(h.name)}</a><em>${esc(h.state)}</em>
+        function hookCard(h, i) {
+          const meta = flow.hooks[h.name];
+          return `<div class="hk s-${esc(h.state)}" style="animation-delay:${reduced ? 0 : 120 + i * 140}ms"><a href="${esc(REPO + meta.source)}" target="_blank" rel="noopener">${esc(h.name)}</a><em>${esc(h.state)}</em>
       <small>${esc(meta.plugin)} · ${meta.on.map(esc).join(" · ")}</small><span>${esc(h.note)}</span></div>`;
-  }
+        }
 
-  function show(l, s) {
-    lane = l; step = s;
-    const ln = flow.lanes[lane], st = flow.steps[step], en = entry(step);
-    player.className = `flow reveal in l-${ln.id}`;
-    $("flow-lanes").querySelectorAll("[data-lane]").forEach((b, i) => b.setAttribute("aria-selected", String(i === lane)));
-    $("flow-req").textContent = ln.request;
-    $("flow-why").textContent = ln.why;
-    $("flow-steps").querySelectorAll("[data-step]").forEach((b, i) => {
-      b.classList.toggle("skip", Boolean(entry(i).skip));
-      b.classList.toggle("done", i < step && !entry(i).skip);
-      i === step ? b.setAttribute("aria-current", "step") : b.removeAttribute("aria-current");
-    });
-    const body = en.skip ? `<p class="skipped">Skipped in this lane. ${esc(en.skip)}</p>` : `<p>${esc(en.text)}</p>`;
-    const hooks = en.hooks?.length
-      ? `<div class="fp-hooks"><b>Hooks on this step</b>${en.hooks.map(hookCard).join("")}</div>`
-      : "";
-    $("flow-panel").innerHTML = `<div class="fp-head"><span class="fp-n">${String(step + 1).padStart(2, "0")}</span><div>
+        function show(l, s) {
+          lane = l;
+          step = s;
+          const ln = flow.lanes[lane],
+            st = flow.steps[step],
+            en = entry(step);
+          player.className = `flow reveal in l-${ln.id}`;
+          $("flow-lanes")
+            .querySelectorAll("[data-lane]")
+            .forEach((b, i) =>
+              b.setAttribute("aria-selected", String(i === lane)),
+            );
+          $("flow-req").textContent = ln.request;
+          $("flow-why").textContent = ln.why;
+          $("flow-steps")
+            .querySelectorAll("[data-step]")
+            .forEach((b, i) => {
+              b.classList.toggle("skip", Boolean(entry(i).skip));
+              b.classList.toggle("done", i < step && !entry(i).skip);
+              i === step
+                ? b.setAttribute("aria-current", "step")
+                : b.removeAttribute("aria-current");
+            });
+          const body = en.skip
+            ? `<p class="skipped">Skipped in this lane. ${esc(en.skip)}</p>`
+            : `<p>${esc(en.text)}</p>`;
+          const hooks = en.hooks?.length
+            ? `<div class="fp-hooks"><b>Hooks on this step</b>${en.hooks.map(hookCard).join("")}</div>`
+            : "";
+          $("flow-panel").innerHTML =
+            `<div class="fp-head"><span class="fp-n">${String(step + 1).padStart(2, "0")}</span><div>
       <h3>${esc(st.title)}<code>${esc(st.label)}</code></h3>
       <a class="fp-src" href="${esc(REPO + en.source)}" target="_blank" rel="noopener">${esc(en.source)} ↗</a></div></div>${body}${hooks}`;
-    $("flow-count").textContent = `${step + 1} / ${flow.steps.length}`;
-    if (playing) schedule();
-  }
+          $("flow-count").textContent = `${step + 1} / ${flow.steps.length}`;
+          if (playing) schedule();
+        }
 
-  function move(by) {
-    let s = step + by, l = lane;
-    if (s >= flow.steps.length) { s = 0; l = (lane + 1) % flow.lanes.length; }
-    if (s < 0) { l = (lane + flow.lanes.length - 1) % flow.lanes.length; s = flow.steps.length - 1; }
-    show(l, s);
-  }
+        function move(by) {
+          let s = step + by,
+            l = lane;
+          if (s >= flow.steps.length) {
+            s = 0;
+            l = (lane + 1) % flow.lanes.length;
+          }
+          if (s < 0) {
+            l = (lane + flow.lanes.length - 1) % flow.lanes.length;
+            s = flow.steps.length - 1;
+          }
+          show(l, s);
+        }
 
-  function schedule() {
-    clearTimeout(timer);
-    const bar = $("flow-bar"), ms = dwell();
-    bar.style.transition = "none"; bar.style.transform = "scaleX(0)"; bar.offsetWidth;
-    bar.style.transition = `transform ${ms}ms linear`; bar.style.transform = "scaleX(1)";
-    timer = setTimeout(() => move(1), ms);
-  }
-  function play() { playing = true; $("flow-play").textContent = "❚❚ Pause"; schedule(); }
-  function stop() {
-    touched = true; playing = false; clearTimeout(timer);
-    $("flow-play").textContent = "▶ Play";
-    const bar = $("flow-bar"); bar.style.transition = "none"; bar.style.transform = "scaleX(0)";
-  }
+        function schedule() {
+          clearTimeout(timer);
+          const bar = $("flow-bar"),
+            ms = dwell();
+          bar.style.transition = "none";
+          bar.style.transform = "scaleX(0)";
+          bar.offsetWidth;
+          bar.style.transition = `transform ${ms}ms linear`;
+          bar.style.transform = "scaleX(1)";
+          timer = setTimeout(() => move(1), ms);
+        }
+        function play() {
+          playing = true;
+          $("flow-play").textContent = "❚❚ Pause";
+          schedule();
+        }
+        function stop() {
+          touched = true;
+          playing = false;
+          clearTimeout(timer);
+          $("flow-play").textContent = "▶ Play";
+          const bar = $("flow-bar");
+          bar.style.transition = "none";
+          bar.style.transform = "scaleX(0)";
+        }
 
-  show(lane, 0);
-  // Autoplay only while on screen and until the reader takes over; reduced motion never autoplays.
-  if (!reduced) new IntersectionObserver(([e]) => {
-    if (touched) return;
-    if (e.isIntersecting && !playing) play();
-    else if (!e.isIntersecting && playing) { playing = false; clearTimeout(timer); $("flow-play").textContent = "▶ Play"; }
-  }, { threshold: 0.35 }).observe(player);
-}
+        show(lane, 0);
+        // Autoplay only while on screen and until the reader takes over; reduced motion never autoplays.
+        if (!reduced)
+          new IntersectionObserver(
+            ([e]) => {
+              if (touched) return;
+              if (e.isIntersecting && !playing) play();
+              else if (!e.isIntersecting && playing) {
+                playing = false;
+                clearTimeout(timer);
+                $("flow-play").textContent = "▶ Play";
+              }
+            },
+            { threshold: 0.35 },
+          ).observe(player);
+      }
 
-document.querySelectorAll(".reveal").forEach(observe);
-typeTerminal();
-fetch("site.json").then(r => r.json()).then(data => { site = data; renderCards(); if (site.flow) initFlow(site.flow); route(); });
-</script>
-</body>
+      document.querySelectorAll(".reveal").forEach(observe);
+      typeTerminal();
+      fetch("site.json")
+        .then((r) => r.json())
+        .then((data) => {
+          site = data;
+          renderCards();
+          if (site.flow) initFlow(site.flow);
+          route();
+        });
+    </script>
+  </body>
 </html>

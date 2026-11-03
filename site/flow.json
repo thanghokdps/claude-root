@@ -1,146 +1,387 @@
 {
- "lanes": [
-  {"id": "tiny", "request": "the footer still says © 2025, make it 2026",
-   "why": "One file, reversible, no contract touched: 0 of the 10 risk flags."},
-  {"id": "normal", "request": "/ticket 412  filter the task list by due date",
-   "why": "An endpoint and a screen: existing behaviour change + weak test coverage, 2 flags."},
-  {"id": "high-risk", "request": "/ticket 431  sign in with Google",
-   "why": "Authentication is a hard gate: high-risk whatever the flag count, plus an external provider."}
- ],
- "steps": [
-  {"id": "session", "title": "Session opens", "label": "SessionStart", "source": "plugins/core/hooks/repo-profile.sh",
-   "lanes": {
-    "*": {"text": "Before the first prompt, repo-profile reads the manifests (package.json, pyproject.toml, go.mod, eas.json, *.tf…) and turns on the role packs this repo needs, so the right engineers exist when a slice is handed out.",
-     "hooks": [
-      {"name": "repo-profile", "state": "fires", "note": "Prints REPO PROFILE: the stack and the packs enabled here."},
-      {"name": "secret-guard", "state": "watching", "note": "From now on, .env* and key files are never read, printed, copied or edited."}
-     ]}
-   }},
-  {"id": "breakdown", "title": "Split the requirement", "label": "/breakdown", "source": "plugins/plan/skills/breakdown/SKILL.md",
-   "lanes": {
-    "tiny": {"skip": "This request is a one-line prompt, not a requirement: there is nothing to split into tasks."},
-    "*": {"text": "Reads the requirement against the code first, so no task is written for what already exists. Splits it into tasks with acceptance criteria and an estimate range with its basis, and creates the issues on GitHub, GitLab or Jira only after an explicit yes.",
-     "hooks": []}
-   }},
-  {"id": "ticket", "title": "Write the contract", "label": "/ticket <id>", "source": "plugins/dev/skills/ticket/SKILL.md",
-   "lanes": {
-    "tiny": {"skip": "No ticket: the request is worked straight from the prompt."},
-    "normal": {"text": "Reads issue #412, cuts feat/412-due-date-filter and writes the contract into the repo, docs/tickets/412/: intent.md (the ticket verbatim), spec.md (Given/When/Then and a test row per criterion), plan.md opening with Risk: normal and Skills: /api-endpoint, /ui-feature.",
-     "hooks": [
-      {"name": "branch-guard", "state": "watching", "note": "Work happens on the branch: a commit on main, master or an environment branch is blocked."},
-      {"name": "ticket-ledger", "state": "records", "note": "Logs every skill and subagent that runs on this branch, for ticket-gate to read later."}
-     ]},
-    "high-risk": {"text": "Reads issue #431, cuts feat/431-google-sign-in and writes docs/tickets/431/. plan.md opens with Risk: high (auth, data writes, migrations and external providers are high). Every mismatch between ticket, design, API and app becomes a concern in spec.md with a severity and an owner.",
-     "hooks": [
-      {"name": "branch-guard", "state": "watching", "note": "Work happens on the branch: a commit on main, master or an environment branch is blocked."},
-      {"name": "ticket-ledger", "state": "records", "note": "Logs every skill and subagent that runs on this branch, for ticket-gate to read later."}
-     ]}
-   }},
-  {"id": "lane", "title": "Pick the lane", "label": "risk intake", "source": "plugins/dev/skills/feature/SKILL.md",
-   "lanes": {
-    "tiny": {"text": "/feature scores the request against its 10-flag checklist. 0–1 flags is tiny: research and the plan are skipped, and the edit is made directly in this session.",
-     "hooks": []},
-    "normal": {"text": "plan.md's Risk: normal is the lane /feature builds with. 2–3 flags is normal: research and a plan before code. The ticket's plan.md is that plan, so /feature skips its own research and plan stages.",
-     "hooks": []},
-    "high-risk": {"text": "Authentication is a hard gate, so the lane is high-risk regardless of scope. The full chain runs, and the scope is confirmed with you before anything is dispatched.",
-     "hooks": []}
-   }},
-  {"id": "ask", "title": "Ask once", "label": "open questions", "source": "plugins/dev/skills/feature/SKILL.md",
-   "lanes": {
-    "tiny": {"text": "Even the tiny lane writes the five lines (scope, data, what you see, where it surfaces, anything the repo answers two ways), each quoting the request. All five quoted: No open questions, go.",
-     "hooks": [
-      {"name": "ask-once", "state": "watching", "note": "Once a project file is edited, the turn's first question to you is denied with a pointer to the decision debate instead."}
-     ]},
-    "*": {"text": "Every open point is asked now, in one AskUserQuestion call, 2–4 options each with the recommended one first. Facts the repo can answer go through /resolve-question with a file:line instead of a question to you.",
-     "hooks": [
-      {"name": "ask-once", "state": "watching", "note": "Once a project file is edited, the turn's first question to you is denied with a pointer to the decision debate instead."}
-     ]}
-   }},
-  {"id": "plan", "title": "Plan and review it", "label": "plan-review.md", "source": "plugins/dev/references/plan-review.md",
-   "lanes": {
-    "tiny": {"skip": "The tiny lane has no planning artifact: the edit is made directly."},
-    "normal": {"text": "plan.md lists the slices in /feature's order, each with its files and green check. A fresh opus agent that never saw the conversation reads it against the code and returns APPROVED, REVISE or BLOCKED with a path:line per finding, at most 2 rounds, logged in plan-review.md.",
-     "hooks": []},
-    "high-risk": {"text": "The same fresh-agent review, logged in plan-review.md, and then the build waits: a high-risk ticket needs your approval of intent.md, spec.md and plan.md before the first slice is dispatched.",
-     "source": "plugins/dev/skills/ticket/SKILL.md",
-     "hooks": []}
-   }},
-  {"id": "build", "title": "Build the slices", "label": "<role>-engineer", "source": "plugins/dev/skills/feature/SKILL.md",
-   "lanes": {
-    "tiny": {"text": "The tiny lane is the only one where the supervisor edits the file itself; every other lane dispatches agents to implement.",
-     "source": "plugins/dev/skills/coordinator/SKILL.md",
-     "hooks": [
-      {"name": "edit-guard", "state": "watching", "note": "Files change through Edit and Write, never sed -i, a redirect or a heredoc, so the per-edit hooks see every change."},
-      {"name": "secret-guard", "state": "watching", "note": "No secret file enters the context while building."}
-     ]},
-    "normal": {"text": "Slice 1 goes to backend:backend-engineer on sonnet, running /api-endpoint: green when the route matrix passes (200 · 400 · 401 · 404). Slice 2 goes to frontend:frontend-engineer running /ui-feature: Testing Library tests and a browser check at every viewport. Each diff is reviewed by fresh agents: spec first, quality second, 3 fix rounds at most.",
-     "hooks": [
-      {"name": "ticket-ledger", "state": "records", "note": "Records each subagent and its model: ticket-gate later needs one on sonnet or haiku."},
-      {"name": "edit-guard", "state": "watching", "note": "Files change through Edit and Write, never sed -i, a redirect or a heredoc."},
-      {"name": "test-lock", "state": "idle", "note": "Armed only while /fix-bug has locked a regression test; no lock in a feature build."}
-     ]},
-    "high-risk": {"text": "Slice 1: backend-engineer runs /api-client for the Google token exchange, green when its tests pass with no network. Slice 2: /api-endpoint for the callback route. Slice 3: frontend-engineer runs /ui-feature for the sign-in button. Same two-tier review per slice.",
-     "hooks": [
-      {"name": "ticket-ledger", "state": "records", "note": "Records each subagent and its model: ticket-gate later needs one on sonnet or haiku."},
-      {"name": "edit-guard", "state": "watching", "note": "Files change through Edit and Write, never sed -i, a redirect or a heredoc."},
-      {"name": "test-lock", "state": "idle", "note": "Armed only while /fix-bug has locked a regression test; no lock in a feature build."}
-     ]}
-   }},
-  {"id": "review", "title": "Review the branch", "label": "Stage 4", "source": "plugins/dev/skills/feature/SKILL.md",
-   "lanes": {
-    "tiny": {"skip": "No slices to review: after a tiny edit the coordinator goes straight to the verifier.", "source": "plugins/dev/skills/coordinator/SKILL.md"},
-    "normal": {"text": "The whole branch is checked once: every plan task done, no security issue across slices, no type or lint error, no dead code. Then /docs-sync writes the new route and screen into .claude/docs/ on the same branch.",
-     "hooks": []},
-    "high-risk": {"text": "Plus one fresh opus reviewer over the whole-branch diff, hunting bugs between slices (a contract one exports and another consumes differently), then /security-review and /code-review. Findings are fixed or listed in plan.md § Deviations.",
-     "hooks": [
-      {"name": "ticket-ledger", "state": "records", "note": "Records /security-review and /code-review; the PR needs both on Risk: high."}
-     ]}
-   }},
-  {"id": "verify", "title": "Prove it", "label": "/verify-done", "source": "plugins/core/skills/verify-done/SKILL.md",
-   "lanes": {
-    "tiny": {"text": "Restates the finish line (Done when the footer shows 2026), re-runs the proof in this session and checks git diff --stat: every file traces to the request, no debug output.",
-     "hooks": []},
-    "*": {"text": "Restates the finish line, then re-runs every proof in this session: the full test suite with counts, typecheck and lint, and the running screen. A subagent's summary does not count. git diff --stat must trace every file to the ticket.",
-     "hooks": [
-      {"name": "ticket-ledger", "state": "records", "note": "Records that /verify-done ran: the PR gate checks for it."}
-     ]}
-   }},
-  {"id": "commit", "title": "Commit", "label": "git commit", "source": "plugins/dev/hooks/hooks.json",
-   "lanes": {
-    "tiny": {"text": "Committed on a fix branch, specific files staged, one logical change.",
-     "hooks": [
-      {"name": "branch-guard", "state": "blocks", "note": "A commit on main, master or an environment branch is blocked."},
-      {"name": "weakened-check", "state": "asks", "note": "An added eslint-disable or .skip(, a deleted test, a lowered coverage threshold or a loosened CONSTRAINTS.md row asks you first."},
-      {"name": "ticket-gate", "state": "idle", "note": "Applies only on a <type>/<id>-<slug> branch with docs/tickets/<id>/plan.md."}
-     ]},
-    "normal": {"text": "feat: filter the task list by due date (#412), with docs/tickets/412/ in the same commit as the code.",
-     "hooks": [
-      {"name": "ticket-gate", "state": "blocks", "note": "A code commit waits until plan-review.md says APPROVED, every Skills: entry has run and a sonnet or haiku subagent wrote code."},
-      {"name": "weakened-check", "state": "asks", "note": "An added suppression or skip, a deleted test or a lowered threshold asks you first."},
-      {"name": "branch-guard", "state": "blocks", "note": "A commit on main, master or an environment branch is blocked."}
-     ]},
-    "high-risk": {"text": "feat: sign in with Google (#431), with docs/tickets/431/ and its plan review in the same commit.",
-     "hooks": [
-      {"name": "ticket-gate", "state": "blocks", "note": "As on normal, plus: a blocking concern in spec.md without a Decision, or an (agent) decision without why: and revert:, blocks the commit."},
-      {"name": "weakened-check", "state": "asks", "note": "An added suppression or skip, a deleted test or a lowered threshold asks you first."},
-      {"name": "branch-guard", "state": "blocks", "note": "A commit on main, master or an environment branch is blocked."}
-     ]}
-   }},
-  {"id": "pr", "title": "Open the PR", "label": "/finish-branch", "source": "plugins/ship/skills/finish-branch/SKILL.md",
-   "lanes": {
-    "tiny": {"text": "Runs /verify-done first, shows the branch state, then asks one question: Open PR/MR, Merge locally, Keep or Discard. The PR says why and how it was tested.",
-     "hooks": []},
-    "normal": {"text": "The PR links the ticket and docs/tickets/412/. Then its checks are watched: a red one is fixed on the branch with /ci-triage, never called done.",
-     "source": "plugins/dev/skills/ticket/SKILL.md",
-     "hooks": [
-      {"name": "ticket-gate", "state": "blocks", "note": "gh pr create waits until /verify-done and /review-checklist have run on this branch."}
-     ]},
-    "high-risk": {"text": "The PR links the ticket and docs/tickets/431/, plan review included, so the reviewer reads the contract next to the diff.",
-     "source": "plugins/dev/skills/ticket/SKILL.md",
-     "hooks": [
-      {"name": "ticket-gate", "state": "blocks", "note": "On Risk: high the PR also waits for /security-review and /code-review."},
-      {"name": "auto-decisions", "state": "watching", "note": "Worked in auto mode, the session cannot stop until plan.md's ## Auto decisions lists every choice made for you, each challenged."}
-     ]}
-   }}
- ]
+  "lanes": [
+    {
+      "id": "tiny",
+      "request": "the footer still says © 2025, make it 2026",
+      "why": "One file, reversible, no contract touched: 0 of the 10 risk flags."
+    },
+    {
+      "id": "normal",
+      "request": "/ticket 412  filter the task list by due date",
+      "why": "An endpoint and a screen: existing behaviour change + weak test coverage, 2 flags."
+    },
+    {
+      "id": "high-risk",
+      "request": "/ticket 431  sign in with Google",
+      "why": "Authentication is a hard gate: high-risk whatever the flag count, plus an external provider."
+    }
+  ],
+  "steps": [
+    {
+      "id": "session",
+      "title": "Session opens",
+      "label": "SessionStart",
+      "source": "plugins/core/hooks/repo-profile.sh",
+      "lanes": {
+        "*": {
+          "text": "Before the first prompt, repo-profile reads the manifests (package.json, pyproject.toml, go.mod, eas.json, *.tf…) and turns on the role packs this repo needs, so the right engineers exist when a slice is handed out.",
+          "hooks": [
+            {
+              "name": "repo-profile",
+              "state": "fires",
+              "note": "Prints REPO PROFILE: the stack and the packs enabled here."
+            },
+            {
+              "name": "secret-guard",
+              "state": "watching",
+              "note": "From now on, .env* and key files are never read, printed, copied or edited."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "breakdown",
+      "title": "Split the requirement",
+      "label": "/breakdown",
+      "source": "plugins/plan/skills/breakdown/SKILL.md",
+      "lanes": {
+        "tiny": {
+          "skip": "This request is a one-line prompt, not a requirement: there is nothing to split into tasks."
+        },
+        "*": {
+          "text": "Reads the requirement against the code first, so no task is written for what already exists. Splits it into tasks with acceptance criteria and an estimate range with its basis, and creates the issues on GitHub, GitLab or Jira only after an explicit yes.",
+          "hooks": []
+        }
+      }
+    },
+    {
+      "id": "ticket",
+      "title": "Write the contract",
+      "label": "/ticket <id>",
+      "source": "plugins/dev/skills/ticket/SKILL.md",
+      "lanes": {
+        "tiny": {
+          "skip": "No ticket: the request is worked straight from the prompt."
+        },
+        "normal": {
+          "text": "Reads issue #412, cuts feat/412-due-date-filter and writes the contract into the repo, docs/tickets/412/: intent.md (the ticket verbatim), spec.md (Given/When/Then and a test row per criterion), plan.md opening with Risk: normal and Skills: /api-endpoint, /ui-feature.",
+          "hooks": [
+            {
+              "name": "branch-guard",
+              "state": "watching",
+              "note": "Work happens on the branch: a commit on main, master or an environment branch is blocked."
+            },
+            {
+              "name": "ticket-ledger",
+              "state": "records",
+              "note": "Logs every skill and subagent that runs on this branch, for ticket-gate to read later."
+            }
+          ]
+        },
+        "high-risk": {
+          "text": "Reads issue #431, cuts feat/431-google-sign-in and writes docs/tickets/431/. plan.md opens with Risk: high (auth, data writes, migrations and external providers are high). Every mismatch between ticket, design, API and app becomes a concern in spec.md with a severity and an owner.",
+          "hooks": [
+            {
+              "name": "branch-guard",
+              "state": "watching",
+              "note": "Work happens on the branch: a commit on main, master or an environment branch is blocked."
+            },
+            {
+              "name": "ticket-ledger",
+              "state": "records",
+              "note": "Logs every skill and subagent that runs on this branch, for ticket-gate to read later."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lane",
+      "title": "Pick the lane",
+      "label": "risk intake",
+      "source": "plugins/dev/skills/feature/SKILL.md",
+      "lanes": {
+        "tiny": {
+          "text": "/feature scores the request against its 10-flag checklist. 0–1 flags is tiny: research and the plan are skipped, and the edit is made directly in this session.",
+          "hooks": []
+        },
+        "normal": {
+          "text": "plan.md's Risk: normal is the lane /feature builds with. 2–3 flags is normal: research and a plan before code. The ticket's plan.md is that plan, so /feature skips its own research and plan stages.",
+          "hooks": []
+        },
+        "high-risk": {
+          "text": "Authentication is a hard gate, so the lane is high-risk regardless of scope. The full chain runs, and the scope is confirmed with you before anything is dispatched.",
+          "hooks": []
+        }
+      }
+    },
+    {
+      "id": "ask",
+      "title": "Ask once",
+      "label": "open questions",
+      "source": "plugins/dev/skills/feature/SKILL.md",
+      "lanes": {
+        "tiny": {
+          "text": "Even the tiny lane writes the five lines (scope, data, what you see, where it surfaces, anything the repo answers two ways), each quoting the request. All five quoted: No open questions, go.",
+          "hooks": [
+            {
+              "name": "ask-once",
+              "state": "watching",
+              "note": "Once a project file is edited, the turn's first question to you is denied with a pointer to the decision debate instead."
+            }
+          ]
+        },
+        "*": {
+          "text": "Every open point is asked now, in one AskUserQuestion call, 2–4 options each with the recommended one first. Facts the repo can answer go through /resolve-question with a file:line instead of a question to you.",
+          "hooks": [
+            {
+              "name": "ask-once",
+              "state": "watching",
+              "note": "Once a project file is edited, the turn's first question to you is denied with a pointer to the decision debate instead."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan",
+      "title": "Plan and review it",
+      "label": "plan-review.md",
+      "source": "plugins/dev/references/plan-review.md",
+      "lanes": {
+        "tiny": {
+          "skip": "The tiny lane has no planning artifact: the edit is made directly."
+        },
+        "normal": {
+          "text": "plan.md lists the slices in /feature's order, each with its files and green check. A fresh opus agent that never saw the conversation reads it against the code and returns APPROVED, REVISE or BLOCKED with a path:line per finding, at most 2 rounds, logged in plan-review.md.",
+          "hooks": []
+        },
+        "high-risk": {
+          "text": "The same fresh-agent review, logged in plan-review.md, and then the build waits: a high-risk ticket needs your approval of intent.md, spec.md and plan.md before the first slice is dispatched.",
+          "source": "plugins/dev/skills/ticket/SKILL.md",
+          "hooks": []
+        }
+      }
+    },
+    {
+      "id": "build",
+      "title": "Build the slices",
+      "label": "<role>-engineer",
+      "source": "plugins/dev/skills/feature/SKILL.md",
+      "lanes": {
+        "tiny": {
+          "text": "The tiny lane is the only one where the supervisor edits the file itself; every other lane dispatches agents to implement.",
+          "source": "plugins/dev/skills/coordinator/SKILL.md",
+          "hooks": [
+            {
+              "name": "edit-guard",
+              "state": "watching",
+              "note": "Files change through Edit and Write, never sed -i, a redirect or a heredoc, so the per-edit hooks see every change."
+            },
+            {
+              "name": "secret-guard",
+              "state": "watching",
+              "note": "No secret file enters the context while building."
+            }
+          ]
+        },
+        "normal": {
+          "text": "Slice 1 goes to backend:backend-engineer on sonnet, running /api-endpoint: green when the route matrix passes (200 · 400 · 401 · 404). Slice 2 goes to frontend:frontend-engineer running /ui-feature: Testing Library tests and a browser check at every viewport. Each diff is reviewed by fresh agents: spec first, quality second, 3 fix rounds at most.",
+          "hooks": [
+            {
+              "name": "ticket-ledger",
+              "state": "records",
+              "note": "Records each subagent and its model: ticket-gate later needs one on sonnet or haiku."
+            },
+            {
+              "name": "edit-guard",
+              "state": "watching",
+              "note": "Files change through Edit and Write, never sed -i, a redirect or a heredoc."
+            },
+            {
+              "name": "test-lock",
+              "state": "idle",
+              "note": "Armed only while /fix-bug has locked a regression test; no lock in a feature build."
+            }
+          ]
+        },
+        "high-risk": {
+          "text": "Slice 1: backend-engineer runs /api-client for the Google token exchange, green when its tests pass with no network. Slice 2: /api-endpoint for the callback route. Slice 3: frontend-engineer runs /ui-feature for the sign-in button. Same two-tier review per slice.",
+          "hooks": [
+            {
+              "name": "ticket-ledger",
+              "state": "records",
+              "note": "Records each subagent and its model: ticket-gate later needs one on sonnet or haiku."
+            },
+            {
+              "name": "edit-guard",
+              "state": "watching",
+              "note": "Files change through Edit and Write, never sed -i, a redirect or a heredoc."
+            },
+            {
+              "name": "test-lock",
+              "state": "idle",
+              "note": "Armed only while /fix-bug has locked a regression test; no lock in a feature build."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "review",
+      "title": "Review the branch",
+      "label": "Stage 4",
+      "source": "plugins/dev/skills/feature/SKILL.md",
+      "lanes": {
+        "tiny": {
+          "skip": "No slices to review: after a tiny edit the coordinator goes straight to the verifier.",
+          "source": "plugins/dev/skills/coordinator/SKILL.md"
+        },
+        "normal": {
+          "text": "The whole branch is checked once: every plan task done, no security issue across slices, no type or lint error, no dead code. Then /docs-sync writes the new route and screen into .claude/docs/ on the same branch.",
+          "hooks": []
+        },
+        "high-risk": {
+          "text": "Plus one fresh opus reviewer over the whole-branch diff, hunting bugs between slices (a contract one exports and another consumes differently), then /security-review and /code-review. Findings are fixed or listed in plan.md § Deviations.",
+          "hooks": [
+            {
+              "name": "ticket-ledger",
+              "state": "records",
+              "note": "Records /security-review and /code-review; the PR needs both on Risk: high."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "verify",
+      "title": "Prove it",
+      "label": "/verify-done",
+      "source": "plugins/core/skills/verify-done/SKILL.md",
+      "lanes": {
+        "tiny": {
+          "text": "Restates the finish line (Done when the footer shows 2026), re-runs the proof in this session and checks git diff --stat: every file traces to the request, no debug output.",
+          "hooks": []
+        },
+        "*": {
+          "text": "Restates the finish line, then re-runs every proof in this session: the full test suite with counts, typecheck and lint, and the running screen. A subagent's summary does not count. git diff --stat must trace every file to the ticket.",
+          "hooks": [
+            {
+              "name": "ticket-ledger",
+              "state": "records",
+              "note": "Records that /verify-done ran: the PR gate checks for it."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "commit",
+      "title": "Commit",
+      "label": "git commit",
+      "source": "plugins/dev/hooks/hooks.json",
+      "lanes": {
+        "tiny": {
+          "text": "Committed on a fix branch, specific files staged, one logical change.",
+          "hooks": [
+            {
+              "name": "branch-guard",
+              "state": "blocks",
+              "note": "A commit on main, master or an environment branch is blocked."
+            },
+            {
+              "name": "weakened-check",
+              "state": "asks",
+              "note": "An added eslint-disable or .skip(, a deleted test, a lowered coverage threshold or a loosened CONSTRAINTS.md row asks you first."
+            },
+            {
+              "name": "ticket-gate",
+              "state": "idle",
+              "note": "Applies only on a <type>/<id>-<slug> branch with docs/tickets/<id>/plan.md."
+            }
+          ]
+        },
+        "normal": {
+          "text": "feat: filter the task list by due date (#412), with docs/tickets/412/ in the same commit as the code.",
+          "hooks": [
+            {
+              "name": "ticket-gate",
+              "state": "blocks",
+              "note": "A code commit waits until plan-review.md says APPROVED, every Skills: entry has run and a sonnet or haiku subagent wrote code."
+            },
+            {
+              "name": "weakened-check",
+              "state": "asks",
+              "note": "An added suppression or skip, a deleted test or a lowered threshold asks you first."
+            },
+            {
+              "name": "branch-guard",
+              "state": "blocks",
+              "note": "A commit on main, master or an environment branch is blocked."
+            }
+          ]
+        },
+        "high-risk": {
+          "text": "feat: sign in with Google (#431), with docs/tickets/431/ and its plan review in the same commit.",
+          "hooks": [
+            {
+              "name": "ticket-gate",
+              "state": "blocks",
+              "note": "As on normal, plus: a blocking concern in spec.md without a Decision, or an (agent) decision without why: and revert:, blocks the commit."
+            },
+            {
+              "name": "weakened-check",
+              "state": "asks",
+              "note": "An added suppression or skip, a deleted test or a lowered threshold asks you first."
+            },
+            {
+              "name": "branch-guard",
+              "state": "blocks",
+              "note": "A commit on main, master or an environment branch is blocked."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "pr",
+      "title": "Open the PR",
+      "label": "/finish-branch",
+      "source": "plugins/ship/skills/finish-branch/SKILL.md",
+      "lanes": {
+        "tiny": {
+          "text": "Runs /verify-done first, shows the branch state, then asks one question: Open PR/MR, Merge locally, Keep or Discard. The PR says why and how it was tested.",
+          "hooks": []
+        },
+        "normal": {
+          "text": "The PR links the ticket and docs/tickets/412/. Then its checks are watched: a red one is fixed on the branch with /ci-triage, never called done.",
+          "source": "plugins/dev/skills/ticket/SKILL.md",
+          "hooks": [
+            {
+              "name": "ticket-gate",
+              "state": "blocks",
+              "note": "gh pr create waits until /verify-done and /review-checklist have run on this branch."
+            }
+          ]
+        },
+        "high-risk": {
+          "text": "The PR links the ticket and docs/tickets/431/, plan review included, so the reviewer reads the contract next to the diff.",
+          "source": "plugins/dev/skills/ticket/SKILL.md",
+          "hooks": [
+            {
+              "name": "ticket-gate",
+              "state": "blocks",
+              "note": "On Risk: high the PR also waits for /security-review and /code-review."
+            },
+            {
+              "name": "auto-decisions",
+              "state": "watching",
+              "note": "Worked in auto mode, the session cannot stop until plan.md's ## Auto decisions lists every choice made for you, each challenged."
+            }
+          ]
+        }
+      }
+    }
+  ]
 }

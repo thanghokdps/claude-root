@@ -17,13 +17,13 @@ From the first install to daily work, with the detail the [README](../README.md)
 
 ## 1. Prerequisites
 
-| Item | Requirement |
-|---|---|
-| Claude Code | CLI or desktop app |
-| Git | `git --version` works |
+| Item               | Requirement                                                                             |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| Claude Code        | CLI or desktop app                                                                      |
+| Git                | `git --version` works                                                                   |
 | `jq` and `python3` | used by the hooks (`brew install jq`); without `python3` the progress hooks stay silent |
-| Python 3.12 | only for headroom (optional context compression) |
-| Node, Python, … | whatever your project needs |
+| Python 3.12        | only for headroom (optional context compression)                                        |
+| Node, Python, …    | whatever your project needs                                                             |
 
 ## 2. Install the plugins
 
@@ -79,11 +79,11 @@ The installer is idempotent and takes no arguments. It backs up `~/.claude/CLAUD
 
 `/project-init` reads manifests and code and writes a `.claude/` workspace plus a project `CLAUDE.md` with real paths and commands. Run it once per project, and again after a big architecture change. In an empty folder there is nothing to read, so start from the row that matches:
 
-| Your folder | Do this |
-|---|---|
-| Existing repo with code | `cd my-project && claude`, then `/project-init` |
-| Empty folder, regular app | `git init`, then `/kickoff` with the documents you have (or `/brainstorming <idea>` when the approach is open) → `/writing-plans` → build wave 1 (the scaffold: manifest, test runner, lint, `.gitignore`, `.env.example`) → commit → `/project-init` |
-| Empty folder, AI assistant | `git init`, then describe the assistant in plain words, for example *"a chatbot that helps customers track and change their orders"*. `/agent-architect` interviews, writes the ADR, scaffolds and runs `/project-init` itself. For an empty skeleton on a named stack say *init* and the stack: *"init chatbot với Next.js + CopilotKit + LangGraph"* |
+| Your folder                | Do this                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Existing repo with code    | `cd my-project && claude`, then `/project-init`                                                                                                                                                                                                                                                                                                        |
+| Empty folder, regular app  | `git init`, then `/kickoff` with the documents you have (or `/brainstorming <idea>` when the approach is open) → `/writing-plans` → build wave 1 (the scaffold: manifest, test runner, lint, `.gitignore`, `.env.example`) → commit → `/project-init`                                                                                                  |
+| Empty folder, AI assistant | `git init`, then describe the assistant in plain words, for example _"a chatbot that helps customers track and change their orders"_. `/agent-architect` interviews, writes the ADR, scaffolds and runs `/project-init` itself. For an empty skeleton on a named stack say _init_ and the stack: _"init chatbot với Next.js + CopilotKit + LangGraph"_ |
 
 From a shell instead of Claude Code:
 
@@ -118,7 +118,7 @@ Then fill in three things once: scan the generated `CLAUDE.md` (Key Rules and Co
 cd my-project && claude
 ```
 
-- **Context loaded?** Ask *"what project are you working on?"*; the answer should name the stack and constraints from `CLAUDE.md` and `MEMORY.md`.
+- **Context loaded?** Ask _"what project are you working on?"_; the answer should name the stack and constraints from `CLAUDE.md` and `MEMORY.md`.
 - **Hooks working?** Try `git push origin main` from the session: `branch-guard` blocks it with the reason. Ask Claude to read `.env`: `secret-guard` refuses and asks you for the value.
 - **First push of `main`** to a new, empty remote is yours. Claude does not push to `main`; `/finish-branch` prints `git push -u origin main` for you to run, after which branches and PRs work as usual.
 - **CI secrets** (for example an evals job): `gh secret set <NAME> --repo <owner>/<repo>` before the first PR that needs them. `/finish-branch` names any the workflows read that the repo lacks.
@@ -130,15 +130,15 @@ Start: `claude` in the project. If the last session ended with `/compact`, `spec
 
 An engineer's day maps onto the skills like this; each step is optional and each hands its file to the next:
 
-| Step | Say or type | Leaves behind |
-|---|---|---|
-| Analyse a requirement, split it, estimate it, put it on the tracker | `/breakdown <text, link or file>` | issues on GitLab / Jira / GitHub with criteria, role, dependency order and an estimate range |
-| Pick up one task | `/ticket <id>` | `docs/tickets/<id>/{intent,spec,plan}.md` on a branch |
-| Design first when the task is not obvious | `/brainstorming` → `/grill` → `/writing-plans` | `specs/<slug>/design.md`, `PLAN.md` |
-| Implement | `/feature` (dispatches slices to the role engineers) · `/tdd` · `/fix-bug` | code with its tests, a commit per slice |
-| Test and review | `/verify-done` · `/review-checklist` · `/blast-radius` | the evidence block, numbered findings |
-| Deliver | `/finish-branch` → PR/MR · `/ci-triage` when red · `/release-checklist <version>` | a merged branch, a tagged release |
-| Close the loop | `/compact` · `/compound` · `/retro` | handoff, lessons, estimate vs actual |
+| Step                                                                | Say or type                                                                       | Leaves behind                                                                                |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Analyse a requirement, split it, estimate it, put it on the tracker | `/breakdown <text, link or file>`                                                 | issues on GitLab / Jira / GitHub with criteria, role, dependency order and an estimate range |
+| Pick up one task                                                    | `/ticket <id>`                                                                    | `docs/tickets/<id>/{intent,spec,plan}.md` on a branch                                        |
+| Design first when the task is not obvious                           | `/brainstorming` → `/grill` → `/writing-plans`                                    | `specs/<slug>/design.md`, `PLAN.md`                                                          |
+| Implement                                                           | `/feature` (dispatches slices to the role engineers) · `/tdd` · `/fix-bug`        | code with its tests, a commit per slice                                                      |
+| Test and review                                                     | `/verify-done` · `/review-checklist` · `/blast-radius`                            | the evidence block, numbered findings                                                        |
+| Deliver                                                             | `/finish-branch` → PR/MR · `/ci-triage` when red · `/release-checklist <version>` | a merged branch, a tagged release                                                            |
+| Close the loop                                                      | `/compact` · `/compound` · `/retro`                                               | handoff, lessons, estimate vs actual                                                         |
 
 Work: describe what you want. The Auto-Coordinator classifies it (tiny, normal, high-risk), routes it to the skill, and for anything above tiny shows `Intent · Lane · Routing` and a task list. A vague request gets questions first, one per turn with a recommendation, never a guessed build. The slash commands below force a skill when you want a specific one.
 
@@ -146,24 +146,24 @@ Finish: `/verify-done` before saying done, `/review-checklist` before the PR, `/
 
 ## 7. Common tasks
 
-| Task | Say or type | What happens |
-|---|---|---|
-| A requirement, an epic, "how long?" | `/breakdown <text or link>` | analysed against the code, split into tasks with Given/When/Then criteria and a range estimate each; created on the tracker after you confirm the list |
-| New feature | *"add dark mode to the settings page"* or `/feature …` | risk intake → lane → plan → build → self-review → commit. A hard gate (auth, payment, migration) asks you to confirm the spec first |
-| A ticket by id | `/ticket 412` · `/ticket 412 413 414` | the ticket's intent, spec and plan are written into `docs/tickets/<id>/`, built through `/feature`, one worktree and one PR per ticket; the commit waits for the plan's skills |
-| A bug | `/fix-bug uploads over 10 MB crash` | reproduce in a red loop → minimise → hypothesis → fix → regression test. The reproducing test is locked while the fix is written |
-| An endpoint, a table, a screen, an API client | `/api-endpoint` · `/db-change` · `/ui-feature` · `/api-client` | built the way the repo already does it, with the layer's test matrix |
-| Match a Figma design | `/design-ui <link>` · `/agent-design-ui <link>` for a chat | frames exported, tokens mapped, primitives built once, screenshot diff at the frame size and narrow widths |
-| Design first | `/brainstorming <idea>` → `/grill` → `/writing-plans` | `specs/<slug>/design.md`, hardened, then `PLAN.md` with a verify command per task |
-| Review | `/review-checklist` · `/blast-radius` · the built-in `/code-review` | numbered findings with the failing case, the fix and the cost of skipping it |
-| Answer the review | `/resolve-pr-feedback` | every open thread: fix, answer or decline with a reason, one push, a reply on each |
-| PR text only | `/create-pr` | title, summary (why), tasks, file table; nothing is pushed |
-| Red build | `/ci-triage` | regression, flaky or environment, with a one-sentence root cause |
-| Release | `/release-checklist <version>` | stops on the first unmet item; a mobile production release also needs the approved `release/<version>` commit |
-| Schema change | `/write-migration` | expand/contract, backfill separated, down path tested; always high-risk |
-| Production incident | `/incident` | timeline, severity, mitigate first, then root cause, regression test and postmortem |
-| AI assistant | describe it → `/agent-feature <capability>` → `/agent-verify-turn` → `/agent-evals` → `/agent-security` | see [`plugins/ai/README.md`](../plugins/ai/README.md) |
-| Quick question | `/btw <question>` | answered without touching the task |
+| Task                                          | Say or type                                                                                             | What happens                                                                                                                                                                   |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A requirement, an epic, "how long?"           | `/breakdown <text or link>`                                                                             | analysed against the code, split into tasks with Given/When/Then criteria and a range estimate each; created on the tracker after you confirm the list                         |
+| New feature                                   | _"add dark mode to the settings page"_ or `/feature …`                                                  | risk intake → lane → plan → build → self-review → commit. A hard gate (auth, payment, migration) asks you to confirm the spec first                                            |
+| A ticket by id                                | `/ticket 412` · `/ticket 412 413 414`                                                                   | the ticket's intent, spec and plan are written into `docs/tickets/<id>/`, built through `/feature`, one worktree and one PR per ticket; the commit waits for the plan's skills |
+| A bug                                         | `/fix-bug uploads over 10 MB crash`                                                                     | reproduce in a red loop → minimise → hypothesis → fix → regression test. The reproducing test is locked while the fix is written                                               |
+| An endpoint, a table, a screen, an API client | `/api-endpoint` · `/db-change` · `/ui-feature` · `/api-client`                                          | built the way the repo already does it, with the layer's test matrix                                                                                                           |
+| Match a Figma design                          | `/design-ui <link>` · `/agent-design-ui <link>` for a chat                                              | frames exported, tokens mapped, primitives built once, screenshot diff at the frame size and narrow widths                                                                     |
+| Design first                                  | `/brainstorming <idea>` → `/grill` → `/writing-plans`                                                   | `specs/<slug>/design.md`, hardened, then `PLAN.md` with a verify command per task                                                                                              |
+| Review                                        | `/review-checklist` · `/blast-radius` · the built-in `/code-review`                                     | numbered findings with the failing case, the fix and the cost of skipping it                                                                                                   |
+| Answer the review                             | `/resolve-pr-feedback`                                                                                  | every open thread: fix, answer or decline with a reason, one push, a reply on each                                                                                             |
+| PR text only                                  | `/create-pr`                                                                                            | title, summary (why), tasks, file table; nothing is pushed                                                                                                                     |
+| Red build                                     | `/ci-triage`                                                                                            | regression, flaky or environment, with a one-sentence root cause                                                                                                               |
+| Release                                       | `/release-checklist <version>`                                                                          | stops on the first unmet item; a mobile production release also needs the approved `release/<version>` commit                                                                  |
+| Schema change                                 | `/write-migration`                                                                                      | expand/contract, backfill separated, down path tested; always high-risk                                                                                                        |
+| Production incident                           | `/incident`                                                                                             | timeline, severity, mitigate first, then root cause, regression test and postmortem                                                                                            |
+| AI assistant                                  | describe it → `/agent-feature <capability>` → `/agent-verify-turn` → `/agent-evals` → `/agent-security` | see [`plugins/ai/README.md`](../plugins/ai/README.md)                                                                                                                          |
+| Quick question                                | `/btw <question>`                                                                                       | answered without touching the task                                                                                                                                             |
 
 ## 8. Team workflow
 
@@ -209,19 +209,19 @@ Hook and CI changes take effect in a new session, not the current one. Plugin ve
 
 ## 12. Cheat sheet
 
-| Command | When |
-|---|---|
-| `/project-init` | once per repo, and after a big architecture change |
-| `/sync-memory` | start of a session on a team project |
-| `/breakdown <requirement>` | a requirement or epic → estimated tasks on GitLab / Jira / GitHub |
-| `/feature <desc>` · `/ticket <id>` | a new capability · a tracker ticket |
-| `/fix-bug <symptom>` | something broken, failing or slow |
-| `/tdd` | build test-first from a plan task |
-| `/brainstorming` → `/grill` → `/writing-plans` | design before a complex feature |
-| `/verify-done` · `/checkpoint` | before saying done · progress plus gates |
-| `/review-checklist` · `/blast-radius` | before the PR |
-| `/finish-branch` | land or park the branch |
-| `/ci-triage` · `/release-checklist` · `/incident` | red build · release · outage |
-| `/agent-architect` · `/agent-feature` · `/agent-verify-turn` | start · grow · prove an AI assistant |
-| `/compact` · `/compound` | end of session · a lesson worth keeping |
-| `/btw <question>` | a quick question without breaking the flow |
+| Command                                                      | When                                                              |
+| ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `/project-init`                                              | once per repo, and after a big architecture change                |
+| `/sync-memory`                                               | start of a session on a team project                              |
+| `/breakdown <requirement>`                                   | a requirement or epic → estimated tasks on GitLab / Jira / GitHub |
+| `/feature <desc>` · `/ticket <id>`                           | a new capability · a tracker ticket                               |
+| `/fix-bug <symptom>`                                         | something broken, failing or slow                                 |
+| `/tdd`                                                       | build test-first from a plan task                                 |
+| `/brainstorming` → `/grill` → `/writing-plans`               | design before a complex feature                                   |
+| `/verify-done` · `/checkpoint`                               | before saying done · progress plus gates                          |
+| `/review-checklist` · `/blast-radius`                        | before the PR                                                     |
+| `/finish-branch`                                             | land or park the branch                                           |
+| `/ci-triage` · `/release-checklist` · `/incident`            | red build · release · outage                                      |
+| `/agent-architect` · `/agent-feature` · `/agent-verify-turn` | start · grow · prove an AI assistant                              |
+| `/compact` · `/compound`                                     | end of session · a lesson worth keeping                           |
+| `/btw <question>`                                            | a quick question without breaking the flow                        |

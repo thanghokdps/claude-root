@@ -10,7 +10,7 @@ when_to_use: prompt injection, agent threat model, "agent có an toàn không", 
 
 **Invoke:** `/ai:agent-security [scope: whole agent | <tool, source or client>]`
 
-Complements the built-in `/security-review` (code-level vulnerabilities in a diff). This skill asks what the *model* can be made to do.
+Complements the built-in `/security-review` (code-level vulnerabilities in a diff). This skill asks what the _model_ can be made to do.
 
 ---
 
@@ -19,7 +19,7 @@ Complements the built-in `/security-review` (code-level vulnerabilities in a dif
 List from the code:
 
 | Asset | Entry | Who controls the text | Reaches the model as | Can trigger |
-|---|---|---|---|---|
+| ----- | ----- | --------------------- | -------------------- | ----------- |
 
 Rows: user messages, client-sent conversation history (`RunAgentInput.messages` — earlier assistant and tool messages can be forged), headers the adapter forwards (`x-*`, client-controlled), write targets (where each id comes from: a trusted read in this thread, or model text), tool results (each upstream), shared client context, long-term memory, retrieved documents (per index, with who wrote them and the tenant filter that scopes them), file/image inputs (upload route, storage, extracted text — controls in `${CLAUDE_PLUGIN_ROOT}/skills/agent-frontend/references/attachments.md`), system prompt, chat-channel messages from others.
 
@@ -48,7 +48,7 @@ For each open or doubtful threat, a test or an eval case that attempts it: an in
 Map each control to evidence in the repo:
 
 | Control | Mechanism | Evidence (file, test, config) | Gap |
-|---|---|---|---|
+| ------- | --------- | ----------------------------- | --- |
 
 Typical rows: access control (verified identity, per-resource checks), change management (eval gate, pinned deps), confidentiality (masking, encryption at rest, retention), logging (masked traces, audit records of tool calls), incident response (kill switch per tool).
 

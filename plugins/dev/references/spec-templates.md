@@ -1,6 +1,7 @@
 # Spec artifact templates — read by /coordinator at Step 4b (high-risk lane only)
 
 `specs/<slug>/SUMMARY.md`
+
 ```markdown
 # Summary — <slug>
 
@@ -31,9 +32,9 @@ Input-type: <new spec | spec slice | change request | new initiative | maintenan
 
 ## Verify
 
-| Check | Command | Exit | Notes |
-|-------|---------|------|-------|
-| <unit/lint/build/behaviour> | `<command>` | 0 | |
+| Check                       | Command     | Exit | Notes |
+| --------------------------- | ----------- | ---- | ----- |
+| <unit/lint/build/behaviour> | `<command>` | 0    |       |
 
 ## Rollback
 
@@ -47,24 +48,25 @@ Input-type: <new spec | spec slice | change request | new initiative | maintenan
 ---
 
 `specs/<slug>/TEST_MATRIX.md`
+
 ```markdown
 # Test Matrix — <slug>
 
 ## Status values
 
-| Status | Meaning |
-|--------|---------|
-| planned | Accepted as intended, not yet implemented |
-| in_progress | Actively being built |
-| implemented | Implemented and proof exists |
-| changed | Contract changed after earlier implementation |
-| retired | No longer part of the contract |
+| Status      | Meaning                                       |
+| ----------- | --------------------------------------------- |
+| planned     | Accepted as intended, not yet implemented     |
+| in_progress | Actively being built                          |
+| implemented | Implemented and proof exists                  |
+| changed     | Contract changed after earlier implementation |
+| retired     | No longer part of the contract                |
 
 ## Matrix
 
-| Behavior | Contract | Unit | Integration | E2E | Status | Evidence |
-|----------|----------|------|-------------|-----|--------|----------|
-| <describe expected behavior> | yes | no | no | no | planned | none |
+| Behavior                     | Contract | Unit | Integration | E2E | Status  | Evidence |
+| ---------------------------- | -------- | ---- | ----------- | --- | ------- | -------- |
+| <describe expected behavior> | yes      | no   | no          | no  | planned | none     |
 
 ## Evidence rules
 
@@ -78,6 +80,7 @@ Input-type: <new spec | spec slice | change request | new initiative | maintenan
 ---
 
 `specs/<slug>/ESCALATIONS.md`
+
 ```markdown
 # Escalations — <slug>
 
@@ -108,10 +111,10 @@ E001
 
 **Agent responsibilities for specs files:**
 
-| Agent | SUMMARY.md | TEST_MATRIX.md | ESCALATIONS.md |
-|---|---|---|---|
-| Coordinator | Fill header (lane, confidence, flags) | Create skeleton rows | Create file (entries only if needed) |
-| Planner | Fill Rationale + Alternatives | Add planned rows | Add entry if direction is ambiguous |
-| Implementer / Debugger / Refactorer | Fill "What changed" + Verify table | Update status → `implemented`, add Evidence | Add entry if blocked |
-| Verifier | Confirm Verify table passes, add commit sha | Mark rows `implemented` | — |
-| Security Reviewer | Add findings to Verify table | — | Add entry if hard gate fires |
+| Agent                               | SUMMARY.md                                  | TEST_MATRIX.md                              | ESCALATIONS.md                       |
+| ----------------------------------- | ------------------------------------------- | ------------------------------------------- | ------------------------------------ |
+| Coordinator                         | Fill header (lane, confidence, flags)       | Create skeleton rows                        | Create file (entries only if needed) |
+| Planner                             | Fill Rationale + Alternatives               | Add planned rows                            | Add entry if direction is ambiguous  |
+| Implementer / Debugger / Refactorer | Fill "What changed" + Verify table          | Update status → `implemented`, add Evidence | Add entry if blocked                 |
+| Verifier                            | Confirm Verify table passes, add commit sha | Mark rows `implemented`                     | —                                    |
+| Security Reviewer                   | Add findings to Verify table                | —                                           | Add entry if hard gate fires         |

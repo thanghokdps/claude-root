@@ -10,10 +10,10 @@ Role pack for web UI: the `frontend-engineer` agent that `/feature`, `/ticket` a
 
 ## Skills
 
-| Skill | Use it when | Example prompt |
-|---|---|---|
+| Skill         | Use it when                                                                                                                                                                                                                                                    | Example prompt                                |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | `/ui-feature` | A page, form, dialog or screen in React with no design to match: feature folder, typed fetchers to the app's own backend, every state (loading, empty, error, optimistic rollback), accessibility, tokens, Testing Library tests, a browser check per viewport | "làm màn hình settings với form đổi mật khẩu" |
-| `/design-ui` | A page must match a Figma link, exported frames or a screenshot. Exports frames, maps variables to tokens, builds the design's components once as primitives, diffs screenshots at the frame size and narrow widths | "làm UI theo figma này" |
+| `/design-ui`  | A page must match a Figma link, exported frames or a screenshot. Exports frames, maps variables to tokens, builds the design's components once as primitives, diffs screenshots at the frame size and narrow widths                                            | "làm UI theo figma này"                       |
 
 ## Rules and references
 

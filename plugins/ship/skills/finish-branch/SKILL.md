@@ -44,12 +44,12 @@ Before opening a PR/MR:
 
 Ask through `AskUserQuestion` with these four options, the one that fits the branch first with `(Recommended)`:
 
-| Option | What happens |
-|--------|--------------|
-| **Open PR/MR** | If the `developers` plugin is enabled, hand off to `developers:create-mr` (it follows the project's commit/remote/base-branch conventions). Otherwise push, draft what / why / how tested, open via `gh pr create` or `glab mr create` |
-| **Merge locally** | Only if the user explicitly wants it and the base is not a protected branch |
-| **Keep** | Leave branch and worktree as they are; note the state in `specs/HANDOFF.md` |
-| **Discard** | Show exactly what will be lost, get an explicit yes, then delete |
+| Option            | What happens                                                                                                                                                                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Open PR/MR**    | If the `developers` plugin is enabled, hand off to `developers:create-mr` (it follows the project's commit/remote/base-branch conventions). Otherwise push, draft what / why / how tested, open via `gh pr create` or `glab mr create` |
+| **Merge locally** | Only if the user explicitly wants it and the base is not a protected branch                                                                                                                                                            |
+| **Keep**          | Leave branch and worktree as they are; note the state in `specs/HANDOFF.md`                                                                                                                                                            |
+| **Discard**       | Show exactly what will be lost, get an explicit yes, then delete                                                                                                                                                                       |
 
 ## Step 4 — Clean up (after the chosen action succeeds)
 

@@ -41,6 +41,7 @@ ls .claude/docs/index.md 2>/dev/null
 ```
 
 **If it exists** — load the knowledge base (do NOT scan the codebase):
+
 - Read `.claude/docs/architecture.md` → understand layers and data flow
 - Read `.claude/docs/conventions.md` → understand naming and patterns
 - Read `.claude/docs/entry-points.md` → understand API routes and handlers
@@ -79,21 +80,21 @@ Map the request to exactly one **Intent Category** and one **Lane**:
 
 ### Intent Categories
 
-| Category | Trigger keywords / patterns | Default Agent |
-|---|---|---|
-| `new-project` | "new project", "start from scratch", "bắt đầu dự án", "here is our PRD / ERD / ADR", an empty repo | `/kickoff` — collect the docs, grill the gaps, then hand off |
-| `ticket` | a ticket or issue id to implement: "/ticket 412", "làm ticket 412", "issue #87", several ids at once | `/ticket` — contract in `docs/tickets/<id>/`, one worktree and PR per ticket |
-| `new-feature` | "add", "build", "create", "implement", "new endpoint", "new page" | Planner → Implementer → Verifier |
-| `incident` | "prod down", "prod sập", outage, 5xx spike, data loss or leak, "postmortem" | `/incident` (ship, if installed) — mitigate first, then root cause, then the postmortem in `docs/incidents/` |
-| `bug-fix` | "fix", "broken", "error", "crash", "not working", "regression" | Debugger → Implementer → Verifier |
-| `refactor` | "refactor", "clean up", "reorganize", "rename", "simplify", "extract" | Refactorer → Verifier |
-| `code-review` | "review", "check", "audit", "look at", "what do you think of" | Reviewer |
-| `verify` | "verify", "confirm", "does this work", "test this", "validate" | Verifier |
-| `explore` | "where is", "how does", "explain", "find", "what calls", "understand" | Explorer |
-| `security` | "security", "vuln", "CVE", "injection", "XSS", "auth bypass", "pentest" | Security Reviewer |
-| `performance` | "slow", "optimize", "latency", "memory leak", "perf", "benchmark" | Performance Analyst |
-| `docs` | "document", "README", "docstring", "comment", "explain for others" | Doc Writer |
-| `question` | conversational, no action implied | Answer directly — no agent dispatch |
+| Category      | Trigger keywords / patterns                                                                          | Default Agent                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `new-project` | "new project", "start from scratch", "bắt đầu dự án", "here is our PRD / ERD / ADR", an empty repo   | `/kickoff` — collect the docs, grill the gaps, then hand off                                                 |
+| `ticket`      | a ticket or issue id to implement: "/ticket 412", "làm ticket 412", "issue #87", several ids at once | `/ticket` — contract in `docs/tickets/<id>/`, one worktree and PR per ticket                                 |
+| `new-feature` | "add", "build", "create", "implement", "new endpoint", "new page"                                    | Planner → Implementer → Verifier                                                                             |
+| `incident`    | "prod down", "prod sập", outage, 5xx spike, data loss or leak, "postmortem"                          | `/incident` (ship, if installed) — mitigate first, then root cause, then the postmortem in `docs/incidents/` |
+| `bug-fix`     | "fix", "broken", "error", "crash", "not working", "regression"                                       | Debugger → Implementer → Verifier                                                                            |
+| `refactor`    | "refactor", "clean up", "reorganize", "rename", "simplify", "extract"                                | Refactorer → Verifier                                                                                        |
+| `code-review` | "review", "check", "audit", "look at", "what do you think of"                                        | Reviewer                                                                                                     |
+| `verify`      | "verify", "confirm", "does this work", "test this", "validate"                                       | Verifier                                                                                                     |
+| `explore`     | "where is", "how does", "explain", "find", "what calls", "understand"                                | Explorer                                                                                                     |
+| `security`    | "security", "vuln", "CVE", "injection", "XSS", "auth bypass", "pentest"                              | Security Reviewer                                                                                            |
+| `performance` | "slow", "optimize", "latency", "memory leak", "perf", "benchmark"                                    | Performance Analyst                                                                                          |
+| `docs`        | "document", "README", "docstring", "comment", "explain for others"                                   | Doc Writer                                                                                                   |
+| `question`    | conversational, no action implied                                                                    | Answer directly — no agent dispatch                                                                          |
 
 If the intent is ambiguous between two categories, pick the one with **higher risk** and note the ambiguity.
 
@@ -101,10 +102,10 @@ Single-role work goes to that role pack's skill, in the lane the table below ass
 
 ### Lane Assignment
 
-| Lane | Criteria |
-|---|---|
-| `tiny` | Single file, no external contracts touched, reversible, <30 min effort |
-| `normal` | Multi-file, internal API changes, moderate complexity |
+| Lane        | Criteria                                                                                                                     |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `tiny`      | Single file, no external contracts touched, reversible, <30 min effort                                                       |
+| `normal`    | Multi-file, internal API changes, moderate complexity                                                                        |
 | `high-risk` | Auth, authorization, data migration, public contract change, payment, security, `.claude/settings.json`, hooks, multi-domain |
 
 **Hard gates → force `high-risk` regardless of scope:** authentication, authorization, data loss / migration, audit / security controls, external provider behavior, removing/weakening validation, touching `.claude/` config files.
@@ -147,11 +148,11 @@ For `tiny` lane with confidence ≥ 4: proceed immediately without asking.
 
 **Only `high-risk` lane creates specs artifacts.** Lighter lanes use built-in tools instead:
 
-| Lane | Planning artifact |
-|------|-------------------|
-| `tiny` | None — edit directly |
-| `normal` | Built-in plan mode (`EnterPlanMode`, or ask the user to press Shift+Tab) — the user approves the plan before code; no `specs/` files |
-| `high-risk` | `specs/<slug>/` below, then `/writing-plans` for PLAN.md |
+| Lane        | Planning artifact                                                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `tiny`      | None — edit directly                                                                                                                 |
+| `normal`    | Built-in plan mode (`EnterPlanMode`, or ask the user to press Shift+Tab) — the user approves the plan before code; no `specs/` files |
+| `high-risk` | `specs/<slug>/` below, then `/writing-plans` for PLAN.md                                                                             |
 
 **1. Generate the slug**
 Derive a short kebab-case slug from the request: 3–5 words max.
@@ -186,6 +187,7 @@ TaskCreate({ title: "Verifier: confirm fix and check regression",           stat
 ```
 
 **Lifecycle rules:**
+
 - Set task to `in_progress` immediately before dispatching that agent.
 - Set task to `completed` after the agent returns a satisfactory output.
 - If an agent fails or is retried, set its task back to `in_progress` and add a note in the description.
@@ -218,6 +220,7 @@ Status:
 ```
 
 **Model selection** (cost optimization):
+
 - Architecture decisions, plans, review → stay in this session (Opus); code from the plan → `sonnet` (`~/.claude/rules/model-cost.md`)
 - Mechanical tasks (tests, formatting, simple CRUD) → `haiku`
 
@@ -241,16 +244,19 @@ Print a sentence like `"T1.1 and T1.2 running in parallel. Updated pipeline stat
 ```
 
 Status cell format — use exactly these strings:
+
 - `✅ Done` — completed
 - `🔵 Running (sonnet)` or `🔵 Running (haiku)` — in progress, include model
 - `⬜ Waiting on T1.1` — blocked, name the dependency task(s)
 - `❌ Failed` — failed
 
 **Step 2 — Dispatch all same-wave tasks in ONE message:**
+
 ```
 Agent({ prompt: "<T1.1 full prompt>", run_in_background: true })
 Agent({ prompt: "<T1.2 full prompt>", run_in_background: true })
 ```
+
 Print: `"* Waiting for N background agents to finish"`
 
 **Step 3 — As each agent completes, narrate inline:**
@@ -263,6 +269,7 @@ Then if it unblocks the next task: `"T1.1 done ✅. Spawning T2.1 now (depends o
 Reprint the full table immediately after each agent returns — show the new state. Do not wait for the whole wave to finish before updating.
 
 **Step 5 — Wave completion check before advancing to Wave N+1:**
+
 - All Wave N tasks show ✅ Done in the table
 - No task returned a file conflict
 - SUMMARY.md Verify table updated
@@ -312,6 +319,7 @@ After all agents complete:
 ## Coordinator Rules
 
 ### Context loading
+
 - **Load `.claude/docs/` first.** If missing → prompt user to run `/project-init`.
 - **Load `~/.claude/docs/solutions/INDEX.md` and `.claude/docs/solutions/INDEX.md`** — read any critical-severity entries before dispatching.
 - **Pass project context explicitly** to every agent prompt. Agents inherit nothing.
@@ -321,15 +329,16 @@ After all agents complete:
 
 Before dispatching wave agents, check scale:
 
-| Signal | Route to |
-|--------|----------|
+| Signal                                                 | Route to                                            |
+| ------------------------------------------------------ | --------------------------------------------------- |
 | 10+ files changed independently OR codebase-wide scope | Dynamic workflow — trigger with `ultracode: <task>` |
-| Orchestration is worth saving and rerunning | Dynamic workflow |
-| < 8 files, one-off, results needed in context | In-context wave agents (default) |
+| Orchestration is worth saving and rerunning            | Dynamic workflow                                    |
+| < 8 files, one-off, results needed in context          | In-context wave agents (default)                    |
 
 If a dynamic workflow is warranted, tell the user: "This task is codebase-wide. I recommend running it as a dynamic workflow. Rephrasing with `ultracode:` trigger…"
 
 ### Dispatch rules
+
 - **Never implement yourself** outside the `tiny` lane, which edits directly. Classify, route, synthesize. Agents implement.
 - **Parallel tasks MUST be dispatched in ONE message** with `run_in_background: true` on each Agent call. Separate messages = sequential. Sequential when parallel is correct = wasted time.
 - **Sequential dispatch** only when: file overlap between tasks, explicit dependency, or scope needs clarification.
@@ -337,11 +346,13 @@ If a dynamic workflow is warranted, tell the user: "This task is codebase-wide. 
 - **Never advance to Wave N+1** until all Wave N tasks pass verification.
 
 ### Tracking
+
 - **Create tasks before dispatching** when `TaskCreate` exists (Step 4.5); end the run with `TaskList`.
 - **Always show status board** before starting and after each wave.
 - **`high-risk` lane: initialize specs/** before the first agent: SUMMARY.md, TEST_MATRIX.md, ESCALATIONS.md (Step 4b).
 
 ### Safety
+
 - **Never skip the Verifier** when code changes.
 - **Verifier reads SUMMARY.md Verify table** — not just its own checks.
 - **Escalate** before dispatch when: confidence ≤ 2, hard gate fires, unresolved ESCALATIONS.md entry. After dispatch, never ask: Verifier failing twice, a new hard gate or scope beyond the request goes through `/resolve-question` (debated, recorded under **Decided for you**).

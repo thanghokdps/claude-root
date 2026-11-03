@@ -39,6 +39,7 @@ Create `docs/tickets/<id>/` on a branch `<type>/<id>-<slug>` (never on `main`/`d
 3. `plan.md` — opens with two lines the commit and PR hooks read: `Risk: high` or `Risk: normal` (high = auth, data writes, migrations, external providers), and `Skills: /<skill>, …` naming the layer skill of every slice (plus `/agent-verify-turn` in an AI-assistant repo). Then the slices (`/feature` Stage 3 order), each with its files and its green check; waves where tasks are independent (`${CLAUDE_PLUGIN_ROOT}/references/wave-parallelism.md`). In an AI-assistant repo (detection in Step 3), write it by running `/agent-feature` Steps 1–4 (ai, if installed): the ADR fit check, the inventory and the slice table with its Runs-in and layer-skill columns go into `plan.md`, so Step 3 starts at its Step 5 instead of deciding the slices twice.
 
 Before `spec.md` is final, cross-check every criterion and fill its `## Cross-check` row:
+
 - Design: which frame or screenshot shows it, and which states (empty, loading, error) are drawn.
 - API: endpoint, params, the fields the screen needs against the response, auth, error format. Read the API spec file; call a dev server with GET only, if at all.
 - App today: the existing route, component or service it touches.

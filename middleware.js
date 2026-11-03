@@ -8,14 +8,23 @@ const digest = (text) => createHash("sha256").update(text).digest();
 
 export default function middleware(request) {
   const password = process.env.SITE_PASSWORD;
-  if (!password) return new Response("Site locked: SITE_PASSWORD is not set.", { status: 503 });
+  if (!password)
+    return new Response("Site locked: SITE_PASSWORD is not set.", {
+      status: 503,
+    });
 
-  const [scheme, encoded] = (request.headers.get("authorization") || "").split(" ");
+  const [scheme, encoded] = (request.headers.get("authorization") || "").split(
+    " ",
+  );
   if (scheme === "Basic" && encoded) {
     const credentials = Buffer.from(encoded, "base64").toString("utf8");
     const colon = credentials.indexOf(":");
     // Returning nothing lets the request through to the static file.
-    if (colon >= 0 && timingSafeEqual(digest(credentials.slice(colon + 1)), digest(password))) return;
+    if (
+      colon >= 0 &&
+      timingSafeEqual(digest(credentials.slice(colon + 1)), digest(password))
+    )
+      return;
   }
   return new Response("Authentication required.", {
     status: 401,

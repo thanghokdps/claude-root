@@ -32,6 +32,7 @@ Then run `bash ${CLAUDE_SKILL_DIR}/scripts/witness.sh`: the test, lint, build an
 ### Step 2 — Analyze changes
 
 Group changes by:
+
 - **Type**: feat | fix | refactor | test | docs | chore
 - **Module**: which layer or feature area was touched
 - **Impact**: what user-visible or system-visible behavior changed
@@ -41,6 +42,7 @@ Group changes by:
 **Title format**: `<type>(<scope>): <short description>` — max 72 characters.
 
 Examples:
+
 - `feat(auth): add JWT refresh token rotation`
 - `fix(upload): handle files larger than 10MB`
 - `refactor(user-service): extract repository pattern`
@@ -59,10 +61,10 @@ Examples:
 
 ## File changes
 
-| File | Action | Notes |
-|------|--------|-------|
+| File            | Action   | Notes        |
+| --------------- | -------- | ------------ |
 | path/to/file.py | modified | <brief note> |
-| path/to/new.py | added | |
+| path/to/new.py  | added    |              |
 
 ## Demonstration
 

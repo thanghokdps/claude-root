@@ -34,14 +34,17 @@ isolation: worktree
 ## Output format
 
 For each finding:
+
 ```markdown
 ### 🔴 MUST FIX — <short label>
+
 **File:** `src/path/to/file.ts:42`
 **Issue:** <what's wrong — be specific>
 **Fix:** <minimal fix>
 ```
 
 Severity:
+
 - `🔴 MUST FIX` — correctness bug or security issue
 - `🟡 SHOULD FIX` — likely problem, not definitely broken
 - `🔵 CONSIDER` — uncertain finding, stated as such
@@ -49,6 +52,7 @@ Severity:
 ## Instructions to caller
 
 Pass the git diff as context:
+
 ```bash
 git diff main...HEAD
 ```

@@ -24,6 +24,7 @@ Convert an approved design into a concrete, executable PLAN.md that any agent ca
 ### Step 1 — Read and internalize the design
 
 Read `specs/<slug>/design.md` and the relevant existing code. Understand:
+
 - What files need to change and why
 - What the layering/architecture constraints are
 - What tests already exist
@@ -31,6 +32,7 @@ Read `specs/<slug>/design.md` and the relevant existing code. Understand:
 ### Step 2 — Build the file map
 
 List every file to create, modify, or delete. For each:
+
 - Exact path (no globs)
 - Action: create | modify | delete
 - Layer: which architectural layer it belongs to
@@ -38,11 +40,13 @@ List every file to create, modify, or delete. For each:
 ### Step 3 — Break into atomic tasks
 
 Each task must be:
+
 - **Completable in 2–5 minutes** by a focused agent
 - **Independently verifiable** with a shell command
 - **Assigned to a wave** (same-wave tasks must have disjoint files)
 
 Follow the TDD pattern:
+
 1. Write failing test
 2. Verify it fails (`pytest ... --co` or run and expect failure)
 3. Implement minimal code
@@ -58,7 +62,7 @@ Save to `specs/<slug>/PLAN.md` following the format in `${CLAUDE_PLUGIN_ROOT}/re
 - Non-goals section
 - Success criteria (checkboxes)
 - File map table
-- Tasks in `\`\`\`xml` blocks with `<task id wave files action verify done>` structure
+- Tasks in `\`\`\`xml`blocks with`<task id wave files action verify done>` structure
 - Risks and mitigations
 - Status log with creation date
 

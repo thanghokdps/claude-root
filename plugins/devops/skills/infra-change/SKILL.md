@@ -16,12 +16,12 @@ Rules: `${CLAUDE_PLUGIN_ROOT}/rules/infra.md`, `security.md` from core. Hard gat
 
 ## Step 1 — Detect
 
-| Piece | Look for |
-|-------|----------|
-| Tool and layout | `*.tf` modules and environments (`envs/<env>/`, workspaces, `-var-file`), `k8s/` or `manifests/`, `Chart.yaml` + `values-<env>.yaml`, `kustomization.yaml` |
-| State and context | the Terraform backend and lock, kube contexts and namespaces per environment, Helm release names |
-| How changes land | applied by CI from the protected branch, or by hand; who may apply to production |
-| Existing resource | the module or manifest closest to what is asked, its naming and tags |
+| Piece             | Look for                                                                                                                                                   |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tool and layout   | `*.tf` modules and environments (`envs/<env>/`, workspaces, `-var-file`), `k8s/` or `manifests/`, `Chart.yaml` + `values-<env>.yaml`, `kustomization.yaml` |
+| State and context | the Terraform backend and lock, kube contexts and namespaces per environment, Helm release names                                                           |
+| How changes land  | applied by CI from the protected branch, or by hand; who may apply to production                                                                           |
+| Existing resource | the module or manifest closest to what is asked, its naming and tags                                                                                       |
 
 **Done when:** each row names a path, and the environments the change touches are listed with how each is applied.
 

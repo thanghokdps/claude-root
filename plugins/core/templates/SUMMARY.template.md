@@ -27,9 +27,9 @@ Input-type: new spec | spec slice | change request | new initiative | maintenanc
 
 ## Verify
 
-| Check | Command | Exit | Notes |
-|-------|---------|------|-------|
-| <unit/lint/build/behaviour> | `<command>` | 0 | |
+| Check                       | Command     | Exit | Notes |
+| --------------------------- | ----------- | ---- | ----- |
+| <unit/lint/build/behaviour> | `<command>` | 0    |       |
 
 ## Rollback
 

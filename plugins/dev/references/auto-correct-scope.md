@@ -17,6 +17,7 @@ Four rules governing when an agent can fix code autonomously vs. when human conf
 ## Rule 4 — Architectural judgment — NEVER auto-apply
 
 **Requires human confirmation.** Examples:
+
 - Schema or data model changes
 - Public API contract changes (adding/removing/renaming fields)
 - Security-sensitive logic (auth, authorization, encryption)

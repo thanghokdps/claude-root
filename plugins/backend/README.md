@@ -10,11 +10,11 @@ Role pack for the server side: the `backend-engineer` agent that `/feature`, `/t
 
 ## Skills
 
-| Skill | Use it when | Example prompt |
-|---|---|---|
-| `/api-endpoint` | A new or changed backend route: schema shared with the frontend, session auth, permission on the specific resource, thin handler, stable error codes, the 200/400/401/404 test matrix | "thêm API endpoint tạo đơn hàng" |
-| `/db-change` | A new table, column, index or relation, or a slow or leaking query (Drizzle, Prisma, Alembic). ERD and schema first, reviewed migration, owner-scoped repository functions, tests on a real engine | "query trả dữ liệu của user khác" |
-| `/api-client` | The backend must call a third party from its OpenAPI spec, docs or curl: typed client, credentials from env, timeouts, retries for idempotent reads only, webhooks, mocks | "tích hợp API thanh toán từ swagger này" |
+| Skill           | Use it when                                                                                                                                                                                        | Example prompt                           |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `/api-endpoint` | A new or changed backend route: schema shared with the frontend, session auth, permission on the specific resource, thin handler, stable error codes, the 200/400/401/404 test matrix              | "thêm API endpoint tạo đơn hàng"         |
+| `/db-change`    | A new table, column, index or relation, or a slow or leaking query (Drizzle, Prisma, Alembic). ERD and schema first, reviewed migration, owner-scoped repository functions, tests on a real engine | "query trả dữ liệu của user khác"        |
+| `/api-client`   | The backend must call a third party from its OpenAPI spec, docs or curl: typed client, credentials from env, timeouts, retries for idempotent reads only, webhooks, mocks                          | "tích hợp API thanh toán từ swagger này" |
 
 ## Rules
 

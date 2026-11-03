@@ -21,12 +21,12 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/design-ui/scripts/check-ui.py design/actual
 
 It prints a table, writes `design/actual/check-ui.json` and exits 1 on any finding. Verify each hit against the screenshot before fixing it. Known false positives — mark them `false positive: <reason>` in the list, do not "fix" them:
 
-| Rule | False positive |
-|------|----------------|
-| contrast | text over a gradient, image or `backdrop-filter` (listed under *skipped*, check by eye); text inside an SVG or canvas the dump cannot see; a logo or brand wordmark (WCAG exempts it) |
-| spacing | `margin: auto` resolves to px; a 1–2px hairline offset; a third-party widget's own padding |
-| target | a target whose 24px circle hits nothing nearby (the WCAG 2.5.8 spacing exception); a control with an equivalent larger one on the same view |
-| font-sizes | a state that embeds user content (rich text, markdown) at its own sizes |
+| Rule       | False positive                                                                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| contrast   | text over a gradient, image or `backdrop-filter` (listed under _skipped_, check by eye); text inside an SVG or canvas the dump cannot see; a logo or brand wordmark (WCAG exempts it) |
+| spacing    | `margin: auto` resolves to px; a 1–2px hairline offset; a third-party widget's own padding                                                                                            |
+| target     | a target whose 24px circle hits nothing nearby (the WCAG 2.5.8 spacing exception); a control with an equivalent larger one on the same view                                           |
+| font-sizes | a state that embeds user content (rich text, markdown) at its own sizes                                                                                                               |
 
 Fix order for real hits: the token first, then the primitive, then the screen.
 

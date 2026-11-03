@@ -4,11 +4,11 @@ Read by `/agent-tool` Step 0. Package names checked against vendor docs on 2026-
 
 ## 1. Take the source, make it one spec
 
-| The user gives | Do |
-|----------------|----|
-| OpenAPI 3.x / Swagger 2.0 (JSON or YAML) | Use it as is: `docs/api/<system>.openapi.{json,yaml}` |
+| The user gives                                      | Do                                                                                                              |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| OpenAPI 3.x / Swagger 2.0 (JSON or YAML)            | Use it as is: `docs/api/<system>.openapi.{json,yaml}`                                                           |
 | Postman collection, curl commands, HAR, a docs page | Write the **subset the P2 tasks use** as an OpenAPI file in the same place, then show it to the user to confirm |
-| An MCP server | Skip to § 5 and do not wrap it |
+| An MCP server                                       | Skip to § 5 and do not wrap it                                                                                  |
 
 - Never invent an endpoint, field, status code or auth scheme the source does not show. A gap becomes a question to the user, not a guess.
 - A real key or token in a pasted curl or collection: replace it with an env var name, tell the user it has been exposed and should be rotated, and never echo it back.
@@ -18,16 +18,16 @@ Read by `/agent-tool` Step 0. Package names checked against vendor docs on 2026-
 
 Fill this table in `docs/api/<system>.tools.md` before writing any code:
 
-| Method · path | Reads / writes | P2 task it serves | Tool | Decision | Auth |
-|---------------|----------------|-------------------|------|----------|------|
-| `GET /orders/{id}` | read | "where is my order 1234?" | `get_order` | tool | caller token |
-| `GET /orders` | read | same task, no id given | `get_order` | merged | caller token |
-| `POST /orders/{id}/cancel` | write | "cancel order 1234" | `cancel_order` | tool → `/agent-hitl` | caller token |
-| `DELETE /admin/orders` | write | none | — | **excluded** | — |
+| Method · path              | Reads / writes | P2 task it serves         | Tool           | Decision             | Auth         |
+| -------------------------- | -------------- | ------------------------- | -------------- | -------------------- | ------------ |
+| `GET /orders/{id}`         | read           | "where is my order 1234?" | `get_order`    | tool                 | caller token |
+| `GET /orders`              | read           | same task, no id given    | `get_order`    | merged               | caller token |
+| `POST /orders/{id}/cancel` | write          | "cancel order 1234"       | `cancel_order` | tool → `/agent-hitl` | caller token |
+| `DELETE /admin/orders`     | write          | none                      | —              | **excluded**         | —            |
 
 - **One tool per user task, not per endpoint.** Endpoints that answer one task (list + detail, search + get) are merged behind one tool with a clear input. Endpoints that no P2 task needs are excluded and listed as excluded, so the boundary is visible.
 - Every write row goes to `/agent-hitl`. Bulk and admin endpoints are excluded unless a P2 task and the ADR name them.
-- Path or query params that pick *whose* data (`{userId}`, `tenantId`, `accountId`) are filled from trusted context in the client, never from the tool schema.
+- Path or query params that pick _whose_ data (`{userId}`, `tenantId`, `accountId`) are filled from trusted context in the client, never from the tool schema.
 - More than ~10–15 tools for one agent → split by scope (`/agent-graph`), not a longer prompt.
 
 **Done when:** every endpoint in the source has a row and a decision, and the user has confirmed the table.
@@ -39,7 +39,7 @@ Run `/api-client` Step 3 for each system (backend, if installed; otherwise build
 What a tool needs on top of that client:
 
 - **Credential per call from the run's trusted context** (`runtime.context` from `contextSchema` — older `config.configurable` — Mastra `requestContext`, or `AsyncLocalStorage` set from them), through `client.use({ onRequest })`, never a module-level variable. Pass the run's abort signal, so a cancelled turn cancels the call.
-- **Auth mode per system**, recorded in the ADR's P3 line: *caller token* (the user's own token passed through: the upstream enforces permission) or *server credential* (a service key from env: the tool must check the caller's permission on the specific resource itself, before the call).
+- **Auth mode per system**, recorded in the ADR's P3 line: _caller token_ (the user's own token passed through: the upstream enforces permission) or _server credential_ (a service key from env: the tool must check the caller's permission on the specific resource itself, before the call).
 - **Errors the model can say**: `errors.ts` codes map to a short, deterministic user-facing message (401/403 → not allowed, 404 → not found, 409, 422, 429, 5xx), never a raw upstream body.
 - **Mappers trim for the model**: only the fields the task needs, lists capped (first N + total + "ask to narrow"), no raw HTML or blobs. Follow the API's own pagination; never loop over all pages inside one tool call.
 

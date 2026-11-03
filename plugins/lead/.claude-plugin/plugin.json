@@ -7,11 +7,6 @@
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
   "description": "Improve the process: weekly retro, session diagnosis, authoring skills.",
-  "keywords": [
-    "retro",
-    "process"
-  ],
-  "dependencies": [
-    "core"
-  ]
+  "keywords": ["retro", "process"],
+  "dependencies": ["core"]
 }

@@ -1,0 +1,9 @@
+# Eval fixture repos are test inputs: their bytes are what the graders expect.
+plugins/*/evals/**/repo/
+plugins/*/evals/**/fixtures/
+# Filled by init.sh text substitution: Prettier turns `{{X}}` in frontmatter into `{ { X } }`.
+plugins/core/memory/templates/
+package-lock.json
+.pytest_cache/
+# Rendered by super-board's visual.py (scripts/skill-map.py), not edited by hand.
+docs/skill-map.html

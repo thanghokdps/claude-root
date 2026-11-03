@@ -51,9 +51,9 @@ AG-UI ≥ 1.0 user and tool content is `string | ContentPart[]`: `{ type: "text"
 
 One server function (`server/attachments/to-model-parts.ts`) turns each `attachment://<id>` part into the framework's part after the owner check. Capture the run input once with `/agent-verify-turn` to see what the AG-UI adapter (`@ag-ui/langgraph`, `@ag-ui/mastra`) actually hands the agent — convert there, not in prompts.
 
-| Framework | Image | Document |
-|---|---|---|
-| Mastra | `{ type: "image", image, mimeType }` | `{ type: "file", data, mimeType }` |
+| Framework      | Image                                                | Document                                                                           |
+| -------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Mastra         | `{ type: "image", image, mimeType }`                 | `{ type: "file", data, mimeType }`                                                 |
 | LangChainJS v1 | `{ type: "image", url \| data \| fileId, mimeType }` | `{ type: "file", url \| data \| fileId, mimeType }` (+ `filename` for OpenAI PDFs) |
 
 - `image` / `data` / `url` must be absolute: Mastra replaces a relative path (`/api/images/x.png`) with a placeholder and logs a warning instead of failing. Use base64 from storage or a signed URL that expires in minutes; never a URL the user typed — the model provider or the framework fetches it (SSRF and exfiltration).

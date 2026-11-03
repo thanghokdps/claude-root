@@ -13,6 +13,7 @@ Bootstrap a complete `.claude/` workspace for the current project.
 **Run once per project.** Re-run only when the architecture changes significantly.
 
 Final output:
+
 ```
 .claude/
   docs/           ← 6 knowledge-base files (written by Claude)
@@ -49,6 +50,7 @@ bash "$INIT_SCRIPT" "$(pwd)"
 ```
 
 `init.sh` will:
+
 - Detect tech stack (Node/TS/Python/Go/Rust/Java + frameworks/libs)
 - Copy universal rules: `git.md`, `testing.md`, `orchestration.md`, `memory.md`
 - Copy stack-specific rules: `typescript.md`, `python.md`, `react.md`, `nextjs.md`, etc.
@@ -91,6 +93,7 @@ git log --since="12 months ago" --no-merges --name-only --format= | grep -v '^$'
 Read: entry points, main config, core models, test setup, CI config, and the top hotspots.
 
 Identify and note:
+
 - Language + framework + versions
 - Package manager + build system
 - Test framework + exact commands
@@ -108,6 +111,7 @@ All 6 files must use real file paths, real commands, real names — no boilerpla
 If the project has a kickoff doc set, written by `/kickoff` (plan, if installed) (`docs/kickoff.md` and the files it lists: `docs/requirements.md`, `docs/stack.md`, `docs/erd.md`, `docs/adr/*`), it is the source of truth for intent and decisions. `architecture.md` and `stack.md` link to it and add only what the code shows; `index.md` lists it first and carries its Open risks. Where the code and the doc set disagree, write both down in `index.md` rather than picking one.
 
 ### `docs/architecture.md`
+
 - What this system does, for whom
 - Module/layer table: `| path | responsibility |`
 - Key architectural decisions (why, not just what)
@@ -116,6 +120,7 @@ If the project has a kickoff doc set, written by `/kickoff` (plan, if installed)
 - Hotspots: the top 10 from Step 2, one line each on what the file holds
 
 ### `docs/conventions.md`
+
 - Naming rules (files, classes, functions, constants)
 - File structure pattern per feature
 - Import ordering rules
@@ -123,12 +128,14 @@ If the project has a kickoff doc set, written by `/kickoff` (plan, if installed)
 - Pre-commit checklist
 
 ### `docs/stack.md`
+
 - Runtime + framework + exact versions
 - Key dependencies table
 - Dev tools (linter, formatter, test runner, type checker)
 - Exact commands: dev server, test (unit / integration / single file), lint, type-check, build, deploy
 
 ### `docs/entry-points.md`
+
 - Application start (main file + boot sequence)
 - Routes / screens / navigation structure
 - Background jobs / workers / cron
@@ -136,6 +143,7 @@ If the project has a kickoff doc set, written by `/kickoff` (plan, if installed)
 - External event handlers / webhooks
 
 ### `docs/test-strategy.md`
+
 - **Test location** — detected, not assumed: count where existing tests live (`git ls-files | grep -cE '/__tests__/'`, `grep -cE '^tests?/'`, and `*.test.*`/`test_*.py` outside both) and read the runner's `include`/`testMatch`. Record the dominant layout as the rule for new tests. No tests yet → ask the user to pick `__tests__/` next to the code or a separate `tests/` folder outside `src/` (options per `rules/testing.md` § Where tests live) and record the answer.
 - Test folder structure
 - Test commands (fast subset, full suite, pattern filter)
@@ -144,6 +152,7 @@ If the project has a kickoff doc set, written by `/kickoff` (plan, if installed)
 - Conventions: co-location, naming, fixtures, mocking policy
 
 ### `docs/index.md`
+
 - Table of contents linking the 5 docs above
 - Quick orientation Q&A (3–5 questions a new agent would ask)
 - Known constraints agents must respect (e.g. "never raw SQL", "use pnpm only")
@@ -155,6 +164,7 @@ If the project has a kickoff doc set, written by `/kickoff` (plan, if installed)
 `init.sh` copied generic agent templates. Now fill in project-specific values in each agent file.
 
 For each agent in `.claude/agents/`:
+
 - Replace placeholder stack info with actual: language, framework, test command, lint command, type-check command
 - Replace placeholder commit format with this project's actual format (from `docs/conventions.md`)
 - Add project-specific constraints from `docs/index.md`
@@ -162,6 +172,7 @@ For each agent in `.claude/agents/`:
 Key agents to adapt:
 
 **`agents/implementer.md`** — fill in:
+
 ```
 Stack: <language> / <framework>
 Test:  <exact test command>
@@ -171,6 +182,7 @@ Commit format: <type>: <description>
 ```
 
 **`agents/reviewer.md`** — fill in:
+
 ```
 Stack: <language> / <framework>
 Conventions: see .claude/docs/conventions.md
@@ -178,6 +190,7 @@ Key anti-patterns: <from docs/conventions.md>
 ```
 
 **`agents/verifier.md`** — fill in:
+
 ```
 Full test suite: <exact command>
 Lint: <exact command>
@@ -187,6 +200,7 @@ Type check: <exact command>
 **`agents/qa.md`**, **`agents/architect.md`**, **`agents/pm-agent.md`** — add project context (stack, key dirs, entry points).
 
 Add project-specific agents if warranted:
+
 - Monorepo → `agents/package-publisher.md`
 - Database → `agents/migration-runner.md`
 - CI/CD pipeline → `agents/release-agent.md`
@@ -198,12 +212,13 @@ Add project-specific agents if warranted:
 `init.sh` copied generic templates. Replace placeholder commands with project-specific ones.
 
 **`templates/SUMMARY.template.md`** — update the Verify table:
+
 ```markdown
-| Check | Command | Exit |
-|-------|---------|------|
-| Lint  | `<real lint command>`       | 0 |
-| Types | `<real typecheck command>`  | 0 |
-| Tests | `<real test command>`       | 0 |
+| Check | Command                    | Exit |
+| ----- | -------------------------- | ---- |
+| Lint  | `<real lint command>`      | 0    |
+| Types | `<real typecheck command>` | 0    |
+| Tests | `<real test command>`      | 0    |
 ```
 
 **`templates/TEST_MATRIX.template.md`** — update column headers to match what test types this project actually has (unit / integration / e2e / eval — only the ones that exist).
@@ -224,15 +239,19 @@ Distill this project's actual conventions into imperative rules:
 # Project Conventions
 
 ## Layer boundaries
+
 - <which layer calls which — enforce strictly>
 
 ## Forbidden patterns
+
 - <anti-pattern>: use <correct pattern> instead
 
 ## Required patterns
+
 - <pattern all code must follow>
 
 ## Before every commit
+
 - [ ] <check 1>
 - [ ] <check 2>
 ```
@@ -260,6 +279,7 @@ description: Lightweight single-task workflow for small fixes and chores.
 For small fixes, chores, single-file changes.
 
 ## Steps
+
 1. TaskCreate: describe what needs to be done
 2. Read .claude/docs/conventions.md
 3. Implement the minimal change
@@ -269,6 +289,7 @@ For small fixes, chores, single-file changes.
 ```
 
 Add more skills if the project's workflow warrants it:
+
 - Team uses a ticket system → no project skill: `/ticket` (dev, if installed) writes each ticket's contract to `docs/tickets/<id>/`
 - Has staging deploys → `skills/deploy/SKILL.md`
 - Has DB migrations → `skills/migrate/SKILL.md`
@@ -289,8 +310,8 @@ Add more skills if the project's workflow warrants it:
 
 **All agents MUST read `.claude/docs/index.md` before scanning any source file.**
 
-| Doc | Contents |
-|-----|----------|
+| Doc                             | Contents                            |
+| ------------------------------- | ----------------------------------- |
 | `.claude/docs/architecture.md`  | <one-line specific to THIS project> |
 | `.claude/docs/conventions.md`   | <one-line specific to THIS project> |
 | `.claude/docs/stack.md`         | <one-line specific to THIS project> |

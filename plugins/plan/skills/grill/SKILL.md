@@ -37,13 +37,13 @@ Getting this backwards is the main failure mode: asking "what test framework doe
 
 Identify what is being grilled:
 
-| Input | Where to look |
-|-------|---------------|
-| A file path | Read that file — grill its contents, not the path string |
-| Explicit text in the invocation | Use it directly |
-| "this plan" / "the design" | `specs/<slug>/design.md`, then `specs/<slug>/PLAN.md` |
-| Nothing given | Most recently modified `specs/*/design.md` or `specs/*/PLAN.md` |
-| Still nothing | Ask **one** question: "What am I grilling?" — then stop |
+| Input                           | Where to look                                                   |
+| ------------------------------- | --------------------------------------------------------------- |
+| A file path                     | Read that file — grill its contents, not the path string        |
+| Explicit text in the invocation | Use it directly                                                 |
+| "this plan" / "the design"      | `specs/<slug>/design.md`, then `specs/<slug>/PLAN.md`           |
+| Nothing given                   | Most recently modified `specs/*/design.md` or `specs/*/PLAN.md` |
+| Still nothing                   | Ask **one** question: "What am I grilling?" — then stop         |
 
 Read `.claude/docs/index.md` if it exists — architecture, conventions, and stack are facts, so they come from there rather than from a question.
 
@@ -80,18 +80,18 @@ One question per turn. Three at once buys one real answer and two shrugs.
 
 Cycle through these categories as the tree demands:
 
-| Category | The question underneath it |
-|----------|---------------------------|
-| Scope | What is explicitly NOT in this? |
-| Assumption | What must be true for this to work, that nobody has verified? |
-| Dependency | What has to land first? What breaks if it doesn't? |
-| Failure mode | What happens when this fails halfway? |
-| Rejected alternatives | What was considered and dropped, and why? |
-| Success criteria | How do we know it worked — what command proves it? |
-| Reversibility | How do we undo this after it ships? |
-| Ownership | Who runs it, who gets paged, who maintains it? |
-| Data | What happens to existing rows/records/state? |
-| Boundary | What's the behaviour at 0, at 1, at max, at concurrent? |
+| Category              | The question underneath it                                    |
+| --------------------- | ------------------------------------------------------------- |
+| Scope                 | What is explicitly NOT in this?                               |
+| Assumption            | What must be true for this to work, that nobody has verified? |
+| Dependency            | What has to land first? What breaks if it doesn't?            |
+| Failure mode          | What happens when this fails halfway?                         |
+| Rejected alternatives | What was considered and dropped, and why?                     |
+| Success criteria      | How do we know it worked — what command proves it?            |
+| Reversibility         | How do we undo this after it ships?                           |
+| Ownership             | Who runs it, who gets paged, who maintains it?                |
+| Data                  | What happens to existing rows/records/state?                  |
+| Boundary              | What's the behaviour at 0, at 1, at max, at concurrent?       |
 
 **Hard-gate sweep.** Before closing, confirm the target has been questioned against every gate it touches: `auth · authorization · data-loss/migration · audit/security · external provider · public contract · weakening validation · high-blast file`. A gate the plan touches but never mentions is an unstated assumption, and it forces the `high-risk` lane.
 
@@ -116,24 +116,30 @@ Output:
 ## Grill summary — <target>
 
 ### Decisions made
-| # | Decision | Rationale |
-|---|----------|-----------|
-| D1 | <what was chosen> | <why> |
+
+| #   | Decision          | Rationale |
+| --- | ----------------- | --------- |
+| D1  | <what was chosen> | <why>     |
 
 ### Assumptions now explicit
+
 - <assumption> — verified: yes/no
 
 ### Deferred (with risk accepted)
-| # | Question | Deferred because | Risk if wrong |
-|---|----------|------------------|---------------|
+
+| #   | Question | Deferred because | Risk if wrong |
+| --- | -------- | ---------------- | ------------- |
 
 ### Still open — blocks implementation
+
 - <anything unresolved that must not be built around>
 
 ### Recommended plan changes
+
 - <concrete edit to design.md / PLAN.md>
 
 ### Lane impact
+
 - <unchanged, or: hard gate <name> surfaced → lane forced to high-risk>
 ```
 
@@ -141,13 +147,13 @@ Then ask: **"Write these back into `specs/<slug>/`?"**
 
 On a yes, and only on a yes:
 
-| Section | Destination |
-|---------|-------------|
-| Decisions made | `design.md` (or `PLAN.md` if that was the target) |
-| Assumptions now explicit | `design.md` → `## Open questions` for the unverified ones |
-| Deferred (with risk accepted) | `SUMMARY.md` → `## Deviations` |
-| Still open — blocks implementation | `ESCALATIONS.md`, one entry each, `decision: pending` |
-| Lane impact | `SUMMARY.md` → Lane field |
+| Section                            | Destination                                               |
+| ---------------------------------- | --------------------------------------------------------- |
+| Decisions made                     | `design.md` (or `PLAN.md` if that was the target)         |
+| Assumptions now explicit           | `design.md` → `## Open questions` for the unverified ones |
+| Deferred (with risk accepted)      | `SUMMARY.md` → `## Deviations`                            |
+| Still open — blocks implementation | `ESCALATIONS.md`, one entry each, `decision: pending`     |
+| Lane impact                        | `SUMMARY.md` → Lane field                                 |
 
 `ESCALATIONS.md` defaults to deny-on-no-response, so anything written there blocks dispatch until a human resolves it. That is the point: an unresolved grill finding stops the build instead of being remembered.
 
@@ -173,7 +179,7 @@ A grill leaves nothing on disk unless asked.
 
 ## Hard gates
 
-- **Stay in interview mode** — the grill produces questions, a summary, and (on request) spec edits. Implementation waits for the user to confirm shared understanding *and* explicitly ask you to build.
+- **Stay in interview mode** — the grill produces questions, a summary, and (on request) spec edits. Implementation waits for the user to confirm shared understanding _and_ explicitly ask you to build.
 - **A plan that looks fine is a plan whose assumptions you have not found yet.** Run the full tree even when nothing looks wrong.
 - **One question per turn**, every turn.
 - **Locked decisions stay locked.** If the user already chose and gave a reason, it is closed.
