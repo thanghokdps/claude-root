@@ -72,12 +72,21 @@ done
 # their stack or domain (frontend: react/next/vue/svelte; backend: a server framework, an ORM, go or rust;
 # mobile: react-native / expo / eas.json; devops: Dockerfile, compose, CI workflow, *.tf, k8s/, Chart.yaml;
 # ai: @langchain/@copilotkit/@mastra/langgraph; workplace: a `Domain: workplace` line or HR module folders),
-# so other repos don't carry their skills.
-for p in frontend backend mobile devops ai workplace; do
-  out=$(claude plugin disable "$p@harness" --scope user 2>&1) || true
-  case "$out" in *Failed*) echo "  WARN $p stays on at user scope — $(printf '%s' "$out" | head -1)" ;; esac
+# so other repos don't carry their skills. A dependent goes first: `plugin disable` refuses a plugin that an
+# enabled plugin still requires, and ai requires frontend and backend.
+PACKS="ai frontend backend mobile devops workplace"
+STAYED_ON=""
+for p in $PACKS; do
+  out=$(claude plugin disable "$p@harness" --scope user 2>&1) && continue
+  case "$out" in *"already disabled"*) continue ;; esac
+  echo "  WARN $p stays on at user scope — $(printf '%s' "$out" | head -1)"
+  STAYED_ON="$STAYED_ON $p"
 done
-echo "  packs off at user scope (enabled per repo by repo-profile): frontend backend mobile devops ai workplace"
+if [ -n "$STAYED_ON" ]; then
+  echo "  packs NOT all off: still on at user scope, loaded in every repo:$STAYED_ON"
+else
+  echo "  packs off at user scope (enabled per repo by repo-profile): $PACKS"
+fi
 echo "  plugins: $(for f in "$KIT"/plugins/*/.claude-plugin/plugin.json; do
   python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(f\"{d['name']} {d['version']}\", end=' ')" "$f"; done)"
 
