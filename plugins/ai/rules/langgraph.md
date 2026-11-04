@@ -39,7 +39,7 @@ return { messages: [...state.messages, aiResponse] }; // duplicates history
 ## Graph lifecycle
 
 - Compile once at module level with its dependencies; invoke many times. Never compile or build a checkpointer per request.
-- Pass per-run limits at invoke time: `recursionLimit`, timeout, abort `signal`.
+- Pass per-run limits at invoke time: `recursionLimit`, timeout, abort `signal`. Size `recursionLimit` from the graph, never from the default: `createAgent` runs every middleware hook (`beforeAgent`, `beforeModel`, `afterModel`, `afterAgent`) as its own node, so one model → tools → model round costs the model and tools nodes plus every hook between them in super-steps — about 10 per round with six middleware on a shape A app (measured 2026-11-04: a limit of 20 ended the first two-tool turn in `RUN_ERROR` while typecheck, lint and tests stayed green). Count the nodes in `docs/graph.md` (`pnpm graph`), set `recursionLimit ≥ nodes per round × (max tool rounds + 1)`, write the count beside the number, and prove it with a turn that calls two tools (`/agent-verify-turn` variation).
 - `GraphRecursionError` and timeouts end as a readable assistant turn, never a 500.
 - An agent that loops model → tools counts its tool rounds; at the cap it gets one last turn told to answer with what it has, and that turn ends the loop whatever it returns, so a model that keeps calling tools ends with an answer instead of the recursion limit.
 - Nodes that route, prepare or summarise must not stream into the chat: tag them `nostream` / disable message emission.

@@ -51,3 +51,7 @@ import { useChat } from "@ai-sdk/react";
 // CORRECT
 import { useCoAgent } from "@copilotkit/react-core";
 ```
+
+## Server and client render the same
+
+- A value computed on both sides from `Intl` / `toLocaleDateString`, `Date.now`, `Math.random` or float math (`Math.cos` in SVG coordinates) differs between Node and the browser — Node's ICU writes `Th 2` where Chrome writes `Thứ 2`, and the last decimal of a float differs — and hydration fails. Weekday and month names come from one table in the code, floats are rounded before they reach markup, anything else renders client-only (`useEffect`, or `dynamic(…, { ssr: false })`). The browser check reads the console for `Hydration` errors.
