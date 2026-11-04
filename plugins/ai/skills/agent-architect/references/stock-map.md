@@ -50,7 +50,7 @@ Verified against vendor source on 2026-10-23 (langchain 1.5.19, @langchain/langg
 
 ## Frontend (`@copilotkit/react-core/v2`)
 
-`CopilotKit` · `CopilotChat` · `useAgent` · `useAgentContext` · `useFrontendTool` · `useRenderTool` · `useHumanInTheLoop` · `useInterrupt` · `useConfigureSuggestions` · `useThreads` · `useCopilotKit` (`setHeaders`) · `useAttachments` (also `CopilotChat`'s `attachments` prop; v1 `imageUploadsEnabled` is gone).
+`CopilotKit` · `CopilotChat` · `useAgent` · `useAgentContext` · `useFrontendTool` · `useRenderTool` · `useHumanInTheLoop` · `useInterrupt` · `useConfigureSuggestions` · `useThreads` (only with Intelligence; otherwise `rules/chat-threads.md`) · `useCopilotKit` (`setHeaders`) · `useAttachments` (also `CopilotChat`'s `attachments` prop; v1 `imageUploadsEnabled` is gone).
 
 Other clients: `@copilotkit/react-native` (same v2 hooks on mobile), Vue and Angular packages, and chat channels (`@copilotkit/channels` + `channels-slack` / `-teams` / `-discord` / `-whatsapp`) — confirm flow in `/agent-hitl` Step 4.
 

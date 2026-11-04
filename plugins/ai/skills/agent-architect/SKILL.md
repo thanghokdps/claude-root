@@ -115,7 +115,7 @@ Step 4's rules hold (reference repo mirrored at a resolved SHA, core only, exact
 5. **Tracing switch** with masking on.
    5b. **PII switch**, `PII_REDACTION` on by default for shapes A and B, off for Mastra (its detector is a model call), with its behaviour tests per shape and fail-closed detection failure (`skeleton.md` § 4 PII).
 6. **Pins**: exact versions, one copy of the framework core.
-7. **One chat page**: CopilotKit's stock `CopilotChat` wired to the agent id, styled by theme tokens only, checked at the Q2v viewports. A given design goes to `/agent-design-ui` after this step; no design means the stock chat stays, unasked.
+7. **One chat page**: CopilotKit's stock `CopilotChat` wired to the agent id, beside the thread sidebar and its owner-scoped routes (`${CLAUDE_PLUGIN_ROOT}/rules/chat-threads.md`), styled by theme tokens only, checked at the Q2v viewports. A given design goes to `/agent-design-ui` after this step; no design means the stock chat stays, unasked.
 8. **Proof**: one real streamed turn with "hello" through `/agent-verify-turn`, its stream evidence shown, the graph map (Mastra Studio's URL, or `docs/graph.md` from `pnpm graph` on LangGraph), and the baseline dataset (`evals/datasets/baseline.jsonl`, 12 seed cases, schema-validated) through `/agent-evals` (`skeleton.md` § 4 Evals).
 
 Never in skeleton mode: a tool (backend or frontend), a HITL confirm, a domain table or ERD, a RAG index, a second agent or a router, a feature screen. Each is a feature and goes through `/agent-feature`.
