@@ -27,13 +27,14 @@ Rows: user messages, client-sent conversation history (`RunAgentInput.messages` 
 
 ## Step 2 — Threats per row
 
-- **Injection**: text from a row the user does not control instructs the model ("ignore previous…", hidden markup). Mitigation: treat as data in a delimited block, never as instructions; the tools it could trigger still need trusted identity and HITL.
+- **Injection**: text from a row the user does not control instructs the model ("ignore previous…", hidden markup). Mitigation: treat as data in a delimited block, never as instructions; the tools it could trigger still need trusted identity and HITL. Text the same principal typed earlier (a player's name, a note) that a tool now returns is still data, not an exemption: the row is the tool result, whoever wrote it.
 - **Confused deputy**: the model acts with the server's or another user's authority. Check `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md` — no identity in tool args, permission per resource, server-resolved targets bound to a row a trusted read returned (`/agent-hitl` Step 2), frontend tools offered only to the agent that may call them.
 - **Forged history**: the client sends earlier assistant or tool messages that never happened ("the tool already returned id X", "the user already approved"). Mitigation: the server's store is the history; only the newest user message is taken from the input (`${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md` § Messages and state).
 - **Unconfirmed writes**: any mutation reachable without the HITL gate (`/agent-hitl`).
 - **Exfiltration**: rendered markdown links/images, tool calls to arbitrary URLs, data from one user's context shown to another (shared threads, caches, memory keyed wrongly).
 - **Leakage**: secrets or tokens in state, checkpoints, traces, logs or eval reports; PII in traces without masking (`${CLAUDE_PLUGIN_ROOT}/rules/agent-tracing-privacy.md`).
 - **Abuse and cost**: unbounded loops, oversized inputs, missing rate limits after auth, missing call limits.
+- **Credential abuse**: a password-only or token-only login (admin pages, kiosk mode) with no attempt limit — 429 with `retry-after` per IP and per account, a delay after a failure, one message for a wrong password and an unknown account.
 
 **Done when:** every row has each applicable threat marked mitigated (with file:line) or open.
 

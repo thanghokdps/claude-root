@@ -76,7 +76,7 @@ Then the widths no frame covers: shoot every state at the smallest supported wid
 
 ## Step 6 — Quality floor and taste
 
-Matching the design is not the same as good UI: a frame can carry low contrast or a cramped target. Follow `${CLAUDE_PLUGIN_ROOT}/references/taste.md`: create `DESIGN.md` / `PRODUCT.md` if missing, run `dump-ui-styles.js` per state and `python3 ${CLAUDE_SKILL_DIR}/scripts/check-ui.py`, then dispatch the taste reviewer with only the screenshots and those two files. A detector hit the frame itself carries (the designer's grey text) is shown to the user as a choice — match the frame or meet the floor — never silently changed.
+Matching the design is not the same as good UI: a frame can carry low contrast or a cramped target. Follow `${CLAUDE_PLUGIN_ROOT}/references/taste.md`: create `DESIGN.md` / `PRODUCT.md` if missing, run `dump-ui-styles.js` per state and `python3 ${CLAUDE_SKILL_DIR}/scripts/check-ui.py`, run the axe pass, then dispatch the taste reviewer with only the screenshots and those two files. A detector hit the frame itself carries (the designer's grey text) is shown to the user as a choice — match the frame or meet the floor — never silently changed.
 
 **Done when:** `check-ui.py` exits 0 or each remaining hit is a listed false positive or a user decision, no P0/P1 taste finding is open without the user's acceptance, and both lists are in `ui-map.md` and the reply.
 

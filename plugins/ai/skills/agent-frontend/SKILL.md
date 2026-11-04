@@ -34,13 +34,15 @@ Read the provider, the agent id constant, and the existing tool renderers. Confi
 ## Step 3 — Context, tools and renderers
 
 - `useAgentContext({ description, value })`: value under a named key, memoised on its inputs — a fresh object each render re-registers forever. Context is display-only, never authorisation. Send only what the agent needs (ids and short labels, not whole lists); the server caps and replaces it per `${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md` § Messages and state.
+- A store the cards read through `useSyncExternalStore` returns the same object for the same state (one shared `IDLE` constant, cached snapshots): a `getSnapshot` that builds a new object per call re-renders forever (`Maximum update depth exceeded`) and the card never shows.
 - Thread sidebar, restoring a thread's history, new chat and delete: `${CLAUDE_PLUGIN_ROOT}/rules/chat-threads.md`. Stock `useThreads` without Intelligence lists from memory only.
 - Disable the send button while a run is in flight and re-join it after reload (`connect`); a second send on the same thread is not a parallel run.
 - Backend tool observed in the UI → `useRenderTool` with the shared tool-name constant; on completion invalidate the affected queries, not patch from the payload; parse the result with a tolerant Zod schema and render a fallback when it does not parse.
 - Side effects keyed by `toolCallId` in a ref that lives above the re-created component, so remounts do not re-trigger them.
 - Browser-side tools → `useFrontendTool`, registered only for the agent that may call them. Agent or frontend: the table "Where a tool lives" in `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md` decides; data, identity and writes stay in agent tools.
 - Clarifying questions may use `useHumanInTheLoop`; mutation confirmations come from the backend gate (`/agent-hitl`) and render with `useInterrupt` (scoped by `agentId`), which resumes the run through `resume[]`.
-- Suggestions from the backend endpoint (`useConfigureSuggestions`), never inventing chips for tools that do not exist.
+- Suggestions from the backend endpoint (`useConfigureSuggestions`), never inventing chips for tools that do not exist; called outside `CopilotChat`'s own provider it falls back to the agent `default` (console: `Agent default not found`) — pass the agent id (`consumerAgentId`; confirm the option name in the installed `react-core` `.d.ts`).
+- Every string the chat renders by default — `CopilotChat`'s `labels` (placeholder, send, stop, the disclaimer `chatDisclaimerText`, error lines; the full set is the `labels` type in the installed package) — is set in each language the app supports, and a prompt that names a button names it as the client shows it in that language.
 - File or image attachments: follow `${CLAUDE_SKILL_DIR}/references/attachments.md` end to end — `onUpload` to your own route (never base64 inline), server-side type and size checks, owner-scoped storage, one server function building the multimodal parts, extracted text as untrusted data, delete with the thread.
 
 **Done when:** component tests cover each renderer's success, failure and unparsable result, mocking the agent hooks.
@@ -50,4 +52,4 @@ Read the provider, the agent id constant, and the existing tool renderers. Confi
 - E2E with recorded streams: `@copilotkit/aimock` (`AGUIMock`) record once against the real agent, replay in CI.
 - For a live bug: reproduce in the running app (Playwright MCP or the browser), capture the AG-UI events with `/agent-verify-turn`, and fix the layer that is wrong — backend first if the stream is wrong, client if the stream is right.
 
-**Done when:** the e2e (or the live reproduction) passes on the fixed build, with a screenshot or event log as evidence.
+**Done when:** the e2e (or the live reproduction) passes on the fixed build, and one real turn ran in the running app at every ADR viewport with a clean console — a render loop, a chat on the library's theme root or a hook outside its provider shows only there — with a screenshot or event log as evidence.

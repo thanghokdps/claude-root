@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Seeds a Next.js skeleton plus a design folder (login.png 8x8 + login.md) to match.
+# Seeds a Next.js skeleton plus a design folder (login.png 360x640 + login.md) to match.
 set -euo pipefail
 git init -q -b main
 git config user.email eval@example.com && git config user.name eval
@@ -54,13 +54,28 @@ cat > design/login.md <<'J'
 - Frame shown: default only. No error, loading or disabled frame was drawn.
 J
 python3 -I - <<'P'
-# 8x8 solid-colour RGB PNG
+# The frame as blocks: an 8x8 placeholder made runs stop and ask for the real mockup.
 import zlib, struct
 def chunk(t, d):
     c = struct.pack(">I", len(d)) + t + d
     return c + struct.pack(">I", zlib.crc32(t + d) & 0xffffffff)
-raw = b"".join(b"\x00" + bytes([0x15, 0x19, 0x22]) * 8 for _ in range(8))
-png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 8, 8, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")
+W, H = 360, 640
+blocks = [  # x0, y0, x1, y1, colour; later blocks paint over earlier ones
+    (20, 150, 340, 420, b"\x15\x19\x22"),  # card
+    (44, 174, 140, 198, b"\xe8\xea\xf0"),  # title
+    (44, 214, 316, 258, b"\x0b\x0d\x12"),  # email
+    (44, 274, 316, 318, b"\x0b\x0d\x12"),  # password
+    (44, 334, 316, 378, b"\x5b\x8c\xff"),  # button
+    (130, 390, 230, 404, b"\x7d\xa2\xff"),  # link
+]
+def row(y):
+    pixels = bytearray(b"\x0b\x0d\x12" * W)
+    for x0, y0, x1, y1, colour in blocks:
+        if y0 <= y < y1:
+            pixels[x0 * 3:x1 * 3] = colour * (x1 - x0)
+    return b"\x00" + bytes(pixels)
+raw = b"".join(row(y) for y in range(H))
+png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", W, H, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")
 open("design/login.png", "wb").write(png)
 P
 git add -A && git commit -qm "init: next app skeleton with login design"

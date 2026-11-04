@@ -10,7 +10,7 @@ when_to_use: mobile screen, "làm màn hình mobile", "màn hình trên app", Re
 
 **Invoke:** `/mobile-feature <what the user should see and do, and on which platforms>`
 
-Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT}/rules/react-native.md`. A web page is `/ui-feature` (frontend, if installed); the store release is `/release-checklist` (ship, if installed); a chat screen on CopilotKit is `/agent-frontend` (ai, if installed).
+Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT}/rules/react-native.md`. No theme yet, or the question is how the app looks → `/mobile-design` first. A web page is `/ui-feature` (frontend, if installed); the store release is `/release-checklist` (ship, if installed); a chat screen on CopilotKit is `/agent-frontend` (ai, if installed).
 
 ---
 
@@ -57,6 +57,12 @@ Build and launch on the iOS Simulator (the iOS Simulator tool, or `npx expo run:
 
 **Done when:** screenshots per platform and a clean log are shown. A platform that could not be launched is named with the reason, never assumed.
 
+## Step 5 — Quality floor and taste
+
+Follow `${CLAUDE_PLUGIN_ROOT}/references/native-taste.md`: create `DESIGN.md` / `PRODUCT.md` if missing, as `/mobile-design` does, grep the tells on the changed files, run the device checks for this screen, then dispatch the taste reviewer with only the Step 4 screenshots and those two files.
+
+**Done when:** each tell hit is fixed or marked not a defect with the reason, no P0/P1 taste finding is open without the user's acceptance, and both lists are in the reply and the PR description.
+
 ---
 
-Hand-offs: the endpoint behind the screen → `/api-endpoint` (backend, if installed) · a design to match → `/design-ui` (frontend, if installed; its token and primitive steps apply, its browser diff does not) · release → `/release-checklist` (ship, if installed) · done → `/verify-done` → `/review-checklist`.
+Hand-offs: the endpoint behind the screen → `/api-endpoint` (backend, if installed) · the theme and primitives → `/mobile-design` · a design to match → `/design-ui` (frontend, if installed; its token and primitive steps apply, its browser diff does not) · release → `/release-checklist` (ship, if installed) · done → `/verify-done` → `/review-checklist`.

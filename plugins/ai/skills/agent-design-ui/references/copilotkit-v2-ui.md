@@ -15,7 +15,7 @@ v2 components are Tailwind + shadcn based. Tokens are CSS custom properties on t
 | Corners           | `--radius` (`--radius-sm/md/lg/xl` derive from it)                                                                                                                   |
 
 ```css
-/* scoped: a wrapper class keeps overrides out of the rest of the app */
+/* scoped: the wrapper class outranks the library's own [data-copilotkit] rule (below) */
 .assistant-chat [data-copilotkit] {
   --primary: oklch(0.55 0.2 264);
   --radius: 0.75rem;
@@ -24,6 +24,8 @@ v2 components are Tailwind + shadcn based. Tokens are CSS custom properties on t
   --background: oklch(0.16 0 0);
 } /* only if the design has dark */
 ```
+
+The wrapper class is specificity, not tidiness: the library's stylesheet declares the same variables on `[data-copilotkit]` (`--background: white` among them) and loads after yours, so a bare `[data-copilotkit] { … }` of equal specificity loses and the chat renders white on a dark app. `.assistant-chat [data-copilotkit]` (and `.dark .assistant-chat [data-copilotkit]`) wins; check `getComputedStyle(chatRoot).getPropertyValue("--background")` in the browser.
 
 Hex → oklch: convert with a tool (`culori`, or `oklch.com`), never by eye.
 

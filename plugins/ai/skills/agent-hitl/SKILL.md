@@ -20,6 +20,8 @@ A mutation is decided by a human, executed once, and reported truthfully. Interr
 
 Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/shapes.md`, then look for an existing interrupt contract, pending-action store and decision endpoint. Reuse them; a second HITL mechanism in one repo is a defect.
 
+The ADR's Q4 says the user writes (the agent proposes, the user's click calls an app route) → stop: this skill does not apply. Build it as `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md` § Agent writes vs user writes says — the read-only tool through `/agent-tool`, the card through `/agent-frontend`, the route as an app-side slice — and say so in one line.
+
 No gate yet → read "The HITL path" in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/stock-map.md`, and check the installed `@ag-ui/core` (≥ 1.0 → standard interrupt outcome) and `@copilotkit/react-core` (exports `useInterrupt`). Then choose:
 
 - Shapes A/B: `interrupt()` inside the tool, or stock `humanInTheLoopMiddleware({ interruptOn })` when the plain approve/edit/reject card is enough.
