@@ -29,6 +29,7 @@ python3 scripts/test_infra_gate.py
 python3 scripts/test_compare_shots.py
 python3 scripts/test_text_styles.py
 python3 scripts/test_check_ui.py
+python3 scripts/test_contrast.py
 python3 scripts/test_sync_remote.py
 python3 scripts/test_run_evidence.py
 python3 scripts/test_thunderkds_hooks.py

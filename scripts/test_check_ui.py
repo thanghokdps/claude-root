@@ -92,6 +92,51 @@ def test_too_many_font_sizes_fail():
     assert run(texts, "--max-font-sizes", "7")[0] == 0
 
 
+def control(selector, **kw):
+    return el(selector, tag="button", interactive=True, box=[40, 40], hasName=True, focusChanges=True, **kw)
+
+
+def test_control_without_a_name_fails():
+    code, out, report = run([control("button.icon", text="")])
+    assert code == 0 and report["findings"] == [], out
+    icon = el("button.close", tag="button", text="", interactive=True, box=[40, 40], hasName=False, focusChanges=True)
+    code, out, report = run([icon])
+    assert code == 1 and rules(report) == ["name"] and report["findings"][0]["selector"] == "button.close", out
+
+
+def test_control_with_no_focus_change_fails():
+    flat = el("a.nav", tag="a", interactive=True, box=[40, 40], hasName=True, focusChanges=False)
+    code, out, report = run([flat])
+    assert code == 1 and rules(report) == ["focus"], out
+
+
+def test_focus_not_measured_is_listed_not_judged():
+    unmeasured = el("button.off", tag="button", interactive=True, box=[40, 40], hasName=True, focusChanges=None)
+    code, out, report = run([unmeasured])
+    assert code == 0 and report["skipped"] == {"focus-not-measured": ["button.off"]}, out
+    disabled = el("button.no", tag="button", interactive=True, disabled=True, box=[40, 40], hasName=True,
+                  focusChanges=None)
+    assert run([disabled])[2]["skipped"] == {}
+
+
+def test_dump_without_the_new_fields_still_passes():
+    assert run([el("button.old", tag="button", interactive=True, box=[40, 40])])[0] == 0
+
+
+def test_heading_that_skips_a_level_fails_going_down_only():
+    h = lambda level: el(f"h{level}", tag=f"h{level}", heading=level)
+    code, out, report = run([h(1), h(3)])
+    assert code == 1 and rules(report) == ["heading"] and "h1 then h3" in out, out
+    assert run([h(1), h(2), h(3), h(2), h(3)])[0] == 0
+    assert run([h(1), h(2), h(3), h(1 + 1)])[0] == 0
+
+
+def test_two_h1_fail():
+    h1 = lambda n: el(f"h1.n{n}", tag="h1", heading=1)
+    code, out, report = run([h1(1), h1(2)])
+    assert code == 1 and rules(report) == ["heading"] and report["findings"][0]["count"] == 2, out
+
+
 def test_table_names_every_finding():
     code, out, _ = run([el("p.grey", color="rgb(119, 119, 119)"),
                         el("button.icon", tag="button", text="", interactive=True, box=[20, 20])])

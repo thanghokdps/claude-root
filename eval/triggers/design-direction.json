@@ -1,0 +1,27 @@
+{
+  "skill": "design-direction",
+  "positive": [
+    {
+      "prompt": "app mới chưa có figma, chọn visual direction, màu và font giúp tôi",
+      "top_k": 3
+    },
+    {
+      "prompt": "define the look of our new product before we build any screens: palette, typeface and design tokens",
+      "top_k": 3
+    },
+    {
+      "prompt": "the product has no visual identity and looks generic, decide a direction for the redesign",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "build the pricing page to match this Figma mockup",
+      "owner": "design-ui"
+    },
+    {
+      "prompt": "I want to build a real-time notification system, let's design the approach",
+      "owner": "brainstorming"
+    }
+  ]
+}

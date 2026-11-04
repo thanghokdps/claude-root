@@ -10,7 +10,7 @@ when_to_use: build a page, "làm màn hình", "làm giao diện bằng React", f
 
 **Invoke:** `/ui-feature <what the user should see and do>`
 
-Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT}/rules/react.md` and, on Next.js, `${CLAUDE_PLUGIN_ROOT}/rules/nextjs.md`. A design to match (Figma, frames, screenshot) → `/design-ui` builds the primitives and screens from it. This skill builds behaviour on top.
+Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT}/rules/react.md` and, on Next.js, `${CLAUDE_PLUGIN_ROOT}/rules/nextjs.md`. A design to match (Figma, frames, screenshot) → `/design-ui` builds the primitives and screens from it. This skill builds behaviour on top. A new product with no tokens and no `DESIGN.md` direction → `/design-direction` first. A working app that only looks unpolished → `/ui-polish`.
 
 ---
 
@@ -23,9 +23,11 @@ Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT
 | Tokens          | `styles/tokens.css`, Tailwind theme                                                            |
 | Data fetching   | `fetchJson`-style helper, TanStack Query/SWR, Server Components, the `api.ts` pattern          |
 | Tests           | Testing Library + jsdom config, existing component tests, a `/design-states` or Storybook page |
-| Viewports       | the ADR, the design doc, or the existing breakpoints                                           |
+| Viewports       | the ADR, the design doc, or the existing breakpoints; 320, 768 and 1440 when nothing says      |
 
-**Done when:** each row names a path. The screen's states are listed: default, loading, empty, error, and for writes saving, saved and failed (the value before the write is back on screen), plus any role-specific views. A form that edits an existing value (a profile name, a setting) loads that value first; "" is not a previous value.
+Then the screen's contract, in the reply, in five lines: its job for the user, the one primary action, the states, how it changes at each viewport, and the patterns to reject here (from `DESIGN.md`'s Direction and the screens already in the repo). Fill it with real content, never lorem: real names and lengths show what placeholder text hides.
+
+**Done when:** each row names a path and the contract is written. The screen's states are listed: default, loading, empty, error, and for writes saving, saved and failed (the value before the write is back on screen), plus any role-specific views. A form that edits an existing value (a profile name, a setting) loads that value first; "" is not a previous value.
 
 ## Step 2 — Tests first, from what the user sees
 
@@ -45,6 +47,7 @@ Write Testing Library tests for the states and interactions in Step 1, with the 
 - Every state is real UI: a skeleton or spinner, an empty state with the next action, an error with retry, and disabled controls while saving. A write is optimistic: keep the value from before the write in state, show the new one at once, and on failure put the old one back (input and any place the value is displayed) and announce the error — a form that only shows the error and leaves the unsaved text in the input has no rollback.
 - Accessible names on controls, labels tied to inputs, errors announced (`aria-live` or `role="alert"`), contrast through tokens.
 - Mobile first: base classes are the narrowest viewport, and `md:`/`lg:` add the wider layout.
+- Motion only where `${CLAUDE_PLUGIN_ROOT}/references/motion.md` allows it, with reduced motion in the same change.
 
 **Done when:** the Step 2 tests pass, plus typecheck and lint, and the raw-hex grep (`grep -rnE '\[#[0-9a-fA-F]{3,8}\]' src`) finds nothing outside `styles/` and `dev/`.
 
@@ -56,9 +59,9 @@ Run the app (or the design-states page) and drive the feature with Playwright MC
 
 ## Step 5 — Quality floor and taste
 
-Follow `${CLAUDE_PLUGIN_ROOT}/references/taste.md`: create `DESIGN.md` / `PRODUCT.md` if missing, save the Step 4 screenshots to `design/actual/<state>.png`, evaluate `dump-ui-styles.js` in each state and run `python3 ${CLAUDE_PLUGIN_ROOT}/skills/design-ui/scripts/check-ui.py` on the dumps, then dispatch the taste reviewer with only the screenshots and those two files.
+Follow `${CLAUDE_PLUGIN_ROOT}/references/taste.md`: create `DESIGN.md` / `PRODUCT.md` if missing, save the Step 4 screenshots to `design/actual/<state>.png`, evaluate `dump-ui-styles.js` in each state and run `python3 ${CLAUDE_PLUGIN_ROOT}/skills/design-ui/scripts/check-ui.py` on the dumps, run the axe pass and the keyboard walk, then dispatch the taste reviewer with only the screenshots and those two files.
 
-**Done when:** `check-ui.py` exits 0 or each remaining hit is a listed false positive, no P0/P1 taste finding is open without the user's acceptance, and both lists are in the reply and the PR description.
+**Done when:** `check-ui.py` exits 0 or each remaining hit is a listed false positive, axe reports no `critical` or `serious` violation, no P0/P1 taste finding is open without the user's acceptance, and both lists are in the reply and the PR description.
 
 ---
 

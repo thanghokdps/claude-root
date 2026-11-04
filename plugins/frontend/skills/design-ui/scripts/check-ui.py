@@ -8,6 +8,9 @@ Each input is dump-ui-styles.js evaluated in one state of the running app. Repor
   spacing     a padding, margin or gap off --scale (default: any multiple of 4px), once per value
   target      an interactive element under 24x24 CSS px, inline links excepted — WCAG 2.5.8
   font-sizes  more distinct text sizes in one state than --max-font-sizes
+  name        a control with no accessible name — WCAG 4.1.2
+  focus       a control whose look does not change on focus — WCAG 2.4.7
+  heading     more than one h1, or a heading that skips a level going down — WCAG 1.3.1
 Disabled controls are exempt from contrast; text on a background image is listed under "skipped", not judged.
 Prints a table and writes the JSON (default: check-ui.json beside the first input). Exit 1 on any finding.
 """
@@ -55,8 +58,43 @@ def on_scale(v, scale):
     return any(abs(v - s) <= TOL for s in scale)
 
 
+def check_controls(state, elements):
+    """Name and focus findings, plus controls whose focus could not be measured; a dump from before these fields carries neither."""
+    findings, unmeasured = [], []
+    for e in elements:
+        if not e.get("interactive"):
+            continue
+        sel = e["selector"]
+        if e.get("hasName") is False:
+            findings.append({"state": state, "rule": "name", "selector": sel, "detail": "no accessible name"})
+        if e.get("focusChanges") is False:
+            findings.append({"state": state, "rule": "focus", "selector": sel, "detail": "no visible change on focus"})
+        elif "focusChanges" in e and e["focusChanges"] is None and not e.get("disabled"):
+            unmeasured.append(sel)
+    return findings, unmeasured
+
+
+def check_headings(state, elements):
+    findings, previous = [], 0
+    levels = [(e["heading"], e["selector"]) for e in elements if e.get("heading")]
+    h1s = [sel for level, sel in levels if level == 1]
+    if len(h1s) > 1:
+        findings.append({"state": state, "rule": "heading", "selector": h1s[1], "count": len(h1s),
+                         "detail": f"{len(h1s)} h1 in one view"})
+    for level, sel in levels:
+        if previous and level > previous + 1:
+            findings.append({"state": state, "rule": "heading", "selector": sel,
+                             "detail": f"h{previous} then h{level} skips a level"})
+        previous = level
+    return findings
+
+
 def check_state(state, elements, scale, max_sizes):
     findings, skipped, off_scale, sizes = [], {}, {}, set()
+    control_findings, unmeasured = check_controls(state, elements)
+    findings += control_findings + check_headings(state, elements)
+    if unmeasured:
+        skipped["focus-not-measured"] = unmeasured
     for e in elements:
         sel = e["selector"]
         if e.get("text"):

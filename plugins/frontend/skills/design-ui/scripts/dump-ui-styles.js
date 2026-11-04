@@ -2,6 +2,8 @@
 // Evaluate in the page in each state and save the result as design/actual/<state>.ui.json:
 //   const ui = await page.evaluate(dumpUiStyles);            // or dumpUiStyles("main") for one region
 // Colours go through a 1×1 canvas so oklch(), color-mix() and named colours all arrive as sRGB.
+// It focuses each control to see whether anything visibly changes. focusChanges is null when that cannot be
+// measured: in a window without focus, or after a mouse click, :focus-visible does not match on programmatic focus.
 function dumpUiStyles(rootSelector) {
   const root = rootSelector
     ? document.querySelector(rootSelector)
@@ -57,6 +59,45 @@ function dumpUiStyles(rootSelector) {
     return parts.join(" > ");
   };
   const px = (v) => (v.endsWith("px") ? parseFloat(v) : null);
+  const hasName = (el) => {
+    const labelledBy = (el.getAttribute("aria-labelledby") || "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .some((id) => document.getElementById(id)?.textContent.trim());
+    return Boolean(
+      labelledBy ||
+      el.getAttribute("aria-label")?.trim() ||
+      el.getAttribute("title")?.trim() ||
+      el.textContent.trim() ||
+      el.labels?.length ||
+      el.querySelector('img[alt]:not([alt=""]), svg title') ||
+      (el.matches("input[type=submit], input[type=button]") && el.value) ||
+      (el.matches("input[type=image]") && el.alt),
+    );
+  };
+  // Transitions are finished first: mid-transition the computed style still reads as unfocused.
+  const settle = (el) => el.getAnimations().forEach((a) => a.finish());
+  const look = (el) => {
+    const cs = getComputedStyle(el);
+    return [
+      cs.outlineStyle,
+      cs.outlineWidth,
+      cs.outlineColor,
+      cs.boxShadow,
+      cs.borderColor,
+      cs.backgroundColor,
+    ].join("|");
+  };
+  const focusChangesLook = (el) => {
+    const before = look(el);
+    el.focus({ preventScroll: true });
+    const measurable = el.matches(":focus-visible");
+    settle(el);
+    const changed = look(el) !== before;
+    el.blur();
+    settle(el);
+    return measurable ? changed : null;
+  };
 
   const elements = [];
   for (const el of root.querySelectorAll("*")) {
@@ -75,13 +116,22 @@ function dumpUiStyles(rootSelector) {
       .join(" ")
       .trim();
     const [r, g, b, a] = rgba(cs.color);
+    const interactive = el.matches(INTERACTIVE);
+    const disabled = el.matches(':disabled, [aria-disabled="true"]');
     elements.push({
       selector: selector(el),
       tag: el.tagName.toLowerCase(),
       text: text.slice(0, 40),
-      interactive: el.matches(INTERACTIVE),
+      interactive,
       inline: cs.display === "inline",
-      disabled: el.matches(':disabled, [aria-disabled="true"]'),
+      disabled,
+      ...(interactive && {
+        hasName: hasName(el),
+        focusChanges: disabled ? null : focusChangesLook(el),
+      }),
+      ...(/^h[1-6]$/.test(el.tagName.toLowerCase()) && {
+        heading: +el.tagName[1],
+      }),
       color: `rgba(${r}, ${g}, ${b}, ${a})`,
       ...background(el),
       fontSize: parseFloat(cs.fontSize),

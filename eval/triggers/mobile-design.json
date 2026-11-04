@@ -1,0 +1,27 @@
+{
+  "skill": "mobile-design",
+  "positive": [
+    {
+      "prompt": "app React Native nhìn chưa pro, làm lại theme và design tokens giúp tôi",
+      "top_k": 3
+    },
+    {
+      "prompt": "create a dark and light theme for our Expo app from these brand colours",
+      "top_k": 3
+    },
+    {
+      "prompt": "audit the UI of this React Native app, it looks AI-generated and does not feel native",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "the keyboard covers the input on Android only, fix the mobile form screen",
+      "owner": "mobile-feature"
+    },
+    {
+      "prompt": "our web dashboard works but the UI looks generic, make it look professional",
+      "owner": "ui-polish"
+    }
+  ]
+}

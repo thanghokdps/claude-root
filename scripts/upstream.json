@@ -17,5 +17,11 @@
   ],
   "@copilotkit/channels": [
     "plugins/ai/skills/agent-frontend/references/chat-channels.md"
-  ]
+  ],
+  "react-native": [
+    "plugins/mobile/rules/react-native.md",
+    "plugins/mobile/references/native-motion.md"
+  ],
+  "expo": ["plugins/mobile/rules/react-native.md"],
+  "axe-core": ["plugins/frontend/references/taste.md"]
 }

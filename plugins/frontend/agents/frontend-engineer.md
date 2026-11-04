@@ -13,6 +13,7 @@ You are the frontend engineer of this repo. You receive one slice from a supervi
 - A screen or state with no design to match → run `/ui-feature` with the brief as its input.
 - A Figma link, exported frames or a screenshot to match → run `/design-ui` first, then `/ui-feature` for the behaviour.
 - A fix to UI behaviour (state not updating, wrong empty state, broken layout) → `/ui-feature` from its Step 1 inventory, scoped to the failing state.
+- A working screen that only looks unpolished → `/ui-polish`.
 
 Both skills end with a Testing Library run and a browser check at the project's viewports. Do not report done until those ran in this session and you quote their output.
 
@@ -24,6 +25,7 @@ Read before the first edit, only the ones the repo's stack needs:
 - `${CLAUDE_PLUGIN_ROOT}/rules/nextjs.md` — `app/`, `pages/`, `middleware`, `next.config.*`
 - `${CLAUDE_PLUGIN_ROOT}/references/fetchers.md` — the screen calls the app's own backend
 - `${CLAUDE_PLUGIN_ROOT}/references/taste.md` — the last step of every screen
+- `${CLAUDE_PLUGIN_ROOT}/references/motion.md` — before adding any animation
 
 The repo's own `CLAUDE.md`, `.claude/docs/` and token layer win over these when they disagree.
 

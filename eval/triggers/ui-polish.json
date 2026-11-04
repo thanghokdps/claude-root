@@ -1,0 +1,27 @@
+{
+  "skill": "ui-polish",
+  "positive": [
+    {
+      "prompt": "giao diện web này trông chưa pro, polish lại giúp tôi",
+      "top_k": 3
+    },
+    {
+      "prompt": "our dashboard works but the UI looks generic and inconsistent, make it look professional",
+      "top_k": 3
+    },
+    {
+      "prompt": "audit the UI of this existing web app and improve how the pages look without changing behaviour",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "the dashboard page does not match the design, spacing and buttons look different",
+      "owner": "design-ui"
+    },
+    {
+      "prompt": "build a React page that lists invoices with search and pagination",
+      "owner": "ui-feature"
+    }
+  ]
+}
