@@ -32,6 +32,7 @@ Checked against mastra.ai docs on 2026-10-23. Confirm each option on the **insta
 
 - A mutation tool uses `requireApproval: true`, or `suspend()` with `suspendSchema` / `resumeSchema` when the card needs the kit's pending-action fields. Always `return await context.agent.suspend(…)`, because code after it still runs.
 - Over AG-UI (`@ag-ui/mastra` ≥ 2): an approval is the standard interrupt with reason `mastra:tool_approval`, approved only by `true` / `{ approved: true }`, declined by `{ approved: false }` or a cancelled resume; any other answer fails the run. At most one interrupt per run.
+- A typed reply while the card is open cannot ride `requireApproval` (any payload but the two above fails the run): a card that accepts typed replies is `suspend()` with a `resumeSchema` of `{ approved?: boolean, reply?: string, messageId?: string }`, decided as `${CLAUDE_PLUGIN_ROOT}/skills/agent-hitl/references/card-open-input.md` says; a second `suspend()` asks again when the reply is unclear.
 - Both need `storage`. Without it a resume fails with "snapshot not found".
 - Code before `suspend()` runs again on resume, so make it idempotent. The real write happens only after the decision.
 

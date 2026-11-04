@@ -27,7 +27,7 @@ A green unit suite does not prove a turn. The stream is the evidence: no "fixed"
    - HITL: `RUN_FINISHED.outcome.type === "interrupt"` with an `id`, `reason` and `toolCallId` when a write is pending; nothing written before the resume run
    - protocol (AG-UI ≥ 1.0): `RUN_STARTED.protocolVersion` present on an own emitter; every `REASONING_*` span and message closed before `RUN_FINISHED`; no client warnings about stripped fields (extra data belongs in `metadata`)
    - text: the answer matches the tool result (no claimed change that did not happen)
-5. Repeat with the variations that matter: two tool calls in flight, a resume run with `resume[]` (approve, decline, the same resume sent twice), new input while an interrupt is open (expect `RUN_ERROR`), an out-of-scope prompt.
+5. Repeat with the variations that matter: two tool calls in flight, a resume run with `resume[]` (approve, decline, the same resume sent twice), text typed while a card is open (a plain yes → one write; a correction → a `superseded` outcome then a second interrupt with the corrected field; another subject → the answer and no write), a plain input while an interrupt is open (the client refuses it; a headless client gets `RUN_ERROR`), an out-of-scope prompt.
 
 **Done when:** each expectation is marked pass/fail with the event lines that prove it, pasted in the reply.
 

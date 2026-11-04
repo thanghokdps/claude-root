@@ -20,6 +20,7 @@ Package names checked against npm (`@copilotkit/channels` 0.12.0) on 2026-10-29;
 - Only the user who asked can confirm or cancel; a click from anyone else in the channel or thread is answered privately and changes nothing.
 - Buttons are guarded against double clicks: the resume is idempotent by interrupt id (`/agent-hitl` Step 3), and the message is updated to its final state after the first click.
 - The resume is built server-side from the stored interrupt (id, expiry, pending-action record), never from values carried in the button payload beyond the interrupt id and the choice.
+- A text reply in the thread from the user who asked, while the card is open, is the same resume with `{ reply, messageId }` (`${CLAUDE_PLUGIN_ROOT}/skills/agent-hitl/references/card-open-input.md`): a plain yes writes, a correction replaces the card, another subject closes it with a one-line note. The card message says both ways; text from anyone else is ignored.
 
 ## Errors and wording
 

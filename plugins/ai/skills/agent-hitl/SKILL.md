@@ -2,8 +2,8 @@
 model: opus
 effort: high
 name: agent-hitl
-description: Puts an agent mutation behind a human-in-the-loop confirmation (LangGraph interrupt or Mastra tool approval / suspend-resume) on the standard AG-UI interrupt and resume, with a pending-action record keyed by the interrupt id, confirm / cancel / replay resume, picking the right target record, and how web, mobile or chat clients render the confirm card. Use when an agent tool creates, updates or deletes data, or a confirm or cancel flow misbehaves. A whole new user feature that includes a write starts at agent-feature, which hands the write here.
-when_to_use: agent action that writes data, "confirm before saving", confirm card, approve or reject, interrupt and resume, useInterrupt, resume[], pending action, "tìm để xóa", add/remove/edit user via chat, resume loops or double-executes
+description: Puts an agent mutation behind a human-in-the-loop confirmation (LangGraph interrupt or Mastra tool approval / suspend-resume) on the standard AG-UI interrupt and resume, with a pending-action record keyed by the interrupt id, confirm / cancel / replay resume, picking the right target record, and how web, mobile or chat clients render the confirm card, and what a typed reply does while it is open (a plain yes, a correction, another subject). Use when an agent tool creates, updates or deletes data, when a confirm or cancel flow misbehaves, or when typing while the confirmation waits does nothing or writes the wrong thing. A whole new user feature that includes a write starts at agent-feature, which hands the write here.
+when_to_use: agent action that writes data, "confirm before saving", confirm card, approve or reject, interrupt and resume, useInterrupt, resume[], pending action, "tìm để xóa", add/remove/edit user via chat, resume loops or double-executes, typed "ok" instead of clicking confirm, "gõ đồng ý mà không lưu", "sửa thông tin trên thẻ đang chờ", the confirmation does not update after a correction, typing while a confirmation is pending
 ---
 
 # agent-hitl
@@ -60,15 +60,17 @@ Resume:
 - Claim the record atomically (`pending → applying`): a second resume with the same answer replays the stored outcome instead of writing again.
 - Cancel → mark cancelled and write nothing.
 - Replay → only when the action says it is replayable.
-- One open interrupt per thread. Input without a `resume` while one is open is a `RUN_ERROR` under AG-UI 1.0 — turn it into a short assistant line on the client ("confirm or cancel the pending change first"), not a second card.
+- One open interrupt per thread; a new record on the thread supersedes an older pending one.
+- Text typed while the card is open is a resume, never a plain input: `@ag-ui/client` ≥ 1.0 refuses a run that leaves an interrupt unanswered, and a resume run drops any message sent beside it. Follow `${CLAUDE_SKILL_DIR}/references/card-open-input.md`: the payload is `{ reply, messageId }`; below the interrupt one structured-output classification (approve / cancel / change / other / unclear) decides; a correction or another subject marks the record `superseded` with nothing written and the model proposes again from a fresh read; unclear asks with the same card again; every typed line is appended to the thread.
 
-**Done when:** tests assert: no upstream write before approve · approve writes exactly once · a replayed resume writes nothing new · decline and cancel write nothing · an expired interrupt is refused · the outcome says "not applied" when the upstream write failed.
+**Done when:** tests assert: no upstream write before approve · approve writes exactly once · a replayed resume writes nothing new · decline and cancel write nothing · an expired interrupt is refused · the outcome says "not applied" when the upstream write failed · a typed yes writes once · a typed correction writes nothing and leaves a second record pending with the corrected field · a replayed typed resume neither classifies nor writes again.
 
 ## Step 4 — Client render
 
 - Web (CopilotKit v2): `useInterrupt({ agentId, render, enabled })` renders the card from the interrupt (`message`, `metadata`) and calls `resolve(payload)` or `cancel()`; it renders inside `CopilotChat` by default (`renderInChat: false` to place it yourself). Wiring stays in `/agent-frontend`.
+- Composer while the card is open: submit adds the user message locally and calls `resolve({ reply, messageId })` instead of `sendMessage` — the stock submit fails the run and nothing reaches the server. The card's copy says both ways ("Bấm Xác nhận, hoặc gõ ok / hủy"); after `expiresAt` it offers only Close. The hook hides the old card when the resume run starts and shows the corrected one that run ends with — the app keeps no card state of its own. Rows and wiring: `${CLAUDE_SKILL_DIR}/references/card-open-input.md`.
 - React Native: the same hook from `@copilotkit/react-native`.
 - Other headless clients: read `RUN_FINISHED.outcome`, render from `message` / `metadata`, send the next run with `resume[]`. Unknown `reason` values render from `message`, never fail.
 - Chat channels (Slack, Teams…): follow `${CLAUDE_PLUGIN_ROOT}/skills/agent-frontend/references/chat-channels.md` — check which interrupt event the installed renderer expects, only the user who asked can decide, buttons guarded against double clicks, resume built server-side.
 
-**Done when:** `/agent-verify-turn` shows the interrupt outcome on one turn and the completed outcome after the resume run.
+**Done when:** `/agent-verify-turn` shows the interrupt outcome on one turn, the completed outcome after the resume run, and, for a typed correction, a `superseded` outcome followed by a second interrupt outcome with the corrected field.
