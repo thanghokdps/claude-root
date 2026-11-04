@@ -16,9 +16,9 @@ No `.claude/docs/index.md` → run `/project-init` instead and stop here; it wri
 ## Step 1 — Read the diff by kind
 
 ```bash
-base="$(git merge-base HEAD origin/HEAD)"
-git diff --stat "$base"...HEAD
-git diff --name-status "$base"...HEAD
+base="$(git merge-base HEAD origin/HEAD 2>/dev/null || git hash-object -t tree /dev/null)"   # no remote or first commit: the empty tree
+git diff --stat "$base" HEAD
+git diff --name-status "$base" HEAD
 ```
 
 Uncommitted work counts too: add `git status --short`.
@@ -42,7 +42,7 @@ A change that maps to no row (an internal fix, a refactor inside one file) needs
 
 ## Step 3 — Edit only those sections
 
-- Read the section first, then edit it with Edit: add the new fact, fix the one it replaced, delete the one the diff removed. Never regenerate a whole doc.
+- Read the section first, then edit it with Edit: add the new fact, fix the one it replaced, delete the one the diff removed. Never regenerate a whole doc — unless every section the diff maps to in it is stale (a stack, host or layout change): say so, rewrite that doc from the code, and when that is most of the set run `/project-init` instead.
 - Every path, command and name you write must exist now: `ls` the path, run `--help` or a dry run for a command when cheap.
 - Keep `CLAUDE.md` under 200 lines; detail goes to `.claude/docs/`, `CLAUDE.md` keeps the pointer.
 - If the repo has an `AGENTS.md` that `CLAUDE.md` imports (`@AGENTS.md`), shared facts go to `AGENTS.md`; Claude-only notes stay in `CLAUDE.md`.

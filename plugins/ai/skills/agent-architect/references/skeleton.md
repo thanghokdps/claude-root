@@ -126,7 +126,7 @@ Next, one at a time (each goes through /agent-feature):
 
 When P1 gives no hint of tasks, list three generic starters: a read tool on their main data, a confirm-before-write action, and the chat design.
 
-## 7. Changing the framework later
+## 7. Changing the framework, frontend or host later
 
-- **Skeleton with no features yet:** rebuild the skeleton on the new framework. Delete the old agent folder, re-run Step 4, and write a new ADR that supersedes the old one. This is cheaper than migrating, and nothing of the user's is lost.
+- **Skeleton with no features yet:** rebuild the skeleton on the new stack. Delete the old agent folder and everything the old stack owned — its scripts in `package.json`, its config files, its entries in `.gitignore` and `.prettierignore` — then re-run Step 4s to its § 5 checklist, `/project-init` included: the new build output (`.next/`, `dist/`) is in both ignore files, and `CLAUDE.md` and `.claude/docs/` name the new stack and no command of the old one (a doc that still says Vite after a move is the sign § 5 did not run). Write a new ADR that supersedes the old one. This is cheaper than migrating, and nothing of the user's is lost.
 - **Once features exist:** this is a migration, not a swap. Run Step 3 (audit), record the switch in a new ADR, and move one feature at a time with its tests kept green. A stored-data change in that move goes through `/write-migration`.
