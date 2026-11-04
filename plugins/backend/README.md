@@ -19,3 +19,11 @@ Role pack for the server side: the `backend-engineer` agent that `/feature`, `/t
 ## Rules
 
 `rules/python.md`, `rules/fastapi.md`, `rules/prisma.md` — read by the agent and the skills when the repo uses them, never always-loaded. `api-contract.md`, `data-access.md` and `security.md` stay in core, since every role reads them.
+
+## Install
+
+```text
+/plugin install backend@harness
+```
+
+The marketplace must be added first: see the [root README](../../README.md#quickstart).

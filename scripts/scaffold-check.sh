@@ -14,7 +14,7 @@ log="$work/.agent.log"
 [ "${1:-}" = "--keep" ] || trap 'rm -rf "$work"' EXIT
 
 dirs=()
-for p in ai progress dev core plan review ship; do dirs+=(--plugin-dir "$repo/plugins/$p"); done
+for p in ai frontend backend progress dev core plan review ship; do dirs+=(--plugin-dir "$repo/plugins/$p"); done
 
 # The OS sandbox blocks `git init` (.git) and any package that ships an `.idea/` dir (iconv-lite): its protected paths
 # cannot be re-allowed, so a full scaffold needs SCAFFOLD_NO_SANDBOX=1 (run it yourself; the agent then has plain Bash as you).
@@ -43,8 +43,10 @@ no_deprecated_imports() { ! grep -rEq '@copilotkit/runtime/langgraph|hono/vercel
 eslint_deprecated() { grep -qE '@typescript-eslint/no-deprecated' eslint.config.*; }
 four_sections() { grep -qE 'OVERVIEW' src/langchain/prompts.ts && grep -qE 'RESPONSE' src/langchain/prompts.ts && grep -qE 'OUT OF SCOPE' src/langchain/prompts.ts && grep -qE 'CONTEXT' src/langchain/prompts.ts; }
 canary() { grep -q 'INTERNAL_CANARY_' src/langchain/prompts.ts; }
-pii_off() { grep -qE '^PII_REDACTION=off[[:space:]]*$' .env.example; }
-baseline_four() { [ "$(grep -cE '^\{.*\}[[:space:]]*$' evals/datasets/baseline.jsonl)" -eq 4 ]; }
+pii_on() { grep -qE '^PII_REDACTION=on[[:space:]]*$' .env.example; }
+baseline_twelve() { [ "$(grep -cE '^\{.*\}[[:space:]]*$' evals/datasets/baseline.jsonl)" -eq 12 ]; }
+list_reads_state() { grep -q 'getState' src/langchain/server/threads.ts; }
+secrets_named() { grep -qE '^INTERNAL_API_TOKEN=(""|'"''"')?$' .env.example && grep -B1 -E '^INTERNAL_API_TOKEN=' .env.example | grep -q 'openssl rand'; }
 agui_import() { grep -rq '@ag-ui/langgraph' src --include='*.ts'; }
 lint_agent_folder() { [ -d node_modules ] && npx eslint src/langchain --max-warnings=0; }
 
@@ -54,7 +56,9 @@ check "eslint.config.* enables @typescript-eslint/no-deprecated" eslint_deprecat
 check "eslint passes on src/langchain" lint_agent_folder
 check "src/langchain/prompts.ts has the four sections" four_sections
 check "prompts.ts has an INTERNAL_CANARY_ line" canary
-check ".env.example has PII_REDACTION=off" pii_off
-check "evals/datasets/baseline.jsonl has 4 lines" baseline_four
+check ".env.example has PII_REDACTION=on" pii_on
+check "evals/datasets/baseline.jsonl has 12 lines" baseline_twelve
+check "thread list route reads the state of a stopped run" list_reads_state
+check ".env.example names INTERNAL_API_TOKEN with how to generate it" secrets_named
 
 [ "$fail" -eq 0 ] && echo "SCAFFOLD OK" || { echo "SCAFFOLD FAILED (log: $log; rerun with --keep to inspect $work)"; exit 1; }

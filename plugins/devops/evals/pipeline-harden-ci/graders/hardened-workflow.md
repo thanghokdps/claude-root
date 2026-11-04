@@ -1,9 +1,11 @@
 ---
 type: llm
-focus: trace
+focus:
+  source: file
+  path: .github/workflows/ci.yml
 ---
 
-Judge the workflow the run wrote, attempted or proposed. An Edit or Write tool input counts even when the sandbox denied it, and so does a full workflow given in the final reply.
+This is `.github/workflows/ci.yml` after the run; a run that changed nothing still shows the original. A job written to another workflow file is not shown.
 
 The original has `actions/checkout@v4` unpinned, no `permissions:` block, a `pull_request_target` trigger, and a deploy job with no guard against forks or non-protected branches. The repo's gate is `scripts/check.sh`.
 

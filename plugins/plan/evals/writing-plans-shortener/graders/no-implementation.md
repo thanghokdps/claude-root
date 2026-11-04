@@ -1,9 +1,7 @@
 ---
-type: tool_used
-tool: Write
-input_match: '"file_path"\s*:\s*"[^"]*src/(?:codes|store|handler)\.py"'
-min: 0
-max: 0
+type: file_exists
+path: src/*.py
+exists: false
 ---
 
-Writing a plan must not start implementing the design.
+Writing a plan must not start implementing the design. This checks the repo's files, so a plan review that test-runs the code in a scratch directory does not count.
