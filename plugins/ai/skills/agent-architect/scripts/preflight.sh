@@ -65,9 +65,10 @@ else row "model key" MISSING "set $k in .env (gitignored) — needed for the fir
 # Before the scaffold there is no .env.example, and only the provider's key above applies.
 ex="$dir/.env.example"
 secret_hint() {  # the comment on the line above the variable in .env.example, else a default by name
+  # Repo text, shown and never run: plain characters only, 80 at most, labelled with its source.
   local c
-  c="$(grep -B1 -E "^$1=" "$ex" | head -1 | sed -nE 's/^#[[:space:]]*//p')"
-  [ -n "$c" ] && { echo "$c"; return; }
+  c="$(grep -B1 -E "^$1=" "$ex" | head -1 | sed -nE 's/^#[[:space:]]*//p' | tr -cd 'A-Za-z0-9 ._:/@=+-' | cut -c1-80)"
+  [ -n "$c" ] && { echo ".env.example says: $c"; return; }
   case "$1" in
     INTERNAL_API_TOKEN) echo "generate: openssl rand -base64 48" ;;
     *) echo "fill from the service that issues it" ;;

