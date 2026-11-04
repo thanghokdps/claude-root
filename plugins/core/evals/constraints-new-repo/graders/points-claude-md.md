@@ -1,9 +1,11 @@
 ---
 type: llm
-focus: trace
+focus:
+  source: file
+  path: CLAUDE.md
 ---
 
-An Edit or Write tool input counts even when the sandbox denied it.
+This is `CLAUDE.md` at the repo root after the run. The repo has none before it.
 
-PASS if the run adds to (or creates) `CLAUDE.md` one line telling the agent to read `CONSTRAINTS.md` before writing code and not to weaken it.
-FAIL if `CLAUDE.md` is never touched or proposed.
+PASS if the file has one line telling the agent to read `CONSTRAINTS.md` before writing code and not to weaken it.
+FAIL if the file is missing or has no such line.
