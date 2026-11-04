@@ -2,7 +2,7 @@
 
 Read by `/agent-hitl` Steps 3–4 and by `/agent-frontend` for the composer. Covers everything the user can do while a card waits: click, type a yes or a no, type a correction, change the subject, wait too long, reload.
 
-Verified against the installed sources on 2026-11-04: `@ag-ui/client` 1.0.2, `@copilotkit/core` and `@copilotkit/react-core` 1.84.0, `@ag-ui/langgraph` 0.0.43, `@langchain/langgraph` 1.6.0, `@langchain/langgraph-api` 1.4.4, `langchain` 1.5.3. Confirm each line on the versions the repo installs before relying on it.
+Verified against the installed sources on 2026-11-05: `@ag-ui/client` 1.0.2, `@copilotkit/core` and `@copilotkit/react-core` 1.84.1, `@ag-ui/langgraph` 0.0.45, `@langchain/langgraph` 1.6.0, `@langchain/langgraph-api` 1.5.7, `langchain` 1.6.0, `@mastra/memory` 1.41.0. Confirm each line on the versions the repo installs before relying on it.
 
 ## What the stack does on its own
 
@@ -55,7 +55,22 @@ The record is the source of truth; the decision is stored on it before anything 
    - Every reply branch appends the typed line, so the thread history matches what the user saw.
 4. The next interrupt on the thread (the corrected card) is a new record and a new interrupt id; the superseded record is never resumed.
 
-Shape M stores the typed line the way the repo already stores thread messages; confirm the call on the installed `@mastra/memory` before using it.
+Shape M stores the typed line with the agent's memory (run live on @mastra/memory 1.41.0, 2026-11-05: it lands after the thread's last message and `memory.recall` returns it):
+
+```ts
+await memory.saveMessages({
+  messages: [
+    {
+      id: crypto.randomUUID(),
+      role: "user",
+      createdAt: new Date(),
+      threadId,
+      resourceId,
+      content: { format: 2, parts: [{ type: "text", text }], content: text },
+    },
+  ],
+});
+```
 
 ## Prompt rule for the agent
 

@@ -9,6 +9,7 @@ paths:
 
 - Pin `@copilotkit/*`, `@ag-ui/*`, `@mastra/*` and `@langchain/langgraph-api` exactly (no `^`/`~`): their wire formats change in patch releases.
 - Force a single installed copy of `@langchain/core`, `@langchain/langgraph` and `langchain` (or `@mastra/core` in shape M) (pnpm `overrides` / npm `overrides`). Two copies break `instanceof` checks and channel identity at runtime, not at compile time.
+- Force one `@ag-ui/langgraph`, `@ag-ui/core` and `@ag-ui/client` too. `@copilotkit/runtime` 1.84.1 pins `@ag-ui/langgraph` 0.0.44, so a skeleton on 0.0.45 overrides it to 0.0.45 and keeps `@ag-ui/core` and `@ag-ui/client` at the 1.0.2 the runtime pins; typecheck, lint, tests and the live thread rows passed on that set.
 - In a pnpm monorepo, declare these versions once in the workspace catalog (`catalog:` in each `package.json`, a named catalog per stack when apps move at different speeds) instead of repeating them per package.
 - Scope an override to the parent that needs it (`"parent>child": "x.y.z"`) when only one dependency pulls the wrong copy; a global override changes every consumer.
 - Bump these packages together, in one change, with the evidence: typecheck, unit tests, and a real streamed turn (and the eval suite where one exists) on the new versions.
