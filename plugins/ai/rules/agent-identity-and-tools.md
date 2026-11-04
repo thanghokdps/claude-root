@@ -38,7 +38,7 @@ paths:
 - Name and description live in constants; the description says when to use the tool and what it cannot do, in short bullets.
 - Every upstream call has a deadline (`AbortSignal.timeout` or the client's timeout); no call waits forever.
 - Read tools: may retry on 429/502/503/504 and network errors, with backoff, honouring the abort signal.
-- Mutation tools: never retried; gated by HITL (`interrupt()`); the only write before the decision is the pending-action record; the upstream write happens after confirm.
+- Mutation tools: never retried; gated by HITL (`interrupt()`); the only write before the decision is the pending-action record; the upstream write happens after confirm — a click, or a typed reply the server classified as an unconditional yes. A typed correction or another subject supersedes the record with nothing written, and the model proposes again through the same gate (`${CLAUDE_PLUGIN_ROOT}/skills/agent-hitl/references/card-open-input.md`).
 - Wrapper order: audit outside retry; every wrapper rethrows `GraphInterrupt`.
 - Errors the user must see (forbidden, not found, ambiguous) become a short, deterministic answer — not a raw upstream error, and not something the model can paraphrase into a false success. Shape A: stock `toolErrorMiddleware({ onError })` maps them to an error `ToolMessage` and never swallows `GraphInterrupt`.
 - A tool reporting a change that did not happen is a defect: confirm the outcome from the upstream response, not from the request.

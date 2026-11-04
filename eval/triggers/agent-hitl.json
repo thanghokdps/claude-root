@@ -16,6 +16,14 @@
     {
       "prompt": "Agent xóa user qua chat, cần confirm trước khi lưu",
       "top_k": 1
+    },
+    {
+      "prompt": "user typed ok instead of clicking confirm and nothing was saved",
+      "top_k": 3
+    },
+    {
+      "prompt": "gõ sửa thông tin khi card confirm đang mở, card không cập nhật",
+      "top_k": 3
     }
   ],
   "negative": [
