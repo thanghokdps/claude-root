@@ -15,7 +15,7 @@ cat ~/.claude/docs/solutions/INDEX.md 2>/dev/null
 
 ## What this project is
 
-A **source library** and the `harness` marketplace of role plugins (local directory marketplace, loaded in place — edits are live in new sessions; a GitHub install is copied to the plugin cache).
+A **source library** and the `harness` marketplace of role plugins. `claude plugin marketplace list` shows the source: GitHub or GitLab installs are copied to the plugin cache, so an edit reaches a session after it is pushed and `scripts/install.sh` ran; a local directory marketplace loads in place.
 
 ```
 <repo>/

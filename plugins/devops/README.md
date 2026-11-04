@@ -19,3 +19,11 @@ Role pack for CI/CD, containers and infrastructure: the `devops-engineer` agent 
 ## Rules and the gate
 
 `rules/ci.md`, `rules/container.md`, `rules/infra.md` — read by the agent and the skills, never always-loaded. The blocking hook `infra-gate` is in `ship`, not here: a gate must run before this pack is enabled, so every blocking hook of the kit lives in a process plugin.
+
+## Install
+
+```text
+/plugin install devops@harness
+```
+
+The marketplace must be added first: see the [root README](../../README.md#quickstart).

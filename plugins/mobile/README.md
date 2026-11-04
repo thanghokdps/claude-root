@@ -22,4 +22,12 @@ Role pack for mobile apps: the `mobile-engineer` agent that `/feature`, `/ticket
 
 Expo's official skills track each SDK: install the `expo` plugin from `expo/skills` for current API details. This pack keeps the process and the durable rules.
 
+## Install
+
+```text
+/plugin install mobile@harness
+```
+
+The marketplace must be added first: see the [root README](../../README.md#quickstart).
+
 Credits, ideas reworded with nothing copied: expo/skills, brunoviews/agent-skills `react-native-design`, nextlevelbuilder/ui-ux-pro-max-skill.
