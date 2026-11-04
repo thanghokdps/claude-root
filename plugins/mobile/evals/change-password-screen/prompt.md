@@ -1,5 +1,5 @@
 ---
-max_turns: 12
+max_turns: 16
 allowed_tools: [Read, Glob, Grep, Skill, Edit, Write]
 tags: [mobile-feature]
 ---
