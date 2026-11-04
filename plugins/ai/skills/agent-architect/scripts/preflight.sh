@@ -30,9 +30,10 @@ if command -v git >/dev/null 2>&1; then row git ok "$(git --version | awk '{prin
 else row git MISSING "$(hint git)"; missing=$((missing + 1)); fi
 
 if command -v node >/dev/null 2>&1; then
-  major="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
-  if [ "$major" -ge 20 ]; then row node ok "$(node --version)"
-  else row node OLD "$(node --version) — LangGraph.js and CopilotKit need ≥ 20; $(hint node)"; missing=$((missing + 1)); fi
+  # The scaffold's test runner sets the floor (vitest 5.1.0 engines), above LangGraph.js and CopilotKit's own ≥ 20.
+  read -r major minor < <(node -p 'process.versions.node.split(".").slice(0, 2).join(" ")' 2>/dev/null || echo "0 0")
+  if { [ "$major" -eq 22 ] && [ "$minor" -ge 12 ]; } || [ "$major" -eq 24 ] || [ "$major" -ge 26 ]; then row node ok "$(node --version)"
+  else row node OLD "$(node --version) — the test runner needs ^22.12.0, ^24.0.0 or >=26.0.0; $(hint node)"; missing=$((missing + 1)); fi
 else row node MISSING "$(hint node)"; missing=$((missing + 1)); fi
 
 pm=""
@@ -49,8 +50,8 @@ case "$provider" in
   openai) k=OPENAI_API_KEY ;; anthropic) k=ANTHROPIC_API_KEY ;; google) k=GOOGLE_API_KEY ;; azure) k=AZURE_OPENAI_API_KEY ;;
   *) k="" ;;
 esac
-is_set() {  # $1 variable, $2 env file: a NAME=<value> line whose value is not empty ("" and '' count as empty)
-  grep -qE "^$1=" "$2" && ! grep -qE "^$1=(\"\"|'')?[[:space:]]*$" "$2"
+is_set() {  # $1 variable, $2 env file: a NAME=<value> line whose value is not empty ("", '' and a bare comment count as empty)
+  grep -qE "^$1=" "$2" && ! grep -qE "^$1=(\"\"|'')?[[:space:]]*(#.*)?$" "$2"
 }
 key=""
 for f in "$dir/.env" "$dir/.env.local"; do
@@ -62,8 +63,17 @@ else row "model key" MISSING "set $k in .env (gitignored) — needed for the fir
 
 # Every variable .env.example leaves empty is a secret the user fills by hand (the internal token, tracing keys…):
 # one row per missing one, with the comment the scaffold wrote above it, so the user gets a step and not a boot error.
+# A tracing provider's keys are named but not counted while TRACING_PROVIDER does not select it: the app boots without them.
 # Before the scaffold there is no .env.example, and only the provider's key above applies.
 ex="$dir/.env.example"
+tracing="$(sed -nE "s/^TRACING_PROVIDER=[\"']?([a-z]*).*/\1/p" "$dir/.env" "$dir/.env.local" "$ex" 2>/dev/null | head -1)"
+tracing_key_off() {
+  case "$1" in
+    LANGFUSE_*) [ "$tracing" != langfuse ] ;;
+    LANGSMITH_*) [ "$tracing" != langsmith ] ;;
+    *) return 1 ;;
+  esac
+}
 secret_hint() {  # the comment on the line above the variable in .env.example, else a default by name
   # Repo text, shown and never run: plain characters only, 80 at most, labelled with its source.
   local c
@@ -78,15 +88,15 @@ if [ -f "$ex" ]; then
   total=0; filled=0
   while IFS= read -r name; do
     [ "$name" = "$k" ] && continue   # reported as "model key" above
-    total=$((total + 1))
     set_in=""
     for f in "$dir/.env" "$dir/.env.local"; do
       [ -f "$f" ] && is_set "$name" "$f" && { set_in="$f"; break; }
     done
-    if [ -n "$set_in" ]; then filled=$((filled + 1))
-    else row "$name" MISSING "set in .env — $(secret_hint "$name")"; missing=$((missing + 1)); fi
+    if [ -n "$set_in" ]; then total=$((total + 1)); filled=$((filled + 1))
+    elif tracing_key_off "$name"; then row "$name" optional "only when TRACING_PROVIDER selects it — $(secret_hint "$name")"
+    else total=$((total + 1)); row "$name" MISSING "set in .env — $(secret_hint "$name")"; missing=$((missing + 1)); fi
   done < <(grep -oE "^[A-Za-z_][A-Za-z0-9_]*=(\"\"|'')?$" "$ex" | cut -d= -f1)
-  [ "$filled" -eq "$total" ] && row secrets ok "$filled of $total set (.env.example)"
+  [ "$total" -gt 0 ] && [ "$filled" -eq "$total" ] && row secrets ok "$filled of $total set (.env.example)"
 fi
 
 if [ -d "$dir/.git" ] || git -C "$dir" rev-parse --git-dir >/dev/null 2>&1; then row "git repo" ok "initialised"

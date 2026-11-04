@@ -5,7 +5,7 @@ paths:
 
 # Chat threads (the sidebar)
 
-Checked on 2026-11-04 against @copilotkit/runtime and @copilotkit/react-core 1.83.0, @ag-ui/langgraph 0.0.45, @langchain/langgraph-api 1.5.7, @langchain/langgraph-sdk 1.12.10, @mastra/core 1.82.0 and @mastra/memory 1.41.0. Run live on a LangGraph server with a fake model, in a browser; the Stop, reload and restart rows on a kit skeleton (shape A, `langgraphjs dev` 1.5.7, a fake OpenAI server behind `OPENAI_BASE_URL`) on 2026-11-04. The Mastra store calls ran against `InMemoryStore` with a mock model; the Mastra routes and the Mastra web client were not run.
+Checked against @copilotkit/runtime and @copilotkit/react-core 1.83.0, @ag-ui/langgraph 0.0.45, @langchain/langgraph-api 1.5.7, @langchain/langgraph-sdk 1.12.10, @mastra/core 1.82.0 and @mastra/memory 1.41.0 on 2026-11-04. Run live on a LangGraph server with a fake model, in a browser; the Stop, reload and restart rows on a kit skeleton (shape A, `langgraphjs dev` 1.5.7, a fake OpenAI server behind `OPENAI_BASE_URL`) on 2026-11-04. The Mastra store calls ran against `InMemoryStore` with a mock model; the Mastra routes and the Mastra web client were not run.
 
 Every chat lists the caller's threads in a sidebar: new chat, switch, delete. The list and the history come from the framework's store, through routes on the framework's own server.
 

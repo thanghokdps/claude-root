@@ -9,7 +9,7 @@ import tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(ROOT, "plugins", "ai", "skills", "agent-architect", "scripts", "preflight.sh")
 KEYS = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "AZURE_OPENAI_API_KEY")
-ROW = re.compile(r"^(?P<name>.+?)\s+(?:ok|MISSING|OLD)\s+")
+ROW = re.compile(r"^(?P<name>.+?)\s+(?:ok|MISSING|OLD|optional)\s+")
 EXAMPLE = """# from https://platform.openai.com/api-keys
 OPENAI_API_KEY=
 # generate: openssl rand -base64 48
@@ -23,8 +23,7 @@ DEV_USER_NAME="Dev User"
 
 def run(d, path=None, provider=None, **env):
     e = {k: v for k, v in os.environ.items() if k not in KEYS}
-    if path is not None:
-        e["PATH"] = path
+    e["PATH"] = node_stub("24.0.0") if path is None else path  # results must not depend on this machine's Node
     e.update(env)
     p = subprocess.run(["bash", SCRIPT, d] + ([provider] if provider else []), capture_output=True, text=True, env=e)
     rows = {}
@@ -124,9 +123,48 @@ def test_every_empty_example_var_is_a_secret_to_fill():
     _, rows, out = run(example_dir("OPENAI_API_KEY=sk-secret-value\n"))
     assert " ok " in rows["model key"], rows
     assert "MISSING" in rows["INTERNAL_API_TOKEN"] and "openssl rand -base64 48" in rows["INTERNAL_API_TOKEN"], rows
-    assert "MISSING" in rows["LANGFUSE_SECRET_KEY"] and "Langfuse project settings" in rows["LANGFUSE_SECRET_KEY"], rows
     assert "TRACING_PROVIDER" not in rows and "DEV_USER_NAME" not in rows, rows
-    assert "missing: 2" in out, out
+    assert "missing: 1" in out, out
+
+
+def test_tracing_key_is_optional_while_tracing_is_off():
+    # The app boots with TRACING_PROVIDER=none, so its keys are named but never block `missing: 0`.
+    _, rows, out = run(example_dir("OPENAI_API_KEY=sk-x\nINTERNAL_API_TOKEN=t\n"))
+    assert " optional " in rows["LANGFUSE_SECRET_KEY"] and "Langfuse project settings" in rows["LANGFUSE_SECRET_KEY"], rows
+    assert "missing: 0" in out and "1 of 1" in rows["secrets"], out
+
+
+def test_tracing_key_is_required_once_tracing_selects_it():
+    _, rows, out = run(example_dir('OPENAI_API_KEY=sk-x\nINTERNAL_API_TOKEN=t\nTRACING_PROVIDER="langfuse"\n'))
+    assert "MISSING" in rows["LANGFUSE_SECRET_KEY"] and "missing: 1" in out, out
+
+
+def test_value_that_is_only_a_comment_counts_as_unset():
+    _, rows, _ = run(example_dir("OPENAI_API_KEY=sk-x\nINTERNAL_API_TOKEN= # todo\n"))
+    assert "MISSING" in rows["INTERNAL_API_TOKEN"], rows
+
+
+def test_example_with_only_the_model_key_prints_no_empty_count():
+    _, rows, out = run(example_dir("OPENAI_API_KEY=sk-x\n", example="OPENAI_API_KEY=\n"))
+    assert "secrets" not in rows and "missing: 0" in out, out
+
+
+def node_stub(version):
+    """A PATH whose `node` answers as this version, ahead of the real tools."""
+    b = tempfile.mkdtemp(prefix="preflight-node-")
+    major, minor = version.split(".")[:2]
+    path = os.path.join(b, "node")
+    with open(path, "w") as f:
+        f.write(f'#!/bin/sh\n[ "$1" = "-p" ] && echo "{major} {minor}" || echo "v{version}"\n')
+    os.chmod(path, 0o755)
+    return b + os.pathsep + os.environ["PATH"]
+
+
+def test_node_floor_is_the_test_runners():
+    for version, status in (("20.19.0", "OLD"), ("22.11.0", "OLD"), ("23.5.0", "OLD"), ("25.1.0", "OLD"),
+                            ("22.12.0", " ok "), ("24.0.0", " ok "), ("26.1.0", " ok ")):
+        _, rows, _ = run(good_dir(), path=node_stub(version))
+        assert status in rows["node"], (version, rows["node"])
 
 
 def test_all_secrets_set_reports_ok_and_hides_values():
