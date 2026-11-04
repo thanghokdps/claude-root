@@ -62,7 +62,7 @@ src/langgraph/            # shape B (R10 on R5)
 
 Tests follow the groups. With `__tests__/` (Q-T), a group's unit tests sit in its own `__tests__/` (`config/__tests__/env.test.ts`, `guardrails/__tests__/pii.test.ts`). Tests that span groups stay in `src/<agent folder>/__tests__/`: the prompt tests, the deprecated-import lint test and its `fixtures/`, and the shared `helpers/` and fakes. With `tests/`, the same groups are mirrored under it.
 
-Only when the user names Next.js: R2 keeps `src/mastra/` and adds `src/agent.ts` (`MastraAgent.getLocalAgents({ mastra })`) behind `src/app/api/copilotkit/route.ts`; R4 puts LangChain/LangGraph in its own `agent/` package beside the Next app.
+Only in an existing Next.js repo: R2 keeps `src/mastra/` and adds `src/agent.ts` (`MastraAgent.getLocalAgents({ mastra })`) behind `src/app/api/copilotkit/route.ts`; R4 puts LangChain/LangGraph in its own `agent/` package beside the Next app.
 
 One dependency list serves both sides, as in the Dojo: `langgraph up`/Docker installs the web deps too (`mastra build` bundles only `src/mastra/`). When the agent and the web must deploy apart, pick L2.
 
@@ -78,7 +78,7 @@ Pick it when: one deployable, no second client planned, Node host.
   .env.example
   apps/
     agent/                # agent server with the CopilotKit runtime as its route: src/mastra/ (registerCopilotKit) or src/langchain|langgraph/ + langgraph.json (http.app), tools, evals/
-    web/                  # Vite + CopilotKit client only, R3 conventions (Next.js only when named; add apps/mobile for headless clients)
+    web/                  # Vite + CopilotKit client only, R3 conventions (add apps/mobile for headless clients)
   packages/
     shared/               # AGENT_ID, interrupt contract types, zod tool schemas shared by server and clients
     config/               # tsconfig + eslint presets

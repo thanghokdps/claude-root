@@ -45,7 +45,7 @@ Map design variables (colors, type, radius, spacing, shadow) onto the repo's tok
 
 Screens are built from primitives, never from raw elements, and the set of primitives comes from the design — not from a fixed list. Follow `${CLAUDE_SKILL_DIR}/references/primitives.md`:
 
-1. **Reference library** — the UI library the repo already uses (detected), or one the user picks as options (`shadcn/ui` on Radix recommended for Next.js + Tailwind). Its component list, read from the installed package or current docs, is the vocabulary for what counts as a primitive.
+1. **Reference library** — the UI library the repo already uses (detected), or one the user picks as options (`shadcn/ui` on Radix recommended for Vite + Tailwind). Its component list, read from the installed package or current docs, is the vocabulary for what counts as a primitive.
 2. **Inventory** — every Figma component set and variant, plus elements clustered by look across frames, overlays and icon sizes included.
 3. **Classify** — library primitive (install or wrap the library's accessible component, themed with tokens) · design primitive (no library equivalent, no domain data, used on ≥ 2 frames or features) · feature component (domain-named, composed of the first two).
 4. **Record** the table in the map, then build every primitive in `components/ui/` before any screen, all variants and states shown on the states page.
