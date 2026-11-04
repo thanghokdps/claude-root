@@ -53,9 +53,9 @@ Write Testing Library tests for the states and interactions in Step 1, with the 
 
 ## Step 4 — Prove it in the browser
 
-Run the app (or the design-states page) and drive the feature with Playwright MCP or Claude in Chrome. Use each project viewport (e.g. 375 / 1024 / 1440): click through the happy path and one failure, check the console has no errors, and take a screenshot per viewport.
+Run the app (or the design-states page) and drive the feature with Playwright MCP or Claude in Chrome. Use each project viewport (e.g. 375 / 1024 / 1440): click through the happy path and one failure, check the console has no errors (a hydration mismatch is one), assert `document.documentElement.scrollWidth <= window.innerWidth` (an implicit grid column or an `sr-only` span outside the scroll box widens the page with no visible tell), and take a screenshot per viewport.
 
-**Done when:** the screenshots and a clean console are shown, at every viewport.
+**Done when:** the screenshots, a clean console and the overflow assert are shown, at every viewport.
 
 ## Step 5 — Quality floor and taste
 

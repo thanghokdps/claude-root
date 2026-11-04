@@ -21,7 +21,7 @@ paths:
 ## Errors
 
 - One wrapper per app turns thrown errors into `{ "error": "<code>" }` with the right status: 400, 401, 403, 404, 409 conflict, 422, 429. Anything else is a 500 `internal`, logged with the path and no stack trace or secret in the response.
-- Error codes are stable strings (`not_found`, `invalid_body`, `quota_exceeded`) the client can switch on. Messages for humans are the client's job.
+- Error codes are stable strings (`not_found`, `invalid_body`, `quota_exceeded`, `rate_limited` for the 429) the client can switch on. Messages for humans are the client's job.
 
 ## Contract
 

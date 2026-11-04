@@ -30,7 +30,7 @@ A chat is mostly states the happy-path frame does not show. Add every row of `${
 
 Map the tokens onto the v2 variables in `${CLAUDE_SKILL_DIR}/references/copilotkit-v2-ui.md`, written as `oklch()` in one stylesheet scoped under a wrapper class around `[data-copilotkit]`, reading from the app's tokens rather than repeating values.
 
-**Done when:** every colour and radius in the chat frames reaches the chat through a `[data-copilotkit]` variable or a slot class built on tokens.
+**Done when:** every colour and radius in the chat frames reaches the chat through a `[data-copilotkit]` variable or a slot class built on tokens, and the chat root's computed `--background` in the browser is the app's, not the library's default (`copilotkit-v2-ui.md` § Theme tokens).
 
 ## At design-ui Step 3 — Primitives in the chat
 

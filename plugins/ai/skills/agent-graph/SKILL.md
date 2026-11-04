@@ -43,7 +43,7 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 - **Prompts**: bullets; keep the user's sentences verbatim; derive tool/scope lists from constants; describe only tools that exist.
 - **Middleware**: insert at the position the order contract requires (`shapes.md`); reordering changes behaviour even when tests stay green. Shape M's equivalent is the `inputProcessors` / `outputProcessors` order on the agent.
 - **Agent id**: a new id changes three places together (`${CLAUDE_PLUGIN_ROOT}/rules/agui-transport.md`).
-- **Limits**: recursion limit (shape M: `maxSteps`) and timeout land as a readable turn.
+- **Limits**: recursion limit sized from the node count per `${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` § Graph lifecycle (shape M: `maxSteps` ≥ the longest tool chain + 1), written with its count; it and the timeout land as a readable turn.
 - **Workflow**: shape M → `createWorkflow` + `createStep`, each step with `inputSchema` / `outputSchema` (Zod), `.then()` / `.branch()` / `.parallel()`, `.commit()` once at module level, registered in `new Mastra({ workflows })` (`${CLAUDE_PLUGIN_ROOT}/rules/mastra.md` § Workflows). Shapes A/B → a `StateGraph` with fixed edges and a typed state, compiled once (`${CLAUDE_PLUGIN_ROOT}/rules/langgraph.md` § Fixed workflows). A step that writes waits for a human through the gate `/agent-hitl` owns (`suspend()` / `interrupt()`), with code before it idempotent. The agent reaches the workflow through one tool or the agent's `workflows` map, named in its prompt like any tool; identity comes from the run context, never a step input.
 
 **Done when:** unit tests cover the new routing rule (one prompt per rule plus one out-of-scope), the prompt ↔ tool parity and prompt budget tests (`agent-prompts.md`) pass, each new workflow has a test per step plus one end-to-end run (including the suspended and the declined path when a step waits for a human), and typecheck and lint pass.
@@ -52,4 +52,4 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 
 Run the router/routing eval if the repo has one (`/agent-evals`), else `/agent-verify-turn` with an in-scope, a neighbouring-scope and an out-of-scope prompt.
 
-**Done when:** each prompt lands on the expected agent, with the evidence shown. Update the agent/tool map doc if the repo keeps one.
+**Done when:** each prompt lands on the expected agent, with the evidence shown, and a turn with two tool calls ends in `RUN_FINISHED`, not at the recursion limit. Update the agent/tool map doc if the repo keeps one.

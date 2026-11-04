@@ -60,7 +60,7 @@ Split the feature into slices per layer and give each one decision:
 | `cancelled_at` column | db             | server                        | **new**    | —                           | orders have no cancel state     | `/feature` → backend engineer  |
 | order history page    | screen         | browser                       | **new**    | —                           | no page lists past orders       | `/feature` → frontend engineer |
 
-- **Runs in** follows `agent-identity-and-tools.md` § Where a tool lives: server data, identity, secrets or audit → agent tool; browser-only effects (navigate, open a panel, fill a form) → frontend tool; fetch-then-show → two tools. A write is always confirmed by the backend interrupt (`/agent-hitl`), never by `useHumanInTheLoop`.
+- **Runs in** follows `agent-identity-and-tools.md` § Where a tool lives: server data, identity, secrets or audit → agent tool; browser-only effects (navigate, open a panel, fill a form) → frontend tool; fetch-then-show → two tools. A write the agent performs is always confirmed by the backend interrupt (`/agent-hitl`), never by `useHumanInTheLoop`; a write the user performs after the agent proposes (ADR Q4: the user writes through the app) is a read-only tool plus a card whose button calls the app's own route, per `agent-identity-and-tools.md` § Agent writes vs user writes — its rows say `/agent-tool`, `/agent-frontend`, and the route is an app-side row.
 - **reuse** when an existing piece already does it; **extend** when a parameter, a field or a variant covers it; **new** only with a reason the two above cannot meet.
 - A new piece that resembles an existing one (same upstream, same entity, same card shape) is an _extend_ unless the reason says otherwise.
 - Layer owners, agent side: tool `/agent-tool` · agent scope, routing, prompt `/agent-graph` · write with confirm `/agent-hitl` · documents, embeddings, semantic memory `/agent-rag` · chat client wiring `/agent-frontend` · chat look from a design `/agent-design-ui` · tests and evals `/agent-evals`.
@@ -68,7 +68,7 @@ Split the feature into slices per layer and give each one decision:
 
 Each new or extended piece names its folder per `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md` (`features/<feature>/`, `components/ui/` only for a second consumer, `server/<aggregate>/`).
 
-Show the table, then ask through `AskUserQuestion`: _build as planned (Recommended)_ / _change a slice_ / _split into smaller features_. When the user already said "implement all, don't ask", take the recommended option and say so in one line.
+Show the table, then ask through `AskUserQuestion`: _build as planned (Recommended)_ / _change a slice_ / _split into smaller features_. When the user already said "implement all, don't ask", take the recommended option and say so in one line. A table that spans more than one P2 task (several example messages) or runs past ~6 slices recommends _split_: one feature per task, each through Steps 5–8 in turn with its own duplicate check and live proof; "implement all" then takes the split and runs them in order.
 
 **Done when:** every slice has a decision, a builder, and each **new** row has its reason.
 
@@ -77,10 +77,10 @@ Show the table, then ask through `AskUserQuestion`: _build as planned (Recommend
 Run each slice through its layer skill in dependency order (contract schema → db → API client → endpoint → retrieval → tool → HITL → agent scope → chat frontend → screens → evals), one slice green before the next. Pass the slice row as the brief so the layer skill does not re-decide placement.
 
 - **Invoke the layer skill** (`/agent-tool`, `/agent-hitl`, `/agent-frontend`, `/agent-design-ui`, `/agent-evals` …) with the Skill tool for every agent-side slice, even a small one; an app-side row goes back to `/feature` for its engineer. Never build a slice inline from memory of what the skill says: its checks (no identity in the schema, no write before confirm, states, tokens) are what the slice is reviewed against. A slice with no matching skill says so in its row.
-- **Code goes to a cheaper model.** Inside the layer skill, the main session decides; the code for the slice goes to one subagent dispatched with `Agent` as `subagent_type: "ai:ai-engineer"`, `model: "sonnet"` (never an untyped, general-purpose agent) whose brief is one slice row, the contract and the test to make pass, per `model-cost.md` (core). Never bundle several slices into one brief: a bundled brief comes back half done and is dispatched again. The main session reviews its diff before the next slice.
+- **Code goes to a cheaper model.** Inside the layer skill, the main session decides; the code for the slice goes to one subagent dispatched with `Agent` as `subagent_type: "ai:ai-engineer"`, `model: "sonnet"` (never an untyped, general-purpose agent) whose brief is one slice row, the contract and the test to make pass, per `model-cost.md` (core). Never bundle several slices into one brief: a bundled brief comes back half done and is dispatched again. The main session reviews its diff before the next slice, with Step 6's list on that slice's diff: a constant, label map or formatter the slice re-declared is imported now, before the next slice copies it again.
 - **Edit files with Edit or Write**, not shell heredocs, `sed` or scripts, so the repo's edit hooks (lint, format) run on every change.
 
-**Done when:** each slice's own Done-when is met, its layer skill was invoked (or its row says why none fits), and typecheck, lint and tests pass.
+**Done when:** each slice's own Done-when is met, its layer skill was invoked (or its row says why none fits), typecheck, lint and tests pass, and the slice ran live before the next one started: an agent-side slice shows one `/agent-verify-turn local` turn through it (two tool calls when the slice adds a tool, a resume when it adds a confirm), a chat-surface slice one real turn in the browser at every ADR viewport with a clean console, an app-side slice its pack's Green-when from `/feature`. A recursion limit too low for two tool calls, a confirm card that re-rendered forever and a chat on the library's theme root passed typecheck, lint and build; one turn showed each. Tests declined by the user → say so once; then each slice's row and the build report name the live check that stands in for its test, with that check's own output pasted — the `/agent-verify-turn local` turn for a tool, prompt or graph slice (in-scope, out-of-scope, two tool calls, a resume), the browser turn for a chat-surface slice, the `curl` status matrix for a route — and a check that cannot run here reads `not verified: <why>`, never "skipped per user" with nothing in its place (`/verify-done` § Tests declined).
 
 ## Step 6 — Duplicate check on the diff
 
@@ -99,9 +99,9 @@ If `jscpd` is installed, also run `npx jscpd <changed dirs> --min-tokens 50`. Fi
 
 ## Step 7 — Prove it
 
-Run `/agent-verify-turn` with each example message from Step 1 and one message the feature must not handle; a manual check in the app adds to it and never replaces it. Add the passing turns to the eval suite via `/agent-evals`.
+Run `/agent-verify-turn` with each example message from Step 1 and one message the feature must not handle; a manual check in the app adds to it and never replaces it. Add the passing turns to the eval suite via `/agent-evals`. Evals declined by the user → this step still runs every message; the passing turns go into the feature doc as example messages with their expected outcomes, so the next session re-runs them, and no eval file is added.
 
-**Done when:** the right agent and tools fire for each example, the out-of-scope message is declined, and the eval cases exist.
+**Done when:** the right agent and tools fire for each example, the out-of-scope message is declined, and the eval cases exist (evals declined: the feature doc lists the messages and outcomes instead).
 
 ## Step 8 — Review and land
 

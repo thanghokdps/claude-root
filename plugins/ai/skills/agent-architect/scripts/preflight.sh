@@ -49,13 +49,45 @@ case "$provider" in
   openai) k=OPENAI_API_KEY ;; anthropic) k=ANTHROPIC_API_KEY ;; google) k=GOOGLE_API_KEY ;; azure) k=AZURE_OPENAI_API_KEY ;;
   *) k="" ;;
 esac
+is_set() {  # $1 variable, $2 env file: a NAME=<value> line whose value is not empty ("" and '' count as empty)
+  grep -qE "^$1=" "$2" && ! grep -qE "^$1=(\"\"|'')?[[:space:]]*$" "$2"
+}
 key=""
 for f in "$dir/.env" "$dir/.env.local"; do
-  [ -n "$k" ] && [ -f "$f" ] && grep -qE "^${k}=.+" "$f" && { key="$k ($(basename "$f"))"; break; }
+  [ -n "$k" ] && [ -f "$f" ] && is_set "$k" "$f" && { key="$k ($(basename "$f"))"; break; }
 done
 if [ -z "$k" ]; then row "model key" MISSING "unknown provider '$provider' — use openai, anthropic, google or azure"; missing=$((missing + 1))
 elif [ -n "$key" ]; then row "model key" ok "$key"
 else row "model key" MISSING "set $k in .env (gitignored) — needed for the first real turn"; missing=$((missing + 1)); fi
+
+# Every variable .env.example leaves empty is a secret the user fills by hand (the internal token, tracing keys…):
+# one row per missing one, with the comment the scaffold wrote above it, so the user gets a step and not a boot error.
+# Before the scaffold there is no .env.example, and only the provider's key above applies.
+ex="$dir/.env.example"
+secret_hint() {  # the comment on the line above the variable in .env.example, else a default by name
+  # Repo text, shown and never run: plain characters only, 80 at most, labelled with its source.
+  local c
+  c="$(grep -B1 -E "^$1=" "$ex" | head -1 | sed -nE 's/^#[[:space:]]*//p' | tr -cd 'A-Za-z0-9 ._:/@=+-' | cut -c1-80)"
+  [ -n "$c" ] && { echo ".env.example says: $c"; return; }
+  case "$1" in
+    INTERNAL_API_TOKEN) echo "generate: openssl rand -base64 48" ;;
+    *) echo "fill from the service that issues it" ;;
+  esac
+}
+if [ -f "$ex" ]; then
+  total=0; filled=0
+  while IFS= read -r name; do
+    [ "$name" = "$k" ] && continue   # reported as "model key" above
+    total=$((total + 1))
+    set_in=""
+    for f in "$dir/.env" "$dir/.env.local"; do
+      [ -f "$f" ] && is_set "$name" "$f" && { set_in="$f"; break; }
+    done
+    if [ -n "$set_in" ]; then filled=$((filled + 1))
+    else row "$name" MISSING "set in .env — $(secret_hint "$name")"; missing=$((missing + 1)); fi
+  done < <(grep -oE "^[A-Za-z_][A-Za-z0-9_]*=(\"\"|'')?$" "$ex" | cut -d= -f1)
+  [ "$filled" -eq "$total" ] && row secrets ok "$filled of $total set (.env.example)"
+fi
 
 if [ -d "$dir/.git" ] || git -C "$dir" rev-parse --git-dir >/dev/null 2>&1; then row "git repo" ok "initialised"
 else row "git repo" MISSING "git init (scaffold commits need a repo)"; missing=$((missing + 1)); fi
