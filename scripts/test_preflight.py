@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for plugins/ai/skills/agent-architect/scripts/preflight.sh. Run: python3 scripts/test_preflight.py"""
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -8,6 +9,16 @@ import tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(ROOT, "plugins", "ai", "skills", "agent-architect", "scripts", "preflight.sh")
 KEYS = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "AZURE_OPENAI_API_KEY")
+ROW = re.compile(r"^(?P<name>.+?)\s+(?:ok|MISSING|OLD)\s+")
+EXAMPLE = """# from https://platform.openai.com/api-keys
+OPENAI_API_KEY=
+# generate: openssl rand -base64 48
+INTERNAL_API_TOKEN=
+TRACING_PROVIDER=none
+# from the Langfuse project settings
+LANGFUSE_SECRET_KEY=""
+DEV_USER_NAME="Dev User"
+"""
 
 
 def run(d, path=None, provider=None, **env):
@@ -18,10 +29,9 @@ def run(d, path=None, provider=None, **env):
     p = subprocess.run(["bash", SCRIPT, d] + ([provider] if provider else []), capture_output=True, text=True, env=e)
     rows = {}
     for line in p.stdout.splitlines():
-        for name in ("git repo", "model key", "package manager", "git", "node"):
-            if line.startswith(name + " "):
-                rows[name] = line
-                break
+        m = ROW.match(line)
+        if m:
+            rows[m["name"]] = line
     return p.returncode, rows, p.stdout
 
 
@@ -31,6 +41,17 @@ def good_dir(key="OPENAI_API_KEY"):
     if key:
         with open(os.path.join(d, ".env"), "w") as f:
             f.write(f"{key}=sk-secret-value\n")
+    return d
+
+
+def example_dir(env_text, example=EXAMPLE):
+    """A repo after the scaffold: .env.example names the secrets (empty) and settings (filled), .env is the user's."""
+    d = good_dir(key=None)
+    with open(os.path.join(d, ".env.example"), "w") as f:
+        f.write(example)
+    if env_text:
+        with open(os.path.join(d, ".env"), "w") as f:
+            f.write(env_text)
     return d
 
 
@@ -96,6 +117,41 @@ def test_lockfile_picks_package_manager():
     open(os.path.join(d, "package-lock.json"), "w").close()
     _, rows, _ = run(d)
     assert " ok " in rows["package manager"] and "npm" in rows["package manager"], rows
+
+
+def test_every_empty_example_var_is_a_secret_to_fill():
+    # The model key alone is not enough: the server dies at boot on the next empty secret.
+    _, rows, out = run(example_dir("OPENAI_API_KEY=sk-secret-value\n"))
+    assert " ok " in rows["model key"], rows
+    assert "MISSING" in rows["INTERNAL_API_TOKEN"] and "openssl rand -base64 48" in rows["INTERNAL_API_TOKEN"], rows
+    assert "MISSING" in rows["LANGFUSE_SECRET_KEY"] and "Langfuse project settings" in rows["LANGFUSE_SECRET_KEY"], rows
+    assert "TRACING_PROVIDER" not in rows and "DEV_USER_NAME" not in rows, rows
+    assert "missing: 2" in out, out
+
+
+def test_all_secrets_set_reports_ok_and_hides_values():
+    d = example_dir("OPENAI_API_KEY=sk-secret-value\nINTERNAL_API_TOKEN=tok-secret-value\n")
+    with open(os.path.join(d, ".env.local"), "w") as f:
+        f.write("LANGFUSE_SECRET_KEY=lf-secret-value\n")
+    _, rows, out = run(d)
+    assert " ok " in rows["secrets"] and "2 of 2" in rows["secrets"], rows
+    assert "missing: 0" in out and "secret-value" not in out, out
+
+
+def test_empty_value_in_env_counts_as_unset():
+    _, rows, _ = run(example_dir('OPENAI_API_KEY=sk-x\nINTERNAL_API_TOKEN=""\nLANGFUSE_SECRET_KEY=lf-x\n'))
+    assert "MISSING" in rows["INTERNAL_API_TOKEN"], rows
+
+
+def test_secret_without_a_comment_gets_a_default_hint():
+    d = example_dir("OPENAI_API_KEY=sk-x\nINTERNAL_API_TOKEN=t\nLANGFUSE_SECRET_KEY=l\n", example=EXAMPLE + "OTHER_TOKEN=\n")
+    _, rows, _ = run(d)
+    assert "MISSING" in rows["OTHER_TOKEN"] and "issues it" in rows["OTHER_TOKEN"], rows
+
+
+def test_no_example_file_checks_only_the_model_key():
+    _, rows, out = run(good_dir())
+    assert "secrets" not in rows and "missing: 0" in out, out
 
 
 if __name__ == "__main__":

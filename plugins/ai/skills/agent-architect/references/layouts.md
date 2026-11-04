@@ -9,7 +9,7 @@ One package, as `mastra-ai/ui-dojo` (R3) does: a Vite SPA and the agent side by 
 ```
 <app>/
   package.json            # dev: concurrently "<mastra dev | langgraph dev>" "vite"
-  .env.example            # model key, auth issuer, tracing switch, VITE_*_BASE_URL — names only
+  .env.example            # model key, INTERNAL_API_TOKEN, auth issuer, tracing switch and keys, VITE_*_BASE_URL — secrets empty, a comment above each saying where it comes from
   vite.config.ts  index.html
   tsconfig.app.json       # the web code; excludes the agent folder so DOM types never reach it
   tsconfig.node.json      # the agent folder and vite.config.ts
