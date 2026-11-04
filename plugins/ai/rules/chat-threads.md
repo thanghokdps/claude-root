@@ -5,7 +5,7 @@ paths:
 
 # Chat threads (the sidebar)
 
-Checked on 2026-11-04 against @copilotkit/runtime and @copilotkit/react-core 1.83.0, @ag-ui/langgraph 0.0.45, @langchain/langgraph-api 1.5.7, @langchain/langgraph-sdk 1.12.10, @mastra/core 1.82.0 and @mastra/memory 1.41.0. Run live on a LangGraph server with a fake model, in a browser. The Mastra store calls ran against `InMemoryStore` with a mock model; the Mastra routes and the Mastra web client were not run.
+Checked on 2026-11-04 against @copilotkit/runtime and @copilotkit/react-core 1.83.0, @ag-ui/langgraph 0.0.45, @langchain/langgraph-api 1.5.7, @langchain/langgraph-sdk 1.12.10, @mastra/core 1.82.0 and @mastra/memory 1.41.0. Run live on a LangGraph server with a fake model, in a browser; the Stop, reload and restart rows on a kit skeleton (shape A, `langgraphjs dev` 1.5.7, a fake OpenAI server behind `OPENAI_BASE_URL`) on 2026-11-04. The Mastra store calls ran against `InMemoryStore` with a mock model; the Mastra routes and the Mastra web client were not run.
 
 Every chat lists the caller's threads in a sidebar: new chat, switch, delete. The list and the history come from the framework's store, through routes on the framework's own server.
 
@@ -33,7 +33,7 @@ Three routes, all behind the same caller check as the chat route. The path is `a
 
 - Answer the routes inside `hooks.onRequest` of `createCopilotHonoHandler`, after the 401 guard: `throw Response.json(…)`. Throwing a `Response` from this hook is the documented early exit (1.83.0 `dist/v2/runtime/core/hooks.d.mts`, `onRequest`), it runs before routing, and the response keeps its CORS headers (`core/fetch-handler.mjs:96-102,219`). `http.app` takes one Hono app, and `hono` stays out of `package.json`, so a second app is not an option.
 - Put them in `server/threads.ts`. It calls `new Client({ apiUrl, defaultHeaders })` from `@langchain/langgraph-sdk` with the headers the route's `headerFactory` sends, so the LangGraph auth user is the caller. The `auth.on("threads", …)` filter (`rules/langgraph.md` § Run context) then scopes `client.threads.search`, `getState` and `delete` by owner. Never filter owners by hand.
-- The title is the thread's first `human` message, cut to 60 characters, read from `thread.values.messages` in the search result — when the search carries values. After Stop it does not: the client's Stop calls `runs.cancel` (@ag-ui/langgraph `abortRun`), the server aborts the run as `interrupt` and leaves the thread `idle` (@langchain/langgraph-api 1.5.7 `dist/storage/ops.mjs:1124,1144-1160`), the queue drops the run's checkpoint (`dist/queue.mjs:117`) and `threads.setStatus` writes `thread.values = undefined` (`queue.mjs:150`, `storage/ops.mjs:602-603`) while the checkpoints stay. So the route reads `client.threads.getState(id)` (`values.messages`) for a thread the search lists without values, and drops only a thread with no human message in either — a thread the user stopped keeps its row. Dropping on the search's `values` alone made every stopped thread vanish from the sidebar (found 2026-11-04).
+- The title is the thread's first `human` message, cut to 60 characters, read from `thread.values.messages` in the search result — when the search carries values. After a cancelled run it does not: the runtime's runner calls the adapter's `abortRun` (@copilotkit/runtime 1.83.0 `dist/v2/runtime/runner/in-memory.mjs` `stop()`), @ag-ui/langgraph's `abortRun` calls `runs.cancel`, the server aborts the run as `interrupt` and leaves the thread `idle` (@langchain/langgraph-api 1.5.7 `dist/storage/ops.mjs:1124,1144-1160`), the queue drops the run's checkpoint (`dist/queue.mjs:117`) and `threads.setStatus` writes `thread.values = undefined` (`queue.mjs:150`, `storage/ops.mjs:602-603`) while the checkpoints stay — and a thread whose first run is still going has no `values` yet either. So the route reads `client.threads.getState(id)` (`values.messages`) for a thread the search lists without values — the first checkpoint already holds the human message — and drops only a thread with no human message in either. Dropping on the search's `values` alone hid every stopped thread from the sidebar (reproduced 2026-11-04: Stop on a new thread's first answer, the row never appeared, not even after a reload, until the next send).
 - `human` maps to `user` and `ai` to `assistant`, keeping the message `id`, so `prepareStream` does not append them again. The first tool brings `tool` messages and assistant `toolCalls` into this mapping.
 - `langgraph dev` keeps threads in `.langgraph_api/`, which survives a restart and belongs in `.gitignore`. Production needs the checkpointer of `production.md` row 1.
 
@@ -52,11 +52,26 @@ Three routes, all behind the same caller check as the chat route. The path is `a
 const { agent } = useAgent({ agentId: AGENT_ID });
 useEffect(() => {
   let cancelled = false;
+  let history: Message[] | null = null;
+  // History order first; what the agent holds beyond it (a question just sent, an answer streaming in) follows.
+  const apply = () => {
+    if (cancelled || !history) return;
+    const known = new Set(history.map((m) => m.id));
+    const merged = [
+      ...history,
+      ...agent.messages.filter((m) => !known.has(m.id)),
+    ];
+    if (!sameIds(merged, agent.messages)) agent.setMessages(merged);
+  };
   agent.setMessages([]);
-  fetchHistory(threadId).then((history) => {
-    if (!cancelled) agent.setMessages(history);
+  fetchHistory(threadId).then((loaded) => {
+    history = loaded;
+    apply();
   });
-  const { unsubscribe } = agent.subscribe({ onRunFinalized: refetchThreads });
+  const { unsubscribe } = agent.subscribe({
+    onRunFinalized: refetchThreads,
+    onMessagesChanged: apply,
+  });
   return () => {
     cancelled = true;
     unsubscribe();
@@ -67,15 +82,16 @@ return <CopilotChat agentId={AGENT_ID} threadId={threadId} />;
 ```
 
 - `useAgent` with no `threadId` returns the agent `CopilotChat` drives. `useAgent({ threadId })` throws without `runtimeAgentId`, and a per-thread local `agentId` crashes `CopilotChat` on the next switch: `Agent 'chat-…' not found after runtime sync`.
-- New chat is `crypto.randomUUID()`: the LangGraph server answers 400 to any other id. The row appears after the first run, never as an empty row.
+- New chat is `crypto.randomUUID()`: the LangGraph server answers 400 to any other id. The row appears once the first message is stored (during the first answer), never as an empty row. New chat navigates with router state (`{ fresh: true }`) and the page skips the history fetch for it: fetching a thread that does not exist yet is a 404 the browser logs as an error, three times under StrictMode, and the console is never clean.
 - The thread id lives in the route (`/:threadId?`, as the Dojo's `pages/assistant-ui` does), so a reload stays on the thread.
 - Deleting the active thread opens a new chat.
-- **Stop** (the chat's own button: @copilotkit/react-core 1.84.0 `stopAgent`, else `agent.abortRun()`) cancels the run on the server and ends the stream. The thread stays `idle` with its checkpoints: the next send continues it, a reload shows its stored messages, and the partial answer the user watched is not stored. The list refetches after Stop as after any run (`onRunFinalized`), and the row stays because the list route falls back to the state. There is no separate reset button: New chat starts a fresh thread, Delete removes one, a stopped thread is continued or deleted.
-- **New chat, switch or delete while a run streams** stops that run first (`agent.abortRun()` before `agent.setMessages([])`), or the old run's events land in the new thread's view. Send stays disabled while a run streams; the server runs one run per thread.
+- **`connect` replays, out of order.** `CopilotChat` calls `connect` for the thread the page loaded on, and the runtime answers with its in-memory snapshot of the runs this process served for it (`runner/in-memory.mjs` `connect()`); a run still streaming resumes in the chat after a reload. That snapshot lands before or after the history route's messages and, merged by id, puts the replayed runs ahead of the earlier ones (observed: a thread's third exchange shown first after a reload, the first two after it). The sync above keeps the server's order and re-applies it on `onMessagesChanged`; it is idempotent, so no loop.
+- **Stop** (the chat's own button, in the send button's place while a run streams) aborts the browser's request. Whether the server's run is cancelled too depends on the runtime (observed on @copilotkit/runtime 1.83.0, in-memory runner, 2026-11-04): a thread the page loaded on (`connect`ed) runs to completion, the full answer is stored while the user saw a partial one, and it shows after a reload; a thread opened by in-app navigation gets `POST /threads/<id>/runs/<id>/cancel?action=interrupt`, the run ends `interrupted`, none of the answer is stored, and the next send continues the thread. @copilotkit/react-core 1.84.0 adds `stopAgent` → the runtime's `POST agent/<id>/stop/<threadId>`, which cancels in both cases (read in the package, not run). Either way the list refetches (`onRunFinalized` fires on Stop) and the row stays because the list route reads the state. There is no separate reset button: New chat starts a fresh thread, Delete removes one, a stopped thread is continued or deleted.
+- **New chat, switch or delete while a run streams** ends the browser's request like Stop does; the old run's text never lands in the new view, and switching back shows whatever the server stored. Nothing to abort by hand.
 - The sidebar is a `nav` with a label, the active row carries `aria-current="page"`, each delete button names its thread, and it has loading, empty and error states. At the narrow viewport it becomes a drawer and the composer stays pinned (`agent-design-ui` `chat-states.md`).
 
 ## Tests
 
 - Routes: no caller → 401 with CORS headers; a second caller's list is empty, and their read and delete of the first caller's thread → 404; the first caller's read → 200; the first caller's delete → 204, gone from the list; a thread the search lists without `values` (stopped) is listed with its title from the state, and a thread with no human message anywhere is not.
-- Web: switching threads shows only that thread's messages; a slow history response from the previous thread is ignored; new chat or switch during a run aborts the run first.
-- Live, every row with the console clean, shown as a table in the report: **new chat** → an empty chat, no row until the first answer, then the row with the title, active · **switch** back and forth between two threads → only that thread's messages · **delete** the active thread → a new chat opens; delete another → the active one stays · **Stop mid-answer** → the row stays in the list, the next send on the same thread answers, a reload shows the stored messages without the partial answer · **Stop on a new thread's first answer** → the row appears with the question as its title, the next send answers · **new chat or switch while a run streams** → the old run stops and none of its text lands in the new view · **send while a run streams** → not possible (Stop is in the send button's place) · **reload mid-answer** → the run finishes on the server; the answer shows after switching away and back · **restart the agent server** → both threads still list and open, and a follow-up in a restored thread leaves each message once in the store · **empty list, loading, error** → their states render. Each row is run before the sidebar is called done; a row that cannot run is `not verified: <why>`, never left out.
+- Web: switching threads shows only that thread's messages; a slow history response from the previous thread is ignored; a `connect` snapshot that lands after the history (the last run first, the earlier messages missing) ends up in history order with the streaming message kept after it, and an already ordered list triggers no `setMessages`.
+- Live, every row with the console clean (a fake model behind `OPENAI_BASE_URL` that streams slowly makes Stop reproducible without a key), shown as a table in the report: **new chat** → an empty chat, no history request, the row with the title once the first answer starts · **switch** back and forth between two threads → only that thread's messages · **delete** the active thread → a new chat opens; delete another → the active one stays · **Stop mid-answer** → the row stays in the list, the next send on the same thread answers, a reload shows the stored messages · **Stop on a new thread's first answer** → the row appears with the question as its title, the next send answers · **new chat or switch while a run streams** → none of the old run's text lands in the new view; switching back shows what the server stored · **send while a run streams** → Stop is in the send button's place, and a message typed and entered meanwhile goes out after the answer ends, as its own exchange, never interleaved · **reload mid-answer** on a thread the page loaded on → the answer resumes streaming and the messages stay in order; reload again → still in order · **restart the agent server** → the list shows its error state with Retry while it is down, Retry restores it, both threads still open, and every message is stored once (`threads/<id>/state`: distinct ids) · **a second caller** → an empty list, 404 on the first caller's thread. Each row is run before the sidebar is called done; a row that cannot run is `not verified: <why>`, never left out.
