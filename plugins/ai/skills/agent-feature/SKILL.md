@@ -80,7 +80,7 @@ Run each slice through its layer skill in dependency order (contract schema → 
 - **Code goes to a cheaper model.** Inside the layer skill, the main session decides; the code for the slice goes to one subagent dispatched with `Agent` as `subagent_type: "ai:ai-engineer"`, `model: "sonnet"` (never an untyped, general-purpose agent) whose brief is one slice row, the contract and the test to make pass, per `model-cost.md` (core). Never bundle several slices into one brief: a bundled brief comes back half done and is dispatched again. The main session reviews its diff before the next slice, with Step 6's list on that slice's diff: a constant, label map or formatter the slice re-declared is imported now, before the next slice copies it again.
 - **Edit files with Edit or Write**, not shell heredocs, `sed` or scripts, so the repo's edit hooks (lint, format) run on every change.
 
-**Done when:** each slice's own Done-when is met, its layer skill was invoked (or its row says why none fits), typecheck, lint and tests pass, and the slice ran live before the next one started: an agent-side slice shows one `/agent-verify-turn local` turn through it (two tool calls when the slice adds a tool, a resume when it adds a confirm), a chat-surface slice one real turn in the browser at every ADR viewport with a clean console, an app-side slice its pack's Green-when from `/feature`. A recursion limit too low for two tool calls, a confirm card that re-rendered forever and a chat on the library's theme root passed typecheck, lint and build; one turn showed each. Tests declined by the user → `/verify-done` § Tests declined.
+**Done when:** each slice's own Done-when is met, its layer skill was invoked (or its row says why none fits), typecheck, lint and tests pass, and the slice ran live before the next one started: an agent-side slice shows one `/agent-verify-turn local` turn through it (two tool calls when the slice adds a tool, a resume when it adds a confirm), a chat-surface slice one real turn in the browser at every ADR viewport with a clean console, an app-side slice its pack's Green-when from `/feature`. A recursion limit too low for two tool calls, a confirm card that re-rendered forever and a chat on the library's theme root passed typecheck, lint and build; one turn showed each. Tests declined by the user → say so once; then each slice's row and the build report name the live check that stands in for its test, with that check's own output pasted — the `/agent-verify-turn local` turn for a tool, prompt or graph slice (in-scope, out-of-scope, two tool calls, a resume), the browser turn for a chat-surface slice, the `curl` status matrix for a route — and a check that cannot run here reads `not verified: <why>`, never "skipped per user" with nothing in its place (`/verify-done` § Tests declined).
 
 ## Step 6 — Duplicate check on the diff
 
@@ -99,9 +99,9 @@ If `jscpd` is installed, also run `npx jscpd <changed dirs> --min-tokens 50`. Fi
 
 ## Step 7 — Prove it
 
-Run `/agent-verify-turn` with each example message from Step 1 and one message the feature must not handle; a manual check in the app adds to it and never replaces it. Add the passing turns to the eval suite via `/agent-evals`.
+Run `/agent-verify-turn` with each example message from Step 1 and one message the feature must not handle; a manual check in the app adds to it and never replaces it. Add the passing turns to the eval suite via `/agent-evals`. Evals declined by the user → this step still runs every message; the passing turns go into the feature doc as example messages with their expected outcomes, so the next session re-runs them, and no eval file is added.
 
-**Done when:** the right agent and tools fire for each example, the out-of-scope message is declined, and the eval cases exist.
+**Done when:** the right agent and tools fire for each example, the out-of-scope message is declined, and the eval cases exist (evals declined: the feature doc lists the messages and outcomes instead).
 
 ## Step 8 — Review and land
 
