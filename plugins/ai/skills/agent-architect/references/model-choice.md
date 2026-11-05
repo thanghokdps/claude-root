@@ -20,6 +20,19 @@ Every assistant has three model roles, set in `.env` and read by `models.ts`:
 
 The provider is OpenAI unless the user names another. It is never inferred from which key is set: two runs on one machine must not pick two providers.
 
+## Limits
+
+Every role gets these in `models.ts`, from env, so a stuck or long call has a floor and a ceiling without a code change:
+
+| Env                       | Skeleton default | What it stops                                                                                                           |
+| ------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `MODEL_MAX_OUTPUT_TOKENS` | `1024`           | A runaway answer's cost. `@langchain/openai` 1.8 sends `maxTokens` as `max_completion_tokens` on reasoning models       |
+| `MODEL_TIMEOUT_MS`        | `60000`          | A call that hangs while the user watches a spinner                                                                      |
+| `MODEL_MAX_RETRIES`       | `1`              | Retry stacking on `modelFallbackMiddleware`, which already covers an outage                                             |
+| `MODEL_REASONING_EFFORT`  | unset            | Primary only, on a reasoning model. A value the model does not support is an error from the provider, so it stays unset |
+
+`temperature` and `top_p` stay out unless an eval shows a need: reasoning models refuse them, and two people tuning both make a result nobody can explain. OpenAI's chat API offers no `top_k` (unverified, from memory; confirm on the provider's page before adding it). Send only what the chosen model accepts.
+
 ## Tier rule
 
 | Hardest task | Primary tier |

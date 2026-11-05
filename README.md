@@ -74,6 +74,42 @@ your sentence
   → memory     /compact (handoff) · /compound (lessons) · /docs-sync (project docs)
 ```
 
+The same flow as a map, with the skills each stage runs. GitLab and GitHub both draw this; the clickable version is [`docs/skill-map.html`](docs/skill-map.html).
+
+```mermaid
+flowchart TD
+  req["A requirement"] --> breakdown["/breakdown"]
+  breakdown --> ticket["/ticket"]
+  sentence["Your sentence"] --> lane{"Lane by risk"}
+  ticket --> lane
+  lane -->|tiny| build
+  lane -->|normal| plan["Plan mode"]
+  lane -->|high-risk| spec["/brainstorming · /writing-plans"]
+  plan --> build
+  spec --> build
+  build["/feature · /fix-bug · /tdd"] --> roles
+
+  subgraph roles["Role engineers"]
+    backend["backend: /api-endpoint /db-change /api-client"]
+    frontend["frontend: /ui-feature /design-ui /ui-polish"]
+    mobile["mobile: /mobile-feature /mobile-design"]
+    ai["ai: /agent-architect /agent-feature /agent-tool /agent-hitl"]
+    devops["devops: /pipeline /container /infra-change"]
+  end
+
+  roles --> verify["/verify-done"]
+  verify --> review["/review-checklist · /code-review · /security-review"]
+  review --> finish["/finish-branch"]
+  finish --> first{"Deployed before?"}
+  first -->|no| setup["/release-setup"]
+  first -->|yes| release["/release-checklist"]
+  setup --> release
+  release --> prod["Production"]
+  prod -.->|red build| triage["/ci-triage"]
+  prod -.->|outage| incident["/incident"]
+  finish --> memory["/compact · /compound · /docs-sync"]
+```
+
 The lane comes from risk; a human is asked only to resolve ambiguity, never to classify risk. Auth, data migration, security, external providers, public contracts and weakened validation are always high-risk. The control model in full: [`HARNESS.md`](HARNESS.md).
 
 ### Engineers

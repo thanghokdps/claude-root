@@ -40,4 +40,4 @@ Checked against the AG-UI 1.0 spec (`@ag-ui/core` 1.0.3) on 2026-10-23. Read the
 ## Ids
 
 - Tool-call ids stay stable end to end (backend → stream → client dedupe → resume).
-- Every agent id is a three-way contract: backend registry (the Mastra `agents` key in shape M), `langgraph.json` or `registerCopilotKit({ resourceId })` (if used), and the client's `agent` prop. Change all three together.
+- Every agent id is a three-way contract: backend registry (the Mastra `agents` key in shape M), the `graph` map in `server/main.ts` or `registerCopilotKit({ resourceId })` (if used), and the client's `agent` prop. Change all three together.
