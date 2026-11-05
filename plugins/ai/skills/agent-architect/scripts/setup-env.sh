@@ -12,12 +12,20 @@ if [ ! -f "$template" ]; then
   echo "no .env.example in $dir: nothing created"
   exit 0
 fi
+if [ -L "$target" ]; then
+  echo ".env is a symlink: left unchanged"
+  exit 1
+fi
 if [ -e "$target" ]; then
   echo ".env already exists: left unchanged"
 else
   token="$(openssl rand -base64 48)"
   umask 077
-  awk -v token="$token" '/^INTERNAL_API_TOKEN=(\"\")?[[:space:]]*$/ { print "INTERNAL_API_TOKEN=\"" token "\""; next } { print }' "$template" > "$target"
+  # noclobber makes the open exclusive, so a file that appears after the checks is never written through.
+  (
+    set -o noclobber
+    awk -v token="$token" '/^INTERNAL_API_TOKEN=(\"\")?[[:space:]]*$/ { print "INTERNAL_API_TOKEN=\"" token "\""; next } { print }' "$template" > "$target"
+  )
   echo ".env created from .env.example"
 fi
 

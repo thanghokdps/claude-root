@@ -81,6 +81,15 @@ def test_never_overwrites_an_existing_env():
     assert "left unchanged" in out and "user-key" not in out, out
 
 
+def test_refuses_a_symlink_and_writes_nothing_through_it():
+    d = project()
+    outside = os.path.join(tempfile.mkdtemp(prefix="setup-env-outside-"), "target")
+    os.symlink(outside, os.path.join(d, ".env"))
+    r = subprocess.run(["bash", SCRIPT, d], capture_output=True, text=True)
+    assert r.returncode != 0 and "symlink" in r.stdout, r
+    assert not os.path.exists(outside)
+
+
 def test_no_template_creates_nothing():
     d = project(template=None)
     out = run(d)
