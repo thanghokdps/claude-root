@@ -35,7 +35,7 @@ A **source library** and the `harness` marketplace of role plugins. `claude plug
                 a role pack = one agents/<role>-engineer.md, deliverable-named skills, on-demand rules, deps exactly [progress, dev]
                 (ai adds frontend, backend: an assistant is a chat page plus an agent server),
                 no hooks (gates live in core/dev/ship so they run before the pack is enabled); lint-kit checks the shape
-    ship        finish-branch ci-triage release-checklist write-migration incident sync-remote → core
+    ship        finish-branch ci-triage release-setup release-checklist write-migration incident sync-remote → core
                 + release-gate hook (repos with eas.json: production releases need an approved release/<version>)
                 + infra-gate hook (repos with *.tf, k8s/, Chart.yaml: a production terraform/kubectl/helm apply is a person's)
     mobile      role pack: agents/mobile-engineer.md + mobile-feature mobile-design + rules/ (react-native) + references/ → progress, dev

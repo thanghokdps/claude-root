@@ -8,12 +8,11 @@ One package, as `mastra-ai/ui-dojo` (R3) does: a Vite SPA and the agent side by 
 
 ```
 <app>/
-  package.json            # dev: concurrently "<mastra dev | langgraph dev>" "vite"
+  package.json            # dev: concurrently "<mastra dev | tsx watch src/<folder>/server/main.ts>" "vite"
   .env.example            # model key, INTERNAL_API_TOKEN, auth issuer, tracing switch and keys, VITE_*_BASE_URL — secrets empty, a comment above each saying where it comes from
   vite.config.ts  index.html
   tsconfig.app.json       # the web code; excludes the agent folder so DOM types never reach it
   tsconfig.node.json      # the agent folder and vite.config.ts
-  langgraph.json          # shapes A/B: graphs → ./src/<folder>/<file>.ts:graph · http.app → ./src/<folder>/server/copilotkit.ts:app
   src/
     main.tsx  App.tsx  pages/  hooks/  lib/  constants.ts      # web: the CopilotKit client only
     components/ui/  components/ai-elements/                    # R3 conventions
@@ -31,10 +30,10 @@ The folder is named after the framework. Its root holds only the vendor's own fi
 
 ```
 config/          env.ts (zod env schema, fails at boot) · ids.ts (AGENT_ID, the single definition) · models.ts (primary + fallback + cheap roles)
-auth/            identity.ts (verify token → trusted context reader) · auth.ts (A/B only: LangGraph custom auth, `langgraph.json` auth.path)
+auth/            identity.ts (verify token → trusted context reader)
 guardrails/      pii.ts (A/B). Shape M calls this folder processors/, Mastra's term for input/output processors
 observability/   tracing.ts (the TRACING_PROVIDER switch, masking on)
-server/          A/B only: copilotkit.ts (the `createCopilotHonoHandler` app `http.app` points at) and its helpers (route builder, stream filter)
+server/          A/B only: main.ts (the one process), agent-api.ts (the guarded embed server), persistence.ts, copilotkit.ts (the `createCopilotHonoHandler` app) and its helpers (route builder, stream filter)
 ```
 
 A new kit file joins the group it belongs to. A new concern gets its own folder, never a loose file at the root. Mastra is unopinionated beyond its own folders, but the docs ask for a structure kept consistent (mastra.ai/docs/getting-started/project-structure). LangGraph's application-structure example keeps only the graph entry at `src/` and moves the rest one folder down (docs.langchain.com/oss/javascript/langgraph/application-structure).
@@ -51,7 +50,8 @@ src/langchain/            # shape A (R10)
   agent.ts                # export const graph = createAgent({ … })
   prompts.ts  tools/<tool>.ts
   config/  auth/  guardrails/  observability/
-  server/copilotkit.ts    # export const app = createCopilotHonoHandler({ runtime, basePath: "/api/copilotkit", cors, hooks }); no `hono` dependency
+  server/main.ts  agent-api.ts  persistence.ts    # the embed server (references/embed-server.md)
+  server/copilotkit.ts    # export const app = createCopilotHonoHandler({ runtime, basePath: "/api/copilotkit", cors, hooks })
   server/threads.ts       # the thread sidebar's routes, answered in hooks.onRequest (rules/chat-threads.md)
 
 src/langgraph/            # shape B (R10 on R5)
@@ -77,7 +77,7 @@ Pick it when: one deployable, no second client planned, Node host.
   package.json            # root scripts only, no runtime deps
   .env.example
   apps/
-    agent/                # agent server with the CopilotKit runtime as its route: src/mastra/ (registerCopilotKit) or src/langchain|langgraph/ + langgraph.json (http.app), tools, evals/
+    agent/                # agent server with the CopilotKit runtime as its route: src/mastra/ (registerCopilotKit) or src/langchain|langgraph/ (server/main.ts), tools, evals/
     web/                  # Vite + CopilotKit client only, R3 conventions (add apps/mobile for headless clients)
   packages/
     shared/               # AGENT_ID, interrupt contract types, zod tool schemas shared by server and clients

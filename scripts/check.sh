@@ -54,6 +54,7 @@ python3 scripts/test_agent_progress.py
 python3 scripts/test_statusline.py
 python3 scripts/test_sync_team.py
 python3 scripts/test_preflight.py
+python3 scripts/test_setup_env.py
 bash plugins/review/scripts/tests/run.sh
 python3 scripts/lint-kit.py
 python3 scripts/eval-triggers.py

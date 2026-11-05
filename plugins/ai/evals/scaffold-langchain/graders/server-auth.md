@@ -2,9 +2,9 @@
 type: regex
 target:
   source: file
-  path: langgraph.json
-pattern: '"auth"\s*:\s*\{[^}]*"path"\s*:\s*"[^"]*auth\.ts:auth"[^}]*"disable_studio_auth"\s*:\s*true'
+  path: src/langchain/server/agent-api.ts
+pattern: "x-api-key.*callerFromHeaders.*not_found"
 flags: s
 ---
 
-The LangGraph server's own routes need the internal token: custom auth is registered and the Studio bypass is off.
+The agent server's own routes need the internal token and a verified caller, and anything outside the thread routes is closed.

@@ -1,0 +1,23 @@
+{
+  "skill": "release-setup",
+  "positive": [
+    {
+      "prompt": "this repo has never been deployed, make it deployable on Render",
+      "top_k": 3
+    },
+    {
+      "prompt": "deploy lên đâu đây, chọn host và database cho chatbot này",
+      "top_k": 3
+    },
+    {
+      "prompt": "generate the Dockerfile and the Railway config so the assistant goes live",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "cut a release and tag v1.4.0",
+      "owner": "release-checklist"
+    }
+  ]
+}
