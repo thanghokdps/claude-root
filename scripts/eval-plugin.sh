@@ -18,7 +18,8 @@ shift
 [ -d "plugins/$plugin/evals" ] || { echo "plugins/$plugin has no evals/ suite" >&2; exit 1; }
 build="$(python3 scripts/eval-build.py "$plugin")"
 
-# --real-scaffold: run only the scaffold-* cases (a real project; 1800 s per case in prompt.md), paid ~$5-9 per case.
+# --real-scaffold: run only the scaffold-* cases (a real project; 2400 s per case in prompt.md), paid ~$12 per case on
+# shape A (#194). The ceiling must cover the three cases, or the last graders go unscored.
 # Without it those cases are dropped, so the cheap pass never grants the shell. The confined sandbox refuses every
 # network host (CLAUDE_CODE_EVAL_CONFINED forces allowedDomains to []), so gh api fails there; it reads only the
 # PATH bin dirs, so npm (a link into lib/) and `pnpm view` do not load. pnpm works offline: each case's
@@ -31,7 +32,7 @@ only=(--concurrency 4 --max-cost-usd 6)
 if [ "${1:-}" = "--real-scaffold" ]; then
   shift
   tools+=("Bash(pnpm *)" "Bash(npm *)" "Bash(npx *)" "Bash(node *)" "Bash(git *)" "Bash(gh api *)" "Bash(mkdir *)" "Bash(ls *)" "Bash(cat *)" "Bash(grep *)")
-  only=(--case 'scaffold-*' --concurrency 1 --max-cost-usd 6)
+  only=(--case 'scaffold-*' --concurrency 1 --max-cost-usd 45)
   case "$(command -v git)" in
     /usr/bin/git | /Users/*) echo "--real-scaffold needs git ahead of /usr/bin outside /Users (brew install git)" >&2; exit 1 ;;
   esac
