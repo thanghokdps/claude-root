@@ -40,6 +40,31 @@ Tôi muốn làm một chatbot tra cứu đơn hàng       # an assistant: /agen
 
 Update later with `/plugin marketplace update harness`. The always-loaded global rules (`~/.claude/CLAUDE.md`, `~/.claude/rules/`) come only from a clone plus `bash scripts/install.sh`; the plugins work without them. Install detail, project bootstrap and troubleshooting: [`docs/USAGE.md`](docs/USAGE.md).
 
+## Skills
+
+Say what you want and the matching skill fires; the slash command is optional. These are the skills a normal week runs through. All 63 are in [`plugins/README.md`](plugins/README.md).
+
+| Skill                    | What it does                                                                                  | Say, or run                                                  |
+| ------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `/project-init`          | Scans a repo once and writes its `.claude/` docs, rules and memory                            | _"set up claude for this project"_                           |
+| `/breakdown`             | Checks a requirement against the code, then creates estimated tasks on GitHub, GitLab or Jira | _"break this epic into tickets"_                             |
+| `/ticket`                | Writes a ticket's intent, spec and plan into the repo, builds it, ships them in the same PR   | `/ticket 412`                                                |
+| `/feature`               | Picks the lane by risk, plans, sends each slice to a role engineer, reviews the result        | _"add CSV export to the reports page"_                       |
+| `/fix-bug`               | Builds a failing test first, locks it, then finds and fixes the cause                         | _"the upload crashes on files over 10 MB"_                   |
+| `/verify-done`           | Re-runs the checks that prove the work is finished and shows their output                     | `/verify-done`                                               |
+| `/review-checklist`      | Reviews the diff in a fixed order; each finding names the case that fails and the fix         | _"review this before I open the PR"_                         |
+| `/finish-branch`         | Verifies the branch, opens the PR or MR, cleans up the worktree                               | _"wrap this up"_                                             |
+| `/release-setup`         | Asks for a host and database, writes the config, deploys after a yes                          | _"make this deployable"_                                     |
+| `/release-checklist`     | Walks a release through its gates and stops on the first unmet item                           | `/release-checklist 1.4.0 production`                        |
+| `/ci-triage`             | Reads a red build and says regression, flaky or environment, with the root cause              | _"why is the build red"_                                     |
+| `/incident`              | Runs an outage from the first alert to the postmortem                                         | _"production is down"_                                       |
+| `/agent-architect`       | Interviews you about an AI assistant, records the architecture, scaffolds it                  | _"I want to build an assistant that helps our support team"_ |
+| `/compact` · `/compound` | Writes the handoff for the next session; keeps the lessons in the repo                        | _"compact"_ · _"save this learning"_                         |
+
+[![Skill map. Once per repo: /kickoff, /project-init, /constraints, or /agent-architect for an AI assistant. Every ticket: /breakdown, /ticket, /feature or /fix-bug, the role engineers, /verify-done, /review-checklist whose findings go back to the engineers, /finish-branch, then a person merges. Every release: /release-setup on the first deploy, /release-checklist, production, then /ci-triage and /incident, whose fixes come back as new tickets. Memory feeds the next session and hooks watch every tool call.](docs/skill-map.svg)](https://claude.ai/artifact/UjsdkgmXN5MMjKuvRXgCv8)
+
+Click the map for the [interactive version](https://claude.ai/artifact/UjsdkgmXN5MMjKuvRXgCv8), with every plugin, skill and hook. Amber lines are the loops: review findings, new tickets from production, and the handoff to the next session.
+
 ## What changes for a team
 
 | Before                                                    | With the harness                                                                                                                           | Enforced by                              |
@@ -74,41 +99,7 @@ your sentence
   → memory     /compact (handoff) · /compound (lessons) · /docs-sync (project docs)
 ```
 
-The same flow as a map, with the skills each stage runs. GitLab and GitHub both draw this; the clickable version is [`docs/skill-map.html`](docs/skill-map.html).
-
-```mermaid
-flowchart TD
-  req["A requirement"] --> breakdown["/breakdown"]
-  breakdown --> ticket["/ticket"]
-  sentence["Your sentence"] --> lane{"Lane by risk"}
-  ticket --> lane
-  lane -->|tiny| build
-  lane -->|normal| plan["Plan mode"]
-  lane -->|high-risk| spec["/brainstorming · /writing-plans"]
-  plan --> build
-  spec --> build
-  build["/feature · /fix-bug · /tdd"] --> roles
-
-  subgraph roles["Role engineers"]
-    backend["backend: /api-endpoint /db-change /api-client"]
-    frontend["frontend: /ui-feature /design-ui /ui-polish"]
-    mobile["mobile: /mobile-feature /mobile-design"]
-    ai["ai: /agent-architect /agent-feature /agent-tool /agent-hitl"]
-    devops["devops: /pipeline /container /infra-change"]
-  end
-
-  roles --> verify["/verify-done"]
-  verify --> review["/review-checklist · /code-review · /security-review"]
-  review --> finish["/finish-branch"]
-  finish --> first{"Deployed before?"}
-  first -->|no| setup["/release-setup"]
-  first -->|yes| release["/release-checklist"]
-  setup --> release
-  release --> prod["Production"]
-  prod -.->|red build| triage["/ci-triage"]
-  prod -.->|outage| incident["/incident"]
-  finish --> memory["/compact · /compound · /docs-sync"]
-```
+The [skill map](#skills) shows the same flow with the skills each stage runs.
 
 The lane comes from risk; a human is asked only to resolve ambiguity, never to classify risk. Auth, data migration, security, external providers, public contracts and weakened validation are always high-risk. The control model in full: [`HARNESS.md`](HARNESS.md).
 
@@ -176,14 +167,14 @@ Today: 15 plugins, 63 skills, 9 always-on rules, 8 recorded design decisions. Th
 
 ## Read next
 
-| You want to…                                                                           | Read                                           |
-| -------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Install step by step, bootstrap a project, fix a blocked commit                        | [`docs/USAGE.md`](docs/USAGE.md)               |
-| Understand the control model: lanes, hard gates, what hooks enforce                    | [`HARNESS.md`](HARNESS.md)                     |
-| See why it is built this way: packaging, layers, where each AI-assistant concern lives | [`DESIGN.md`](DESIGN.md)                       |
-| Read one decision and its trade-off                                                    | [`docs/ddr/`](docs/ddr/README.md)              |
-| Build an AI assistant                                                                  | [`plugins/ai/README.md`](plugins/ai/README.md) |
-| Browse every skill and hook visually                                                   | [`docs/skill-map.html`](docs/skill-map.html)   |
+| You want to…                                                                           | Read                                                                       |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Install step by step, bootstrap a project, fix a blocked commit                        | [`docs/USAGE.md`](docs/USAGE.md)                                           |
+| Understand the control model: lanes, hard gates, what hooks enforce                    | [`HARNESS.md`](HARNESS.md)                                                 |
+| See why it is built this way: packaging, layers, where each AI-assistant concern lives | [`DESIGN.md`](DESIGN.md)                                                   |
+| Read one decision and its trade-off                                                    | [`docs/ddr/`](docs/ddr/README.md)                                          |
+| Build an AI assistant                                                                  | [`plugins/ai/README.md`](plugins/ai/README.md)                             |
+| Browse every skill and hook visually                                                   | [interactive skill map](https://claude.ai/artifact/UjsdkgmXN5MMjKuvRXgCv8) |
 
 ## For kit contributors
 

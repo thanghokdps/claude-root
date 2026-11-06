@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for skill-map.py. Run: python3 scripts/test_skill_map.py"""
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -45,6 +46,24 @@ def test_into_refreshes_the_page_title_with_the_data():
         html = page.read_text(encoding="utf-8")
         assert "<title>ai — skill map</title>" in html, html[:200]
         assert '"kind": "map"' in html
+
+
+def test_readme_map_names_only_real_skills_and_hooks():
+    # the SVG is hand-drawn, so nothing else notices a renamed or removed skill
+    svg = (ROOT / "docs" / "skill-map.svg").read_text(encoding="utf-8")
+    words = " ".join(re.findall(r"<text[^>]*>([^<]+)</text>", svg)).split()
+    named = {w[1:] for w in words if re.fullmatch(r"/[a-z][a-z-]*", w)}
+    skills = {p.parent.name for p in ROOT.glob("plugins/*/skills/*/SKILL.md")}
+    assert named and named <= skills, named - skills
+    chips = set(re.findall(r'class="box rose"[^>]*/>\s*<text[^>]*>([^<]+)<', svg))
+    hooks = {p.stem for p in ROOT.glob("plugins/*/hooks/*.sh")}
+    assert chips and chips <= hooks, chips - hooks
+
+
+def test_readme_map_animates_without_a_script():
+    # GitHub and GitLab show it through <img>, where scripts never run
+    svg = (ROOT / "docs" / "skill-map.svg").read_text(encoding="utf-8")
+    assert "<script" not in svg and "@keyframes" in svg and "<animateMotion" in svg
 
 
 if __name__ == "__main__":

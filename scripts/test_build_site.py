@@ -20,7 +20,7 @@ def write(root, rel, text="x"):
 def fake_repo(d):
     root = Path(d) / "repo"
     for rel in ["README.md", "DESIGN.md", "HARNESS.md", "PLAYBOOK.md", "docs/USAGE.md",
-                "docs/skill-map.html", "docs/ddr/0001-a.md", "specs/x/PLAN.md", "site/index.html",
+                "docs/skill-map.html", "docs/skill-map.svg", "docs/ddr/0001-a.md", "specs/x/PLAN.md", "site/index.html",
                 "plugins/README.md", "plugins/core/README.md", "plugins/core/skills/btw/SKILL.md",
                 "plugins/core/skills/compact/SKILL.md", "plugins/core/rules/git.md",
                 "plugins/core/hooks/branch-guard.sh", "plugins/core/hooks/hooks.json",
@@ -44,8 +44,8 @@ def test_only_published_files_reach_dist():
         files = sorted(p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file())
         assert "PLAYBOOK.md" not in files and not any(f.startswith("specs/") for f in files), files
         assert "plugins/core/rules/git.md" not in files, files
-        for rel in ["index.html", "site.json", "README.md", "docs/skill-map.html", "docs/ddr/0001-a.md",
-                    "plugins/core/README.md"]:
+        for rel in ["index.html", "site.json", "README.md", "docs/skill-map.html", "docs/skill-map.svg",
+                    "docs/ddr/0001-a.md", "plugins/core/README.md"]:
             assert rel in files, (rel, files)
 
 
