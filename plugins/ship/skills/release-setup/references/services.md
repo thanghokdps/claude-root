@@ -48,6 +48,11 @@ services:
     plan: free
     region: singapore
     healthCheckPath: /ok
+    buildFilter:
+      paths:
+        - apps/agent/**
+        - packages/**
+        - pnpm-lock.yaml
     envVars:
       - key: OPENAI_API_KEY
         sync: false
@@ -63,8 +68,13 @@ services:
   - type: web
     name: <app>-web
     runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
-    staticPublishPath: ./dist
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter web build
+    staticPublishPath: ./apps/web/dist
+    buildFilter:
+      paths:
+        - apps/web/**
+        - packages/**
+        - pnpm-lock.yaml
     routes:
       - type: rewrite
         source: /*
@@ -73,6 +83,8 @@ services:
       - key: VITE_LANGGRAPH_BASE_URL
         sync: false
 ```
+
+`buildFilter` is what makes the two services release apart: a change under `apps/web` leaves the agent alone (render.com/docs/blueprint-spec, checked on 2026-11-06; paths are relative to the repo root). On a one-package repo, drop it and use `pnpm build` with `./dist`.
 
 Set `WEB_ORIGIN` and the `VITE_*` base URL after the first deploy shows the two URLs, then redeploy the web service: Vite writes `VITE_*` into the bundle at build time.
 
@@ -122,7 +134,7 @@ export default defineRailway(() => {
 });
 ```
 
-`preserve()` keeps the value the user set in the dashboard. `Dockerfile.web` builds the client and serves `dist/` with Caddy, falling back to `index.html`, as Railway's Vite guides do. It declares `ARG VITE_LANGGRAPH_BASE_URL` so the value reaches the build; confirm that Railway passes it, because this template has not been run on Railway.
+`preserve()` keeps the value the user set in the dashboard. `Dockerfile.web`, at the repo root with the root as its context, runs `pnpm --filter web build` and serves `apps/web/dist/` with Caddy, falling back to `index.html`, as Railway's Vite guides do. It declares `ARG VITE_LANGGRAPH_BASE_URL` so the value reaches the build; confirm that Railway passes it, because this template has not been run on Railway.
 
 With no database and a volume:
 
@@ -212,4 +224,4 @@ export default {
 
 `database_id` comes from `wrangler d1 create <app>`, which the user runs. Add every other variable the env schema needs to `envVars` too: anything left out never reaches the container. Secrets are set by the user: `wrangler secret put OPENAI_API_KEY`.
 
-Deploy: Docker running, then `wrangler deploy` for the agent and `wrangler pages deploy dist --project-name <app>` for the client after `pnpm build`. `max_instances: 1` keeps one process, which the in-process thread state and run queue assume.
+Deploy: Docker running, then `wrangler deploy` for the agent and `wrangler pages deploy apps/web/dist --project-name <app>` for the client after `pnpm --filter web build`. `max_instances: 1` keeps one process, which the in-process thread state and run queue assume.

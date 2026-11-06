@@ -1,6 +1,6 @@
 # Assistant repos — what a deploy adds
 
-Read by `/release-setup` for a repo with `src/langchain/`, `src/langgraph/` or `src/mastra/`. Everything on shapes A and B assumes the embed server (`embed-server.md`, ai, if installed): `src/<folder>/server/main.ts` with `/ok`, and `createPersistence` in `server/persistence.ts`.
+Read by `/release-setup` for a repo with `src/langchain/`, `src/langgraph/` or `src/mastra/`, under `apps/agent/` on a monorepo. Paths here are read from `apps/agent` for the agent and `apps/web` for the client; on a one-package repo both are the root. Everything on shapes A and B assumes the embed server (`embed-server.md`, ai, if installed): `src/<folder>/server/main.ts` with `/ok`, and `createPersistence` in `server/persistence.ts`.
 
 A repo still on `langgraph.json` has no production server: move it to the embed server first, through `/agent-architect` (ai, if installed).
 
@@ -169,7 +169,74 @@ export function App(): React.JSX.Element {
 
 ## Dockerfile
 
-Pin the base image by digest at generation time. `pnpm prune` keeps `better-sqlite3`'s built binary. `package.json` must name `packageManager` exactly: without it, `corepack` in the image takes the newest pnpm, which failed `pnpm install` with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION` and ignored the `pnpm` field (run on 2026-11-05).
+Pin the base image by digest at generation time. The root `package.json` must name `packageManager` exactly: without it, `corepack` in the image takes the newest pnpm, which failed `pnpm install` with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION` and ignored the `pnpm` field (run on 2026-11-05).
+
+The Dockerfile sits at the repo root, and the build context is the root, because the agent needs `packages/`. `pnpm deploy` writes only the agent's production dependencies, with the built `better-sqlite3` binary. `dist-server` is copied by hand: `deploy` skips a gitignored folder. The compilers stay in the build stage: `better-sqlite3` 13.0.3 fell back from `prebuild-install` to `node-gyp` on `node:24-slim`, which failed with `gyp ERR!` until they were added. Shape A, run as an image on 2026-11-06 from a real skeleton, with `@repo/shared` inlined and `/data/agent.db` created as non-root (897 MB):
+
+```dockerfile
+FROM node:24-slim AS build
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++
+RUN corepack enable
+WORKDIR /repo
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter agent build
+RUN pnpm --filter agent deploy --legacy --prod /out
+RUN cp -R apps/agent/dist-server /out/dist-server
+
+FROM node:24-slim
+ENV NODE_ENV=production
+ENV DATA_DIR=/data
+WORKDIR /app
+COPY --from=build /out ./
+RUN mkdir /data && chown node:node /data
+USER node
+EXPOSE 2024
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||2024)+'/ok').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
+CMD ["node", "dist-server/main.mjs"]
+```
+
+`.dockerignore` at the root:
+
+```
+**/node_modules
+**/dist
+**/dist-server
+**/.turbo
+**/.mastra
+**/.data
+.git
+**/.env*
+!.env.example
+```
+
+Shape M, run as an image on 2026-11-06 with `mastra` 1.38.0 (`@repo/shared` bundled into `.mastra/output`, 565 MB without `@mastra/libsql`). `mastra build` installs the output's own `node_modules`, so it runs inside the image:
+
+```dockerfile
+FROM node:24-slim AS build
+RUN corepack enable
+WORKDIR /repo
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter agent build
+
+FROM node:24-slim
+ENV NODE_ENV=production
+ENV DATA_DIR=/data
+WORKDIR /app
+COPY --from=build /repo/apps/agent/.mastra/output ./
+RUN mkdir /data && chown node:node /data
+USER node
+EXPOSE 4111
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||4111)+'/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
+CMD ["node", "index.mjs"]
+```
+
+### One-package repos
+
+An existing one-package repo keeps these. `pnpm prune` keeps `better-sqlite3`'s built binary; on a `gyp ERR!` add the compiler line of the monorepo image:
 
 ```dockerfile
 FROM node:24-slim AS build

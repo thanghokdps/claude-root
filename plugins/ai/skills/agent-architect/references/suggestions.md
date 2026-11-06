@@ -177,7 +177,8 @@ The log prints `No memory is configured but resourceId and threadId were passed`
 ```ts
 import { useConfigureSuggestions } from "@copilotkit/react-core/v2";
 import { useEffect, useState } from "react";
-import { AGENT_ID, RUNTIME_URL } from "@/constants";
+import { AGENT_ID } from "@repo/shared";
+import { RUNTIME_URL } from "@/constants";
 
 interface SuggestionScope {
   starters: { title: string; message: string }[];

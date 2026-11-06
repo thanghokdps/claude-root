@@ -1,24 +1,82 @@
-# Repo layouts — the user picks one (interview Q-L); never assume
+# Repo layouts — monorepo by default
 
-Both carry the same rules: one agent id defined once, exact version pins resolved at scaffold time (`<pm> view <pkg> version`, never from memory), `.env` gitignored with a committed `.env.example`.
+Both layouts carry the same rules: one agent id defined once, exact version pins resolved at scaffold time (`<pm> view <pkg> version`, never from memory), `.env` gitignored with a committed `.env.example`.
 
-## L1 — single app (default for one assistant, one web client, one team)
+**Paths in the kit.** `<agent app>` is `apps/agent` on L2 and the repo root on L1; `<web app>` is `apps/web` on L2 and the repo root on L1. A path such as `src/mastra/index.ts` or `evals/run.ts` in a rule or skill is read from `<agent app>`; `src/components/` and `src/styles/` from `<web app>`.
 
-One package, as `mastra-ai/ui-dojo` (R3) does: a Vite SPA and the agent side by side, the CopilotKit runtime a route on the framework's own server.
+## L2 — monorepo, pnpm workspaces + Turborepo (default)
+
+The web and the agent are separate packages, so each has its own dependencies, build and deploy, and the web cannot reach the agent's code.
 
 ```
-<app>/
-  package.json            # dev: concurrently "<mastra dev | tsx watch src/<folder>/server/main.ts>" "vite"
+<repo>/
+  pnpm-workspace.yaml     # packages: ["apps/*", "packages/*"]; onlyBuiltDependencies
+  turbo.json              # build / dev / test / lint / typecheck, with "envMode": "loose"
+  package.json            # root scripts only, no runtime deps; names packageManager exactly
   .env.example            # model key, INTERNAL_API_TOKEN, auth issuer, tracing switch and keys, VITE_*_BASE_URL — secrets empty, a comment above each saying where it comes from
-  vite.config.ts  index.html
-  tsconfig.app.json       # the web code; excludes the agent folder so DOM types never reach it
-  tsconfig.node.json      # the agent folder and vite.config.ts
-  src/
-    main.tsx  App.tsx  pages/  hooks/  lib/  constants.ts      # web: the CopilotKit client only
-    components/ui/  components/ai-elements/                    # R3 conventions
-    <agent folder>/       # src/mastra/ (M) · src/langchain/ (A) · src/langgraph/ (B): vendor files at its root, kit files grouped (trees below)
-  evals/                  # agent evals, separate from unit tests
+  apps/
+    agent/                # package "agent": the agent server with the CopilotKit runtime as its route
+      package.json  tsconfig.json  tsup.config.ts    # tsup.config.ts on A/B only
+      src/<agent folder>/  # src/mastra/ (M) · src/langchain/ (A) · src/langgraph/ (B): the trees below
+      src/server/<system>/ # external API clients (rules/agent-code-structure.md)
+      evals/              # agent evals, separate from unit tests
+      scripts/            # graph.ts on A/B
+    web/                  # package "web": Vite + the CopilotKit client only
+      package.json  tsconfig.json  vite.config.ts  index.html
+      src/
+        main.tsx  App.tsx  pages/  hooks/  lib/  constants.ts
+        components/ui/  components/ai-elements/              # R3 conventions
+      e2e/                # Playwright specs
+  packages/
+    shared/               # package "@repo/shared": AGENT_ID, interrupt contract types, zod tool schemas shared by the agent and its clients
+    config/               # package "@repo/config": tsconfig + eslint presets
 ```
+
+- **Shared code.** `@repo/shared` ships TypeScript source with no build step: `"exports": { ".": "./src/index.ts" }`, as the company's `packages/shared` does. Both apps depend on it with `workspace:*`. `AGENT_ID` lives here, not in `config/ids.ts`. A type or schema moves here once both apps need it, not before. A new package under `packages/` needs code that already has two consumers.
+- **Boundary.** `apps/web/package.json` lists no `@repo` package except `shared` and `config`, and no framework or server package (`hono`, `@hono/node-server`, `express`, `@copilotkit/runtime`, `@langchain/*`, `@mastra/*`). `apps/agent` is never a dependency of anything. pnpm's strict `node_modules` then makes a stray import fail to resolve.
+- **One framework core.** `pnpm why @langchain/core` or `pnpm why @mastra/core` shows one version. `zod` is one version across the workspace.
+- **`.env` lives at the root**, so `setup-env.sh` and the preflight stay one command. The apps reach it explicitly: `tsx --env-file=../../.env` on A/B, `mastra dev --env ../../.env` on M (mastra 1.38.0 `dev --help`), and `envDir: "../.."` in `vite.config.ts` (vite 8.3.6 `dist/node/index.d.ts:3508-3512`; only `VITE_*` reaches the bundle).
+- **Turbo env mode.** `"envMode": "loose"` at the top of `turbo.json`. In the default strict mode a shell variable never reaches a task: `SPIKE_PORT=1234 turbo run probe` printed `undefined` on turbo 2.11.10, and `PORT=… pnpm dev` or `TOOL_CURRENT_TIME=off pnpm dev` would be ignored without a word.
+
+Root scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "format:check": "prettier --check ."
+  }
+}
+```
+
+`turbo.json`:
+
+```json
+{
+  "$schema": "https://turbo.build/schema.json",
+  "envMode": "loose",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "dist-server/**", ".mastra/output/**"]
+    },
+    "dev": { "cache": false, "persistent": true },
+    "test": {},
+    "lint": {},
+    "typecheck": {}
+  }
+}
+```
+
+`apps/agent/package.json` scripts: `embed-server.md` § `package.json` on A/B; `"dev": "mastra dev --env ../../.env"`, `"build": "mastra build"`, `"start": "mastra start"` on M. `mastra build` bundles a TypeScript-source workspace package into `.mastra/output` on its own, with no `@repo/shared` left in the output (mastra 1.38.0, built and booted on 2026-11-06). `apps/web/package.json`: `"dev": "vite"`, `"build": "vite build"`.
+
+Several LangGraph agents → one `apps/<agent>/` each (R6). A mobile app or a chat channel → `apps/mobile` or `apps/<channel>`, sharing `@repo/shared`.
+
+## The app inside each package
 
 The web code never holds a server: no `hono`, `@hono/node-server`, `express` or `@copilotkit/runtime` import outside the agent folder.
 
@@ -29,7 +87,7 @@ The rest of the app (features, shared UI, server aggregates, tokens, dev fixture
 The folder is named after the framework. Its root holds only the vendor's own files, as the reference repo lays them out (`reference-repos.md`), plus `prompts.ts`. Every file the kit adds goes in a folder per concern, with the same names in all three shapes:
 
 ```
-config/          env.ts (zod env schema, fails at boot) · ids.ts (AGENT_ID, the single definition) · models.ts (primary + fallback + cheap roles)
+config/          env.ts (zod env schema, fails at boot) · ids.ts (AGENT_ID, the single definition, on L1 only) · models.ts (primary + fallback + cheap roles)
 auth/            identity.ts (verify token → trusted context reader)
 guardrails/      pii.ts (A/B). Shape M calls this folder processors/, Mastra's term for input/output processors
 observability/   tracing.ts (the TRACING_PROVIDER switch, masking on)
@@ -64,33 +122,30 @@ Tests follow the groups. With `__tests__/` (Q-T), a group's unit tests sit in it
 
 Only in an existing Next.js repo: R2 keeps `src/mastra/` and adds `src/agent.ts` (`MastraAgent.getLocalAgents({ mastra })`) behind `src/app/api/copilotkit/route.ts`; R4 puts LangChain/LangGraph in its own `agent/` package beside the Next app.
 
-One dependency list serves both sides, as in the Dojo: `langgraph up`/Docker installs the web deps too (`mastra build` bundles only `src/mastra/`). When the agent and the web must deploy apart, pick L2.
+## L1 — single app (only when asked)
 
-Pick it when: one deployable, no second client planned, Node host.
-
-## L2 — monorepo, pnpm workspaces + Turborepo (default when ≥ 2 clients or agent and web deploy separately)
+One package, as `mastra-ai/ui-dojo` (R3) does: a Vite SPA and the agent side by side, the CopilotKit runtime a route on the framework's own server.
 
 ```
-<repo>/
-  pnpm-workspace.yaml     # packages: ["apps/*", "packages/*"]
-  turbo.json              # build / test / lint / typecheck pipelines
-  package.json            # root scripts only, no runtime deps
+<app>/
+  package.json            # dev: concurrently "<mastra dev | tsx watch src/<folder>/server/main.ts>" "vite"
   .env.example
-  apps/
-    agent/                # agent server with the CopilotKit runtime as its route: src/mastra/ (registerCopilotKit) or src/langchain|langgraph/ (server/main.ts), tools, evals/
-    web/                  # Vite + CopilotKit client only, R3 conventions (add apps/mobile for headless clients)
-  packages/
-    shared/               # AGENT_ID, interrupt contract types, zod tool schemas shared by server and clients
-    config/               # tsconfig + eslint presets
+  vite.config.ts  index.html
+  tsconfig.app.json       # the web code; excludes the agent folder so DOM types never reach it
+  tsconfig.node.json      # the agent folder and vite.config.ts
+  src/
+    main.tsx  App.tsx  pages/  hooks/  lib/  constants.ts      # web: the CopilotKit client only
+    components/ui/  components/ai-elements/                    # R3 conventions
+    <agent folder>/
+  evals/                  # agent evals, separate from unit tests
 ```
 
-Pick it when: web plus mobile or a chat channel, separate deploys, or several agents owned by different people. One copy of the framework core across the workspace (`pnpm why @langchain/core` or `pnpm why @mastra/core` shows one version). Several LangGraph agents → one `apps/<agent>/` each with its own `langgraph.json` (R6).
+One dependency list serves both sides, as in the Dojo: `langgraph up`/Docker installs the web deps too (`mastra build` bundles only `src/mastra/`). The web and the agent can still run as two services, but they share one dependency list, one pipeline and no enforced boundary.
 
-## Asking
+Pick it when: the user asks for one app or one package. Never as the default, because a growing team ends up splitting it.
 
-Through `AskUserQuestion` (shape in `interview.md` § Shape of each question):
+## Choosing
 
-- question: `Q-L — Repo layout: one app or a monorepo?` — it fixes where the agent id, schemas and interrupt contract live, how clients share them, and the CI pipeline.
-- options: `L1 single app` and `L2 pnpm + Turborepo monorepo`, the one that fits Q2 clients and the deploy answer first with `(Recommended)`; each description says what it changes (one deploy vs shared `packages/`, CI shape).
-
-An existing repo's layout is a fact, not a question: detect it (`pnpm-workspace.yaml`, `turbo.json`, `nx.json`, workspaces in package.json) and follow it.
+- **New repo:** L2, shown on the defaults card as `Q-L layout`. L1 only when the request says one app, one package or no monorepo.
+- **Existing repo:** its layout is a fact, not a question: detect it (`pnpm-workspace.yaml`, `turbo.json`, `nx.json`, workspaces in package.json) and follow it. An existing L1 repo stays L1; moving it to L2 is a change the user asks for.
+- The question, when the card's row is challenged, goes through `AskUserQuestion` (shape in `interview.md` § Shape of each question): `Q-L — Repo layout: monorepo or one app?`, with `L2 pnpm + Turborepo monorepo (Recommended)` first and `L1 single app` second; each description says what it changes (shared `packages/` and per-app deploys vs one package).

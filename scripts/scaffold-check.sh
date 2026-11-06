@@ -26,7 +26,7 @@ cd "$work"
 # Claude's own (ANTHROPIC_*, CLAUDE_CODE_*), so provider keys (OPENAI_API_KEY) and git-host tokens stay out of the agent.
 scrub=()
 while IFS= read -r name; do scrub+=(-u "$name"); done < <(env | cut -d= -f1 | grep -E 'TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL|PASS$' | grep -vE '^(ANTHROPIC_|CLAUDE_CODE_)')
-env ${scrub[@]+"${scrub[@]}"} CLAUDE_REPO_PROFILE=0 claude -p "init codebase chatbot asisstant empty features for me using langchain framework and tracing with langfuse" \
+env ${scrub[@]+"${scrub[@]}"} CLAUDE_REPO_PROFILE=0 CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 claude -p "init codebase chatbot asisstant empty features for me using langchain framework and tracing with langfuse" \
   "${dirs[@]}" --model sonnet --max-budget-usd 5 --output-format json \
   --permission-mode dontAsk \
   --settings "$settings" \
@@ -40,24 +40,31 @@ check() { # check <label> <command...>
   if "$@" >/dev/null 2>&1; then echo "PASS $label"; else echo "FAIL $label"; fail=1; fi
 }
 no_deprecated_imports() { ! grep -rEq '@copilotkit/runtime/langgraph|hono/vercel' . --include='*.ts' --include='*.tsx' --include='*.json' --exclude-dir=node_modules --exclude-dir=.git; }
-eslint_deprecated() { grep -qE '@typescript-eslint/no-deprecated' eslint.config.*; }
-four_sections() { grep -qE 'OVERVIEW' src/langchain/prompts.ts && grep -qE 'RESPONSE' src/langchain/prompts.ts && grep -qE 'OUT OF SCOPE' src/langchain/prompts.ts && grep -qE 'CONTEXT' src/langchain/prompts.ts; }
-canary() { grep -q 'INTERNAL_CANARY_' src/langchain/prompts.ts; }
+eslint_deprecated() { grep -rqE '@typescript-eslint/no-deprecated' packages/config apps/agent/eslint.config.* --exclude-dir=node_modules; }
+agent=apps/agent/src/langchain
+four_sections() { grep -qE 'OVERVIEW' "$agent/prompts.ts" && grep -qE 'RESPONSE' "$agent/prompts.ts" && grep -qE 'OUT OF SCOPE' "$agent/prompts.ts" && grep -qE 'CONTEXT' "$agent/prompts.ts"; }
+canary() { grep -q 'INTERNAL_CANARY_' "$agent/prompts.ts"; }
 pii_on() { grep -qE '^PII_REDACTION=on[[:space:]]*$' .env.example; }
-baseline_twelve() { [ "$(grep -cE '^\{.*\}[[:space:]]*$' evals/datasets/baseline.jsonl)" -eq 12 ]; }
-list_reads_state() { grep -q 'getState' src/langchain/server/threads.ts; }
+baseline_twelve() { [ "$(grep -cE '^\{.*\}[[:space:]]*$' apps/agent/evals/datasets/baseline.jsonl)" -eq 12 ]; }
+list_reads_state() { grep -q 'getState' "$agent/server/threads.ts"; }
+workspace() { [ -f pnpm-workspace.yaml ] && [ -f turbo.json ] && [ -d apps/web ] && [ -d apps/agent ] && [ -d packages/shared ] && [ -d packages/config ]; }
+web_has_no_server() { ! grep -qE '"(hono|@hono/node-server|express|@copilotkit/runtime|@langchain/[^"]*|@mastra/[^"]*)"' apps/web/package.json; }
+shared_used_by_both() { grep -rq '@repo/shared' apps/web/src --include='*.ts' --include='*.tsx' && grep -rq '@repo/shared' apps/agent/src --include='*.ts'; }
 secrets_named() { grep -qE '^INTERNAL_API_TOKEN=(""|'"''"')?$' .env.example && grep -B1 -E '^INTERNAL_API_TOKEN=' .env.example | grep -q 'openssl rand'; }
-agui_import() { grep -rq '@ag-ui/langgraph' src --include='*.ts'; }
-lint_agent_folder() { [ -d node_modules ] && npx eslint src/langchain --max-warnings=0; }
+agui_import() { grep -rq '@ag-ui/langgraph' apps/agent/src --include='*.ts'; }
+lint_agent_folder() { [ -d node_modules ] && pnpm --filter agent exec eslint src/langchain --max-warnings=0; }
 
+check "monorepo: apps/web, apps/agent, packages/shared, packages/config" workspace
+check "apps/web lists no server or agent framework package" web_has_no_server
+check "both apps import @repo/shared" shared_used_by_both
 check "no deprecated imports (@copilotkit/runtime/langgraph, hono/vercel)" no_deprecated_imports
 check "LangGraphAgent imported from @ag-ui/langgraph" agui_import
-check "eslint.config.* enables @typescript-eslint/no-deprecated" eslint_deprecated
-check "eslint passes on src/langchain" lint_agent_folder
-check "src/langchain/prompts.ts has the four sections" four_sections
+check "the shared eslint preset enables @typescript-eslint/no-deprecated" eslint_deprecated
+check "eslint passes on apps/agent/src/langchain" lint_agent_folder
+check "$agent/prompts.ts has the four sections" four_sections
 check "prompts.ts has an INTERNAL_CANARY_ line" canary
 check ".env.example has PII_REDACTION=on" pii_on
-check "evals/datasets/baseline.jsonl has 12 lines" baseline_twelve
+check "apps/agent/evals/datasets/baseline.jsonl has 12 lines" baseline_twelve
 check "thread list route reads the state of a stopped run" list_reads_state
 check ".env.example names INTERNAL_API_TOKEN with how to generate it" secrets_named
 

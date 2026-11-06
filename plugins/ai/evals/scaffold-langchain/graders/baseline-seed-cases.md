@@ -2,7 +2,7 @@
 type: regex
 target:
   source: file
-  path: evals/datasets/baseline.jsonl
+  path: apps/agent/evals/datasets/baseline.jsonl
 pattern: '^\{.*\}\s*$'
 flags: m
 match: "count:12"
