@@ -14,6 +14,14 @@ Unit tests prove code paths with no model. Evals prove behaviour with a real mod
 
 **Precondition.** No assistant in the repo yet (no agent framework dependency, no agent entry point, no ADR) → stop and say so: a new assistant starts with `/agent-architect`, which writes the ADR this skill builds inside. Never scaffold an agent here to have something to test; come back once the ADR exists.
 
+**Who runs a real-model eval.** A run (modes suite and compare-models) needs nothing from this conversation and its log is long, so it goes to a subagent; this session keeps the judgement.
+
+1. Dispatch one fresh `Agent` on `model: "haiku"`, one per compare-models candidate. The brief names the repo root, the exact command and the results file it must write under `evals/results/`, and says: run it once, edit nothing, never retry a case or change a threshold, return the exit code, the results path and the failing lines verbatim.
+2. Read the results file here and take executed, passed and failed from it. The subagent's summary is not evidence. A missing or stale file, or zero executed, is a failed run.
+3. Decide here what a failure means and what to change; fixes never go to the runner.
+
+Run the command directly when already inside a subagent (`ai-engineer` has no `Agent` tool), or when the suite writes no results file.
+
 ---
 
 ## Mode unit — no real model
