@@ -2,8 +2,8 @@
 type: regex
 target:
   source: file
-  path: src/langchain/server/agent-api.ts
-pattern: "x-api-key.*callerFromHeaders.*not_found"
+  path: apps/agent/src/langchain/server/agent-api.ts
+pattern: "not_found.*x-api-key.*callerFromHeaders|x-api-key.*callerFromHeaders.*not_found"
 flags: s
 ---
 

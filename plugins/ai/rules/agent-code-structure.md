@@ -9,17 +9,27 @@ Read by `/agent-architect` (scaffold), `/agent-design-ui` (build) and `/agent-fe
 
 **The base is core's `app-structure.md`** (in `~/.claude/rules/` after the kit's `install.sh`, or in the project after `/project-init`): routes thin in `app/`, `features/<feature>/`, `components/ui/`, `server/<aggregate>/`, `server/<system>/`, `db/`, `lib/`, `dev/`, the test location rule, size and naming limits. Follow it; this file adds only what an assistant needs on top. With core's rule absent, the tree below is still the layout to use.
 
-## What an assistant adds to the tree (L1; in L2 under `apps/web/src`)
+## What an assistant adds to the tree
+
+The monorepo (`layouts.md` L2) is the default; on an L1 repo both trees below sit in the one package. A path such as `src/mastra/index.ts` or `evals/run.ts` in the kit's rules and skills is read from `apps/agent`, and a web path such as `src/components/` from `apps/web`.
 
 ```
-src/
-  agent/                    # per layouts.md (or src/mastra/ in shape M)
-  server/<system>/          # external API clients, built by /api-client and reused by agent tools (agent-tool Step 0)
-  styles/                   # tokens.css + the CopilotKit theme scoped under [data-copilotkit]
-  dev/                      # also the /__design states page and recorded chat states
-e2e/                        # Playwright specs + recorded AG-UI streams
-evals/                      # agent evals (agent-evals), never run by `test`
+apps/agent/
+  src/
+    <agent folder>/         # per layouts.md: src/langchain/, src/langgraph/ or src/mastra/
+    server/<system>/        # external API clients, built by /api-client and reused by agent tools (agent-tool Step 0)
+    server/<aggregate>/     # services and repositories the tools call
+  evals/                    # agent evals (agent-evals), never run by `test`
+apps/web/
+  src/
+    features/<feature>/  components/ui/  pages/
+    styles/                 # tokens.css + the CopilotKit theme scoped under [data-copilotkit]
+    dev/                    # also the /__design states page and recorded chat states
+  e2e/                      # Playwright specs + recorded AG-UI streams
+packages/shared/src/        # types and zod schemas both apps use; nothing that needs a server or a browser
 ```
+
+The web reaches the agent over HTTP through the runtime route, never by import. What both sides must agree on (a tool's input schema, an interrupt payload, an id) goes in `@repo/shared`.
 
 - Agent tools import `server/<system>/` clients and `server/<aggregate>/` services; they never hold SQL or a second HTTP client for a system that already has one.
 - The design's primitives go in `components/ui/` from the start, before the screens that use them, classified against the repo's UI library (`/design-ui` Step 3): a library primitive is installed or wrapped, never hand-rebuilt. CopilotKit slots render these same primitives.
@@ -27,11 +37,11 @@ evals/                      # agent evals (agent-evals), never run by `test`
 ## Styling (the gates `/agent-feature` Step 6 runs)
 
 - Colours, radii, spacing, font sizes and shadows come from tokens (`styles/tokens.css` → Tailwind theme or CSS variables). No raw hex (`[#efefef]`) and no one-off pixel values (`w-[348px]`) in components; a value the design uses once goes into the ui-map as a one-off with its element, and then into a token.
-- Gate: `grep -rnE '\[#[0-9a-fA-F]{3,8}\]' src` returns nothing outside `styles/` and `dev/`.
+- Gate: `grep -rnE '\[#[0-9a-fA-F]{3,8}\]' apps/web/src` (`src` on L1) returns nothing outside `styles/` and `dev/`.
 - Raw `<button>`, `<input>`, `<textarea>`, `<select>` and inline `<svg>` appear only inside `components/ui/`; screens use the primitives. Icons come from one library at the sizes of one scale (e.g. 16 / 20 / 24), through `Icon` or a size prop limited to that scale.
 - A second element that looks like an existing primitive with different classes is a missing variant, not a new component.
 - Mobile first: base classes are the smallest supported width; `md:` / `lg:` add the wider layout. Breakpoints come from the ADR's `Viewports:`.
 
 ## Tooling the scaffold sets up
 
-Prettier with a `format:check` script, ESLint with the framework preset plus `import-x/order` from `eslint-plugin-import-x` (`eslint-plugin-import` 2.32.0 peers `eslint` only up to `^9`; `eslint-plugin-import-x` 4.17.1 accepts `^10`), `no-restricted-imports` for `dev/`, and `@typescript-eslint/no-deprecated` (type-aware: `requiresTypeChecking: true` at typescript-eslint 8.72.1 `dist/rules/no-deprecated.js:47`, so `parserOptions.projectService` is on) so any `@deprecated` symbol from CopilotKit, Hono, LangChain or Mastra fails lint; one config at the package root whose `files` include the agent folder (`src/langchain/`, `src/langgraph/` or `src/mastra/`), never a web-only config. CI runs format → typecheck → lint → tests, and evals in their own job.
+Prettier with a `format:check` script, ESLint with the framework preset plus `import-x/order` from `eslint-plugin-import-x` (`eslint-plugin-import` 2.32.0 peers `eslint` only up to `^9`; `eslint-plugin-import-x` 4.17.1 accepts `^10`), `no-restricted-imports` for `dev/`, and `@typescript-eslint/no-deprecated` (type-aware: `requiresTypeChecking: true` at typescript-eslint 8.72.1 `dist/rules/no-deprecated.js:47`, so `parserOptions.projectService` is on) so any `@deprecated` symbol from CopilotKit, Hono, LangChain or Mastra fails lint; the presets live in `packages/config`, and each app's `eslint.config.js` extends them, so the agent app is linted by the same rules as the web, never a web-only config. CI runs format → typecheck → lint → tests, and evals in their own job.

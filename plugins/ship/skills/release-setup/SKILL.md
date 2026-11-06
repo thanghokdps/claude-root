@@ -17,7 +17,7 @@ Read `${CLAUDE_SKILL_DIR}/references/services.md` before Step 2. For an assistan
 
 Find the deployable parts and what already exists: `Dockerfile`, `render.yaml`, `.railway/railway.ts`, `wrangler.jsonc`, the web build output, the server's start command, the health path, `.env.example` for the variable names. Never read `.env`.
 
-- A repo with `src/langchain/`, `src/langgraph/` or `src/mastra/` → the shape in `agent.md`.
+- A repo with `apps/agent/src/langchain/`, `apps/agent/src/langgraph/` or `apps/agent/src/mastra/` → the monorepo shape in `agent.md`. The same folders directly under `src/` → the one-package shape in `agent.md` § One-package repos.
 - A repo with no server and no web build → say so and stop; nothing deploys yet.
 
 ## Step 2 — Ask, one question per turn, in this order
