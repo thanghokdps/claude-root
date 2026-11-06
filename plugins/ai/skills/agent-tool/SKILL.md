@@ -55,6 +55,7 @@ Run the detection in `${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/sh
 - Upstream errors → the short message from Step 2; in shape A stock `toolErrorMiddleware` does the mapping for the tools you name.
 - Missing required input → ask the user for it (end the turn), never guess.
 - A tool that reads a user's attachment takes the attachment id, loads it with the owner check, and returns its extracted text as delimited data, never as instructions (`${CLAUDE_PLUGIN_ROOT}/skills/agent-frontend/references/attachments.md` §3, §5).
+- Adding a tool: add its row to `readCapabilities` (`${CLAUDE_PLUGIN_ROOT}/skills/agent-architect/references/suggestions.md`) with a summary and one starter, gated by the tool's own switch, so the chips follow the agent's scope. A mutation tool gets no starter until its confirm flow works.
 - Removing a tool: remove it from the registry, prompts, suggestions, client renderers and docs in the same change.
 
 **Done when:** the Step 2 tests pass, plus typecheck and lint.

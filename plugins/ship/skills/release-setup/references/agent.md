@@ -140,7 +140,7 @@ export function PasswordGate({
 }
 ```
 
-`<CopilotKit headers={demoHeaders()} …>` goes in a child of the gate, never above it: a provider rendered before the gate opens computes its headers with no password. Every `fetch` in `lib/threads-api.ts` sends `demoHeaders()` too.
+`<CopilotKit headers={demoHeaders()} …>` goes in a child of the gate, never above it: a provider rendered before the gate opens computes its headers with no password. Every `fetch` in `lib/threads-api.ts` and `hooks/use-chat-suggestions.ts` sends `demoHeaders()` too.
 
 ```tsx
 // Its own component: it renders only once the gate opens, so the headers hold the password.
