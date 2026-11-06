@@ -48,6 +48,7 @@ Root scripts:
     "test": "turbo run test",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
+    "format": "prettier --write .",
     "format:check": "prettier --check ."
   }
 }

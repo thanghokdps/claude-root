@@ -134,6 +134,8 @@ export default defineRailway(() => {
 });
 ```
 
+On a monorepo, set **Watch Paths** on each service in the dashboard so web and agent release apart: `/apps/agent/**`, `/packages/**` and `/pnpm-lock.yaml` on `agent`; `/apps/web/**`, `/packages/**` and `/pnpm-lock.yaml` on `web` (docs.railway.com/deployments/monorepo, checked on 2026-11-06; gitignore-style patterns). The `railway/iac` reference page shows no field for them, so the template cannot set them.
+
 `preserve()` keeps the value the user set in the dashboard. `Dockerfile.web`, at the repo root with the root as its context, runs `pnpm --filter web build` and serves `apps/web/dist/` with Caddy, falling back to `index.html`, as Railway's Vite guides do. It declares `ARG VITE_LANGGRAPH_BASE_URL` so the value reaches the build; confirm that Railway passes it, because this template has not been run on Railway.
 
 With no database and a volume:
@@ -223,5 +225,7 @@ export default {
 `handleD1Bridge` is in `agent.md` § D1. `exports` replaces the older `migrations` array, and the two cannot be combined (developers.cloudflare.com/containers/get-started). Run on `wrangler dev --local` 4.157.0 on 2026-11-05, on Colima: the config was accepted, the image built, and the container started healthy with its `envVars`. A request through the Worker then hung with no error, so the Worker-to-container path is not proven; test it on Docker Desktop or on a real deploy first. The D1 bridge ran on the same wrangler.
 
 `database_id` comes from `wrangler d1 create <app>`, which the user runs. Add every other variable the env schema needs to `envVars` too: anything left out never reaches the container. Secrets are set by the user: `wrangler secret put OPENAI_API_KEY`.
+
+These two commands release web and agent apart, so a monorepo needs no filter. When the user connects the repo to Workers Builds or Pages instead, set **Settings > Build > Build watch paths** on each project in the dashboard, with `apps/agent/*` and `packages/*` on the Worker and `apps/web/*` and `packages/*` on Pages; no config file holds them (developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths and /pages/configuration/build-watch-paths, checked on 2026-11-06).
 
 Deploy: Docker running, then `wrangler deploy` for the agent and `wrangler pages deploy apps/web/dist --project-name <app>` for the client after `pnpm --filter web build`. `max_instances: 1` keeps one process, which the in-process thread state and run queue assume.
