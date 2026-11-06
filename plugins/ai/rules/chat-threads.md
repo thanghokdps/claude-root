@@ -105,6 +105,13 @@ const merged = [...history, ...beyond];
 
 ```tsx
 const { agent } = useAgent({ agentId: AGENT_ID });
+const [settledThreadId, setSettledThreadId] = useState<string | null>(null);
+const isHistoryPending = !fresh && settledThreadId !== threadId;
+// A threadId prop turns the stock welcome screen off; keep that only until the history is known.
+const chatView = useMemo(
+  () => ({ hasExplicitThreadId: isHistoryPending }),
+  [isHistoryPending],
+);
 useEffect(() => {
   let cancelled = false;
   let history: Message[] | null = null;
@@ -120,10 +127,15 @@ useEffect(() => {
     if (!sameIds(merged, agent.messages)) agent.setMessages(merged);
   };
   agent.setMessages([]);
-  fetchHistory(threadId).then((loaded) => {
-    history = loaded;
-    apply();
-  });
+  fetchHistory(threadId)
+    .then((loaded) => {
+      history = loaded;
+      apply();
+    })
+    .catch(() => undefined)
+    .finally(() => {
+      if (!cancelled) setSettledThreadId(threadId);
+    });
   const { unsubscribe } = agent.subscribe({
     onTextMessageStartEvent: ({ event }) => {
       streaming = event.messageId;
@@ -148,8 +160,12 @@ useEffect(() => {
   };
 }, [agent, threadId]);
 
-return <CopilotChat agentId={AGENT_ID} threadId={threadId} />;
+return (
+  <CopilotChat agentId={AGENT_ID} threadId={threadId} chatView={chatView} />
+);
 ```
+
+- **Welcome screen.** `CopilotChatView` shows it only without an explicit thread (`hasExplicitThreadId`, @copilotkit/react-core 1.84.1), and a `threadId` from the route is explicit, so a new chat falls back to the bottom composer with the chips alone at the top. `chatView` overrides that one prop once the history is known. Passing `false` from the start flashes the welcome screen on a thread whose history is still loading; a new chat, which skips the fetch, counts as known from its first render.
 
 - `useAgent` with no `threadId` returns the agent `CopilotChat` drives. `useAgent({ threadId })` throws without `runtimeAgentId`, and a per-thread local `agentId` crashes `CopilotChat` on the next switch: `Agent 'chat-…' not found after runtime sync`.
 - New chat is `crypto.randomUUID()`: the LangGraph server answers 400 to any other id. The row appears once the first message is stored (during the first answer), never as an empty row. New chat navigates with router state (`{ fresh: true }`) and the page skips the history fetch for it: fetching a thread that does not exist yet is a 404 the browser logs as an error, three times under StrictMode, and the console is never clean. That state lives in `history.state` and survives a reload, so clear it on mount or a reloaded new chat skips its history and, once `connect` has nothing to replay (a restarted server), sits on "Loading conversation": `useEffect(() => { if (fresh) window.history.replaceState({ ...window.history.state, usr: null }, ""); }, [fresh]);`.

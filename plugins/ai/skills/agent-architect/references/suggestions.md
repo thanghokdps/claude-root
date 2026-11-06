@@ -2,7 +2,7 @@
 
 Read with `skeleton.md` § 4. Every skeleton ships chips: starters on an empty chat, follow-ups after each answer. Both come from what the agent can do, so the sample tool is already enough scope, and each new tool adds to it.
 
-Run live on 2026-11-05 with a fake OpenAI server, on @copilotkit/react-core and runtime 1.84.1. Shape A on the embed server, in a browser: the starter showed, a chip sent its message, follow-ups showed after an answer, after Stop and after a reload, New chat went back to the starter, and each chat stayed one thread. With the model failing the suggestion call, the answer stayed and no chip showed. Shape M on `mastra build` with `@ag-ui/mastra` 2.0.2, by direct requests: the forced tool call came back, the token limit reached the model, and only the chat's thread was stored; its web client was not run. Shape B shares A's server code and was not run separately.
+Run live on 2026-11-05 with a fake OpenAI server, on @copilotkit/react-core and runtime 1.84.1. Shape A on the embed server, in a browser: the starter showed, a chip sent its message, follow-ups showed after an answer, after Stop and after a reload, New chat went back to the starter, and each chat stayed one thread. With the model failing the suggestion call, the answer stayed and no chip showed. Shape M on `mastra build` with `@ag-ui/mastra` 2.0.2, by direct requests: the forced tool call came back, the token limit reached the model, and only the chat's thread was stored; its web client was not run. Shape B shares A's server code and was not run separately. The welcome screen ran the same way on shape A on 2026-11-06, at desktop and phone widths; that run showed no follow-up after a reload, with or without the welcome change, cause not found.
 
 ## Why not the stock default
 
@@ -40,8 +40,8 @@ function readCapabilities(env: Env): Capability[] {
         {
           summary: "tell the current date and time in any time zone",
           starter: {
-            title: "Time in Tokyo",
-            message: "What time is it in Tokyo?",
+            title: "Local time",
+            message: "What is my local time?",
           },
         },
       ]
@@ -233,10 +233,13 @@ export function useChatSuggestions(): void {
 
 Send the same auth headers as `lib/threads-api.ts`. On M, `RUNTIME_URL` must not start with `/api`: Mastra refuses a custom route there at boot (`must not start with "/api"`).
 
+A starter names what the tool does, not one example of it: "Local time", which the sample tool answers from the caller's own zone. The chips sit under the composer on the welcome screen, as in the Dojo; that screen needs the `chatView` line in `rules/chat-threads.md`, because `threadId` from the route turns it off.
+
 ## Tests
 
 - Server: `/app-suggestions` with no caller → 401; with one → the starters and `followUps: true`; `TOOL_CURRENT_TIME=off` or `SUGGESTIONS_ENABLED=off` → `{ starters: [], followUps: false }` and no `suggestions` agent in the runtime's `info`.
 - Routes: `POST /agent/<chat agent>/suggest` and `POST /agent/suggestions/run` → 404 on A/B.
 - Filter: the suggest route passes only the last assistant message and the instruction, with empty `forwardedProps`; a normal run is unchanged.
 - Prompt: `buildSuggestionsPrompt` names each capability and refuses data look-ups and actions.
+- Live: a new chat shows the welcome heading, the composer in the middle and the starter under it; a thread with history opens on its messages with no welcome screen in between.
 - Live: one turn, then the thread list has exactly one row and the captured model request used `MODEL_CHEAP` with the forced tool. With that call failing, the answer stays and no chip shows.
