@@ -52,7 +52,8 @@ web_has_no_server() { ! grep -qE '"(hono|@hono/node-server|express|@copilotkit/r
 shared_used_by_both() { grep -rq '@repo/shared' apps/web/src --include='*.ts' --include='*.tsx' && grep -rq '@repo/shared' apps/agent/src --include='*.ts'; }
 secrets_named() { grep -qE '^INTERNAL_API_TOKEN=(""|'"''"')?$' .env.example && grep -B1 -E '^INTERNAL_API_TOKEN=' .env.example | grep -q 'openssl rand'; }
 agui_import() { grep -rq '@ag-ui/langgraph' apps/agent/src --include='*.ts'; }
-lint_agent_folder() { [ -d node_modules ] && pnpm --filter agent exec eslint src/langchain --max-warnings=0; }
+# eslint loads config the agent wrote, so it gets the same scrubbed env as the agent. It still runs outside the OS sandbox.
+lint_agent_folder() { [ -d node_modules ] && env ${scrub[@]+"${scrub[@]}"} pnpm --filter agent exec eslint src/langchain --max-warnings=0; }
 
 check "monorepo: apps/web, apps/agent, packages/shared, packages/config" workspace
 check "apps/web lists no server or agent framework package" web_has_no_server
