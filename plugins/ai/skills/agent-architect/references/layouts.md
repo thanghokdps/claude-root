@@ -2,7 +2,7 @@
 
 Both layouts carry the same rules: one agent id defined once, exact version pins resolved at scaffold time (`<pm> view <pkg> version`, never from memory), `.env` gitignored with a committed `.env.example`.
 
-**Paths in the kit.** `<agent app>` is `apps/agent` on L2 and the repo root on L1; `<web app>` is `apps/web` on L2 and the repo root on L1. A path such as `src/mastra/index.ts` or `evals/run.ts` in a rule or skill is read from `<agent app>`; `src/components/` and `src/styles/` from `<web app>`.
+**Paths in the kit.** `<agent app>` is `apps/agent` on L2 and the repo root on L1; `<web app>` is `apps/web` on L2 and the repo root on L1; `<agent src>` is `apps/agent/src` on L2 and `src/agent` on L1, because L1's `src/` also holds the web code. A path such as `src/config/env.ts` in a rule or skill is read from `<agent src>`, `evals/run.ts` from `<agent app>`, and `src/components/` and `src/styles/` from `<web app>`. A repo built before the flat tree keeps its `src/langchain/`, `src/langgraph/` or `src/mastra/`: read `<agent src>` as that folder, and move it only when the user asks.
 
 ## L2 — monorepo, pnpm workspaces + Turborepo (default)
 
@@ -17,8 +17,7 @@ The web and the agent are separate packages, so each has its own dependencies, b
   apps/
     agent/                # package "agent": the agent server with the CopilotKit runtime as its route
       package.json  tsconfig.json  tsup.config.ts    # tsup.config.ts on A/B only
-      src/<agent folder>/  # src/mastra/ (M) · src/langchain/ (A) · src/langgraph/ (B): the trees below
-      src/server/<system>/ # external API clients (rules/agent-code-structure.md)
+      src/                # the agent's code, flat: the trees below, no folder named after the framework
       evals/              # agent evals, separate from unit tests
       scripts/            # graph.ts on A/B
     web/                  # package "web": Vite + the CopilotKit client only
@@ -35,7 +34,7 @@ The web and the agent are separate packages, so each has its own dependencies, b
 - **Shared code.** `@repo/shared` ships TypeScript source with no build step: `"exports": { ".": "./src/index.ts" }`, as the company's `packages/shared` does. Both apps depend on it with `workspace:*`. `AGENT_ID` lives here, not in `config/ids.ts`. A type or schema moves here once both apps need it, not before. A new package under `packages/` needs code that already has two consumers.
 - **Boundary.** `apps/web/package.json` lists no `@repo` package except `shared` and `config`, and no framework or server package (`hono`, `@hono/node-server`, `express`, `@copilotkit/runtime`, `@langchain/*`, `@mastra/*`). `apps/agent` is never a dependency of anything. pnpm's strict `node_modules` then makes a stray import fail to resolve.
 - **One framework core.** `pnpm why @langchain/core` or `pnpm why @mastra/core` shows one version. `zod` is one version across the workspace.
-- **`.env` lives at the root**, so `setup-env.sh` and the preflight stay one command. The apps reach it explicitly: `tsx --env-file=../../.env` on A/B, `mastra dev --env ../../.env` on M (mastra 1.38.0 `dev --help`), and `envDir: "../.."` in `vite.config.ts` (vite 8.3.6 `dist/node/index.d.ts:3508-3512`; only `VITE_*` reaches the bundle).
+- **`.env` lives at the root**, so `setup-env.sh` and the preflight stay one command. The apps reach it explicitly: `tsx --env-file=../../.env` on A/B, `mastra dev --dir src --env ../../.env` on M (mastra 1.38.0 `dev --help`), and `envDir: "../.."` in `vite.config.ts` (vite 8.3.6 `dist/node/index.d.ts:3508-3512`; only `VITE_*` reaches the bundle).
 - **Turbo env mode.** `"envMode": "loose"` at the top of `turbo.json`. In the default strict mode a shell variable never reaches a task: `SPIKE_PORT=1234 turbo run probe` printed `undefined` on turbo 2.11.10, and `PORT=… pnpm dev` or `TOOL_CURRENT_TIME=off pnpm dev` would be ignored without a word.
 
 Root scripts:
@@ -73,39 +72,39 @@ Root scripts:
 }
 ```
 
-`apps/agent/package.json` scripts: `embed-server.md` § `package.json` on A/B; `"dev": "mastra dev --env ../../.env"`, `"build": "mastra build"`, `"start": "mastra start"` on M. `mastra build` bundles a TypeScript-source workspace package into `.mastra/output` on its own, with no `@repo/shared` left in the output (mastra 1.38.0, built and booted on 2026-11-06). `apps/web/package.json`: `"dev": "vite"`, `"build": "vite build"`.
+`apps/agent/package.json` scripts: `embed-server.md` § `package.json` on A/B; `"dev": "mastra dev --dir src --env ../../.env"`, `"build": "mastra build --dir src"`, `"start": "mastra start"` on M. `--dir src` is required: with no flag the CLI looks in `src/mastra/` and stops with `No index.ts and no file-based primitives found` (mastra 1.38.0; with the flag `build`, the built server and `dev` all served the agent and its tool on 2026-11-06). `mastra build` bundles a TypeScript-source workspace package into `.mastra/output` on its own, with no `@repo/shared` left in the output (mastra 1.38.0, built and booted on 2026-11-06). `apps/web/package.json`: `"dev": "vite"`, `"build": "vite build"`.
 
 Several LangGraph agents → one `apps/<agent>/` each (R6). A mobile app or a chat channel → `apps/mobile` or `apps/<channel>`, sharing `@repo/shared`.
 
 ## The app inside each package
 
-The web code never holds a server: no `hono`, `@hono/node-server`, `express` or `@copilotkit/runtime` import outside the agent folder.
+The web code never holds a server: no `hono`, `@hono/node-server`, `express` or `@copilotkit/runtime` import outside `<agent src>`.
 
 The rest of the app (features, shared UI, server aggregates, tokens, dev fixtures) is placed by `${CLAUDE_PLUGIN_ROOT}/rules/agent-code-structure.md`.
 
 ### The agent tree per framework
 
-The folder is named after the framework. Its root holds only the vendor's own files, as the reference repo lays them out (`reference-repos.md`), plus `prompts.ts`. Every file the kit adds goes in a folder per concern, with the same names in all three shapes:
+The tree is flat: `<agent src>` itself holds the code, in a folder named after no framework. The reference repos keep `src/mastra/`; the kit moves that folder's contents up one level. Its root holds only the vendor's own files, as the reference repo lays them out (`reference-repos.md`), plus `prompts.ts`. Every file the kit adds goes in a folder per concern, with the same names in all three shapes:
 
 ```
 config/          env.ts (zod env schema, fails at boot) · ids.ts (AGENT_ID, the single definition, on L1 only) · models.ts (primary + fallback + cheap roles)
 auth/            identity.ts (verify token → trusted context reader)
 guardrails/      pii.ts (A/B). Shape M calls this folder processors/, Mastra's term for input/output processors
 observability/   tracing.ts (the TRACING_PROVIDER switch, masking on)
-server/          A/B only: main.ts (the one process), agent-api.ts (the guarded embed server), persistence.ts, copilotkit.ts (the `createCopilotHonoHandler` app) and its helpers (route builder, stream filter)
+server/          <system>/ and <aggregate>/ (rules/agent-code-structure.md). A/B also: main.ts (the one process), agent-api.ts (the guarded embed server), persistence.ts, copilotkit.ts (the `createCopilotHonoHandler` app) and its helpers (route builder, stream filter)
 ```
 
 A new kit file joins the group it belongs to. A new concern gets its own folder, never a loose file at the root. Mastra is unopinionated beyond its own folders, but the docs ask for a structure kept consistent (mastra.ai/docs/getting-started/project-structure). LangGraph's application-structure example keeps only the graph entry at `src/` and moves the rest one folder down (docs.langchain.com/oss/javascript/langgraph/application-structure).
 
 ```
-src/mastra/               # shape M (R3)
+src/                      # shape M (R3)
   index.ts                # the one `new Mastra({ agents, tools, workflows, storage, server: { apiRoutes: [registerCopilotKit(…)] }, … })`
   agents/<name>.ts  tools/<tool>.ts  workflows/<name>.ts      # vendor folders; scorers/ and mcp/ when used
   routes/threads.ts       # the thread sidebar's registerApiRoute routes (rules/chat-threads.md)
   prompts.ts
-  config/  auth/  processors/  observability/
+  config/  auth/  processors/  observability/  server/
 
-src/langchain/            # shape A (R10)
+src/                      # shape A (R10)
   agent.ts                # export const graph = createAgent({ … })
   prompts.ts  tools/<tool>.ts
   config/  auth/  guardrails/  observability/
@@ -113,13 +112,13 @@ src/langchain/            # shape A (R10)
   server/copilotkit.ts    # export const app = createCopilotHonoHandler({ runtime, basePath: "/api/copilotkit", cors, hooks })
   server/threads.ts       # the thread sidebar's routes, answered in hooks.onRequest (rules/chat-threads.md)
 
-src/langgraph/            # shape B (R10 on R5)
+src/                      # shape B (R10 on R5)
   graph.ts  state.ts  tools.ts  prompts.ts  configuration.ts
   config/  auth/  guardrails/  observability/
-  server/copilotkit.ts  server/threads.ts    # as in src/langchain/
+  server/main.ts  agent-api.ts  persistence.ts  copilotkit.ts  threads.ts    # as in shape A
 ```
 
-Tests follow the groups. With `__tests__/` (Q-T), a group's unit tests sit in its own `__tests__/` (`config/__tests__/env.test.ts`, `guardrails/__tests__/pii.test.ts`). Tests that span groups stay in `src/<agent folder>/__tests__/`: the prompt tests, the deprecated-import lint test and its `fixtures/`, and the shared `helpers/` and fakes. With `tests/`, the same groups are mirrored under it.
+Tests follow the groups. With `__tests__/` (Q-T), a group's unit tests sit in its own `__tests__/` (`config/__tests__/env.test.ts`, `guardrails/__tests__/pii.test.ts`). Tests that span groups stay in `<agent src>/__tests__/`: the prompt tests, the deprecated-import lint test and its `fixtures/`, and the shared `helpers/` and fakes. With `tests/`, the same groups are mirrored under it.
 
 Only in an existing Next.js repo: R2 keeps `src/mastra/` and adds `src/agent.ts` (`MastraAgent.getLocalAgents({ mastra })`) behind `src/app/api/copilotkit/route.ts`; R4 puts LangChain/LangGraph in its own `agent/` package beside the Next app.
 
@@ -129,19 +128,19 @@ One package, as `mastra-ai/ui-dojo` (R3) does: a Vite SPA and the agent side by 
 
 ```
 <app>/
-  package.json            # dev: concurrently "<mastra dev | tsx watch src/<folder>/server/main.ts>" "vite"
+  package.json            # dev: concurrently "<mastra dev --dir src/agent | tsx watch src/agent/server/main.ts>" "vite"
   .env.example
   vite.config.ts  index.html
-  tsconfig.app.json       # the web code; excludes the agent folder so DOM types never reach it
-  tsconfig.node.json      # the agent folder and vite.config.ts
+  tsconfig.app.json       # the web code; excludes src/agent so DOM types never reach it
+  tsconfig.node.json      # src/agent and vite.config.ts
   src/
     main.tsx  App.tsx  pages/  hooks/  lib/  constants.ts      # web: the CopilotKit client only
     components/ui/  components/ai-elements/                    # R3 conventions
-    <agent folder>/
+    agent/                                                     # the trees above
   evals/                  # agent evals, separate from unit tests
 ```
 
-One dependency list serves both sides, as in the Dojo: `langgraph up`/Docker installs the web deps too (`mastra build` bundles only `src/mastra/`). The web and the agent can still run as two services, but they share one dependency list, one pipeline and no enforced boundary.
+One dependency list serves both sides, as in the Dojo: `langgraph up`/Docker installs the web deps too (`mastra build --dir src/agent` bundles only that folder). The web and the agent can still run as two services, but they share one dependency list, one pipeline and no enforced boundary.
 
 Pick it when: the user asks for one app or one package. Never as the default, because a growing team ends up splitting it.
 

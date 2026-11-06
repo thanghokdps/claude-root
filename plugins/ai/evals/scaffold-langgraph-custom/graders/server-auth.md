@@ -2,7 +2,7 @@
 type: regex
 target:
   source: file
-  path: apps/agent/src/langgraph/server/agent-api.ts
+  path: apps/agent/src/server/agent-api.ts
 pattern: "not_found.*x-api-key.*callerFromHeaders|x-api-key.*callerFromHeaders.*not_found"
 flags: s
 ---

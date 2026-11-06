@@ -43,7 +43,7 @@ Mixed signals (both shapes in one app) → name the app/package each belongs to;
 
 ## Shape M — Mastra
 
-- One registry: `export const mastra = new Mastra({ agents, tools, workflows, storage, logger, observability })` in `src/mastra/index.ts`. Every agent, workflow and tool is registered there, keyed by its id.
+- One registry: `export const mastra = new Mastra({ agents, tools, workflows, storage, logger, observability })` in `src/index.ts`. Every agent, workflow and tool is registered there, keyed by its id.
 - Agents are `new Agent({ id, instructions, model, tools, memory })`. Tools are `createTool({ id, description, inputSchema, outputSchema, execute })`, and `execute(input, context)` reads trusted values from `context.requestContext`.
 - Supervisor: an `Agent` with `agents: { … }`, where each subagent carries a `description` the supervisor routes by. `.network()` is deprecated, so do not start new work on it. A fixed sequence is a workflow (`createWorkflow` + `createStep`, `.then()`/`.branch()`/`.parallel()`), not a prompt.
 - Writes: `requireApproval: true` on the tool, or `suspend()`/`resume` in the tool or a workflow step. Either needs `storage` configured.

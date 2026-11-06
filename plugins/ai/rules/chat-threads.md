@@ -40,7 +40,7 @@ Three routes, all behind the same caller check as the chat route. The path is `a
 - **The server keeps a stopped answer.** A cancelled run's checkpoint has no partial answer, so a `MiddlewareFunction` from `@ag-ui/client` on the agent collects the stream and stores it. Never take this text from the browser: a client that can write assistant text forges the history. `rxjs` becomes a direct dependency, pinned to the version `@ag-ui/client` uses.
 
 ```ts
-// src/<agent folder>/server/keep-stopped-answer.ts
+// src/server/keep-stopped-answer.ts
 export function keepStoppedAnswer(save: SaveStoppedAnswer): MiddlewareFunction {
   return (input, next) => {
     let open: { id: string; text: string } | null = null;
@@ -76,7 +76,7 @@ export function keepStoppedAnswer(save: SaveStoppedAnswer): MiddlewareFunction {
 
 ## Shape M (Mastra)
 
-- `registerApiRoute` routes beside `registerCopilotKit` in `server.apiRoutes`, in `src/mastra/routes/threads.ts`. The caller is `c.get("requestContext").get(MASTRA_RESOURCE_ID_KEY)`, set by the middleware of `rules/mastra.md` § identity.
+- `registerApiRoute` routes beside `registerCopilotKit` in `server.apiRoutes`, in `src/routes/threads.ts`. The caller is `c.get("requestContext").get(MASTRA_RESOURCE_ID_KEY)`, set by the middleware of `rules/mastra.md` § identity.
 - The agent needs `memory: new Memory()` and the Mastra instance needs `storage`, with `InMemoryStore` from `@mastra/core/storage` as the _dev only_ default.
 - From `const memory = await mastra.getAgent(AGENT_ID).getMemory()`: `memory.listThreads({ filter: { resourceId } })` returns `{ threads, total, page, perPage, hasMore }`; `memory.recall({ threadId, resourceId })` returns `{ messages }` and throws when the thread is another resource's, which the route maps to 404; `memory.deleteThread(id)` runs only after `memory.getThreadById({ threadId })` shows `resourceId` is the caller's, since it takes no owner.
 - Mastra refuses a run on another resource's thread: `Thread "x" belongs to resource "alice" but resource "bob" was provided`.

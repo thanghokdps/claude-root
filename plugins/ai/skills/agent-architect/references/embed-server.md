@@ -368,7 +368,7 @@ graph.streamEvents = ((
   "name": "agent",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --env-file=../../.env src/<folder>/server/main.ts",
+    "dev": "tsx watch --env-file=../../.env src/server/main.ts",
     "build": "tsup",
     "start": "node dist-server/main.mjs"
   },
@@ -382,7 +382,7 @@ graph.streamEvents = ((
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: { main: "src/<folder>/server/main.ts" },
+  entry: { main: "src/server/main.ts" },
   format: ["esm"],
   platform: "node",
   outDir: "dist-server",
@@ -396,7 +396,7 @@ Built on 2026-11-06 with tsup 9.0.0, booted from a `pnpm deploy` folder with `be
 
 `pnpm-workspace.yaml` at the root carries `onlyBuiltDependencies: [better-sqlite3, esbuild]`.
 
-On an existing L1 repo the scripts stay in the one `package.json`: `"dev:agent": "tsx watch --env-file=.env src/<folder>/server/main.ts"`, `"dev:web": "vite"`, `"dev"` running both through `concurrently`, `"build": "vite build"`, and `"build:server": "esbuild src/<folder>/server/main.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-server/main.mjs"`.
+On an existing L1 repo the scripts stay in the one `package.json`: `"dev:agent": "tsx watch --env-file=.env <agent src>/server/main.ts"`, `"dev:web": "vite"`, `"dev"` running both through `concurrently`, `"build": "vite build"`, and `"build:server": "esbuild <agent src>/server/main.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-server/main.mjs"`.
 
 Dependencies, pinned exactly: `@langchain/langgraph-api`, `@langchain/langgraph-checkpoint-sqlite`, `better-sqlite3`, `hono`, `@hono/node-server`. Dev: `tsup`, `tsx`, `@types/better-sqlite3`. `@langchain/langgraph-cli` is not used. Without `onlyBuiltDependencies`, pnpm skips the better-sqlite3 build and the server fails at boot looking for its native binary.
 
