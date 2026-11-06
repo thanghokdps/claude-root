@@ -1,6 +1,6 @@
 # Assistant repos — what a deploy adds
 
-Read by `/release-setup` for a repo with `src/langchain/`, `src/langgraph/` or `src/mastra/`, under `apps/agent/` on a monorepo. Paths here are read from `apps/agent` for the agent and `apps/web` for the client; on a one-package repo both are the root. Everything on shapes A and B assumes the embed server (`embed-server.md`, ai, if installed): `src/<folder>/server/main.ts` with `/ok`, and `createPersistence` in `server/persistence.ts`.
+Read by `/release-setup` for a repo whose agent package lists `@mastra/core` or `@langchain/langgraph`: `apps/agent` on a monorepo, the root on a one-package repo. Paths here are read from `apps/agent` for the agent and `apps/web` for the client; on a one-package repo both are the root, with the agent's code in `src/agent/`. A repo built before the flat tree keeps its `src/langchain/`, `src/langgraph/` or `src/mastra/`: read `src/` as that folder. Everything on shapes A and B assumes the embed server (`embed-server.md`, ai, if installed): `src/server/main.ts` with `/ok`, and `createPersistence` in `server/persistence.ts`.
 
 A repo still on `langgraph.json` has no production server: move it to the embed server first, through `/agent-architect` (ai, if installed).
 
@@ -276,7 +276,7 @@ dist-server
 !.env.example
 ```
 
-Shape M, run as an image with `mastra` 1.38.0 and `@mastra/libsql` 1.29.0 (635 MB; `/data/mastra.db` created as non-root). `mastra build` installs the output's own `node_modules`, so it runs inside the image:
+Shape M, run as an image with `mastra` 1.38.0 and `@mastra/libsql` 1.29.0 (635 MB; `/data/mastra.db` created as non-root). `mastra build` installs the output's own `node_modules`, so it runs inside the image. A repo that still has `src/mastra/` drops `--dir src/agent`:
 
 ```dockerfile
 FROM node:24-slim AS build
@@ -285,7 +285,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY src ./src
-RUN pnpm mastra build
+RUN pnpm mastra build --dir src/agent
 
 FROM node:24-slim
 ENV NODE_ENV=production

@@ -2,7 +2,7 @@
 type: regex
 target:
   source: file
-  path: apps/agent/src/langchain/prompts.ts
+  path: apps/agent/src/prompts.ts
 pattern: "INTERNAL_CANARY_"
 ---
 

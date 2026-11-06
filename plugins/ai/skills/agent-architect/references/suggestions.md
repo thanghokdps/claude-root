@@ -17,7 +17,7 @@ So a second agent with no thread store provides the chips, on `MODEL_CHEAP`, and
 
 One list on the server, one row per tool. A tool that is switched off leaves the list, so its chips go too. Add a row in the same change as the tool: `/agent-tool` and `/agent-feature` both do.
 
-`src/<agent folder>/server/suggestions.ts` on A/B:
+`src/server/suggestions.ts` on A/B:
 
 ```ts
 import { BuiltInAgent } from "@copilotkit/runtime/v2";

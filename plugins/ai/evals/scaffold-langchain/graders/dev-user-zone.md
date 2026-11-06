@@ -2,7 +2,7 @@
 type: regex
 target:
   source: file
-  path: apps/agent/src/langchain/config/env.ts
+  path: apps/agent/src/config/env.ts
 pattern: 'DEV_USER_TIME_ZONE[\s\S]{0,120}resolvedOptions\(\)\.timeZone'
 ---
 

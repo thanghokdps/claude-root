@@ -34,7 +34,7 @@ Fill this table in `docs/api/<system>.tools.md` before writing any code:
 
 ## 3. The client layer — one per system, built by `/api-client` (backend, if installed)
 
-Run `/api-client` Step 3 for each system (backend, if installed; otherwise build the same files below by hand), with the spec from § 1 as its source of truth. It builds `server/<system>/` (generated `schema.d.ts` with an `api:types` script, `client.ts` on `openapi-fetch`, `errors.ts`, `mappers.ts`), puts base URL, timeout and keys in the env schema, gives every call a timeout and an abort signal, retries only idempotent reads, and writes spec-based MSW mocks. An app route that already uses the system keeps its client: the tools reuse it. In shape M the client can sit beside `src/mastra/tools/`, imported by them.
+Run `/api-client` Step 3 for each system (backend, if installed; otherwise build the same files below by hand), with the spec from § 1 as its source of truth. It builds `server/<system>/` (generated `schema.d.ts` with an `api:types` script, `client.ts` on `openapi-fetch`, `errors.ts`, `mappers.ts`), puts base URL, timeout and keys in the env schema, gives every call a timeout and an abort signal, retries only idempotent reads, and writes spec-based MSW mocks. An app route that already uses the system keeps its client: the tools reuse it. In shape M the client can sit beside `src/tools/`, imported by them.
 
 What a tool needs on top of that client:
 

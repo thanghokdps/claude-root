@@ -11,12 +11,11 @@ Read by `/agent-architect` (scaffold), `/agent-design-ui` (build) and `/agent-fe
 
 ## What an assistant adds to the tree
 
-The monorepo (`layouts.md` L2) is the default; on an L1 repo both trees below sit in the one package. A path such as `src/mastra/index.ts` or `evals/run.ts` in the kit's rules and skills is read from `apps/agent`, and a web path such as `src/components/` from `apps/web`.
+The monorepo (`layouts.md` L2) is the default; on an L1 repo both trees below sit in the one package. A path such as `src/config/env.ts` or `evals/run.ts` in the kit's rules and skills is read from `apps/agent`, and a web path such as `src/components/` from `apps/web`.
 
 ```
 apps/agent/
-  src/
-    <agent folder>/         # per layouts.md: src/langchain/, src/langgraph/ or src/mastra/
+  src/                      # flat, no folder named after the framework: the trees in layouts.md
     server/<system>/        # external API clients, built by /api-client and reused by agent tools (agent-tool Step 0)
     server/<aggregate>/     # services and repositories the tools call
   evals/                    # agent evals (agent-evals), never run by `test`

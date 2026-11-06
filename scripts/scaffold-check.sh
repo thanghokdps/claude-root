@@ -41,7 +41,7 @@ check() { # check <label> <command...>
 }
 no_deprecated_imports() { ! grep -rEq '@copilotkit/runtime/langgraph|hono/vercel' . --include='*.ts' --include='*.tsx' --include='*.json' --exclude-dir=node_modules --exclude-dir=.git; }
 eslint_deprecated() { grep -rqE '@typescript-eslint/no-deprecated' packages/config apps/agent/eslint.config.* --exclude-dir=node_modules; }
-agent=apps/agent/src/langchain
+agent=apps/agent/src
 four_sections() { grep -qE 'OVERVIEW' "$agent/prompts.ts" && grep -qE 'RESPONSE' "$agent/prompts.ts" && grep -qE 'OUT OF SCOPE' "$agent/prompts.ts" && grep -qE 'CONTEXT' "$agent/prompts.ts"; }
 canary() { grep -q 'INTERNAL_CANARY_' "$agent/prompts.ts"; }
 pii_on() { grep -qE '^PII_REDACTION=on[[:space:]]*$' .env.example; }
@@ -52,8 +52,9 @@ web_has_no_server() { ! grep -qE '"(hono|@hono/node-server|express|@copilotkit/r
 shared_used_by_both() { grep -rq '@repo/shared' apps/web/src --include='*.ts' --include='*.tsx' && grep -rq '@repo/shared' apps/agent/src --include='*.ts'; }
 secrets_named() { grep -qE '^INTERNAL_API_TOKEN=(""|'"''"')?$' .env.example && grep -B1 -E '^INTERNAL_API_TOKEN=' .env.example | grep -q 'openssl rand'; }
 agui_import() { grep -rq '@ag-ui/langgraph' apps/agent/src --include='*.ts'; }
+no_framework_folder() { [ -f "$agent/server/main.ts" ] && [ ! -e "$agent/langchain" ] && [ ! -e "$agent/langgraph" ] && [ ! -e "$agent/mastra" ]; }
 # eslint loads config the agent wrote, so it gets the same scrubbed env as the agent. It still runs outside the OS sandbox.
-lint_agent_folder() { [ -d node_modules ] && env ${scrub[@]+"${scrub[@]}"} pnpm --filter agent exec eslint src/langchain --max-warnings=0; }
+lint_agent_src() { [ -d node_modules ] && env ${scrub[@]+"${scrub[@]}"} pnpm --filter agent exec eslint src --max-warnings=0; }
 
 check "monorepo: apps/web, apps/agent, packages/shared, packages/config" workspace
 check "apps/web lists no server or agent framework package" web_has_no_server
@@ -61,7 +62,8 @@ check "both apps import @repo/shared" shared_used_by_both
 check "no deprecated imports (@copilotkit/runtime/langgraph, hono/vercel)" no_deprecated_imports
 check "LangGraphAgent imported from @ag-ui/langgraph" agui_import
 check "the shared eslint preset enables @typescript-eslint/no-deprecated" eslint_deprecated
-check "eslint passes on apps/agent/src/langchain" lint_agent_folder
+check "no agent folder named after the framework" no_framework_folder
+check "eslint passes on apps/agent/src" lint_agent_src
 check "$agent/prompts.ts has the four sections" four_sections
 check "prompts.ts has an INTERNAL_CANARY_ line" canary
 check ".env.example has PII_REDACTION=on" pii_on
