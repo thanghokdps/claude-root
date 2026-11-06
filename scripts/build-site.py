@@ -16,6 +16,7 @@ PUBLISHED = [
     "HARNESS.md",
     "docs/USAGE.md",
     "docs/skill-map.html",
+    "docs/skill-map.svg",
     "docs/ddr/*.md",
     "eval/README.md",
     "plugins/README.md",

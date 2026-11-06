@@ -1,0 +1,195 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 648" width="1200" height="648" role="img" aria-labelledby="map-title map-desc">
+  <title id="map-title">Harness skill map</title>
+  <desc id="map-desc">Once per repo: kickoff, project-init, constraints, or agent-architect for an AI assistant. Every ticket: breakdown, ticket, feature or fix-bug, role engineers, verify-done, review-checklist with findings going back, finish-branch, a person merges. Every release: release-setup on the first deploy, release-checklist, production run by a person, then ci-triage and incident, whose fixes return as tickets. Memory feeds the next session and hooks watch every tool call.</desc>
+  <defs>
+    <style>
+      .bg { fill: #0d1117; }
+      .panel { fill: #151b23; stroke: #30363d; }
+      .head { font: 700 11.5px ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: 1.4px; fill: #9198a1; }
+      .box { fill: #0d1117; stroke-width: 1.5; }
+      .blue { stroke: #6ea8fe; }
+      .violet { stroke: #b392f0; }
+      .rose { stroke: #f47067; }
+      .green { stroke: #3fb950; }
+      .amber { stroke: #e3b341; stroke-dasharray: 5 4; }
+      .t { font: 700 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #e6edf3; }
+      .s { font: 12px ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif; fill: #9198a1; }
+      .label { font: 600 11.5px ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif; fill: #e6edf3; }
+      .label-bg { fill: #0d1117; }
+      .edge { fill: none; stroke-width: 1.6; stroke-dasharray: 6 6; animation: flow 1.2s linear infinite; }
+      .edge.loop { stroke: #e3b341; }
+      .edge.main { stroke: #6ea8fe; }
+      .edge.ai { stroke: #b392f0; }
+      .dot-main { fill: #6ea8fe; }
+      .dot-loop { fill: #e3b341; }
+      .dot-ai { fill: #b392f0; }
+      @keyframes flow { to { stroke-dashoffset: -12; } }
+      @media (prefers-reduced-motion: reduce) {
+        .edge { animation: none; }
+        .dot-main, .dot-loop, .dot-ai { display: none; }
+      }
+    </style>
+    <marker id="arrow-main" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 8 4 0 8z" fill="#6ea8fe"/></marker>
+    <marker id="arrow-loop" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 8 4 0 8z" fill="#e3b341"/></marker>
+    <marker id="arrow-ai" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 8 4 0 8z" fill="#b392f0"/></marker>
+  </defs>
+
+  <rect class="bg" width="1200" height="648" rx="14"/>
+
+  <rect class="panel" x="16" y="16" width="246" height="460" rx="12"/>
+  <text class="head" x="32" y="40">ONCE PER REPO</text>
+  <rect class="panel" x="278" y="16" width="608" height="460" rx="12"/>
+  <text class="head" x="294" y="40">EVERY TICKET</text>
+  <rect class="panel" x="902" y="16" width="282" height="460" rx="12"/>
+  <text class="head" x="918" y="40">EVERY RELEASE</text>
+  <rect class="panel" x="16" y="506" width="580" height="126" rx="12"/>
+  <text class="head" x="32" y="530">EVERY SESSION · MEMORY</text>
+  <rect class="panel" x="612" y="506" width="572" height="126" rx="12"/>
+  <text class="head" x="628" y="530">EVERY TOOL CALL · HOOKS</text>
+
+  <path id="e-kickoff" class="edge main" marker-end="url(#arrow-main)" d="M139 118V138"/>
+  <path id="e-init" class="edge main" marker-end="url(#arrow-main)" d="M139 200V220"/>
+  <path id="e-start" class="edge main" marker-end="url(#arrow-main)" d="M246 251H256V87H288"/>
+  <path id="e-breakdown" class="edge main" marker-end="url(#arrow-main)" d="M366 118V138"/>
+  <path id="e-ticket" class="edge main" marker-end="url(#arrow-main)" d="M366 200V220"/>
+  <path id="e-slices" class="edge main" marker-end="url(#arrow-main)" d="M444 251H474"/>
+  <path id="e-fix" class="edge main" marker-end="url(#arrow-main)" d="M444 333H474"/>
+  <path id="e-built" class="edge main" marker-end="url(#arrow-main)" d="M674 87H704"/>
+  <path id="e-verify" class="edge main" marker-end="url(#arrow-main)" d="M787 118V138"/>
+  <path id="e-review" class="edge main" marker-end="url(#arrow-main)" d="M787 200V220"/>
+  <path id="e-finish" class="edge main" marker-end="url(#arrow-main)" d="M787 282V302"/>
+  <path id="e-merged" class="edge main" marker-end="url(#arrow-main)" d="M870 333H894V179H918"/>
+  <path id="e-first" class="edge main" marker-end="url(#arrow-main)" d="M894 179V87H918"/>
+  <path id="e-setup" class="edge main" marker-end="url(#arrow-main)" d="M1043 118V148"/>
+  <path id="e-release" class="edge main" marker-end="url(#arrow-main)" d="M1043 210V240"/>
+  <path id="e-red" class="edge loop" marker-end="url(#arrow-loop)" d="M1000 302V386"/>
+  <path id="e-outage" class="edge loop" marker-end="url(#arrow-loop)" d="M1090 302V386"/>
+  <path id="e-findings" class="edge loop" marker-end="url(#arrow-loop)" d="M704 169H674"/>
+  <path id="e-return" class="edge loop" marker-end="url(#arrow-loop)" d="M978 448V490H272V169H288"/>
+  <path class="edge loop" d="M1108 448V490H978"/>
+  <path id="e-next" class="edge loop" marker-end="url(#arrow-loop)" d="M60 506V476"/>
+
+  <rect class="box blue" x="32" y="56" width="214" height="62" rx="9"/>
+  <text class="t" x="44" y="82">/kickoff</text>
+  <text class="s" x="44" y="102">a new project from your docs</text>
+  <rect class="box blue" x="32" y="138" width="214" height="62" rx="9"/>
+  <text class="t" x="44" y="164">/project-init</text>
+  <text class="s" x="44" y="184">.claude/ docs, rules, memory</text>
+  <rect class="box blue" x="32" y="220" width="214" height="62" rx="9"/>
+  <text class="t" x="44" y="246">/constraints</text>
+  <text class="s" x="44" y="266">the quality bar, with numbers</text>
+  <text class="head" x="32" y="376">OR AN AI ASSISTANT</text>
+  <rect class="box violet" x="32" y="386" width="214" height="62" rx="9"/>
+  <text class="t" x="44" y="412">/agent-architect</text>
+  <text class="s" x="44" y="432">one sentence, then a skeleton</text>
+
+  <rect class="box blue" x="288" y="56" width="156" height="62" rx="9"/>
+  <text class="t" x="300" y="82">/breakdown</text>
+  <text class="s" x="300" y="102">requirement to tasks</text>
+  <rect class="box blue" x="288" y="138" width="156" height="62" rx="9"/>
+  <text class="t" x="300" y="164">/ticket &lt;id&gt;</text>
+  <text class="s" x="300" y="184">spec and plan in repo</text>
+  <rect class="box blue" x="288" y="220" width="156" height="62" rx="9"/>
+  <text class="t" x="300" y="246">/feature</text>
+  <text class="s" x="300" y="266">lane, plan, slices</text>
+  <rect class="box blue" x="288" y="302" width="156" height="62" rx="9"/>
+  <text class="t" x="300" y="328">/fix-bug</text>
+  <text class="s" x="300" y="348">red test, then the fix</text>
+
+  <rect class="panel" x="474" y="50" width="200" height="414" rx="10"/>
+  <text class="head" x="486" y="70">ROLE ENGINEERS</text>
+  <rect class="box blue" x="484" y="80" width="180" height="66" rx="9"/>
+  <text class="t" x="496" y="106">backend</text>
+  <text class="s" x="496" y="127">/api-endpoint /db-change</text>
+  <rect class="box blue" x="484" y="156" width="180" height="66" rx="9"/>
+  <text class="t" x="496" y="182">frontend</text>
+  <text class="s" x="496" y="203">/ui-feature /design-ui</text>
+  <rect class="box blue" x="484" y="232" width="180" height="66" rx="9"/>
+  <text class="t" x="496" y="258">mobile</text>
+  <text class="s" x="496" y="279">/mobile-feature</text>
+  <rect class="box blue" x="484" y="308" width="180" height="66" rx="9"/>
+  <text class="t" x="496" y="334">devops</text>
+  <text class="s" x="496" y="355">/pipeline /container</text>
+  <rect class="box violet" x="484" y="384" width="180" height="66" rx="9"/>
+  <text class="t" x="496" y="410">ai</text>
+  <text class="s" x="496" y="431">/agent-feature /agent-tool</text>
+
+  <rect class="box blue" x="704" y="56" width="166" height="62" rx="9"/>
+  <text class="t" x="716" y="82">/verify-done</text>
+  <text class="s" x="716" y="102">evidence, not claims</text>
+  <rect class="box blue" x="704" y="138" width="166" height="62" rx="9"/>
+  <text class="t" x="716" y="164">/review-checklist</text>
+  <text class="s" x="716" y="184">findings go back</text>
+  <rect class="box blue" x="704" y="220" width="166" height="62" rx="9"/>
+  <text class="t" x="716" y="246">/finish-branch</text>
+  <text class="s" x="716" y="266">opens the PR</text>
+  <rect class="box amber" x="704" y="302" width="166" height="62" rx="9"/>
+  <text class="t" x="716" y="328">a person</text>
+  <text class="s" x="716" y="348">reviews and merges</text>
+
+  <rect class="box blue" x="918" y="56" width="250" height="62" rx="9"/>
+  <text class="t" x="930" y="82">/release-setup</text>
+  <text class="s" x="930" y="102">host, database, first deploy</text>
+  <rect class="box blue" x="918" y="148" width="250" height="62" rx="9"/>
+  <text class="t" x="930" y="174">/release-checklist</text>
+  <text class="s" x="930" y="194">gates, notes, tag, rollback ready</text>
+  <rect class="box green" x="918" y="240" width="250" height="62" rx="9"/>
+  <text class="t" x="930" y="266">production</text>
+  <text class="s" x="930" y="286">a person runs the production step</text>
+  <rect class="box blue" x="918" y="386" width="120" height="62" rx="9"/>
+  <text class="t" x="930" y="412">/ci-triage</text>
+  <text class="s" x="930" y="432">root cause</text>
+  <rect class="box blue" x="1048" y="386" width="120" height="62" rx="9"/>
+  <text class="t" x="1060" y="412">/incident</text>
+  <text class="s" x="1060" y="432">postmortem</text>
+
+  <rect class="box blue" x="32" y="544" width="176" height="72" rx="9"/>
+  <text class="t" x="44" y="572">/compact</text>
+  <text class="s" x="44" y="594">handoff for next session</text>
+  <rect class="box blue" x="218" y="544" width="176" height="72" rx="9"/>
+  <text class="t" x="230" y="572">/compound</text>
+  <text class="s" x="230" y="594">lessons kept in the repo</text>
+  <rect class="box blue" x="404" y="544" width="176" height="72" rx="9"/>
+  <text class="t" x="416" y="572">/docs-sync</text>
+  <text class="s" x="416" y="594">project docs stay current</text>
+
+  <rect class="box rose" x="628" y="544" width="172" height="32" rx="7"/>
+  <text class="t" x="640" y="565">branch-guard</text>
+  <rect class="box rose" x="812" y="544" width="172" height="32" rx="7"/>
+  <text class="t" x="824" y="565">secret-guard</text>
+  <rect class="box rose" x="996" y="544" width="172" height="32" rx="7"/>
+  <text class="t" x="1008" y="565">test-lock</text>
+  <rect class="box rose" x="628" y="584" width="172" height="32" rx="7"/>
+  <text class="t" x="640" y="605">ticket-gate</text>
+  <rect class="box rose" x="812" y="584" width="172" height="32" rx="7"/>
+  <text class="t" x="824" y="605">release-gate</text>
+  <rect class="box rose" x="996" y="584" width="172" height="32" rx="7"/>
+  <text class="t" x="1008" y="605">infra-gate</text>
+
+  <path id="e-agent" class="edge ai" marker-end="url(#arrow-ai)" d="M246 417H484"/>
+
+  <rect class="label-bg" x="330" y="408" width="62" height="18" rx="4"/>
+  <text class="label" x="361" y="421" text-anchor="middle">scaffold</text>
+  <rect class="label-bg" x="852" y="119" width="76" height="18" rx="4"/>
+  <text class="label" x="890" y="132" text-anchor="middle">first deploy</text>
+  <rect class="label-bg" x="968" y="334" width="64" height="18" rx="4"/>
+  <text class="label" x="1000" y="347" text-anchor="middle">red build</text>
+  <rect class="label-bg" x="1064" y="334" width="52" height="18" rx="4"/>
+  <text class="label" x="1090" y="347" text-anchor="middle">outage</text>
+  <rect class="label-bg" x="520" y="481" width="136" height="18" rx="4"/>
+  <text class="label" x="588" y="494" text-anchor="middle">a fix is a new ticket</text>
+  <rect class="label-bg" x="72" y="482" width="130" height="18" rx="4"/>
+  <text class="label" x="137" y="495" text-anchor="middle">next session reads it</text>
+
+  <circle class="dot-main" r="4"><animateMotion dur="4s" repeatCount="indefinite"><mpath href="#e-start" xlink:href="#e-start"/></animateMotion></circle>
+  <circle class="dot-main" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#e-breakdown" xlink:href="#e-breakdown"/></animateMotion></circle>
+  <circle class="dot-main" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#e-ticket" xlink:href="#e-ticket"/></animateMotion></circle>
+  <circle class="dot-main" r="4"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#e-slices" xlink:href="#e-slices"/></animateMotion></circle>
+  <circle class="dot-main" r="4"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#e-built" xlink:href="#e-built"/></animateMotion></circle>
+  <circle class="dot-main" r="4"><animateMotion dur="3s" repeatCount="indefinite"><mpath href="#e-merged" xlink:href="#e-merged"/></animateMotion></circle>
+  <circle class="dot-main" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#e-release" xlink:href="#e-release"/></animateMotion></circle>
+  <circle class="dot-ai" r="4"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#e-agent" xlink:href="#e-agent"/></animateMotion></circle>
+  <circle class="dot-loop" r="4"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#e-findings" xlink:href="#e-findings"/></animateMotion></circle>
+  <circle class="dot-loop" r="4"><animateMotion dur="7s" repeatCount="indefinite"><mpath href="#e-return" xlink:href="#e-return"/></animateMotion></circle>
+  <circle class="dot-loop" r="4"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#e-next" xlink:href="#e-next"/></animateMotion></circle>
+</svg>
