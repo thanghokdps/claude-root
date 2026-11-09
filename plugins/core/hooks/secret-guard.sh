@@ -29,7 +29,12 @@ READERS = set("cat head tail less more bat strings xxd od hexdump base64 grep eg
               "cut jq yq source . cp mv scp rsync open diff python python3 node ruby vi vim nvim nano emacs code view "
               "xargs dd iconv zcat gzip gunzip tar zip unzip openssl plutil security".split())
 GREPS = {"grep", "egrep", "fgrep", "rgrep", "rg", "ag"}
-RECURSIVE = re.compile(r"^(-[a-zA-Z]*[rR][a-zA-Z]*|--recursive|--dereference-recursive)$")
+GREP_FAMILY = {"grep", "egrep", "fgrep", "rgrep"}
+# Fail closed: any short group with r, R or d (-d takes recurse/read/skip), and any long option grep could read as
+# --recursive, --dereference-recursive or --directories (it accepts unambiguous prefixes).
+RECURSIVE = re.compile(r"^(-[a-zA-Z]*[rRd]\w*|--(r|re|rec|recu|recur|recurs|recursi|recursiv|recursive)"
+                       r"|--(de|der|dere|deref\w*)|--di(r\w*)?(=.*)?)$")
+D_VALUES = {"recurse", "read", "skip"}
 SHELLS = {"bash", "sh", "zsh"}
 WRAPPERS = {"sudo", "env", "command", "time", "nohup", "exec"}
 SEPARATORS = {"&&", "||", ";", ";;", "|", "|&", "&", "(", ")"}
@@ -197,21 +202,20 @@ def bash_hits(cmd, depth=0):
         elif head == "eval":
             hits += bash_hits(" ".join(args[1:]), depth + 1)
         if head in READERS:
-            # `-d recurse` takes a value; it is not a file argument.
-            pos = [a for i, a in enumerate(args[1:], 1) if not a.startswith("-") and args[i - 1] != "-d"]
+            # grep's `-d recurse` takes a value; only those exact words are skipped, and only for grep.
+            pos = [a for i, a in enumerate(args[1:], 1) if not a.startswith("-") and not (
+                head in GREP_FAMILY and a in D_VALUES and re.match(r"^-[a-zA-Z]*d$", args[i - 1]))]
             # grep's first positional is the pattern (`grep ".env" README.md`), unless -e/-f supplied it.
             if os.path.basename(args[0]) in GREPS and not any(re.match(r"^(-[ef]|--regexp|--file)", a) for a in args[1:]):
                 pos = pos[1:]
             hits += [a for a in pos if arg_hit(a)]
-            recursive = head == "rgrep" or (head in ("grep", "egrep", "fgrep") and any(
-                RECURSIVE.match(a) or a in ("-drecurse", "--directories=recurse") or (a == "recurse" and prev == "-d")
-                for prev, a in zip(args, args[1:])))
-            if recursive:
+            if head == "rgrep" or (head in GREP_FAMILY and any(RECURSIVE.match(a) for a in args[1:])):
                 # grep -r reads dotfiles and gitignored files, so a directory argument searches .env too.
                 includes = [a.split("=", 1)[1] for a in args[1:] if a.startswith("--include=")]
+                skip = {a.split("=", 1)[1] for a in args[1:] if a.startswith("--exclude-dir=")}
                 for base, d in recursive_grep_dirs(pos):
                     found = secret_in_scope(d, lambda f: not includes or any(match(f, g) for g in includes), True,
-                                            base)
+                                            base, skip)
                     if found:
                         hits.append(found)
                         reason_extra = (f"grep -r over {d} would print lines of {found}, which holds secrets. Grep "
@@ -226,15 +230,14 @@ def in_glob(f, glob_param):
     return any(match(os.path.basename(f), g) or match(f, g) for g in expand_braces(glob_param))
 
 
-# shortcut: these folders are skipped unread when walking; a secret placed inside one is missed. Revisit if one ever holds keys.
-HEAVY = {".git", "node_modules", ".venv", "venv", "__pycache__", ".next", ".turbo", ".gradle", "Pods", "target"}
-
-
-def walk_for_secret(full, keep, inside):
-    """First secret file under full, or full itself when there are too many files to check (fail closed)."""
+def walk_for_secret(full, keep, inside, skip):
+    """First secret file under full, or full itself when there are too many files to check (fail closed).
+    Only folders in skip (glob names) are left out."""
     seen = 0
+    if any(fnmatch.fnmatch(os.path.basename(full.rstrip(os.sep)), s) for s in skip):
+        return None
     for d, dirs, files in os.walk(full):
-        dirs[:] = [x for x in dirs if x not in HEAVY]
+        dirs[:] = [x for x in dirs if not any(fnmatch.fnmatch(x, s) for s in skip)]
         for name in files:
             seen += 1
             f = os.path.join(d, name)
@@ -246,15 +249,17 @@ def walk_for_secret(full, keep, inside):
     return None
 
 
-def secret_in_scope(path, keep, include_ignored=False, base=None):
+def secret_in_scope(path, keep, include_ignored=False, base=None, skip=frozenset()):
     """First secret file a search over `path` (default cwd) would read and `keep` accepts. Inside the repo it
-    honours .gitignore (ripgrep does) unless include_ignored, which also walks the ignored folders git collapses."""
+    honours .gitignore (ripgrep does) unless include_ignored, which also walks the ignored folders git collapses.
+    skip holds the folder names the search itself leaves out (grep --exclude-dir)."""
     full = os.path.realpath(os.path.join(base or cwd, os.path.expanduser(path or ".")))
     if not os.path.isdir(full):
         return None
     if not (full == top or full.startswith(top + os.sep)):
         # Outside the repo (~/.ssh, a sibling project) there is no .gitignore to lean on: walk it, capped.
-        return walk_for_secret(full, keep, False)
+        # The Grep tool skips .git and node_modules there; grep -r reads them.
+        return walk_for_secret(full, keep, False, skip | ({".git", "node_modules"} if not include_ignored else set()))
     listings = [["-co", "--exclude-standard"]] + ([["-o", "-i", "--exclude-standard", "--directory"]]
                                                   if include_ignored else [])
     for flags in listings:
@@ -267,10 +272,9 @@ def secret_in_scope(path, keep, include_ignored=False, base=None):
             return None
         for f in filter(None, r.stdout.split("\0")):
             if f.endswith("/"):
-                if os.path.basename(f.rstrip("/")) not in HEAVY:
-                    found = walk_for_secret(os.path.join(top, f), keep, True)
-                    if found:
-                        return found
+                found = walk_for_secret(os.path.join(top, f), keep, True, skip)
+                if found:
+                    return found
             elif is_secret([f]) and keep(f):
                 return f
     return None

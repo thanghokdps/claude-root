@@ -174,6 +174,15 @@ def test_bash_recursive_grep_checks_files_it_would_search():
                 "grep --directories=recurse K .", "rgrep K .", "grep -rn K $DIR", "cd src; grep -rn K config"]:
         assert bash(cmd, nested) == "deny", cmd
     assert bash("grep -rn K src", nested) == "allow"
+    # Option spellings grep accepts, and a -d that belongs to another command, fail closed.
+    for cmd in ["grep --recur K .", "grep --dir=recurse K .", "grep -nd recurse K .", "diff -d .env x"]:
+        assert bash(cmd, cwd) == "deny", cmd
+    # No folder is skipped by name: an ignored node_modules is searched by grep -r unless --exclude-dir says so.
+    deps = repo()
+    touch(deps, ".gitignore", "node_modules/\n")
+    touch(deps, "node_modules/pkg/.env", "K=1")
+    assert bash("grep -rn K .", deps) == "deny"
+    assert bash("grep -rn K --exclude-dir=node_modules .", deps) == "allow"
 
 
 if __name__ == "__main__":
