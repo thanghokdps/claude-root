@@ -21,7 +21,9 @@ Each skill ends with its own proof: the migration applied and repository tests o
 Read before the first edit, only the ones the repo's stack needs:
 
 - `${CLAUDE_PLUGIN_ROOT}/rules/python.md`, `${CLAUDE_PLUGIN_ROOT}/rules/fastapi.md` — Python services
+- `${CLAUDE_PLUGIN_ROOT}/rules/nestjs.md` — a NestJS app (`@nestjs/core` in package.json, `*.module.ts`)
 - `${CLAUDE_PLUGIN_ROOT}/rules/prisma.md` — a Prisma schema
+- `${CLAUDE_PLUGIN_ROOT}/rules/drizzle.md` — a Drizzle schema (`drizzle.config.*`)
 - `api-contract.md`, `data-access.md`, `security.md` from core (`~/.claude/rules/`) — always
 
 Every mutating route is authenticated and checks permission on the specific resource; every query is scoped to the caller's owner key. These are hard gates: when the brief would weaken one, stop and report instead of building.

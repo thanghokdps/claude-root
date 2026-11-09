@@ -127,13 +127,13 @@ Gates live in the process plugins, never in a pack, so they hold before a pack i
 
 Five role packs with one shape: one `<role>-engineer` agent, skills named after the deliverable, the stack rules read on demand, no hooks, depending only on `progress` and `dev`.
 
-| Pack       | Turned on when the repo has                              | Rules it carries        |
-| ---------- | -------------------------------------------------------- | ----------------------- |
-| `frontend` | React, Next.js, Vue, Svelte or Vite without React Native | React, Next.js, taste   |
-| `backend`  | a server framework, a database or ORM, Go or Rust        | Python, FastAPI, Prisma |
-| `mobile`   | React Native or Expo, `eas.json`                         | React Native            |
-| `devops`   | a Dockerfile, CI workflows, `*.tf`, `k8s/`, a Helm chart | CI, container, infra    |
-| `ai`       | CopilotKit, LangGraph, LangChain, Mastra                 | the framework rules     |
+| Pack       | Turned on when the repo has                              | Rules it carries                         |
+| ---------- | -------------------------------------------------------- | ---------------------------------------- |
+| `frontend` | React, Next.js, Vue, Svelte or Vite without React Native | React, Next.js, taste                    |
+| `backend`  | a server framework, a database or ORM, Go or Rust        | Python, FastAPI, NestJS, Prisma, Drizzle |
+| `mobile`   | React Native or Expo, `eas.json`                         | React Native                             |
+| `devops`   | a Dockerfile, CI workflows, `*.tf`, `k8s/`, a Helm chart | CI, container, infra                     |
+| `ai`       | CopilotKit, LangGraph, LangChain, Mastra                 | the framework rules                      |
 
 `core`'s `repo-profile` hook reads the repo on session start and writes the packs into `.claude/settings.local.json`; they load from the next session. A pack that is not on is not an error: `/feature` builds that slice with the generic steps. The domain pack `workplace` (HR / workplace apps) is turned on the same way.
 
@@ -152,7 +152,7 @@ One marketplace, `harness`, one plugin per role. Installing a role pulls in what
 | [`review`](plugins/review/README.md)       | reviewers                                                         | `/review-checklist`, `/review-diff`, `/blast-radius`, `/create-pr`, `/resolve-pr-feedback`, `/debt-ledger`, `/repo-audit`                                                                                                                                              | progress                 |
 | [`dev`](plugins/dev/README.md)             | every developer                                                   | `/feature` (dispatches slices to the role packs' engineers), `/ticket`, `/fix-bug`, `/tdd`, `/resolve-question`, `/checkpoint`, `/coordinator`; the ticket and test-lock hooks                                                                                         | core, plan, review, ship |
 | [`frontend`](plugins/frontend/README.md)   | web UI repos, turned on per repo                                  | the `frontend-engineer` agent, `/ui-feature`, `/design-ui`, `/ui-polish`; React and Next.js rules                                                                                                                                                                      | progress, dev            |
-| [`backend`](plugins/backend/README.md)     | server repos, turned on per repo                                  | the `backend-engineer` agent, `/api-endpoint`, `/db-change`, `/api-client`; Python, FastAPI and Prisma rules                                                                                                                                                           | progress, dev            |
+| [`backend`](plugins/backend/README.md)     | server repos, turned on per repo                                  | the `backend-engineer` agent, `/api-endpoint`, `/db-change`, `/api-client`; Python, FastAPI, NestJS, Prisma and Drizzle rules                                                                                                                                          | progress, dev            |
 | [`ship`](plugins/ship/README.md)           | release and CI owners                                             | `/finish-branch`, `/ci-triage`, `/release-checklist`, `/write-migration`, `/incident`, `/sync-remote`; the mobile release gate                                                                                                                                         | core                     |
 | [`mobile`](plugins/mobile/README.md)       | React Native / Expo repos, turned on per repo                     | the `mobile-engineer` agent, `/mobile-feature`, `/mobile-design`; React Native rules                                                                                                                                                                                   | progress, dev            |
 | [`devops`](plugins/devops/README.md)       | repos with CI, containers or infra, turned on per repo            | the `devops-engineer` agent, `/pipeline`, `/container`, `/infra-change`; CI, container and infra rules                                                                                                                                                                 | progress, dev            |

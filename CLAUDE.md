@@ -31,7 +31,7 @@ A **source library** and the `harness` marketplace of role plugins. `claude plug
                 feature is the supervisor: one slice table, each slice dispatched to a role pack's <role>-engineer (sonnet)
                 + ticket-ledger, ticket-gate, test-lock, weakened-check, auto-decisions, ask-once, plan-recall, plan-gate hooks (always on: a ticket's commit/PR waits for its plan's skills; no question to the user once the build has started; an active PLAN.md stays live)
     frontend    role pack: agents/frontend-engineer.md + ui-feature design-ui ui-polish + rules/ (react, nextjs) + references/ → progress, dev
-    backend     role pack: agents/backend-engineer.md + api-endpoint db-change api-client + rules/ (python, fastapi, prisma) → progress, dev
+    backend     role pack: agents/backend-engineer.md + api-endpoint db-change api-client + rules/ (python, fastapi, nestjs, prisma, drizzle) → progress, dev
                 a role pack = one agents/<role>-engineer.md, deliverable-named skills, on-demand rules, deps exactly [progress, dev]
                 (ai adds frontend, backend: an assistant is a chat page plus an agent server),
                 no hooks (gates live in core/dev/ship so they run before the pack is enabled); lint-kit checks the shape

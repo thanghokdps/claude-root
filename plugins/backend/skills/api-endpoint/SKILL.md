@@ -2,7 +2,7 @@
 model: opus
 effort: high
 name: api-endpoint
-description: Adds or changes a backend HTTP endpoint (Next.js route handler, Express/Hono, FastAPI) the way the repo already builds them. It covers the request/response schema, session auth, a permission check on the specific resource, a thin handler calling a service and repository, stable error codes, and the route test matrix (200, 400, 401, 404 for another user's resource). Use when the user asks for a new API route or endpoint, to change what an endpoint accepts or returns, or to fix an endpoint that leaks data or returns the wrong status.
+description: Adds or changes a backend HTTP endpoint (Next.js route handler, Express/Hono, NestJS controller, FastAPI) the way the repo already builds them. It covers the request/response schema, session auth, a permission check on the specific resource, a thin handler calling a service and repository, stable error codes, and the route test matrix (200, 400, 401, 404 for another user's resource). Use when the user asks for a new API route or endpoint, to change what an endpoint accepts or returns, or to fix an endpoint that leaks data or returns the wrong status.
 when_to_use: new API endpoint, "thêm endpoint", "thêm API endpoint", "viết API cho", add a DELETE / POST / PATCH route, "GET /orders/{id}" or any method + path, REST route, route handler, controller, CRUD API, a user may only act on their own resource, endpoint returns 500 instead of 400, endpoint shows another user's data, change request or response shape — even a single-route change
 ---
 
@@ -10,7 +10,7 @@ when_to_use: new API endpoint, "thêm endpoint", "thêm API endpoint", "viết A
 
 **Invoke:** `/api-endpoint <method> <path> — what it does`
 
-Rules: `api-contract.md`, `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`); on Python, `${CLAUDE_PLUGIN_ROOT}/rules/python.md` and `${CLAUDE_PLUGIN_ROOT}/rules/fastapi.md`. An agent tool is not an endpoint: use `/agent-tool` (ai, if installed).
+Rules: `api-contract.md`, `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`); on Python, `${CLAUDE_PLUGIN_ROOT}/rules/python.md` and `${CLAUDE_PLUGIN_ROOT}/rules/fastapi.md`; on NestJS, `${CLAUDE_PLUGIN_ROOT}/rules/nestjs.md`. An agent tool is not an endpoint: use `/agent-tool` (ai, if installed).
 
 ---
 
@@ -18,18 +18,18 @@ Rules: `api-contract.md`, `data-access.md` and `app-structure.md` from core (in 
 
 Find the existing pieces before writing any. **Reuse them**, because a second error wrapper or auth helper is a defect:
 
-| Piece                    | Look for                                                                                                    |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| Route location and style | `app/api/**/route.ts` (Next), `routes/` + `router.` (Express/Hono), `APIRouter` (FastAPI)                   |
-| Wrapper and errors       | `route(`, `HttpError`, `errorHandler`, `HTTPException`, exception middleware                                |
-| Auth                     | `requireUser`, `getSession`, `Depends(get_current_user)`, auth middleware                                   |
-| Validation               | `parseJson`, `z.object`, pydantic models                                                                    |
-| Aggregate                | `server/<aggregate>/{schema,repository,service}.ts` or `app/<domain>/`                                      |
-| Test helpers             | the route test helpers (`signInAs`, `request`, `params`), the test DB (PGlite, testcontainers, test client) |
+| Piece                    | Look for                                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Route location and style | `app/api/**/route.ts` (Next), `routes/` + `router.` (Express/Hono), `*.controller.ts` + `@Controller` (NestJS), `APIRouter` (FastAPI) |
+| Wrapper and errors       | `route(`, `HttpError`, `errorHandler`, `@Catch()` filter + `APP_FILTER` (NestJS), `HTTPException`, exception middleware               |
+| Auth                     | `requireUser`, `getSession`, `*.guard.ts` + `@UseGuards` / `APP_GUARD` (NestJS), `Depends(get_current_user)`, auth middleware         |
+| Validation               | `parseJson`, `z.object`, `ZodValidationPipe` (NestJS), pydantic models                                                                |
+| Aggregate                | `server/<aggregate>/{schema,repository,service}.ts`, `src/modules/<aggregate>/*.module.ts` (NestJS) or `app/<domain>/`                |
+| Test helpers             | the route test helpers (`signInAs`, `request`, `params`), the test DB (PGlite, testcontainers, test client)                           |
 
 Read one existing endpoint and its test end to end, and copy its shape.
 
-**Done when:** each row names a file path, or "none" with the grep that found nothing. Missing auth or an error wrapper → build it once in the shared place (`server/http.ts`) as its own step, and ask first if it touches auth.
+**Done when:** each row names a file path, or "none" with the grep that found nothing. Missing auth or an error wrapper → build it once in the shared place (`server/http.ts`, or the session guard and global filter in NestJS) as its own step, and ask first if it touches auth.
 
 ## Step 2 — Contract and failing tests
 
@@ -46,7 +46,7 @@ Read one existing endpoint and its test end to end, and copy its shape.
 
 ## Step 3 — Implement, thin
 
-- The handler is auth → validate → service/repository → DTO, inside the repo's error wrapper. No SQL and no business rule in the handler.
+- The handler is auth → validate → service/repository → DTO, inside the repo's error wrapper (in NestJS: guard → `ZodValidationPipe` → service → DTO, errors mapped by the global filter). No SQL and no business rule in the handler.
 - Data reads and writes go through repository functions that take the owner (`/db-change` when a table, column or query is new).
 - Composition across aggregates, quotas and side effects go in `service.ts`. Pure rules go in their own module with unit tests.
 - Lists: limit with a server maximum, a stable sort, and cursor or offset.
