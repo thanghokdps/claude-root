@@ -47,16 +47,23 @@ bodies = re.findall(r"<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n(.*?)\n\s*\1\s*(?:\n|$)", 
 shell = re.sub(r"(<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n).*?\n(\s*\2\s*(?:\n|$))", r"\1\3", cmd, flags=re.S)
 shell = re.sub(r"'[^']*'|\"[^\"]*\"", "''", shell)  # quoted text (commit messages, grep patterns) is not a target
 hits = []
-base = cwd  # a `cd` moves where later relative targets land: `cd /tmp/x && printf x > notes.txt` is not a repo write
-
-for seg in re.split(r"&&|\|\||[;\n]|(?<!>)\|", shell):  # `>|` is a redirect, not a pipe
+# A `cd` moves where later relative targets land (`cd /tmp/x && printf x > notes.txt` is not a repo write), but only
+# one that surely ran: joined by `&&` to what follows, outside ( ), to a folder that exists. After `;`, `||` or a
+# newline the shell may still be in the repo, so the base falls back to the event cwd.
+base = cwd
+parts = re.split(r"(&&|\|\||[;\n]|(?<!>)\|)", shell)  # `>|` is a redirect, not a pipe
+for i in range(0, len(parts), 2):
+    seg, sep = parts[i], parts[i + 1] if i + 1 < len(parts) else ""
+    if i and parts[i - 1] in (";", "\n", "||"):
+        base = cwd
     words = seg.replace("(", " ").replace(")", " ").split()
-    if not words:
-        continue
-    head = os.path.basename(words[0])
+    head = os.path.basename(words[0]) if words else ""
     if head == "cd":
-        if len(words) > 1 and "$" not in words[1] and words[1] != "''":
-            base = os.path.realpath(os.path.join(base, os.path.expanduser(words[1])))
+        target = os.path.realpath(os.path.join(base, os.path.expanduser(words[1]))) if len(words) > 1 else ""
+        if sep == "&&" and "(" not in shell and ")" not in shell and "$" not in target and os.path.isdir(target):
+            base = target
+        continue
+    if not words:
         continue
     if head == "sed" and any(re.match(r"^-[a-zA-Z]*i", w) or w.startswith("--in-place") for w in words[1:]):
         hits.append(("sed -i", [w for w in words[1:] if not w.startswith("-")][-1:] or ["?"], base))

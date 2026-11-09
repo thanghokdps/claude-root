@@ -68,11 +68,15 @@ def test_outside_a_git_repo_nothing_is_blocked():
 
 def test_targets_resolve_after_cd():
     cwd, outside = repo(), tempfile.mkdtemp()
-    for cmd in [f"cd {outside} && printf x > notes.txt", f"cd {outside}; echo x >> notes.txt",
-                f"cd {outside} && sed -i 's/a/b/' x.ts", f"(cd {outside} && printf x | tee a.txt)"]:
+    for cmd in [f"cd {outside} && printf x > notes.txt", f"cd {outside} && sed -i 's/a/b/' x.ts",
+                f"cd {outside} && ls && printf x | tee a.txt", f"ls; cd {outside} && echo x > notes.txt"]:
         assert code(cmd, cwd) == 0, cmd
+    # Only a cd that surely ran moves the target: after `;`, `||`, inside ( ) or to a missing folder the shell may
+    # still be in the repo.
     for cmd in ["cd src && echo x > a.ts", f"cd {outside} && cd {cwd}/src && echo x > a.ts",
-                f"cd {outside} && echo x > {cwd}/README.md"]:
+                f"cd {outside} && echo x > {cwd}/README.md", f"cd {outside}; echo x >> notes.txt",
+                f"cd {outside} || echo x > notes.txt", f"(cd {outside} && printf x) > notes.txt",
+                f"cd {outside}/missing && echo x > notes.txt", f"cd {outside} && ls; echo x > notes.txt"]:
         assert code(cmd, cwd) == 2, cmd
 
 
