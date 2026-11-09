@@ -30,11 +30,16 @@ READERS = set("cat head tail less more bat strings xxd od hexdump base64 grep eg
               "xargs dd iconv zcat gzip gunzip tar zip unzip openssl plutil security".split())
 GREPS = {"grep", "egrep", "fgrep", "rgrep", "rg", "ag"}
 GREP_FAMILY = {"grep", "egrep", "fgrep", "rgrep"}
-# Fail closed: any short group with r, R or d (-d takes recurse/read/skip), and any long option grep could read as
-# --recursive, --dereference-recursive or --directories (it accepts unambiguous prefixes).
-RECURSIVE = re.compile(r"^(-[a-zA-Z]*[rRd]\w*|--(r|re|rec|recu|recur|recurs|recursi|recursiv|recursive)"
-                       r"|--(de|der|dere|deref\w*)|--di(r\w*)?(=.*)?)$")
 D_VALUES = {"recurse", "read", "skip"}
+
+
+def recursive_opt(a):
+    """Fail closed: a short group with r, R or d (-d takes recurse/read/skip), or a long option grep could read as
+    --recursive, --dereference-recursive or --directories (it accepts unambiguous prefixes)."""
+    if a.startswith("--"):
+        name = a[2:].split("=", 1)[0]
+        return bool(name) and any(o.startswith(name) for o in ("recursive", "dereference-recursive", "directories"))
+    return bool(re.match(r"^-[a-zA-Z0-9]*[rRd]", a))
 SHELLS = {"bash", "sh", "zsh"}
 WRAPPERS = {"sudo", "env", "command", "time", "nohup", "exec"}
 SEPARATORS = {"&&", "||", ";", ";;", "|", "|&", "&", "(", ")"}
@@ -209,7 +214,7 @@ def bash_hits(cmd, depth=0):
             if os.path.basename(args[0]) in GREPS and not any(re.match(r"^(-[ef]|--regexp|--file)", a) for a in args[1:]):
                 pos = pos[1:]
             hits += [a for a in pos if arg_hit(a)]
-            if head == "rgrep" or (head in GREP_FAMILY and any(RECURSIVE.match(a) for a in args[1:])):
+            if head == "rgrep" or (head in GREP_FAMILY and any(recursive_opt(a) for a in args[1:])):
                 # grep -r reads dotfiles and gitignored files, so a directory argument searches .env too.
                 includes = [a.split("=", 1)[1] for a in args[1:] if a.startswith("--include=")]
                 skip = {a.split("=", 1)[1] for a in args[1:] if a.startswith("--exclude-dir=")}
@@ -232,10 +237,8 @@ def in_glob(f, glob_param):
 
 def walk_for_secret(full, keep, inside, skip):
     """First secret file under full, or full itself when there are too many files to check (fail closed).
-    Only folders in skip (glob names) are left out."""
+    Only subfolders in skip (glob names) are left out; full itself is always searched."""
     seen = 0
-    if any(fnmatch.fnmatch(os.path.basename(full.rstrip(os.sep)), s) for s in skip):
-        return None
     for d, dirs, files in os.walk(full):
         dirs[:] = [x for x in dirs if not any(fnmatch.fnmatch(x, s) for s in skip)]
         for name in files:
@@ -272,7 +275,12 @@ def secret_in_scope(path, keep, include_ignored=False, base=None, skip=frozenset
             return None
         for f in filter(None, r.stdout.split("\0")):
             if f.endswith("/"):
-                found = walk_for_secret(os.path.join(top, f), keep, True, skip)
+                rel = os.path.relpath(os.path.join(top, f), full)
+                inside_full = rel != "." and not rel.startswith("..")
+                if inside_full and any(fnmatch.fnmatch(part, s) for part in rel.split(os.sep) for s in skip):
+                    continue  # a subfolder the search itself leaves out
+                # git lists the ignored folder itself or a parent of it: walk only what the search covers.
+                found = walk_for_secret(os.path.join(top, f) if inside_full else full, keep, True, skip)
                 if found:
                     return found
             elif is_secret([f]) and keep(f):

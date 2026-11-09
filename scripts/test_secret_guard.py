@@ -175,14 +175,24 @@ def test_bash_recursive_grep_checks_files_it_would_search():
         assert bash(cmd, nested) == "deny", cmd
     assert bash("grep -rn K src", nested) == "allow"
     # Option spellings grep accepts, and a -d that belongs to another command, fail closed.
-    for cmd in ["grep --recur K .", "grep --dir=recurse K .", "grep -nd recurse K .", "diff -d .env x"]:
+    for cmd in ["grep --recur K .", "grep --dir=recurse K .", "grep -nd recurse K .", "diff -d .env x",
+                "grep --dereference-recursive K .", "grep --dereference-rec K .", "grep -C2r K ."]:
         assert bash(cmd, cwd) == "deny", cmd
+    # --exclude-dir names subfolders; it never skips the folder the command names.
+    assert bash(f"grep -rn K --exclude-dir={os.path.basename(cwd)} .", cwd) == "deny"
+    assert bash("grep -rn K --exclude-dir=src src", cwd) == "allow"
     # No folder is skipped by name: an ignored node_modules is searched by grep -r unless --exclude-dir says so.
     deps = repo()
     touch(deps, ".gitignore", "node_modules/\n")
     touch(deps, "node_modules/pkg/.env", "K=1")
     assert bash("grep -rn K .", deps) == "deny"
     assert bash("grep -rn K --exclude-dir=node_modules .", deps) == "allow"
+    # The files of the folder named on the command line are judged whatever --exclude-dir says, also when git lists
+    # that folder as ignored.
+    touch(deps, "node_modules/.env", "K=1")
+    for cmd in ["grep -rn K --exclude-dir=* node_modules", "grep -rn K --exclude-dir=. node_modules",
+                "grep -rn K --exclude-dir=* node_modules/pkg"]:
+        assert bash(cmd, deps) == "deny", cmd
 
 
 if __name__ == "__main__":
