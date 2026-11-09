@@ -172,6 +172,16 @@ def test_the_kit_repo_itself_gets_no_team_settings():
     assert not os.path.exists(os.path.join(cwd, ".claude", "rules"))
 
 
+def test_the_kit_repo_itself_gets_no_role_packs():
+    # The kit's own CI workflow must not make it a devops repo.
+    cwd = repo({".claude-plugin/marketplace.json": {"name": "harness", "plugins": []},
+                ".github/workflows/check.yml": "on: push\n"})
+    ctx = run(cwd)
+    assert "harness kit" in ctx and "scripts/check.sh" in ctx, ctx
+    assert "Roles:" not in ctx and "/pipeline" not in ctx and "/project-init" not in ctx, ctx
+    assert local_settings(cwd) is None
+
+
 def test_plain_backend_repo_without_docs():
     cwd = repo({"package.json": {"dependencies": {"express": "4"}}})
     ctx = run(cwd)

@@ -137,23 +137,7 @@ Format:
 
 ---
 
-## Step 5 — Write session breadcrumb
-
-Append to `specs/STATE.md` (create if missing):
-
-```markdown
-## Session — <YYYY-MM-DD HH:MM>
-
-**Work done:** <1–2 sentences>
-**Commits:** <sha list>
-**Learnings crystallized:** <slugs written to solutions/>
-**Open items:** <anything unfinished or unresolved>
-**Resume from:** <what to read first in the next session>
-```
-
----
-
-## Step 6 — Report
+## Step 5 — Report
 
 ```
 Compound complete.
@@ -165,8 +149,6 @@ Learnings crystallized: N
 Written to:
   global:  ~/.claude/docs/solutions/
   project: .claude/docs/solutions/
-
-Session breadcrumb: specs/STATE.md
 
 Next session: agents will load these automatically via docs/solutions/INDEX.md
 ```

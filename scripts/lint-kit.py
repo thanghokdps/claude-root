@@ -39,6 +39,11 @@ def listing_chars(fm):
     return len(str(fm.get("description") or "")) + len(str(fm.get("when_to_use") or ""))
 
 
+def too_long(text):
+    # A vendored skill stays byte-identical to upstream (plugins/reverse/README.md), so splitting it is not an option.
+    return text.count("\n") > 500 and "<!-- Vendored from " not in text
+
+
 def frontmatter(path):
     text = open(path, encoding="utf-8").read()
     if not text.startswith("---\n"):
@@ -113,8 +118,8 @@ def check_skills():
         for ref in re.findall(r"\$\{CLAUDE_SKILL_DIR\}/([\w./-]+\w)", text):
             if not os.path.exists(os.path.join(os.path.dirname(path), ref)):
                 errors.append(f"{rel}: references missing file {ref} in its skill directory")
-        lines = text.count("\n")
-        if lines > 500:
+        if too_long(text):
+            lines = text.count("\n")
             warnings.append(f"{rel}: {lines} lines — loads in full on every invocation")
         if not os.path.isfile(os.path.join(ROOT, "eval", "triggers", f"{name}.json")):
             warnings.append(f"{rel}: no trigger case at eval/triggers/{name}.json")
