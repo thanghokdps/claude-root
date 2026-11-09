@@ -1,6 +1,6 @@
 {
   "name": "harness",
-  "description": "Claude Code plugins in two layers — the process every role shares (plan, dev, review, ship, lead, guards, bundled as harness) and role packs enabled per repo (frontend, backend, mobile, devops, ai, workplace domain).",
+  "description": "Claude Code plugins in two layers — the process every role shares (plan, dev, review, ship, lead, guards, bundled as harness) and role packs enabled per repo (frontend, backend, mobile, devops, ai; workplace and reverse domain).",
   "owner": {
     "name": "Thang Ho Quang"
   },
@@ -64,6 +64,11 @@
       "name": "workplace",
       "source": "./plugins/workplace",
       "description": "Domain pack for internal workplace / HR apps (time off, approvals, balances, room and meal bookings, maintenance requests): domain rules, starter model, kickoff questions and a domain review. Enabled per repo by core's repo-profile hook."
+    },
+    {
+      "name": "reverse",
+      "source": "./plugins/reverse",
+      "description": "Domain pack for reverse engineering shipped apps, binaries, APKs, ASARs and firmware with REA (vendored from morluto/rea, MIT) and its rea MCP server, pinned to rea-agents@6.8.0. Off by default and enabled only by hand (claude plugin enable reverse@harness --scope local); core's repo-profile hook suggests it for a `Domain: reverse-engineering` line."
     },
     {
       "name": "lead",

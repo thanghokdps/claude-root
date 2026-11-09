@@ -154,6 +154,47 @@ def test_grep_over_a_directory_checks_files_it_would_search():
     assert decide(GUARD, "Grep", {"pattern": "x"}, ignored) == "deny"
 
 
+def test_bash_recursive_grep_checks_files_it_would_search():
+    # grep -r ignores .gitignore and reads dotfiles, so a gitignored .env is still searched and printed.
+    cwd = repo()
+    touch(cwd, ".gitignore", ".env\n")
+    touch(cwd, ".env", "K=1")
+    touch(cwd, "src/a.ts", "K")
+    for cmd in ["grep -rn K .", "grep -r K", "grep -Rn K .", "egrep -r K .", "grep --recursive K .",
+                "cd src && grep -rn K .."]:
+        assert bash(cmd, cwd) == "deny", cmd
+    for cmd in ["grep -rn K src", "grep -rn K --include=*.ts .", "grep -n K src/a.ts", "grep -rn K ./src"]:
+        assert bash(cmd, cwd) == "allow", cmd
+    # A folder git collapses as ignored is walked; globs, variables and other recursive spellings are judged too.
+    nested = repo()
+    touch(nested, ".gitignore", "config/\n")
+    touch(nested, "config/.env", "K=1")
+    touch(nested, "src/a.ts", "K")
+    for cmd in ["grep -rn K .", "grep -rn K *", "grep -rn K config", "grep -d recurse K .",
+                "grep --directories=recurse K .", "rgrep K .", "grep -rn K $DIR", "cd src; grep -rn K config"]:
+        assert bash(cmd, nested) == "deny", cmd
+    assert bash("grep -rn K src", nested) == "allow"
+    # Option spellings grep accepts, and a -d that belongs to another command, fail closed.
+    for cmd in ["grep --recur K .", "grep --dir=recurse K .", "grep -nd recurse K .", "diff -d .env x",
+                "grep --dereference-recursive K .", "grep --dereference-rec K .", "grep -C2r K ."]:
+        assert bash(cmd, cwd) == "deny", cmd
+    # --exclude-dir names subfolders; it never skips the folder the command names.
+    assert bash(f"grep -rn K --exclude-dir={os.path.basename(cwd)} .", cwd) == "deny"
+    assert bash("grep -rn K --exclude-dir=src src", cwd) == "allow"
+    # No folder is skipped by name: an ignored node_modules is searched by grep -r unless --exclude-dir says so.
+    deps = repo()
+    touch(deps, ".gitignore", "node_modules/\n")
+    touch(deps, "node_modules/pkg/.env", "K=1")
+    assert bash("grep -rn K .", deps) == "deny"
+    assert bash("grep -rn K --exclude-dir=node_modules .", deps) == "allow"
+    # The files of the folder named on the command line are judged whatever --exclude-dir says, also when git lists
+    # that folder as ignored.
+    touch(deps, "node_modules/.env", "K=1")
+    for cmd in ["grep -rn K --exclude-dir=* node_modules", "grep -rn K --exclude-dir=. node_modules",
+                "grep -rn K --exclude-dir=* node_modules/pkg"]:
+        assert bash(cmd, deps) == "deny", cmd
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

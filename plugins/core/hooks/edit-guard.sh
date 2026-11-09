@@ -3,7 +3,7 @@
 # per-edit hooks (lint, format, blast radius) see every change.
 # Trigger: PreToolUse(Bash). Blocks (exit 2) when a command run inside a git worktree:
 #   - edits in place: sed -i, perl -i / -pi
-#   - writes a repo file through >, >>, tee or a heredoc
+#   - writes a repo file through >, >>, tee or a heredoc (relative targets resolve after any `cd` in the command)
 #   - runs an inline python/node/ruby script (heredoc, -c, -e) that writes files
 # Targets outside the worktree, gitignored paths, .git/ and /dev/* are allowed: logs, scratch files and
 # build output stay possible. A script kept in a file (python3 scripts/gen.py) is allowed: it is reviewed code.
@@ -27,12 +27,12 @@ if r.returncode != 0:
 top = os.path.realpath(r.stdout.strip())
 
 
-def in_repo(path):
-    """True when path is a file of the worktree that git would track."""
+def in_repo(path, base=None):
+    """True when path, resolved from base (default the event cwd), is a file of the worktree that git would track."""
     path = path.strip("'\"")
     if not path or path.startswith("/dev/") or path.startswith("&") or "$" in path:
         return False
-    full = os.path.realpath(os.path.join(cwd, os.path.expanduser(path)))
+    full = os.path.realpath(os.path.join(base or cwd, os.path.expanduser(path)))
     if not (full == top or full.startswith(top + os.sep)):
         return False
     rel = os.path.relpath(full, top)
@@ -47,23 +47,34 @@ bodies = re.findall(r"<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n(.*?)\n\s*\1\s*(?:\n|$)", 
 shell = re.sub(r"(<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n).*?\n(\s*\2\s*(?:\n|$))", r"\1\3", cmd, flags=re.S)
 shell = re.sub(r"'[^']*'|\"[^\"]*\"", "''", shell)  # quoted text (commit messages, grep patterns) is not a target
 hits = []
-
-for seg in re.split(r"&&|\|\||[;|\n]", shell):
-    words = seg.split()
+# A `cd` moves where later relative targets land (`cd /tmp/x && printf x > notes.txt` is not a repo write), but only
+# one that surely ran: joined by `&&` to what follows, outside ( ), to a folder that exists. After `;`, `||` or a
+# newline the shell may still be in the repo, so the base falls back to the event cwd.
+base = cwd
+parts = re.split(r"(&&|\|\||[;\n]|(?<!>)\|)", shell)  # `>|` is a redirect, not a pipe
+for i in range(0, len(parts), 2):
+    seg, sep = parts[i], parts[i + 1] if i + 1 < len(parts) else ""
+    if i and parts[i - 1] in (";", "\n", "||"):
+        base = cwd
+    words = seg.replace("(", " ").replace(")", " ").split()
+    head = os.path.basename(words[0]) if words else ""
+    if head == "cd":
+        target = os.path.realpath(os.path.join(base, os.path.expanduser(words[1]))) if len(words) > 1 else ""
+        if sep == "&&" and "(" not in shell and ")" not in shell and "$" not in target and os.path.isdir(target):
+            base = target
+        continue
     if not words:
         continue
-    head = os.path.basename(words[0])
     if head == "sed" and any(re.match(r"^-[a-zA-Z]*i", w) or w.startswith("--in-place") for w in words[1:]):
-        hits.append(("sed -i", [w for w in words[1:] if not w.startswith("-")][-1:] or ["?"]))
+        hits.append(("sed -i", [w for w in words[1:] if not w.startswith("-")][-1:] or ["?"], base))
     if head == "perl" and any(re.match(r"^-[a-zA-Z]*i", w) for w in words[1:]):
-        hits.append(("perl -i", [w for w in words[1:] if not w.startswith("-")][-1:] or ["?"]))
+        hits.append(("perl -i", [w for w in words[1:] if not w.startswith("-")][-1:] or ["?"], base))
     if head == "tee":
-        hits += [("tee", [w]) for w in words[1:] if not w.startswith("-")]
+        hits += [("tee", [w], base) for w in words[1:] if not w.startswith("-")]
+    for m in re.finditer(r"(?<![0-9&<])>{1,2}\|?\s*([^\s;&|<>()]+)", seg):
+        hits.append(("redirect", [m.group(1)], base))
 
-for m in re.finditer(r"(?<![0-9&<])>{1,2}\|?\s*([^\s;&|<>()]+)", shell):
-    hits.append(("redirect", [m.group(1)]))
-
-blocked = [(how, t) for how, targets in hits for t in targets if t == "?" or in_repo(t)]
+blocked = [(how, t) for how, targets, at in hits for t in targets if t == "?" or in_repo(t, at)]
 
 WRITES = r"open\([^)]*['\"][wax]\+?b?['\"]|\.write_text\(|\.write_bytes\(|writeFileSync|writeFile\(|File\.write|shutil\.(copy|move)"
 LIT = r"\s*['\"]([^'\"]+)['\"]"

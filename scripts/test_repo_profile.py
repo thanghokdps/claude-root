@@ -506,6 +506,18 @@ def test_domain_marker_line_enables_the_workplace_pack():
     assert "workplace" in shared_packs(cwd)
 
 
+def test_reverse_engineering_marker_suggests_the_reverse_pack_without_enabling_it():
+    # The pack starts an npx MCP server; a cloned repo's text (plus its .npmrc) must never switch that on.
+    cwd = repo({"package.json": {"private": True},
+                ".claude/docs/index.md": "# Docs\n\n- **Domain:** reverse-engineering\n"})
+    ctx = run(cwd)
+    assert "Domain: reverse-engineering" in ctx and "claude plugin enable reverse@harness --scope local" in ctx, ctx
+    assert "reverse" not in shared_packs(cwd)
+    assert "reverse@harness" not in ((local_settings(cwd) or {}).get("enabledPlugins") or {})
+    plain = repo({"package.json": {"private": True}, "docs/requirements.md": "# Req\n\nreverse engineering\n"})
+    assert "Domain:" not in run(plain)
+
+
 def test_backend_modules_one_level_down_count():
     cwd = repo({"package.json": {"private": True}, "apps/api/package.json": {"dependencies": {"hono": "4"}},
                 "apps/api/src/api/meal-reservations/index.ts": "", "apps/api/src/api/meeting-rooms/index.ts": "",

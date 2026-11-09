@@ -71,10 +71,12 @@ done
 # Role and domain packs stay off at user scope: core's repo-profile hook enables them per repo when it detects
 # their stack or domain (frontend: react/next/vue/svelte; backend: a server framework, an ORM, go or rust;
 # mobile: react-native / expo / eas.json; devops: Dockerfile, compose, CI workflow, *.tf, k8s/, Chart.yaml;
-# ai: @langchain/@copilotkit/@mastra/langgraph; workplace: a `Domain: workplace` line or HR module folders),
-# so other repos don't carry their skills. A dependent goes first: `plugin disable` refuses a plugin that an
-# enabled plugin still requires, and ai requires frontend and backend.
-PACKS="ai frontend backend mobile devops workplace"
+# ai: @langchain/@copilotkit/@mastra/langgraph; workplace: a `Domain: workplace` line or HR module folders;
+# reverse is only suggested for a `Domain: reverse-engineering` line, never enabled: it starts an npx MCP server),
+# so other repos don't carry their skills or MCP servers.
+# A dependent goes first: `plugin disable` refuses a plugin that an enabled plugin still requires, and ai
+# requires frontend and backend.
+PACKS="ai frontend backend mobile devops workplace reverse"
 STAYED_ON=""
 for p in $PACKS; do
   out=$(claude plugin disable "$p@harness" --scope user 2>&1) && continue

@@ -5,6 +5,7 @@
 #   - file_path / notebook_path, a Grep path or glob, a Glob pattern that names a secret file
 #   - Bash: a secret path as an argument of a reader/copier (cat, grep, sed, source, cp, base64 ...) or as `< file`
 #   - a Grep over a directory that would search a secret file; globs, `bash -c` and `eval` strings are expanded
+#   - Bash grep -r over a directory holding a secret file, gitignored ones included (grep reads them); `cd` is followed
 # Inside the repo the path is matched relative to the repo top, outside it by file name (~/.ssh/id_rsa), case-blind.
 # The repo list only adds patterns (its `!` lines are ignored) and only inside the repo. Templates (.env.example) pass. Anything unparseable passes. CLAUDE_SECRET_GUARD=0 turns it off.
 [ "${CLAUDE_SECRET_GUARD:-1}" = "0" ] && exit 0
@@ -24,10 +25,21 @@ try:
 except Exception:
     sys.exit(0)
 
-READERS = set("cat head tail less more bat strings xxd od hexdump base64 grep egrep rg ag awk sed nl tac sort uniq "
+READERS = set("cat head tail less more bat strings xxd od hexdump base64 grep egrep fgrep rgrep rg ag awk sed nl tac sort uniq "
               "cut jq yq source . cp mv scp rsync open diff python python3 node ruby vi vim nvim nano emacs code view "
               "xargs dd iconv zcat gzip gunzip tar zip unzip openssl plutil security".split())
-GREPS = {"grep", "egrep", "rg", "ag"}
+GREPS = {"grep", "egrep", "fgrep", "rgrep", "rg", "ag"}
+GREP_FAMILY = {"grep", "egrep", "fgrep", "rgrep"}
+D_VALUES = {"recurse", "read", "skip"}
+
+
+def recursive_opt(a):
+    """Fail closed: a short group with r, R or d (-d takes recurse/read/skip), or a long option grep could read as
+    --recursive, --dereference-recursive or --directories (it accepts unambiguous prefixes)."""
+    if a.startswith("--"):
+        name = a[2:].split("=", 1)[0]
+        return bool(name) and any(o.startswith(name) for o in ("recursive", "dereference-recursive", "directories"))
+    return bool(re.match(r"^-[a-zA-Z0-9]*[rRd]", a))
 SHELLS = {"bash", "sh", "zsh"}
 WRAPPERS = {"sudo", "env", "command", "time", "nohup", "exec"}
 SEPARATORS = {"&&", "||", ";", ";;", "|", "|&", "&", "(", ")"}
@@ -68,14 +80,24 @@ def is_secret(candidates, inside=True):
     return hit
 
 
+# Directories a relative path may resolve against: the event cwd, plus each `cd` target in the command. A failed
+# or subshell `cd` leaves the shell where it was, so a path is a secret when it is one from any of them.
+bases = [cwd]
+
+
 def secret_path(path):
     path = (path or "").strip()
     if not path or path.startswith("/dev/") or "$(" in path:
         return False
-    full = os.path.realpath(os.path.join(cwd, os.path.expandvars(os.path.expanduser(path))))
-    if full == top or full.startswith(top + os.sep):
-        return is_secret([os.path.relpath(full, top)])
-    return is_secret([os.path.basename(full), full.lstrip(os.sep)], False)
+    for base in bases:
+        full = os.path.realpath(os.path.join(base, os.path.expandvars(os.path.expanduser(path))))
+        if full == top or full.startswith(top + os.sep):
+            hit = is_secret([os.path.relpath(full, top)])
+        else:
+            hit = is_secret([os.path.basename(full), full.lstrip(os.sep)], False)
+        if hit:
+            return True
+    return False
 
 
 def secret_name(name):
@@ -114,12 +136,29 @@ def one_arg_hit(a):
     if re.search(r"[*?\[]", a):
         if secret_name(a):
             return True
-        pattern = os.path.join(cwd, os.path.expanduser(os.path.expandvars(a)))
-        return any(secret_path(m) for m in glob.glob(pattern)[:500])
+        return any(secret_path(m) for base in bases
+                   for m in glob.glob(os.path.join(base, os.path.expanduser(os.path.expandvars(a))))[:500])
     return secret_path(a)
 
 
+def recursive_grep_dirs(pos):
+    """(base, dir) pairs a recursive grep searches. A positional that stays unresolved ($VAR, $(...)) is taken as
+    the whole base folder: fail closed. No positional means the current folder."""
+    out = []
+    for base in bases:
+        for a in pos or ["."]:
+            p = os.path.expanduser(os.path.expandvars(a))
+            if "$" in p:
+                out.append((base, "."))
+            elif re.search(r"[*?\[]", p):
+                out += [(base, m) for m in glob.glob(os.path.join(base, p))[:500] if os.path.isdir(m)]
+            elif os.path.isdir(os.path.join(base, p)):
+                out.append((base, p))
+    return out
+
+
 def bash_hits(cmd, depth=0):
+    global reason_extra
     if depth > 3:
         return []
     cmd = re.sub(r"(<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n).*?\n(\s*\2\s*(?:\n|$))", r"\1\3", cmd, flags=re.S)
@@ -156,6 +195,10 @@ def bash_hits(cmd, depth=0):
         while args and (re.match(r"^\w+=", args[0]) or args[0] in WRAPPERS):
             args.pop(0)
         head = os.path.basename(args[0]) if args else ""
+        if head == "cd" and len(args) > 1 and "$" not in args[1]:
+            # Later paths may resolve against the new directory (`cd src && grep -r K ..`) or, if cd fails, the old.
+            bases.append(os.path.realpath(os.path.join(bases[-1], os.path.expanduser(args[1]))))
+            continue
         if head in SHELLS:
             for i, a in enumerate(args[1:], 1):
                 if re.match(r"^-[a-zA-Z]*c[a-zA-Z]*$", a) and i + 1 < len(args):
@@ -164,11 +207,24 @@ def bash_hits(cmd, depth=0):
         elif head == "eval":
             hits += bash_hits(" ".join(args[1:]), depth + 1)
         if head in READERS:
-            pos = [a for a in args[1:] if not a.startswith("-")]
+            # grep's `-d recurse` takes a value; only those exact words are skipped, and only for grep.
+            pos = [a for i, a in enumerate(args[1:], 1) if not a.startswith("-") and not (
+                head in GREP_FAMILY and a in D_VALUES and re.match(r"^-[a-zA-Z]*d$", args[i - 1]))]
             # grep's first positional is the pattern (`grep ".env" README.md`), unless -e/-f supplied it.
             if os.path.basename(args[0]) in GREPS and not any(re.match(r"^(-[ef]|--regexp|--file)", a) for a in args[1:]):
                 pos = pos[1:]
             hits += [a for a in pos if arg_hit(a)]
+            if head == "rgrep" or (head in GREP_FAMILY and any(recursive_opt(a) for a in args[1:])):
+                # grep -r reads dotfiles and gitignored files, so a directory argument searches .env too.
+                includes = [a.split("=", 1)[1] for a in args[1:] if a.startswith("--include=")]
+                skip = {a.split("=", 1)[1] for a in args[1:] if a.startswith("--exclude-dir=")}
+                for base, d in recursive_grep_dirs(pos):
+                    found = secret_in_scope(d, lambda f: not includes or any(match(f, g) for g in includes), True,
+                                            base, skip)
+                    if found:
+                        hits.append(found)
+                        reason_extra = (f"grep -r over {d} would print lines of {found}, which holds secrets. Grep "
+                                        "a narrower folder or add --include for the file types you need.")
     return hits
 
 
@@ -179,34 +235,56 @@ def in_glob(f, glob_param):
     return any(match(os.path.basename(f), g) or match(f, g) for g in expand_braces(glob_param))
 
 
-def secret_in_scope(path, glob_param):
-    """First secret file a Grep over `path` (default cwd) would search, honouring .gitignore inside the repo."""
-    full = os.path.realpath(os.path.join(cwd, os.path.expanduser(path or ".")))
+def walk_for_secret(full, keep, inside, skip):
+    """First secret file under full, or full itself when there are too many files to check (fail closed).
+    Only subfolders in skip (glob names) are left out; full itself is always searched."""
+    seen = 0
+    for d, dirs, files in os.walk(full):
+        dirs[:] = [x for x in dirs if not any(fnmatch.fnmatch(x, s) for s in skip)]
+        for name in files:
+            seen += 1
+            f = os.path.join(d, name)
+            if seen > 5000:
+                return full  # the reason asks for a narrower path
+            candidates = [os.path.relpath(f, top)] if inside else [name, f.lstrip(os.sep)]
+            if is_secret(candidates, inside) and keep(f):
+                return f
+    return None
+
+
+def secret_in_scope(path, keep, include_ignored=False, base=None, skip=frozenset()):
+    """First secret file a search over `path` (default cwd) would read and `keep` accepts. Inside the repo it
+    honours .gitignore (ripgrep does) unless include_ignored, which also walks the ignored folders git collapses.
+    skip holds the folder names the search itself leaves out (grep --exclude-dir)."""
+    full = os.path.realpath(os.path.join(base or cwd, os.path.expanduser(path or ".")))
     if not os.path.isdir(full):
         return None
     if not (full == top or full.startswith(top + os.sep)):
         # Outside the repo (~/.ssh, a sibling project) there is no .gitignore to lean on: walk it, capped.
-        seen = 0
-        for d, dirs, files in os.walk(full):
-            dirs[:] = [x for x in dirs if x not in (".git", "node_modules")]
-            for name in files:
-                seen += 1
-                f = os.path.join(d, name)
-                if seen > 5000:
-                    return full  # too big to check: fail closed, the reason asks for a narrower path
-                if is_secret([name, f.lstrip(os.sep)], False) and in_glob(f, glob_param):
-                    return f
-        return None
-    try:
-        r = subprocess.run(["git", "-C", top, "ls-files", "-z", "-co", "--exclude-standard", "--",
-                            os.path.relpath(full, top)], capture_output=True, text=True, timeout=5)
-    except Exception:
-        return None
-    if r.returncode != 0:
-        return None
-    for f in filter(None, r.stdout.split("\0")):
-        if is_secret([f]) and in_glob(f, glob_param):
-            return f
+        # The Grep tool skips .git and node_modules there; grep -r reads them.
+        return walk_for_secret(full, keep, False, skip | ({".git", "node_modules"} if not include_ignored else set()))
+    listings = [["-co", "--exclude-standard"]] + ([["-o", "-i", "--exclude-standard", "--directory"]]
+                                                  if include_ignored else [])
+    for flags in listings:
+        try:
+            r = subprocess.run(["git", "-C", top, "ls-files", "-z", *flags, "--", os.path.relpath(full, top)],
+                               capture_output=True, text=True, timeout=5)
+        except Exception:
+            return None
+        if r.returncode != 0:
+            return None
+        for f in filter(None, r.stdout.split("\0")):
+            if f.endswith("/"):
+                rel = os.path.relpath(os.path.join(top, f), full)
+                inside_full = rel != "." and not rel.startswith("..")
+                if inside_full and any(fnmatch.fnmatch(part, s) for part in rel.split(os.sep) for s in skip):
+                    continue  # a subfolder the search itself leaves out
+                # git lists the ignored folder itself or a parent of it: walk only what the search covers.
+                found = walk_for_secret(os.path.join(top, f) if inside_full else full, keep, True, skip)
+                if found:
+                    return found
+            elif is_secret([f]) and keep(f):
+                return f
     return None
 
 
@@ -223,7 +301,7 @@ try:
         if ti.get("glob") and secret_name(ti["glob"]):
             hits.append(ti["glob"])
         if not hits:
-            found = secret_in_scope(ti.get("path"), ti.get("glob"))
+            found = secret_in_scope(ti.get("path"), lambda f: in_glob(f, ti.get("glob")))
             if found:
                 hits.append(found)
                 reason_extra = (f"This search would read {found}, which holds secrets. Narrow the path to the "

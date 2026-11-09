@@ -15,7 +15,8 @@
 # assistant, workplace@harness for a
 # `Domain: workplace` line in docs/requirements.md or .claude/docs/index.md, or two or more HR/workplace module
 # folders (time off, booking, reservation, approval, maintenance, meal, lunch, attendance) under apps/,
-# src/{modules,features}/ or apps/*/src/{api,modules}/. An explicit false in the project or local settings is never
+# src/{modules,features}/ or apps/*/src/{api,modules}/. A `Domain: reverse-engineering` line in the same files only
+# suggests reverse@harness: it ships an npx MCP server, so repo content never enables it. An explicit false in the project or local settings is never
 # overridden. CLAUDE_REPO_PROFILE=0 turns the hook off. Never blocks: any failure exits 0.
 [ "${CLAUDE_REPO_PROFILE:-1}" = "0" ] && exit 0
 command -v python3 >/dev/null 2>&1 || exit 0
@@ -306,6 +307,9 @@ modules = [os.path.basename(p).lower() for parent in ("apps", "src/modules", "sr
            for p in glob.glob(at(parent, "*"))[:200] if os.path.isdir(p)]
 workplace = domain_marked("workplace") or sum(1 for m in modules if re.search(
     r"time-?off|leave|booking|reservation|approval|maintenance|meal|lunch|attendance", m)) >= 2
+# Suggested, never enabled: the pack starts an npx MCP server, and a cloned repo's text and .npmrc must not be able to
+# switch that on. Only the marker line counts.
+reverse = domain_marked("reverse-engineering")
 # Role and domain packs stay off at user scope (install.sh) and are turned on here for the repos that need them.
 # ai depends on frontend and backend, so an AI repo turns both on even with no web UI.
 frontend = web or ai
@@ -385,6 +389,10 @@ lines.append("Read .claude/docs/index.md before scanning source; /docs-sync befo
              else "No .claude/docs yet — /project-init builds it once, so later sessions skip the rescan.")
 if workplace:
     lines.append("Domain: workplace — requests, approvals, balances or bookings → /workplace-review before the PR.")
+if reverse:
+    lines.append("Domain: reverse-engineering — shipped apps, binaries, APKs or firmware → /reverse-engineer-anything "
+                 "(reverse@harness, off by default: if the skill is missing, tell the user to run "
+                 "`claude plugin enable reverse@harness --scope local` and open a new session).")
 for note in (enable_note, setup_note(added or [])):
     if note:
         lines.append(note)

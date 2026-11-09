@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PACKS = ("ai", "frontend", "backend", "mobile", "devops", "workplace")
+PACKS = ("ai", "frontend", "backend", "mobile", "devops", "workplace", "reverse")
 
 # Refuses what the CLI refuses (2.1.317): a plugin an enabled plugin requires, and one already disabled.
 # Dependencies come from the real plugin.json files, so a new dependency between packs is covered too.

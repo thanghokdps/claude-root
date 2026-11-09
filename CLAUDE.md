@@ -19,7 +19,7 @@ A **source library** and the `harness` marketplace of role plugins. `claude plug
 
 ```
 <repo>/
-  .claude-plugin/marketplace.json  ← lists the 15 plugins below
+  .claude-plugin/marketplace.json  ← lists the 16 plugins below
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
     core        verify-done btw compact compound sync-memory project-init docs-sync constraints + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, step-limit, repo-profile, learn-capture, stale-install, missing-tools hooks (always on; repo-profile enables the role packs frontend, backend, mobile, devops, ai and the domain pack workplace per repo) — plus scripts/init.sh and
@@ -42,10 +42,11 @@ A **source library** and the `harness` marketplace of role plugins. `claude plug
     devops      role pack: agents/devops-engineer.md + pipeline container infra-change + rules/ (ci, container, infra) → progress, dev
     ai          role pack: agents/ai-engineer.md + agent-* (the deliverable is an agent) + rules/ (mastra, langgraph…) → progress, dev, frontend, backend
     workplace   domain pack (HR / workplace apps): workplace-review + references/    → progress
+    reverse     domain pack: reverse-engineer-anything (vendored from morluto/rea) + the `rea` MCP server   → progress
                 a domain pack = a plugin folder + its detect condition in core's repo-profile.sh + install.sh's off list
-    lead        retro diagnose-session writing-skills reverse-engineer-anything (vendored REA + its `rea` MCP server) → core
+    lead        retro diagnose-session writing-skills                                 → core
     guards      hooks/hooks.json + hook scripts (opt-in)                              → dev
-    harness     bundle of the eight process plugins — never the packs (frontend, backend, mobile, devops, ai, workplace): a bundle
+    harness     bundle of the eight process plugins — never the packs (frontend, backend, mobile, devops, ai, workplace, reverse): a bundle
                 dependency cannot be disabled, so it could not stay off at user scope
   global/CLAUDE.md    ← installed to ~/.claude/CLAUDE.md
   eval/triggers/      ← one routing case per skill
