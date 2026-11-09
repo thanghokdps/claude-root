@@ -72,7 +72,8 @@ done
 # their stack or domain (frontend: react/next/vue/svelte; backend: a server framework, an ORM, go or rust;
 # mobile: react-native / expo / eas.json; devops: Dockerfile, compose, CI workflow, *.tf, k8s/, Chart.yaml;
 # ai: @langchain/@copilotkit/@mastra/langgraph; workplace: a `Domain: workplace` line or HR module folders;
-# reverse: a `Domain: reverse-engineering` line), so other repos don't carry their skills or MCP servers.
+# reverse is only suggested for a `Domain: reverse-engineering` line, never enabled: it starts an npx MCP server),
+# so other repos don't carry their skills or MCP servers.
 # A dependent goes first: `plugin disable` refuses a plugin that an enabled plugin still requires, and ai
 # requires frontend and backend.
 PACKS="ai frontend backend mobile devops workplace reverse"

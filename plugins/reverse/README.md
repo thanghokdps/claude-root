@@ -12,13 +12,13 @@ Domain pack for reverse engineering what ships without its source: native binari
 
 ## MCP server
 
-`rea` — `npx --yes --ignore-scripts rea-agents@6.8.0 mcp`, pinned to the version the skill was copied with (upstream `c78c8ae`, skill version 61). `--ignore-scripts` keeps npm from running install scripts of the package or its dependencies. Needs Node `^22.23.4 || ^24.22.1 || >=26.12.1`; native analysis also needs an existing Hopper, Ghidra, IDA or Kuna.
+`rea` — `npx --yes --ignore-scripts --registry=https://registry.npmjs.org/ rea-agents@6.8.0 mcp`, pinned to the version the skill was copied with (upstream `c78c8ae`, skill version 61). `--ignore-scripts` keeps npm from running install scripts of the package or its dependencies; `--registry` on the command line wins over a repo's `.npmrc`, so a cloned repo cannot point the fetch at another registry. Second-level dependencies still resolve from version ranges (the package ships no shrinkwrap). Needs Node `^22.23.4 || ^24.22.1 || >=26.12.1`; native analysis also needs an existing Hopper, Ghidra, IDA or Kuna.
 
 To update: copy `.agents/skills/reverse-engineer-anything/` from upstream over `skills/reverse-engineer-anything/` (keep this kit's frontmatter fields and provenance comment), and bump the pin here and in `.claude-plugin/plugin.json` together. The folder is in `.prettierignore` so the copy stays byte-identical.
 
 ## Hooks
 
-None of its own. Core's `repo-profile` hook enables it in a repo whose `docs/requirements.md` or `.claude/docs/index.md` has a `Domain: reverse-engineering` line; the switch is written to `.claude/settings.local.json`, effective next session. An explicit `false` in project or local settings wins.
+None of its own. Core's `repo-profile` hook detects a `Domain: reverse-engineering` line in `docs/requirements.md` or `.claude/docs/index.md` and suggests the pack with the command below, but never enables it: the pack starts an npx server, and text in a cloned repo must not be able to switch that on.
 
 ## Depends on
 
@@ -30,10 +30,12 @@ None of its own. Core's `repo-profile` hook enables it in a repo whose `docs/req
 /plugin install reverse@harness
 ```
 
-`scripts/install.sh` installs it off at user scope. To turn it on in one repo without the marker line:
+`scripts/install.sh` installs it off at user scope. To turn it on for yourself in one repo, then open a new session:
 
 ```bash
-claude plugin enable reverse@harness --scope project
+claude plugin enable reverse@harness --scope local
 ```
+
+`--scope project` instead writes it to the committed `.claude/settings.json`, turning it on for every teammate who trusts the folder.
 
 The marketplace must be added first (GitLab or the GitHub mirror): see the [root README](../../README.md#quickstart). All plugins: [`../README.md`](../README.md).
