@@ -18,7 +18,7 @@ git log --since="7 days ago" --grep='^revert' -i --oneline
 gh pr list --state merged --search "merged:>=$(date -v-7d +%F)" --author @me   # or: glab mr list --merged
 ```
 
-Also read: `specs/*/ESCALATIONS.md` touched in the window, `specs/STATE.md`, `docs/solutions/` entries added this week, and the rows of `docs/tickets/README.md` whose `actual` was filled in the window (`/breakdown` writes the estimate, `/ticket` the actual; both dev / plan, if installed).
+Also read: `specs/*/ESCALATIONS.md` touched in the window, `docs/solutions/` entries added this week, and the rows of `docs/tickets/README.md` whose `actual` was filled in the window (`/breakdown` writes the estimate, `/ticket` the actual; both dev / plan, if installed).
 
 ## Step 2 — Summarize
 

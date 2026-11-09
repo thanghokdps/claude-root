@@ -30,8 +30,6 @@ cat .claude/docs/solutions/INDEX.md 2>/dev/null
 
 Read any file marked `severity: critical` in the index. These are mistakes agents have made before — do not repeat them.
 
-If `specs/STATE.md` exists, read the last session breadcrumb to understand what was left unfinished.
-
 **2. Load project knowledge base:**
 
 Check if `.claude/docs/index.md` exists:
