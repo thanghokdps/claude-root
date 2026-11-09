@@ -20,6 +20,10 @@ To update: copy `.agents/skills/reverse-engineer-anything/` from upstream over `
 
 None of its own. Core's `repo-profile` hook detects a `Domain: reverse-engineering` line in `docs/requirements.md` or `.claude/docs/index.md` and suggests the pack with the command below, but never enables it: the pack starts an npx server, and text in a cloned repo must not be able to switch that on.
 
+## Evals
+
+Run them on sonnet: `bash scripts/eval-plugin.sh reverse --model sonnet`. On Opus 5 a safety classifier (`[cyber]`) withholds the first reply of a reverse-engineering prompt, so the skill call never lands and the routing cases fail for a reason the skill does not control (2026-11-09: 1/3 on Opus 5, 3/3 on sonnet).
+
 ## Depends on
 
 `progress`.
