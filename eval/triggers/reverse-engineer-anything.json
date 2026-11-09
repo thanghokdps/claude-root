@@ -1,0 +1,23 @@
+{
+  "skill": "reverse-engineer-anything",
+  "positive": [
+    {
+      "prompt": "decompile this native binary and explain how its file sync feature works",
+      "top_k": 3
+    },
+    {
+      "prompt": "how does search work inside the Notes app? I only have the shipped app, no source",
+      "top_k": 3
+    },
+    {
+      "prompt": "inspect this APK and tell me which classes handle the login screen",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "audit this inherited codebase for bugs and code to delete",
+      "owner": "repo-audit"
+    }
+  ]
+}

@@ -43,7 +43,7 @@ A **source library** and the `harness` marketplace of role plugins. `claude plug
     ai          role pack: agents/ai-engineer.md + agent-* (the deliverable is an agent) + rules/ (mastra, langgraph…) → progress, dev, frontend, backend
     workplace   domain pack (HR / workplace apps): workplace-review + references/    → progress
                 a domain pack = a plugin folder + its detect condition in core's repo-profile.sh + install.sh's off list
-    lead        retro diagnose-session writing-skills                                 → core
+    lead        retro diagnose-session writing-skills reverse-engineer-anything (vendored REA + its `rea` MCP server) → core
     guards      hooks/hooks.json + hook scripts (opt-in)                              → dev
     harness     bundle of the eight process plugins — never the packs (frontend, backend, mobile, devops, ai, workplace): a bundle
                 dependency cannot be disabled, so it could not stay off at user scope

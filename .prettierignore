@@ -7,6 +7,8 @@ package-lock.json
 .pytest_cache/
 # Rendered by super-board's visual.py (scripts/skill-map.py), not edited by hand.
 docs/skill-map.html
+# Vendored from morluto/rea: kept byte-identical so an upstream sync is a plain copy.
+plugins/lead/skills/reverse-engineer-anything/
 # Ignored by eval/.gitignore and Claude Code's worktree exclude; Prettier reads only the root .gitignore.
 eval/reports/
 .claude/worktrees/
