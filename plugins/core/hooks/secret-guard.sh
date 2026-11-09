@@ -5,6 +5,7 @@
 #   - file_path / notebook_path, a Grep path or glob, a Glob pattern that names a secret file
 #   - Bash: a secret path as an argument of a reader/copier (cat, grep, sed, source, cp, base64 ...) or as `< file`
 #   - a Grep over a directory that would search a secret file; globs, `bash -c` and `eval` strings are expanded
+#   - Bash grep -r over a directory holding a secret file, gitignored ones included (grep reads them); `cd` is followed
 # Inside the repo the path is matched relative to the repo top, outside it by file name (~/.ssh/id_rsa), case-blind.
 # The repo list only adds patterns (its `!` lines are ignored) and only inside the repo. Templates (.env.example) pass. Anything unparseable passes. CLAUDE_SECRET_GUARD=0 turns it off.
 [ "${CLAUDE_SECRET_GUARD:-1}" = "0" ] && exit 0
@@ -28,6 +29,7 @@ READERS = set("cat head tail less more bat strings xxd od hexdump base64 grep eg
               "cut jq yq source . cp mv scp rsync open diff python python3 node ruby vi vim nvim nano emacs code view "
               "xargs dd iconv zcat gzip gunzip tar zip unzip openssl plutil security".split())
 GREPS = {"grep", "egrep", "rg", "ag"}
+RECURSIVE = re.compile(r"^(-[a-zA-Z]*[rR][a-zA-Z]*|--recursive|--dereference-recursive)$")
 SHELLS = {"bash", "sh", "zsh"}
 WRAPPERS = {"sudo", "env", "command", "time", "nohup", "exec"}
 SEPARATORS = {"&&", "||", ";", ";;", "|", "|&", "&", "(", ")"}
@@ -120,6 +122,7 @@ def one_arg_hit(a):
 
 
 def bash_hits(cmd, depth=0):
+    global cwd, reason_extra
     if depth > 3:
         return []
     cmd = re.sub(r"(<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n).*?\n(\s*\2\s*(?:\n|$))", r"\1\3", cmd, flags=re.S)
@@ -156,6 +159,10 @@ def bash_hits(cmd, depth=0):
         while args and (re.match(r"^\w+=", args[0]) or args[0] in WRAPPERS):
             args.pop(0)
         head = os.path.basename(args[0]) if args else ""
+        if head == "cd" and len(args) > 1 and "$" not in args[1]:
+            # Later paths in the command resolve against the new directory (`cd src && grep -r K ..`).
+            cwd = os.path.realpath(os.path.join(cwd, os.path.expanduser(args[1])))
+            continue
         if head in SHELLS:
             for i, a in enumerate(args[1:], 1):
                 if re.match(r"^-[a-zA-Z]*c[a-zA-Z]*$", a) and i + 1 < len(args):
@@ -169,6 +176,16 @@ def bash_hits(cmd, depth=0):
             if os.path.basename(args[0]) in GREPS and not any(re.match(r"^(-[ef]|--regexp|--file)", a) for a in args[1:]):
                 pos = pos[1:]
             hits += [a for a in pos if arg_hit(a)]
+            if head in ("grep", "egrep") and any(RECURSIVE.match(a) for a in args[1:]):
+                # grep -r reads dotfiles and gitignored files, so a directory argument searches .env too.
+                includes = [a.split("=", 1)[1] for a in args[1:] if a.startswith("--include=")]
+                dirs = [a for a in pos if os.path.isdir(os.path.join(cwd, os.path.expanduser(a)))] if pos else ["."]
+                for d in dirs:
+                    found = secret_in_scope(d, lambda f: not includes or any(match(f, g) for g in includes), True)
+                    if found:
+                        hits.append(found)
+                        reason_extra = (f"grep -r over {d} would print lines of {found}, which holds secrets. Grep "
+                                        "a narrower folder or add --include for the file types you need.")
     return hits
 
 
@@ -179,8 +196,9 @@ def in_glob(f, glob_param):
     return any(match(os.path.basename(f), g) or match(f, g) for g in expand_braces(glob_param))
 
 
-def secret_in_scope(path, glob_param):
-    """First secret file a Grep over `path` (default cwd) would search, honouring .gitignore inside the repo."""
+def secret_in_scope(path, keep, include_ignored=False):
+    """First secret file a search over `path` (default cwd) would read and `keep` accepts. Inside the repo it
+    honours .gitignore (ripgrep does) unless include_ignored; ignored folders git collapses are not walked."""
     full = os.path.realpath(os.path.join(cwd, os.path.expanduser(path or ".")))
     if not os.path.isdir(full):
         return None
@@ -194,19 +212,22 @@ def secret_in_scope(path, glob_param):
                 f = os.path.join(d, name)
                 if seen > 5000:
                     return full  # too big to check: fail closed, the reason asks for a narrower path
-                if is_secret([name, f.lstrip(os.sep)], False) and in_glob(f, glob_param):
+                if is_secret([name, f.lstrip(os.sep)], False) and keep(f):
                     return f
         return None
-    try:
-        r = subprocess.run(["git", "-C", top, "ls-files", "-z", "-co", "--exclude-standard", "--",
-                            os.path.relpath(full, top)], capture_output=True, text=True, timeout=5)
-    except Exception:
-        return None
-    if r.returncode != 0:
-        return None
-    for f in filter(None, r.stdout.split("\0")):
-        if is_secret([f]) and in_glob(f, glob_param):
-            return f
+    listings = [["-co", "--exclude-standard"]] + ([["-o", "-i", "--exclude-standard", "--directory"]]
+                                                  if include_ignored else [])
+    for flags in listings:
+        try:
+            r = subprocess.run(["git", "-C", top, "ls-files", "-z", *flags, "--", os.path.relpath(full, top)],
+                               capture_output=True, text=True, timeout=5)
+        except Exception:
+            return None
+        if r.returncode != 0:
+            return None
+        for f in filter(None, r.stdout.split("\0")):
+            if not f.endswith("/") and is_secret([f]) and keep(f):
+                return f
     return None
 
 
@@ -223,7 +244,7 @@ try:
         if ti.get("glob") and secret_name(ti["glob"]):
             hits.append(ti["glob"])
         if not hits:
-            found = secret_in_scope(ti.get("path"), ti.get("glob"))
+            found = secret_in_scope(ti.get("path"), lambda f: in_glob(f, ti.get("glob")))
             if found:
                 hits.append(found)
                 reason_extra = (f"This search would read {found}, which holds secrets. Narrow the path to the "

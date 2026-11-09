@@ -154,6 +154,19 @@ def test_grep_over_a_directory_checks_files_it_would_search():
     assert decide(GUARD, "Grep", {"pattern": "x"}, ignored) == "deny"
 
 
+def test_bash_recursive_grep_checks_files_it_would_search():
+    # grep -r ignores .gitignore and reads dotfiles, so a gitignored .env is still searched and printed.
+    cwd = repo()
+    touch(cwd, ".gitignore", ".env\n")
+    touch(cwd, ".env", "K=1")
+    touch(cwd, "src/a.ts", "K")
+    for cmd in ["grep -rn K .", "grep -r K", "grep -Rn K .", "egrep -r K .", "grep --recursive K .",
+                "cd src && grep -rn K .."]:
+        assert bash(cmd, cwd) == "deny", cmd
+    for cmd in ["grep -rn K src", "grep -rn K --include=*.ts .", "grep -n K src/a.ts", "grep -rn K ./src"]:
+        assert bash(cmd, cwd) == "allow", cmd
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:
