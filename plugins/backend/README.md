@@ -1,6 +1,6 @@
 # backend
 
-Role pack for the server side: the `backend-engineer` agent that `/feature`, `/ticket` and `/fix-bug` dispatch schema, endpoint and integration slices to, the three skills it runs, and the Python / FastAPI / Prisma rules it reads on demand. Off by default; core's `repo-profile` hook turns it on in a repo with a server framework (Next.js route handlers, Express, Hono, NestJS, FastAPI, Django, Flask), an ORM or migration tool (Prisma, Drizzle, Alembic), Go or Rust.
+Role pack for the server side: the `backend-engineer` agent that `/feature`, `/ticket` and `/fix-bug` dispatch schema, endpoint and integration slices to, the three skills it runs, and the Python / FastAPI / NestJS / Prisma / Drizzle rules it reads on demand. Off by default; core's `repo-profile` hook turns it on in a repo with a server framework (Next.js route handlers, Express, Hono, NestJS, FastAPI, Django, Flask), an ORM or migration tool (Prisma, Drizzle, Alembic), Go or Rust.
 
 **For:** backend developers, and every `/feature` run that includes a table, an endpoint or a third-party API.
 
@@ -18,7 +18,7 @@ Role pack for the server side: the `backend-engineer` agent that `/feature`, `/t
 
 ## Rules
 
-`rules/python.md`, `rules/fastapi.md`, `rules/prisma.md` — read by the agent and the skills when the repo uses them, never always-loaded. `api-contract.md`, `data-access.md` and `security.md` stay in core, since every role reads them.
+`rules/python.md`, `rules/fastapi.md`, `rules/nestjs.md` (modular monolith, guard → zod pipe → service, one exception filter, one `PermissionService` for REST and Socket.IO, Fastify, pg-boss, nestjs-pino, Vitest on a real Postgres), `rules/prisma.md`, `rules/drizzle.md` (schema as source, generated add-only migrations, `migrate` not `push` on shared databases, one pool, parameterised `sql`, FTS via raw SQL) — read by the agent and the skills when the repo uses them, never always-loaded. `api-contract.md`, `data-access.md` and `security.md` stay in core, since every role reads them.
 
 ## Install
 

@@ -10,19 +10,19 @@ when_to_use: add a table, "thêm bảng", "thêm cột", add a column to a table
 
 **Invoke:** `/db-change <what must be stored or queried>`
 
-Rules: `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`); with Prisma, `${CLAUDE_PLUGIN_ROOT}/rules/prisma.md`. A destructive or long-running change (drop, rename, type change, backfill on a large table) is a data migration: hand it to `/write-migration` (ship, if installed) and treat it as high-risk.
+Rules: `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`); with Prisma, `${CLAUDE_PLUGIN_ROOT}/rules/prisma.md`; with Drizzle, `${CLAUDE_PLUGIN_ROOT}/rules/drizzle.md`. A destructive or long-running change (drop, rename, type change, backfill on a large table) is a data migration: hand it to `/write-migration` (ship, if installed) and treat it as high-risk.
 
 ---
 
 ## Step 1 — Detect
 
-| Piece          | Look for                                                                                                                  |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| ORM and schema | `drizzle.config.*` + `db/schema/`, `prisma/schema.prisma`, `models.py` + `alembic/`                                       |
-| Migrations     | `drizzle/`, `prisma/migrations/`, `alembic/versions/`, and the generate/migrate scripts in `package.json` or the Makefile |
-| ERD            | `docs/erd.md` or similar                                                                                                  |
-| Repositories   | `server/<aggregate>/repository.ts`, `repositories/`, `crud.py`                                                            |
-| Test DB        | PGlite / SQLite helper, testcontainers, the `testDb()`-style helper and its seed                                          |
+| Piece          | Look for                                                                                                                                      |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| ORM and schema | `drizzle.config.*` + `db/schema/`, `prisma/schema.prisma`, `models.py` + `alembic/`                                                           |
+| Migrations     | `drizzle/` (`drizzle-kit generate` / `migrate`), `prisma/migrations/`, `alembic/versions/`, and the scripts in `package.json` or the Makefile |
+| ERD            | `docs/erd.md` or similar                                                                                                                      |
+| Repositories   | `server/<aggregate>/repository.ts`, `repositories/`, `crud.py`                                                                                |
+| Test DB        | PGlite / SQLite helper, testcontainers, the `testDb()`-style helper and its seed                                                              |
 
 **Done when:** each row names a file path. The change is classified as **additive** (new table, nullable or defaulted column, index) or **destructive / long-running** → `/write-migration` (ship, if installed).
 
