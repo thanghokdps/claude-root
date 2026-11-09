@@ -165,6 +165,15 @@ def test_bash_recursive_grep_checks_files_it_would_search():
         assert bash(cmd, cwd) == "deny", cmd
     for cmd in ["grep -rn K src", "grep -rn K --include=*.ts .", "grep -n K src/a.ts", "grep -rn K ./src"]:
         assert bash(cmd, cwd) == "allow", cmd
+    # A folder git collapses as ignored is walked; globs, variables and other recursive spellings are judged too.
+    nested = repo()
+    touch(nested, ".gitignore", "config/\n")
+    touch(nested, "config/.env", "K=1")
+    touch(nested, "src/a.ts", "K")
+    for cmd in ["grep -rn K .", "grep -rn K *", "grep -rn K config", "grep -d recurse K .",
+                "grep --directories=recurse K .", "rgrep K .", "grep -rn K $DIR", "cd src; grep -rn K config"]:
+        assert bash(cmd, nested) == "deny", cmd
+    assert bash("grep -rn K src", nested) == "allow"
 
 
 if __name__ == "__main__":

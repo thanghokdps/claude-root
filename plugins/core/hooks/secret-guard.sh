@@ -25,10 +25,10 @@ try:
 except Exception:
     sys.exit(0)
 
-READERS = set("cat head tail less more bat strings xxd od hexdump base64 grep egrep rg ag awk sed nl tac sort uniq "
+READERS = set("cat head tail less more bat strings xxd od hexdump base64 grep egrep fgrep rgrep rg ag awk sed nl tac sort uniq "
               "cut jq yq source . cp mv scp rsync open diff python python3 node ruby vi vim nvim nano emacs code view "
               "xargs dd iconv zcat gzip gunzip tar zip unzip openssl plutil security".split())
-GREPS = {"grep", "egrep", "rg", "ag"}
+GREPS = {"grep", "egrep", "fgrep", "rgrep", "rg", "ag"}
 RECURSIVE = re.compile(r"^(-[a-zA-Z]*[rR][a-zA-Z]*|--recursive|--dereference-recursive)$")
 SHELLS = {"bash", "sh", "zsh"}
 WRAPPERS = {"sudo", "env", "command", "time", "nohup", "exec"}
@@ -70,14 +70,24 @@ def is_secret(candidates, inside=True):
     return hit
 
 
+# Directories a relative path may resolve against: the event cwd, plus each `cd` target in the command. A failed
+# or subshell `cd` leaves the shell where it was, so a path is a secret when it is one from any of them.
+bases = [cwd]
+
+
 def secret_path(path):
     path = (path or "").strip()
     if not path or path.startswith("/dev/") or "$(" in path:
         return False
-    full = os.path.realpath(os.path.join(cwd, os.path.expandvars(os.path.expanduser(path))))
-    if full == top or full.startswith(top + os.sep):
-        return is_secret([os.path.relpath(full, top)])
-    return is_secret([os.path.basename(full), full.lstrip(os.sep)], False)
+    for base in bases:
+        full = os.path.realpath(os.path.join(base, os.path.expandvars(os.path.expanduser(path))))
+        if full == top or full.startswith(top + os.sep):
+            hit = is_secret([os.path.relpath(full, top)])
+        else:
+            hit = is_secret([os.path.basename(full), full.lstrip(os.sep)], False)
+        if hit:
+            return True
+    return False
 
 
 def secret_name(name):
@@ -116,13 +126,29 @@ def one_arg_hit(a):
     if re.search(r"[*?\[]", a):
         if secret_name(a):
             return True
-        pattern = os.path.join(cwd, os.path.expanduser(os.path.expandvars(a)))
-        return any(secret_path(m) for m in glob.glob(pattern)[:500])
+        return any(secret_path(m) for base in bases
+                   for m in glob.glob(os.path.join(base, os.path.expanduser(os.path.expandvars(a))))[:500])
     return secret_path(a)
 
 
+def recursive_grep_dirs(pos):
+    """(base, dir) pairs a recursive grep searches. A positional that stays unresolved ($VAR, $(...)) is taken as
+    the whole base folder: fail closed. No positional means the current folder."""
+    out = []
+    for base in bases:
+        for a in pos or ["."]:
+            p = os.path.expanduser(os.path.expandvars(a))
+            if "$" in p:
+                out.append((base, "."))
+            elif re.search(r"[*?\[]", p):
+                out += [(base, m) for m in glob.glob(os.path.join(base, p))[:500] if os.path.isdir(m)]
+            elif os.path.isdir(os.path.join(base, p)):
+                out.append((base, p))
+    return out
+
+
 def bash_hits(cmd, depth=0):
-    global cwd, reason_extra
+    global reason_extra
     if depth > 3:
         return []
     cmd = re.sub(r"(<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n).*?\n(\s*\2\s*(?:\n|$))", r"\1\3", cmd, flags=re.S)
@@ -160,8 +186,8 @@ def bash_hits(cmd, depth=0):
             args.pop(0)
         head = os.path.basename(args[0]) if args else ""
         if head == "cd" and len(args) > 1 and "$" not in args[1]:
-            # Later paths in the command resolve against the new directory (`cd src && grep -r K ..`).
-            cwd = os.path.realpath(os.path.join(cwd, os.path.expanduser(args[1])))
+            # Later paths may resolve against the new directory (`cd src && grep -r K ..`) or, if cd fails, the old.
+            bases.append(os.path.realpath(os.path.join(bases[-1], os.path.expanduser(args[1]))))
             continue
         if head in SHELLS:
             for i, a in enumerate(args[1:], 1):
@@ -171,17 +197,21 @@ def bash_hits(cmd, depth=0):
         elif head == "eval":
             hits += bash_hits(" ".join(args[1:]), depth + 1)
         if head in READERS:
-            pos = [a for a in args[1:] if not a.startswith("-")]
+            # `-d recurse` takes a value; it is not a file argument.
+            pos = [a for i, a in enumerate(args[1:], 1) if not a.startswith("-") and args[i - 1] != "-d"]
             # grep's first positional is the pattern (`grep ".env" README.md`), unless -e/-f supplied it.
             if os.path.basename(args[0]) in GREPS and not any(re.match(r"^(-[ef]|--regexp|--file)", a) for a in args[1:]):
                 pos = pos[1:]
             hits += [a for a in pos if arg_hit(a)]
-            if head in ("grep", "egrep") and any(RECURSIVE.match(a) for a in args[1:]):
+            recursive = head == "rgrep" or (head in ("grep", "egrep", "fgrep") and any(
+                RECURSIVE.match(a) or a in ("-drecurse", "--directories=recurse") or (a == "recurse" and prev == "-d")
+                for prev, a in zip(args, args[1:])))
+            if recursive:
                 # grep -r reads dotfiles and gitignored files, so a directory argument searches .env too.
                 includes = [a.split("=", 1)[1] for a in args[1:] if a.startswith("--include=")]
-                dirs = [a for a in pos if os.path.isdir(os.path.join(cwd, os.path.expanduser(a)))] if pos else ["."]
-                for d in dirs:
-                    found = secret_in_scope(d, lambda f: not includes or any(match(f, g) for g in includes), True)
+                for base, d in recursive_grep_dirs(pos):
+                    found = secret_in_scope(d, lambda f: not includes or any(match(f, g) for g in includes), True,
+                                            base)
                     if found:
                         hits.append(found)
                         reason_extra = (f"grep -r over {d} would print lines of {found}, which holds secrets. Grep "
@@ -196,25 +226,35 @@ def in_glob(f, glob_param):
     return any(match(os.path.basename(f), g) or match(f, g) for g in expand_braces(glob_param))
 
 
-def secret_in_scope(path, keep, include_ignored=False):
+# shortcut: these folders are skipped unread when walking; a secret placed inside one is missed. Revisit if one ever holds keys.
+HEAVY = {".git", "node_modules", ".venv", "venv", "__pycache__", ".next", ".turbo", ".gradle", "Pods", "target"}
+
+
+def walk_for_secret(full, keep, inside):
+    """First secret file under full, or full itself when there are too many files to check (fail closed)."""
+    seen = 0
+    for d, dirs, files in os.walk(full):
+        dirs[:] = [x for x in dirs if x not in HEAVY]
+        for name in files:
+            seen += 1
+            f = os.path.join(d, name)
+            if seen > 5000:
+                return full  # the reason asks for a narrower path
+            candidates = [os.path.relpath(f, top)] if inside else [name, f.lstrip(os.sep)]
+            if is_secret(candidates, inside) and keep(f):
+                return f
+    return None
+
+
+def secret_in_scope(path, keep, include_ignored=False, base=None):
     """First secret file a search over `path` (default cwd) would read and `keep` accepts. Inside the repo it
-    honours .gitignore (ripgrep does) unless include_ignored; ignored folders git collapses are not walked."""
-    full = os.path.realpath(os.path.join(cwd, os.path.expanduser(path or ".")))
+    honours .gitignore (ripgrep does) unless include_ignored, which also walks the ignored folders git collapses."""
+    full = os.path.realpath(os.path.join(base or cwd, os.path.expanduser(path or ".")))
     if not os.path.isdir(full):
         return None
     if not (full == top or full.startswith(top + os.sep)):
         # Outside the repo (~/.ssh, a sibling project) there is no .gitignore to lean on: walk it, capped.
-        seen = 0
-        for d, dirs, files in os.walk(full):
-            dirs[:] = [x for x in dirs if x not in (".git", "node_modules")]
-            for name in files:
-                seen += 1
-                f = os.path.join(d, name)
-                if seen > 5000:
-                    return full  # too big to check: fail closed, the reason asks for a narrower path
-                if is_secret([name, f.lstrip(os.sep)], False) and keep(f):
-                    return f
-        return None
+        return walk_for_secret(full, keep, False)
     listings = [["-co", "--exclude-standard"]] + ([["-o", "-i", "--exclude-standard", "--directory"]]
                                                   if include_ignored else [])
     for flags in listings:
@@ -226,7 +266,12 @@ def secret_in_scope(path, keep, include_ignored=False):
         if r.returncode != 0:
             return None
         for f in filter(None, r.stdout.split("\0")):
-            if not f.endswith("/") and is_secret([f]) and keep(f):
+            if f.endswith("/"):
+                if os.path.basename(f.rstrip("/")) not in HEAVY:
+                    found = walk_for_secret(os.path.join(top, f), keep, True)
+                    if found:
+                        return found
+            elif is_secret([f]) and keep(f):
                 return f
     return None
 
