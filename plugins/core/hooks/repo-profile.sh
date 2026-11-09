@@ -50,6 +50,11 @@ def load_json(path):
         return None
 
 
+def is_kit():
+    market = load_json(at(".claude-plugin", "marketplace.json"))
+    return isinstance(market, dict) and market.get("name") == "harness"
+
+
 def enabled_at(path, plugin):
     s = load_json(path)
     if isinstance(s, dict) and isinstance(s.get("enabledPlugins"), dict):
@@ -103,8 +108,7 @@ def setup_repo(plugins):
     if os.path.realpath(top) == os.path.realpath(os.path.expanduser("~")):
         return None
     # The kit is the harness marketplace itself: team setup here only leaves an untracked settings.json each session.
-    market = load_json(at(".claude-plugin", "marketplace.json"))
-    if isinstance(market, dict) and market.get("name") == "harness":
+    if is_kit():
         return None
     if os.path.islink(at(".claude")) or os.path.islink(shared_path):
         return None
@@ -195,6 +199,15 @@ for path in [at("pyproject.toml")] + glob.glob(at("requirements*.txt")):
 for name, label in (("go.mod", "go"), ("Cargo.toml", "rust")):
     if os.path.exists(at(name)):
         manifests.append(label)
+if is_kit():
+    # The kit's own CI workflow made it a devops repo and enabled devops@harness in its local settings.
+    lines = ["REPO PROFILE: the harness kit itself — no role packs. Follow its CLAUDE.md; the gate is "
+             "`bash scripts/check.sh`."]
+    blocked = blocked_reads()
+    if blocked:
+        lines.append(blocked[0])
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": "\n".join(lines)}}))
+    sys.exit(0)
 if not manifests:
     # Nothing to detect from yet, and a pack enabled now loads only after a reload: say so before a stack is scaffolded.
     # ai depends on frontend and backend; install.sh turns them off at user scope, and a dependency disabled anywhere
