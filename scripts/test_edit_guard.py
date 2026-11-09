@@ -32,7 +32,7 @@ def test_in_place_edits_are_blocked():
 
 def test_writes_into_the_repo_are_blocked():
     for cmd in ["cat > src/app.ts <<'EOF'\nexport {}\nEOF", "echo x >> README.md", "printf x | tee src/a.ts",
-                "cat <<EOF > src/b.ts\nx\nEOF"]:
+                "cat <<EOF > src/b.ts\nx\nEOF", "echo x >| src/a.ts"]:
         assert code(cmd) == 2, cmd
 
 
@@ -64,6 +64,16 @@ def test_inline_script_judged_by_its_write_targets_not_its_data():
 
 def test_outside_a_git_repo_nothing_is_blocked():
     assert code("sed -i 's/a/b/' x.ts", cwd=tempfile.mkdtemp()) == 0
+
+
+def test_targets_resolve_after_cd():
+    cwd, outside = repo(), tempfile.mkdtemp()
+    for cmd in [f"cd {outside} && printf x > notes.txt", f"cd {outside}; echo x >> notes.txt",
+                f"cd {outside} && sed -i 's/a/b/' x.ts", f"(cd {outside} && printf x | tee a.txt)"]:
+        assert code(cmd, cwd) == 0, cmd
+    for cmd in ["cd src && echo x > a.ts", f"cd {outside} && cd {cwd}/src && echo x > a.ts",
+                f"cd {outside} && echo x > {cwd}/README.md"]:
+        assert code(cmd, cwd) == 2, cmd
 
 
 if __name__ == "__main__":
