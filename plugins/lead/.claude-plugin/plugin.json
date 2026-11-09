@@ -6,13 +6,7 @@
   },
   "repository": "https://github.com/thanghokdps/claude-root",
   "license": "MIT",
-  "description": "Improve the process: weekly retro, session diagnosis, authoring skills, reverse engineering shipped apps with REA.",
-  "keywords": ["retro", "process", "reverse-engineering"],
-  "dependencies": ["core"],
-  "mcpServers": {
-    "rea": {
-      "command": "npx",
-      "args": ["-y", "rea-agents@6.8.0", "mcp"]
-    }
-  }
+  "description": "Improve the process: weekly retro, session diagnosis, authoring skills.",
+  "keywords": ["retro", "process"],
+  "dependencies": ["core"]
 }

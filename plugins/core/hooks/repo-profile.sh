@@ -15,7 +15,8 @@
 # assistant, workplace@harness for a
 # `Domain: workplace` line in docs/requirements.md or .claude/docs/index.md, or two or more HR/workplace module
 # folders (time off, booking, reservation, approval, maintenance, meal, lunch, attendance) under apps/,
-# src/{modules,features}/ or apps/*/src/{api,modules}/. An explicit false in the project or local settings is never
+# src/{modules,features}/ or apps/*/src/{api,modules}/, reverse@harness for a `Domain: reverse-engineering` line
+# in the same files (nothing else: its MCP server starts with every session). An explicit false in the project or local settings is never
 # overridden. CLAUDE_REPO_PROFILE=0 turns the hook off. Never blocks: any failure exits 0.
 [ "${CLAUDE_REPO_PROFILE:-1}" = "0" ] && exit 0
 command -v python3 >/dev/null 2>&1 || exit 0
@@ -306,6 +307,8 @@ modules = [os.path.basename(p).lower() for parent in ("apps", "src/modules", "sr
            for p in glob.glob(at(parent, "*"))[:200] if os.path.isdir(p)]
 workplace = domain_marked("workplace") or sum(1 for m in modules if re.search(
     r"time-?off|leave|booking|reservation|approval|maintenance|meal|lunch|attendance", m)) >= 2
+# Only the marker line: the pack's rea MCP server starts with every session of a repo that enables it.
+reverse = domain_marked("reverse-engineering")
 # Role and domain packs stay off at user scope (install.sh) and are turned on here for the repos that need them.
 # ai depends on frontend and backend, so an AI repo turns both on even with no web UI.
 frontend = web or ai
@@ -318,7 +321,8 @@ devops = bool(glob.glob(at("Dockerfile*")) or glob.glob(at("docker-compose*")) o
 roles = [r for r, on in (("frontend", frontend), ("backend", backend_pack), ("mobile", mobile), ("devops", devops),
                          ("ai", ai)) if on]
 packs = [p for p, on in (("frontend@harness", frontend), ("backend@harness", backend_pack), ("mobile@harness", mobile),
-                         ("devops@harness", devops), ("ai@harness", ai), ("workplace@harness", workplace)) if on]
+                         ("devops@harness", devops), ("ai@harness", ai), ("workplace@harness", workplace),
+                         ("reverse@harness", reverse)) if on]
 
 
 added = setup_repo(packs)
@@ -385,6 +389,8 @@ lines.append("Read .claude/docs/index.md before scanning source; /docs-sync befo
              else "No .claude/docs yet — /project-init builds it once, so later sessions skip the rescan.")
 if workplace:
     lines.append("Domain: workplace — requests, approvals, balances or bookings → /workplace-review before the PR.")
+if reverse:
+    lines.append("Domain: reverse-engineering — shipped apps, binaries, APKs or firmware → /reverse-engineer-anything.")
 for note in (enable_note, setup_note(added or [])):
     if note:
         lines.append(note)

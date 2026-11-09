@@ -6,7 +6,7 @@ model: opus
 effort: high
 ---
 
-<!-- Vendored from github.com/morluto/rea .agents/skills/reverse-engineer-anything at c78c8ae (skill version 61, MIT, see LICENSE); the MCP server is lead's `rea` (rea-agents@6.8.0). Sync from upstream, don't edit in place. -->
+<!-- Vendored from github.com/morluto/rea .agents/skills/reverse-engineer-anything at c78c8ae (skill version 61, MIT, see LICENSE); the MCP server is the reverse pack's `rea` (rea-agents@6.8.0). Sync from upstream, don't edit in place. -->
 
 # REA
 

@@ -1,0 +1,18 @@
+{
+  "name": "reverse",
+  "version": "1.0.0",
+  "author": {
+    "name": "Thang Ho Quang"
+  },
+  "repository": "https://github.com/thanghokdps/claude-root",
+  "license": "MIT",
+  "description": "Domain pack for reverse engineering shipped apps, binaries, APKs, ASARs and firmware with REA (vendored from morluto/rea) and its rea MCP server. Off by default; enabled per repo.",
+  "keywords": ["domain", "reverse-engineering", "decompile"],
+  "dependencies": ["progress"],
+  "mcpServers": {
+    "rea": {
+      "command": "npx",
+      "args": ["--yes", "--ignore-scripts", "rea-agents@6.8.0", "mcp"]
+    }
+  }
+}
