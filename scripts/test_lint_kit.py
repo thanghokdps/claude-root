@@ -86,6 +86,14 @@ def test_unknown_skill_field_is_flagged():
     assert lint_kit.unknown_fields({"name": "x", "context": "fork", "agent": "Explore", "paths": "*.ts"}) == []
 
 
+def test_long_skill_is_flagged_unless_vendored():
+    long_text = "x\n" * 501
+    assert lint_kit.too_long(long_text)
+    assert not lint_kit.too_long("x\n" * 500)
+    # A vendored copy stays byte-identical to upstream, so its length is not ours to fix.
+    assert not lint_kit.too_long("<!-- Vendored from github.com/o/r at abc -->\n" + long_text)
+
+
 def test_listing_text_over_cap_is_flagged():
     assert lint_kit.listing_chars({"description": "a" * 1000, "when_to_use": "b" * 600}) == 1600
     assert lint_kit.listing_chars({"description": "a" * 10}) == 10
