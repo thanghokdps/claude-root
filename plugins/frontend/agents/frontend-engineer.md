@@ -24,6 +24,8 @@ Read before the first edit, only the ones the repo's stack needs:
 - `${CLAUDE_PLUGIN_ROOT}/rules/react.md` — any `.jsx` / `.tsx`
 - `${CLAUDE_PLUGIN_ROOT}/rules/nextjs.md` — `app/`, `pages/`, `middleware`, `next.config.*`
 - `${CLAUDE_PLUGIN_ROOT}/rules/tanstack.md` — a client-only SPA with TanStack Query / Router / Virtual or i18next
+- `${CLAUDE_PLUGIN_ROOT}/rules/client-runtime.md` — Zustand stores, an offline outbox, Effect flows or web push
+- `${CLAUDE_PLUGIN_ROOT}/rules/ui-testing.md` — Storybook stories, Playwright specs, axe or jsx-a11y
 - `${CLAUDE_PLUGIN_ROOT}/references/fetchers.md` — the screen calls the app's own backend
 - `${CLAUDE_PLUGIN_ROOT}/references/taste.md` — the last step of every screen
 - `${CLAUDE_PLUGIN_ROOT}/references/motion.md` — before adding any animation

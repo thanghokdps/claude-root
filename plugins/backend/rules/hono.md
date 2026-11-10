@@ -27,6 +27,12 @@ Adds only what is Hono-specific. The handler order, error shape and owner scopin
 - One `app.onError` maps every thrown error to `{ error: <code> }` with the status from `api-contract.md`. Services throw the app's `AppError(code, status)`, and `HTTPException` is mapped the same way ([HTTPException](https://hono.dev/docs/api/exception)). Unknown errors return 500 with no message or stack.
 - A throw from a handler or middleware is caught and passed to `onError`, and `next()` never throws ([middleware](https://hono.dev/docs/guides/middleware)). So no `try/catch` in handlers builds an error response.
 
+## Effect in services (when the repo uses `effect`)
+
+- A service that composes calls with retries or timeouts (Firestore REST, FCM, a token fetch) may return an `Effect`. Its expected failures are `Data.TaggedError` classes, so callers handle them with `catchTag` ([expected errors](https://effect.website/docs/error-management/expected-errors/)). An unexpected throw stays a defect, not a tagged error.
+- Retries use `Effect.retry` with a `Schedule` such as `Schedule.exponential("100 millis")` combined with `Schedule.recurs(n)`. Every outbound call gets an `Effect.timeout` ([retrying](https://effect.website/docs/error-management/retrying/), [schedules](https://effect.website/docs/scheduling/built-in-schedules/), [timeouts](https://effect.website/docs/error-management/timing-out/)). Only idempotent calls are retried.
+- The handler is the edge: it runs the effect once with `Effect.runPromise` and maps each tagged error to its code from `api-contract.md` ([running effects](https://effect.website/docs/getting-started/running-effects/)). Routes, validators and `onError` stay plain Hono. One style per layer, never a mix inside one service.
+
 ## Tests
 
 - Route tests call `app.request(path, init)` and assert status and body ([testing](https://hono.dev/docs/guides/testing)). On Workers they run in `@cloudflare/vitest-plugin`, as Hono's testing guide recommends, so bindings are real.
