@@ -2,7 +2,7 @@
 model: opus
 effort: high
 name: project-init
-description: One-time project scan that bootstraps the full .claude/ workspace — docs, agents, hooks, rules, skills, templates, memory, and CLAUDE.md — all tailored to this specific project. Run once per project. Re-run when architecture changes significantly.
+description: One-time project scan that bootstraps the .claude/ workspace — docs, rules, project skills, hooks, settings and CLAUDE.md — all tailored to this specific project. Run once per project. Re-run when architecture changes significantly.
 when_to_use: a repo with no .claude/ workspace or CLAUDE.md, "set up claude for this project", "init .claude", "khởi tạo workspace cho repo này", after /kickoff on a new project, the architecture changed enough that the docs no longer match
 ---
 
@@ -16,15 +16,15 @@ Final output:
 
 ```
 .claude/
-  docs/           ← 6 knowledge-base files (written by Claude)
-  agents/         ← role definitions adapted to this project's stack
-  rules/          ← universal + stack-specific + project conventions
-  skills/         ← universal + project-specific slash commands
-  hooks/          ← automation scripts registered in settings.json
-  templates/      ← SUMMARY, TEST_MATRIX, ESCALATIONS with real commands
-  memory/         ← bootstrapped (MEMORY.md, project/context.md, user.md)
-  settings.json   ← hooks wired, permissions set, statusLine registered
-CLAUDE.md         ← project-specific coordinator config
+  docs/                ← 6 knowledge-base files (written by Claude)
+  rules/               ← project conventions (+ stack rules; + universal rules in standalone)
+  skills/              ← project-specific slash commands (+ shared skills in standalone)
+  hooks/               ← stack lint-on-edit hooks (+ shared hooks in standalone)
+  templates/           ← DESIGN and PRODUCT, read by /design-direction (plan, if installed)
+  agents/ commands/    ← standalone only
+  settings.json        ← hooks wired, permissions set
+  settings.local.json  ← status line (this machine's path; excluded from git)
+CLAUDE.md              ← project-specific coordinator config
 ```
 
 ---
@@ -52,15 +52,13 @@ bash "$INIT_SCRIPT" "$(pwd)"
 `init.sh` will:
 
 - Detect tech stack (Node/TS/Python/Go/Rust/Java + frameworks/libs)
-- Copy universal rules: `git.md`, `testing.md`, `orchestration.md`, `memory.md`
-- Copy stack-specific rules: `typescript.md`, `python.md`, `react.md`, `nextjs.md`, etc.
-- Copy universal skills: `feature`, `fix-bug`, `review-checklist`, `checkpoint`, `sync-memory`
-- Copy all agents: `implementer`, `reviewer`, `verifier`, `pm-agent`, `architect`, `qa`, `auto-dev`
-- Copy all templates: `SUMMARY`, `TEST_MATRIX`, `ESCALATIONS`, `AGENT_WATCHER`
-- Copy hooks: `commit-quality-gate`, `branch-guard`, `scope-gate`, `save-commit-memory`, `state-breadcrumb`
-- Write `.claude/settings.json` with all hooks registered and the kit status line (`scripts/statusline.sh`: model · branch #ticket · plan done/total · ctx % · lane) registered under `statusLine` by its absolute path, since `${CLAUDE_PLUGIN_ROOT}` does not resolve there. A `statusLine` the project already has is kept; init.sh prints one line saying so.
-- Bootstrap `.claude/memory/` (MEMORY.md, project/context.md, user.md)
-- Write a base `CLAUDE.md` with real commands extracted from `package.json` / manifests
+- Copy stack files by signal: `rules/jest.md`; `hooks/eslint-on-edit.sh` (TypeScript), `hooks/ruff-on-edit.sh` (Python). Universal rules are not copied: `~/.claude/rules/` already loads them
+- Copy `templates/DESIGN.template.md` and `PRODUCT.template.md`
+- Write `.claude/settings.json` with the hooks registered
+- Write the kit status line (`scripts/statusline.sh`: model · branch #ticket · plan done/total · ctx % · lane) to `.claude/settings.local.json` by its absolute path, since `${CLAUDE_PLUGIN_ROOT}` does not resolve there, and add that file to `.git/info/exclude`. A `statusLine` the project already has is kept; init.sh prints one line saying so
+- Add `/specs/` to `.gitignore` and `.claude` to `.prettierignore` (when the repo uses Prettier)
+- Write a base `CLAUDE.md` with real commands extracted from `package.json` / manifests, or keep an existing one untouched
+- `STANDALONE=1` only, for a repo shared with people who do not have the plugins: also copy the universal rules, the shared skills, the project commands (`/task`, `/auto`, `/workflow`), the project agents and the shared hooks
 
 ## Step 1b — anti-slop (TypeScript repos)
 
@@ -159,9 +157,9 @@ If the project has a kickoff doc set, written by `/kickoff` (plan, if installed)
 
 ---
 
-## Step 4 — Adapt `.claude/agents/` with project stack
+## Step 4 — Adapt `.claude/agents/` with project stack (standalone only)
 
-`init.sh` copied generic agent templates. Now fill in project-specific values in each agent file.
+No `.claude/agents/` (the default, plugin mode) → skip this step: the plugins' agents read `.claude/docs/`. In standalone, `init.sh` copied generic agent templates; fill in project-specific values in each agent file.
 
 For each agent in `.claude/agents/`:
 
@@ -207,29 +205,9 @@ Add project-specific agents if warranted:
 
 ---
 
-## Step 5 — Adapt `.claude/templates/` with real commands
+## Step 5 — Write project-specific `.claude/rules/`
 
-`init.sh` copied generic templates. Replace placeholder commands with project-specific ones.
-
-**`templates/SUMMARY.template.md`** — update the Verify table:
-
-```markdown
-| Check | Command                    | Exit |
-| ----- | -------------------------- | ---- |
-| Lint  | `<real lint command>`      | 0    |
-| Types | `<real typecheck command>` | 0    |
-| Tests | `<real test command>`      | 0    |
-```
-
-**`templates/TEST_MATRIX.template.md`** — update column headers to match what test types this project actually has (unit / integration / e2e / eval — only the ones that exist).
-
-**`templates/ESCALATIONS.template.md`** — add project-specific hard-gate conditions discovered in the scan (e.g. "DB migration", "auth changes", "public API contract").
-
----
-
-## Step 6 — Write project-specific `.claude/rules/`
-
-`init.sh` already copied universal and stack-specific rules. Now add a project-conventions rule file.
+Add a project-conventions rule file. Its Hard gates section is what the high-risk lane reads for this repo (the spec templates live in `dev`'s `references/spec-templates.md`, not in the project).
 
 ### `rules/project-conventions.md`
 
@@ -241,6 +219,10 @@ Distill this project's actual conventions into imperative rules:
 ## Layer boundaries
 
 - <which layer calls which — enforce strictly>
+
+## Hard gates (always high-risk lane)
+
+- <path or change that is auth, migration, audit, external provider, public contract here>
 
 ## Forbidden patterns
 
@@ -260,11 +242,11 @@ Add additional rule files only if a domain genuinely needs its own rules (e.g. `
 
 ---
 
-## Step 7 — Write project-specific `.claude/skills/`
+## Step 6 — Write project-specific `.claude/skills/`
 
-`init.sh` copied universal skills. Add project-specific slash commands based on workflow patterns found in the scan.
+Add project-specific slash commands based on workflow patterns found in the scan. Never write one that a plugin skill already covers.
 
-### Always create: `skills/task/SKILL.md`
+### Always create (unless standalone copied `commands/task.md`): `skills/task/SKILL.md`
 
 Lightweight single-task skill (no full coordinator ceremony):
 
@@ -292,12 +274,12 @@ Add more skills if the project's workflow warrants it:
 
 - Team uses a ticket system → no project skill: `/ticket` (dev, if installed) writes each ticket's contract to `docs/tickets/<id>/`
 - Has staging deploys → `skills/deploy/SKILL.md`
-- Has DB migrations → `skills/migrate/SKILL.md`
+- Has DB migrations → no project skill: `/db-change` (backend, if installed) and `/write-migration` (ship) cover them; put the repo's migration commands in `docs/stack.md`
 - Is a monorepo → `skills/add-package/SKILL.md`
 
 ---
 
-## Step 8 — Finalize `CLAUDE.md`
+## Step 7 — Finalize `CLAUDE.md`
 
 `init.sh` wrote a base `CLAUDE.md`, or kept the existing one untouched (its output says which). Now make it project-specific; an existing `CLAUDE.md` keeps its own sections and gets only what is missing or wrong.
 
@@ -327,28 +309,27 @@ Add more skills if the project's workflow warrants it:
 
 ---
 
-## Step 9 — Report
+## Step 8 — Report
 
 ```
 Project init complete.
 
 Project: <name>
 Stack:   <detected signals>
+Mode:    <plugins | standalone>
 
 Generated by init.sh (automation):
-  rules/       N files  — universal + stack-specific
-  agents/      N agents — implementer, reviewer, verifier, pm, architect, qa, auto-dev
-  skills/      N skills — feature, fix-bug, review-checklist, checkpoint, sync-memory
-  hooks/       N files  — commit-gate, branch-guard, scope-gate, save-commit-memory
+  rules/       N files  — stack rules (+ universal in standalone)
+  hooks/       N files  — stack lint-on-edit (+ shared hooks in standalone)
+  templates/   DESIGN, PRODUCT
   rulesets     <applied: default-branch, env-branches | skipped: reason>
-  templates/   N files  — SUMMARY, TEST_MATRIX, ESCALATIONS, AGENT_WATCHER
-  memory/      bootstrapped (MEMORY.md, project/context.md, user.md)
-  settings.json hooks registered, statusLine <registered | kept existing>
+  settings.json        hooks registered
+  settings.local.json  statusLine <registered | kept existing>
+  .gitignore   /specs/
 
 Written/adapted by Claude (intelligence):
   docs/        6 files  — architecture, conventions, stack, entry-points, test-strategy, index
-  agents/      adapted  — stack commands filled in, project constraints added
-  templates/   adapted  — real verify commands inserted
+  agents/      <adapted | none (plugin mode)>
   rules/       + project-conventions.md
   skills/      + task/SKILL.md (+ project-specific if applicable)
   CLAUDE.md    finalized with Agent Context + real constraints
