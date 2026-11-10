@@ -13,7 +13,7 @@ allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/contrast.py *)
 
 A direction is a decision, not a mood. "Clean and modern" decides nothing; a good direction could not be moved to an unrelated product unchanged. A Figma or mockup already decides the look: use `/design-ui` (frontend, if installed) instead.
 
-The result goes in `DESIGN.md` at the repo root, from `.claude/templates/DESIGN.template.md` (copied by `/project-init`, core). Screens are built by `/ui-feature` (frontend, if installed) or `/mobile-design` (mobile, if installed).
+The result goes in `DESIGN.md` at the repo root, from `${CLAUDE_PLUGIN_ROOT}/references/DESIGN.template.md`. Screens are built by `/ui-feature` (frontend, if installed) or `/mobile-design` (mobile, if installed).
 
 ---
 
@@ -39,7 +39,7 @@ From `PRODUCT.md` (else `docs/requirements.md`, the README, the spec), name:
 - **Primary job** — the one thing a screen must make easy.
 - **Platforms and theme** — web, iOS, Android; light, dark or both.
 
-A line no source supports is asked with `AskUserQuestion`, never invented. Create `PRODUCT.md` from `.claude/templates/PRODUCT.template.md` if it is missing.
+A line no source supports is asked with `AskUserQuestion`, never invented. Create `PRODUCT.md` from `${CLAUDE_PLUGIN_ROOT}/references/PRODUCT.template.md` if it is missing.
 
 **Done when:** all four are named, each from a source or the user's answer.
 

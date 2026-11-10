@@ -4,7 +4,7 @@ Two kinds of pass, two lists, never merged: the **detector** (`check-ui.py` and 
 
 ## 0. DESIGN.md and PRODUCT.md
 
-Both live at the repo root; both passes read them. One missing → create it from `.claude/templates/DESIGN.template.md` / `PRODUCT.template.md` (copied there by `/project-init`, core):
+Both live at the repo root; both passes read them. One missing → create it from `${CLAUDE_PLUGIN_ROOT}/references/DESIGN.template.md` / `PRODUCT.template.md`:
 
 - **DESIGN.md** — tokens, type scale and spacing scale read from the repo's token layer (`styles/tokens.css`, the Tailwind theme, the UI library theme, design-ui's `docs/design/ui-map.md`). Record what the code holds, even when it is messy; the detector's job is to show the drift.
 - **PRODUCT.md** — who, the job and tone from `docs/requirements.md` (else the README and the spec). A line no source supports is asked with `AskUserQuestion`, never invented.
