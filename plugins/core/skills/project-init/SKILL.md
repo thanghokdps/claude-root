@@ -60,10 +60,6 @@ bash "$INIT_SCRIPT" "$(pwd)"
 - Write a base `CLAUDE.md` with real commands extracted from `package.json` / manifests, or keep an existing one untouched
 - `STANDALONE=1` only, for a repo shared with people who do not have the plugins: also copy the universal rules, the shared skills, the project commands (`/task`, `/auto`, `/workflow`), the project agents and the shared hooks
 
-## Step 1b — anti-slop (TypeScript repos)
-
-When the repo has `tsconfig.json` or TypeScript in `package.json`, vendor the anti-slop Oxlint rules per `${CLAUDE_PLUGIN_ROOT}/references/anti-slop.md`: pinned upstream SHA, exact Oxlint versions, `lint:slop` inside `lint`, severity by repo age. Ask before adding the dependencies; an existing repo gets its violation count first.
-
 ## Step 1c — Branch protection on the server
 
 The `branch-guard` hook protects this machine only. Follow `${CLAUDE_PLUGIN_ROOT}/references/branch-protection.md`: when the repo has a GitHub or GitLab remote and no rule yet blocks direct pushes to the default branch and `dev`/`stag`/`prod`, fill the ruleset templates (`templates/github/`) with the repo's real check names, show them, and apply only after the user picks an option. No remote, or no admin right → record the gap and the command for an admin.
