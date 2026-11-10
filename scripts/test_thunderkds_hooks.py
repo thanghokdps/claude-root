@@ -78,19 +78,31 @@ def test_one_approval_unlocks_the_repo_for_that_session():
     path, other = repo(), repo()
     env = {"TMPDIR": tempfile.mkdtemp()}
 
-    def pre(cwd, session, f):
-        code, out = run(SENSITIVE, {"cwd": cwd, "session_id": session, "tool_name": "Edit",
-                                    "tool_input": {"file_path": os.path.join(cwd, f)}}, env)
+    def pre(cwd, session, f, mode="default", call="t1"):
+        code, out = run(SENSITIVE, {"cwd": cwd, "session_id": session, "tool_name": "Edit", "permission_mode": mode,
+                                    "tool_use_id": call, "tool_input": {"file_path": os.path.join(cwd, f)}}, env)
         assert code == 0, out
         return bool(out)
 
-    def post(cwd, session, f):
+    def post(cwd, session, f, mode="acceptEdits", call="t1"):
         r = subprocess.run([SENSITIVE, "post"], capture_output=True, text=True, env={**os.environ, **env},
                            input=json.dumps({"cwd": cwd, "session_id": session, "tool_name": "Edit",
+                                             "permission_mode": mode, "tool_use_id": call,
                                              "tool_input": {"file_path": os.path.join(cwd, f)}}))
         assert r.returncode == 0 and not r.stdout, r.stdout
 
     post(path, "s1", "src/app.ts")
+    # A post for a call pre never asked about unlocks nothing.
+    post(path, "s1", ".env", call="never-asked")
+    assert pre(path, "s1", ".env")
+    post(path, "s1", ".env", mode="default")
+    # "Yes" keeps the mode: allowed once, the next sensitive edit asks again.
+    assert pre(path, "s1", ".github/workflows/ci.yml")
+    post(path, "s1", ".github/workflows/ci.yml", mode="default")
+    assert pre(path, "s1", ".github/workflows/ci.yml", mode="acceptEdits")
+    # Already in acceptEdits when asked, so the mode says nothing about the answer: once.
+    post(path, "s1", ".github/workflows/ci.yml")
+    # "Yes, allow all edits during this session" switches default → acceptEdits: always.
     assert pre(path, "s1", ".github/workflows/ci.yml")
     post(path, "s1", ".github/workflows/ci.yml")
     assert not pre(path, "s1", ".env")

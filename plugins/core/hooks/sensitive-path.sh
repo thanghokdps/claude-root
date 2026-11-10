@@ -6,8 +6,9 @@
 # like .env through, this does not. A path named in the current ticket's plan (docs/tickets/<id>/plan.md) or
 # in specs/*/PLAN.md was approved with the plan and passes. Anything unparseable passes: the rule is a prompt,
 # not a sandbox. CLAUDE_SENSITIVE_PATHS=0 turns it off.
-# `sensitive-path.sh post` runs on PostToolUse: a sensitive edit that ran was approved, so it unlocks every path
-# of that repo and its worktrees for the rest of the session until the machine reboots (the marker's name holds the boot time).
+# `sensitive-path.sh post` runs on PostToolUse: an edit approved with "allow all edits during this session" (the
+# mode switched to acceptEdits or auto) unlocks every path of that repo and its worktrees for the rest of the
+# session until the machine reboots (the marker's name holds the boot time); a plain Yes allows that edit only.
 [ "${CLAUDE_SENSITIVE_PATHS:-1}" = "0" ] && exit 0
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
@@ -134,14 +135,30 @@ def planned(path):
 hits = [p for p in dict.fromkeys(filter(None, map(rel, targets))) if sensitive(p) and not planned(p)]
 if not hits:
     sys.exit(0)
+# A hook cannot add buttons or see which one was pressed (hooks.md: each dialog builds its own options), but the
+# mode can: "Yes, allow all edits during this session" or "switch to auto mode" changes it between pre and post.
+# Keyed on tool_use_id, so only the call pre actually asked about can unlock, never state the tool changed.
+mode, call = ev.get("permission_mode") or "", ev.get("tool_use_id") or ""
+asked = f"{unlock}.{hashlib.sha256(call.encode()).hexdigest()[:16]}.asked" if unlock and call else None
 if post:
-    if unlock:
-        os.makedirs(os.path.dirname(unlock), exist_ok=True)
+    if not asked:
+        sys.exit(0)
+    try:
+        before = open(asked, encoding="utf-8").read()
+        os.remove(asked)
+    except OSError:
+        sys.exit(0)
+    if mode in ("acceptEdits", "auto") and mode != before:
         open(unlock, "w").close()
     sys.exit(0)
+if asked:
+    os.makedirs(os.path.dirname(asked), exist_ok=True)
+    with open(asked, "w", encoding="utf-8") as f:
+        f.write(mode)
 reason = ("sensitive-path: " + ", ".join(hits[:3]) + " is a secret, CI/deploy or Claude-config file. "
           "Approve only if you expected this change; list the path in the ticket's plan.md to pre-approve it. "
-          "Allowing it unlocks this repo's sensitive paths for this session until the machine restarts.")
+          "No = deny · Yes = allow once · \"Yes, allow all edits during this session\" = allow every sensitive "
+          "path of this repo for the session.")
 print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask",
                                          "permissionDecisionReason": reason}}))
 sys.exit(0)
