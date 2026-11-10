@@ -149,7 +149,7 @@ if [ "$STANDALONE" = 1 ]; then
 fi
 
 # Stack-specific rules. TypeScript is covered by the universal rules/typescript.md; a second copy
-# loaded twice and its JS twin advised filter/map/reduce chains that anti-slop rejects.
+# would load it twice.
 has_signal "jest"       && cp "$HARNESS_DIR/rules/stacks/jest.md"        "$CLAUDE_DIR/rules/jest.md"        2>/dev/null || true
 
 if [ "$STANDALONE" = 1 ]; then
