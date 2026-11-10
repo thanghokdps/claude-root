@@ -38,6 +38,18 @@ def test_prettier_project_ignores_kit_files_once():
         assert f.read() == "dist\n.claude\n"
 
 
+def test_gitignore_gets_per_person_claude_state_once():
+    project = tempfile.mkdtemp(prefix="init-gitignore-")
+    subprocess.run(["git", "-C", project, "init", "-q", "-b", "feat/x"], check=True)
+    with open(os.path.join(project, ".gitignore"), "w") as f:
+        f.write("node_modules/\nspecs/")  # an entry the repo already has, spelled its own way, no trailing newline
+    env = {k: v for k, v in os.environ.items() if k != "STANDALONE"}
+    for _ in range(2):
+        subprocess.run(["bash", INIT, project], capture_output=True, text=True, env=env, check=True, timeout=120)
+    with open(os.path.join(project, ".gitignore")) as f:
+        assert f.read() == "node_modules/\nspecs/\n.claude/settings.local.json\n.claude/worktrees/\n"
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:
