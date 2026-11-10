@@ -6,6 +6,9 @@
 # like .env through, this does not. A path named in the current ticket's plan (docs/tickets/<id>/plan.md) or
 # in specs/*/PLAN.md was approved with the plan and passes. Anything unparseable passes: the rule is a prompt,
 # not a sandbox. CLAUDE_SENSITIVE_PATHS=0 turns it off.
+# `sensitive-path.sh post` runs on PostToolUse: an edit approved with "allow all edits during this session" (the
+# mode switched to acceptEdits or auto) unlocks every path of that repo and its worktrees for the rest of the
+# session until the machine reboots (the marker's name holds the boot time); a plain Yes allows that edit only.
 [ "${CLAUDE_SENSITIVE_PATHS:-1}" = "0" ] && exit 0
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
@@ -13,8 +16,8 @@ LIST="$(dirname "$0")/sensitive-paths.txt"
 
 SECRETS="$(dirname "$0")/secret-paths.txt"
 
-HOOK_INPUT="$INPUT" LIST="$LIST" SECRETS="$SECRETS" python3 -I - <<'PY'
-import fnmatch, glob, json, os, re, subprocess, sys
+HOOK_INPUT="$INPUT" HOOK_PHASE="${1:-pre}" LIST="$LIST" SECRETS="$SECRETS" python3 -I - <<'PY'
+import fnmatch, glob, hashlib, json, os, re, subprocess, sys, tempfile
 
 try:
     ev = json.loads(os.environ.get("HOOK_INPUT") or "{}")
@@ -24,6 +27,29 @@ tool, ti = ev.get("tool_name", ""), ev.get("tool_input") or {}
 cwd = ev.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
 r = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"], capture_output=True, text=True)
 top = os.path.realpath(r.stdout.strip()) if r.returncode == 0 else os.path.realpath(cwd)
+
+
+def boot_id():
+    try:
+        return open("/proc/sys/kernel/random/boot_id", encoding="utf-8").read().strip()
+    except OSError:
+        out = subprocess.run(["sysctl", "-n", "kern.boottime"], capture_output=True, text=True).stdout
+        m = re.search(r"sec = (\d+)", out)
+        return m.group(1) if m else ""
+
+
+session, boot = ev.get("session_id") or "", boot_id()
+# The shared git dir, so one approval covers the main checkout and every worktree of the repo.
+common = subprocess.run(["git", "-C", top, "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                        capture_output=True, text=True).stdout.strip()
+repo_key = os.path.realpath(common) if common else top
+unlock = None
+if session and boot:
+    key = hashlib.sha256("\0".join((session, boot, repo_key)).encode()).hexdigest()[:32]
+    unlock = os.path.join(tempfile.gettempdir(), "claude-sensitive-path", key)
+post = os.environ.get("HOOK_PHASE") == "post"
+if not post and unlock and os.path.exists(unlock):
+    sys.exit(0)
 
 targets = []
 if tool in ("Edit", "Write", "MultiEdit"):
@@ -109,8 +135,30 @@ def planned(path):
 hits = [p for p in dict.fromkeys(filter(None, map(rel, targets))) if sensitive(p) and not planned(p)]
 if not hits:
     sys.exit(0)
+# A hook cannot add buttons or see which one was pressed (hooks.md: each dialog builds its own options), but the
+# mode can: "Yes, allow all edits during this session" or "switch to auto mode" changes it between pre and post.
+# Keyed on tool_use_id, so only the call pre actually asked about can unlock, never state the tool changed.
+mode, call = ev.get("permission_mode") or "", ev.get("tool_use_id") or ""
+asked = f"{unlock}.{hashlib.sha256(call.encode()).hexdigest()[:16]}.asked" if unlock and call else None
+if post:
+    if not asked:
+        sys.exit(0)
+    try:
+        before = open(asked, encoding="utf-8").read()
+        os.remove(asked)
+    except OSError:
+        sys.exit(0)
+    if mode in ("acceptEdits", "auto") and mode != before:
+        open(unlock, "w").close()
+    sys.exit(0)
+if asked:
+    os.makedirs(os.path.dirname(asked), exist_ok=True)
+    with open(asked, "w", encoding="utf-8") as f:
+        f.write(mode)
 reason = ("sensitive-path: " + ", ".join(hits[:3]) + " is a secret, CI/deploy or Claude-config file. "
-          "Approve only if you expected this change; list the path in the ticket's plan.md to pre-approve it.")
+          "Approve only if you expected this change; list the path in the ticket's plan.md to pre-approve it. "
+          "No = deny · Yes = allow once · \"Yes, allow all edits during this session\" = allow every sensitive "
+          "path of this repo for the session.")
 print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask",
                                          "permissionDecisionReason": reason}}))
 sys.exit(0)
