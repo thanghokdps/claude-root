@@ -11,6 +11,7 @@ Checked on 2026-11-05 against render.com/docs/blueprint-spec, docs.railway.com/i
 | Render                | A free web service exists: it sleeps after 15 minutes idle and wakes in about a minute | A free instance's memory is tight for this image. A disk's free-plan availability is not stated, so check before promising one |
 | Railway               | Priced by usage. Check the current plan before quoting a number                        | `railway.json` is deprecated and stops being read on 2026-12-01: generate `.railway/railway.ts`, never `railway.json`          |
 | Cloudflare Containers | Needs Workers Paid ($5 per month). Billed by use, and sleeps when idle                 | Needs a Worker in front. Whether a container's disk survives a restart is not stated, so treat it as lost                      |
+| Cloudflare Workers    | Workers Paid ($5 per month) plus D1, Durable Object, R2 and Queues usage               | Only for an app written for Workers. D1 caps a database at 10 GB and runs one query at a time (`cloudflare-workers.md`)        |
 
 ## Database by host
 
@@ -229,3 +230,86 @@ export default {
 These two commands release web and agent apart, so a monorepo needs no filter. When the user connects the repo to Workers Builds or Pages instead, set **Settings > Build > Build watch paths** on each project in the dashboard, with `apps/agent/*` and `packages/*` on the Worker and `apps/web/*` and `packages/*` on Pages; no config file holds them (developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths and /pages/configuration/build-watch-paths, checked on 2026-11-06).
 
 Deploy: Docker running, then `wrangler deploy` for the agent and `wrangler pages deploy apps/web/dist --project-name <app>` for the client after `pnpm --filter web build`. `max_instances: 1` keeps one process, which the in-process thread state and run queue assume.
+
+## Cloudflare Workers — native, one Worker per environment
+
+For an app written for Workers (Hono or a plain `fetch` handler): one Worker serves the API and the SPA from Static Assets, and D1, R2, Durable Objects and Queues are bindings. The rules are in `cloudflare-workers.md` (backend, if installed). Checked on 2026-11-10 against developers.cloudflare.com/workers/wrangler/environments, /workers/static-assets/routing/single-page-application, /d1/reference/migrations and /workers/wrangler/commands/workers.
+
+Bindings, vars and secrets are not inherited, so every environment repeats them with its own resources. Only the top level and `env.staging` are shown here; `env.production` repeats the same block.
+
+```jsonc
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "<app>",
+  "main": "apps/api/src/index.ts",
+  "compatibility_date": "<today>",
+  "assets": {
+    "directory": "apps/web/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/ws"],
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "<app>-dev",
+      "database_id": "<from wrangler d1 create>",
+      "migrations_dir": "apps/api/migrations",
+      "migrations_pattern": "apps/api/migrations/*/migration.sql",
+    },
+  ],
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "<app>-files-dev" }],
+  "durable_objects": {
+    "bindings": [{ "name": "USER_SOCKET", "class_name": "UserSocket" }],
+  },
+  "exports": {
+    "UserSocket": { "type": "durable-object", "storage": "sqlite" },
+  },
+  "queues": {
+    "producers": [{ "binding": "PUSH", "queue": "<app>-push-dev" }],
+    "consumers": [
+      {
+        "queue": "<app>-push-dev",
+        "max_retries": 3,
+        "dead_letter_queue": "<app>-push-dlq-dev",
+      },
+    ],
+  },
+  "triggers": { "crons": ["0 3 * * *"] },
+  "vars": { "PUBLIC_URL": "https://dev.<domain>" },
+  "env": {
+    "staging": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "<app>-staging",
+          "database_id": "<id>",
+          "migrations_dir": "apps/api/migrations",
+          "migrations_pattern": "apps/api/migrations/*/migration.sql",
+        },
+      ],
+      "r2_buckets": [
+        { "binding": "FILES", "bucket_name": "<app>-files-staging" },
+      ],
+      "durable_objects": {
+        "bindings": [{ "name": "USER_SOCKET", "class_name": "UserSocket" }],
+      },
+      "queues": {
+        "producers": [{ "binding": "PUSH", "queue": "<app>-push-staging" }],
+        "consumers": [
+          {
+            "queue": "<app>-push-staging",
+            "max_retries": 3,
+            "dead_letter_queue": "<app>-push-dlq-staging",
+          },
+        ],
+      },
+      "triggers": { "crons": ["0 3 * * *"] },
+      "vars": { "PUBLIC_URL": "https://staging.<domain>" },
+    },
+  },
+}
+```
+
+`run_worker_first` with a pattern list needs Wrangler 4.20.0 or later, and the Worker then handles only those paths (/workers/static-assets/routing/single-page-application). `exports` declares the Durable Object class, as in the Containers section above. Field names change between Wrangler majors, so check them against the installed `node_modules/wrangler/config-schema.json` before writing. `database_id` comes from `wrangler d1 create <app>-<env>`, which the user runs, once per environment. Secrets are set per environment by the user: `wrangler secret put <NAME> --env <env>`.
+
+Deploy, per environment and in this order: `pnpm --filter web build`, then `wrangler d1 migrations apply <app>-<env> --env <env> --remote`, then `wrangler deploy --env <env>`. Migrations go first and are add-only, so the running version keeps working on the new schema. Rollback is `wrangler rollback --env <env> [<version-id>]`, which redeploys an earlier Worker version at once. It does not undo a D1 migration, so `RELEASE.md` names the forward fix for each one. A deploy drops every WebSocket, and clients reconnect and catch up.

@@ -23,7 +23,10 @@ Read before the first edit, only the ones the repo's stack needs:
 - `${CLAUDE_PLUGIN_ROOT}/rules/python.md`, `${CLAUDE_PLUGIN_ROOT}/rules/fastapi.md` — Python services
 - `${CLAUDE_PLUGIN_ROOT}/rules/nestjs.md` — a NestJS app (`@nestjs/core` in package.json, `*.module.ts`)
 - `${CLAUDE_PLUGIN_ROOT}/rules/prisma.md` — a Prisma schema
-- `${CLAUDE_PLUGIN_ROOT}/rules/drizzle.md` — a Drizzle schema (`drizzle.config.*`)
+- `${CLAUDE_PLUGIN_ROOT}/rules/drizzle.md` — a Drizzle schema (`drizzle.config.*`); on D1 its § SQLite and Cloudflare D1
+- `${CLAUDE_PLUGIN_ROOT}/rules/hono.md` — a Hono app (`hono` in package.json)
+- `${CLAUDE_PLUGIN_ROOT}/rules/cloudflare-workers.md` — a Worker (`wrangler.jsonc` / `wrangler.toml`): D1, Durable Objects, Queues, R2
+- `${CLAUDE_PLUGIN_ROOT}/rules/better-auth.md` — sign-in with Better Auth (`better-auth` in package.json); auth is high-risk
 - `api-contract.md`, `data-access.md`, `security.md` from core (`~/.claude/rules/`) — always
 
 Every mutating route is authenticated and checks permission on the specific resource; every query is scoped to the caller's owner key. These are hard gates: when the brief would weaken one, stop and report instead of building.

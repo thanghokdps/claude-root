@@ -10,8 +10,8 @@
 # user config both lack into .claude/rules/ (a plugin cannot ship always-loaded rules), and leaves both uncommitted.
 # An opted-out repo gets the packs in .claude/settings.local.json (personal, excluded from git) instead.
 # Packs, effective after /reload-plugins or a new session: frontend@harness for a web UI framework (not React Native alone),
-# backend@harness for a server framework, an ORM, go, rust or an AI assistant, mobile@harness for react-native / expo / eas.json,
-# devops@harness for a Dockerfile, compose file, CI workflow, *.tf, k8s/ or Chart.yaml, ai@harness for an AI
+# backend@harness for a server framework, a Worker, an ORM, go, rust or an AI assistant, mobile@harness for react-native / expo / eas.json,
+# devops@harness for a Worker, Dockerfile, compose file, CI workflow, *.tf, k8s/ or Chart.yaml, ai@harness for an AI
 # assistant, workplace@harness for a
 # `Domain: workplace` line in docs/requirements.md or .claude/docs/index.md, or two or more HR/workplace module
 # folders (time off, booking, reservation, approval, maintenance, meal, lunch, attendance) under apps/,
@@ -289,14 +289,15 @@ backends = [label for cond, label in ((has_dep("@nestjs/core"), "NestJS"), (has_
                                       (has_dep("koa"), "Koa"), (has_dep("elysia"), "Elysia"),
                                       (has_py("fastapi"), "FastAPI"), (has_py("django"), "Django"),
                                       (has_py("flask"), "Flask")) if cond]
+workers = has_dep("wrangler") or any(os.path.exists(at(f"wrangler.{ext}")) for ext in ("toml", "jsonc", "json"))
 for cond, label in ((True, web_labels), (mobile, ["React Native"]), ("python" in manifests, ["Python"]),
-                    (True, backends), (has_dep("wrangler") or os.path.exists(at("wrangler.toml")),
-                                       ["Cloudflare Workers"]),
+                    (True, backends), (workers, ["Cloudflare Workers"]),
                     ("go" in manifests, ["Go"]), ("rust" in manifests, ["Rust"]),
                     (has_dep("typescript"), ["TypeScript"])):
     if cond:
         stack.extend(label)
-backend = bool(backends) or has_dep("next")
+# A Worker is a server and its wrangler config is deploy config, so it brings backend and devops.
+backend = bool(backends) or has_dep("next") or workers
 ai = (has_prefix("@langchain/", "@copilotkit/", "@mastra/", "@ag-ui/")
       or has_py("langgraph", "langchain", "langchain-core", "copilotkit"))
 db = [label for cond, label in ((has_dep("prisma", "@prisma/client") or os.path.isdir(at("prisma")), "Prisma"),
@@ -328,7 +329,7 @@ reverse = domain_marked("reverse-engineering")
 frontend = web or ai
 # An AI repo runs an agent server even with no web framework or ORM (LangGraph's own server, Mastra).
 backend_pack = backend or bool(db) or "go" in manifests or "rust" in manifests or ai
-devops = bool(glob.glob(at("Dockerfile*")) or glob.glob(at("docker-compose*")) or glob.glob(at("compose.y*ml"))
+devops = workers or bool(glob.glob(at("Dockerfile*")) or glob.glob(at("docker-compose*")) or glob.glob(at("compose.y*ml"))
              or glob.glob(at(".github", "workflows", "*.y*ml")) or os.path.exists(at(".gitlab-ci.yml"))
              or glob.glob(at("*.tf")) or glob.glob(at("*", "*.tf")) or os.path.isdir(at("k8s"))
              or glob.glob(at("*", "Chart.yaml")) or os.path.exists(at("Chart.yaml")))
@@ -383,6 +384,8 @@ if db:
     prefer.append("schema or queries → /db-change")
 if backend_pack:
     prefer.append("endpoints → /api-endpoint")
+if workers:
+    prefer.append("Worker code → backend's rules/cloudflare-workers.md, first deploy → /release-setup cloudflare")
 if web:
     prefer.append("UI → /ui-feature, from a Figma → /design-ui")
 if mobile:

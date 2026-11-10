@@ -1,7 +1,7 @@
 ---
 effort: high
 name: release-setup
-description: Makes a repo deployable on the host the user picks — asks where the server runs, then the database that fits that host, then login, shows the files it will generate for approval, writes the config, runs the image, and deploys after a yes. Supports Render, Railway and Cloudflare Containers, with the assistant skeleton's three shapes built in. Use when a repo has never been deployed, when choosing a host or a database for it, or when a new skeleton should go live.
+description: Makes a repo deployable on the host the user picks — asks where the server runs, then the database that fits that host, then login, shows the files it will generate for approval, writes the config, runs the image, and deploys after a yes. Supports Render, Railway, Cloudflare Containers and native Cloudflare Workers (a Hono or fetch-handler Worker with D1, R2, Durable Objects and Queues), with the assistant skeleton's three shapes built in. Use when a repo has never been deployed, when choosing a host or a database for it, or when a new skeleton should go live.
 when_to_use: first deploy of a repo, "setup release", "deploy lên đâu", "deploy lên Render / Railway / Cloudflare", "chọn host", "chọn database khi deploy", "tạo Dockerfile và config để deploy", "make this deployable", "go live", no Dockerfile or deploy config yet, /agent-architect finished a skeleton and asks where it runs
 ---
 
@@ -18,13 +18,14 @@ Read `${CLAUDE_SKILL_DIR}/references/services.md` before Step 2. For an assistan
 Find the deployable parts and what already exists: `Dockerfile`, `render.yaml`, `.railway/railway.ts`, `wrangler.jsonc`, the web build output, the server's start command, the health path, `.env.example` for the variable names. Never read `.env`.
 
 - `apps/agent/package.json` lists `@mastra/core` or `@langchain/langgraph` → the monorepo shape in `agent.md`. The root `package.json` lists one of them → the one-package shape in `agent.md` § One-package repos.
+- `wrangler.jsonc` (or `wrangler.toml`) with a `main` script and no Node server start command, such as a Hono app on Workers → the Workers shape in `services.md` § Cloudflare Workers. It has no image: skip the container steps.
 - A repo with no server and no web build → say so and stop; nothing deploys yet.
 
 ## Step 2 — Ask, one question per turn, in this order
 
 Use `AskUserQuestion` with the recommended option first. Skip what the request or the repo already answers. Never ask for a secret's value in chat.
 
-1. **Where does the server run?** Render (Recommended), Railway or Cloudflare Containers, each with the cost line of `services.md` § Choosing. The web client follows the server to the same host.
+1. **Where does the server run?** Render (Recommended), Railway or Cloudflare Containers, each with the cost line of `services.md` § Choosing. The web client follows the server to the same host. A repo already in the Workers shape gets Cloudflare Workers as the first option instead, and its environments (dev, staging, production) become the question.
 2. **Does it need a database?** The options come from the host, never from a fixed list (`services.md` § Database by host): Cloudflare → D1, Render or Railway → Postgres, or no database. Say what each one means, in these words:
    - **With a database:** threads and context survive a restart and a redeploy.
    - **No database:** threads live in a file on the server, as `mastra-ai/ui-dojo` does. Context survives a process restart. A redeploy loses it unless the host gives a volume (`services.md` § File storage).
@@ -39,10 +40,10 @@ List every file to create or change with one line each, the variables the host n
 Write only the files of the approved list, from the templates in `services.md`, and from `agent.md` for an assistant. Resolve every version and every base image digest at generation time, never from memory. Then, in order:
 
 1. The repo's own checks pass: format, typecheck, lint, tests.
-2. Build the image, run it with fake or local values, and check it: the health path answers, the process runs as non-root, and data survives a container recreate on a volume.
+2. Build the image, run it with fake or local values, and check it: the health path answers, the process runs as non-root, and data survives a container recreate on a volume. For the Workers shape instead: `wrangler deploy --dry-run --env <env>` compiles for each environment, and `wrangler dev` with local D1 answers the health path and serves the SPA.
 3. Record the host, database and login in the repo's `RELEASE.md`, with the deploy command and the rollback command, so `/release-checklist` picks them up.
 
-**Done when:** the image runs and passes its health check, and `RELEASE.md` exists.
+**Done when:** the image runs and passes its health check (Workers shape: the dry run passes for every environment and `wrangler dev` answers the health path), and `RELEASE.md` exists.
 
 ## Step 5 — Deploy, after a yes
 
@@ -68,7 +69,7 @@ Run these against the real URL and show each result:
 - Never bake a secret into an image, a config file or a `VITE_*` variable. Everything in `dist/` is public.
 - A file on a container disk is not durable. Say so whenever the user picks no database.
 - Report a host whose limits break the app before generating, such as a plan with too little memory or no volume.
-- `Cloudflare Workers` without containers cannot run these Node servers. Offer Containers, or stop.
+- `Cloudflare Workers` without containers cannot run a Node server (Express, NestJS, a LangGraph or Mastra server). Offer Containers, or stop. Only an app written for Workers takes the Workers shape.
 
 ## Hand-offs
 

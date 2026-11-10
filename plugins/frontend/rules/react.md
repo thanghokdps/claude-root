@@ -7,6 +7,8 @@ paths:
 
 Universal rules for React v19 projects. Applies to both Client and Server Components.
 
+Server Components, `"use client"` and Server Actions need a framework or bundler that implements React Server Components, such as Next.js ([Server Components](https://react.dev/reference/rsc/server-components)). A client-only SPA (Vite, React Router or TanStack Router) has none of them: skip § Server Components vs Client Components, § When to add `"use client"` and the Server Action examples. Write no `"use client"` there, and keep server state in TanStack Query (`tanstack.md`).
+
 ---
 
 ## Component model
@@ -314,9 +316,9 @@ useEffect(() => {
 
 - **Local state first** — `useState` for component-scoped state
 - **URL state** — use search params for filterable/shareable state (`useSearchParams`)
-- **Server state** — use Server Components + Server Actions instead of fetching on the client
+- **Server state** — with RSC, Server Components + Server Actions instead of fetching on the client; in a SPA, TanStack Query (`tanstack.md`)
 - **Global client state** — Zustand or Jotai; avoid Context for frequently-changing values
-- **Form state** — `useActionState` + Server Actions; avoid large form libraries for simple cases
+- **Form state** — `useActionState` (+ Server Actions with RSC; a plain async function in a SPA); avoid large form libraries for simple cases
 
 ### What NOT to put in state
 
