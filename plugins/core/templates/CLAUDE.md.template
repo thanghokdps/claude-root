@@ -36,7 +36,7 @@
 | fix-bug | `/fix-bug <symptom>` | Root cause → fix → verify → commit |
 | review-checklist | `/review-checklist [PR]` | correctness → tests → scale → readability → security → scope; numbered findings, each with a failing case |
 | checkpoint | `/checkpoint` | Progress vs plan + quality gates |
-| sync-memory | `/sync-memory` | Pull latest + rebuild memory from your commits |
+| sync-memory | `/sync-memory` | Pull latest + summarise the new commits, flag overlaps |
 
 ## Hooks (auto-registered)
 
@@ -44,9 +44,7 @@
 |------|---------|------|
 | `commit-quality-gate.sh` | Before `git commit` | Block secrets, debug artifacts |
 | `branch-guard.sh` | Before `git push` | Block direct pushes to dev/stag/prod and force/delete pushes to protected branches (core, always on) |
-| `save-commit-memory.sh` | After `git commit` | Save commit to `.claude/memory/` |
-| `state-breadcrumb.sh` | Session end | Append session summary to memory |
-| `scope-gate.sh` | Each prompt | Flag high-risk patterns, stale memory |
+| `scope-gate.sh` | Each prompt | Flag high-risk patterns |
 
 ## Constraints
 

@@ -39,7 +39,7 @@ Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the 
 ## Rules and references
 
 - Always loaded: `~/.claude/rules/` `git` · `security` · `code-quality` · `model-cost`. Path-scoped: `typescript`, `testing`, `api-contract`, `app-structure`, `data-access`.
-- On demand (skills read them): each plugin's `references/` — dev `orchestration` · `wave-parallelism` · `plan-format` · `auto-correct-scope` · `spec-templates` · `agent-prompts`; core `memory`.
+- On demand (skills read them): each plugin's `references/` — dev `orchestration` · `wave-parallelism` · `plan-format` · `auto-correct-scope` · `spec-templates` · `agent-prompts`.
 
 ## Gotchas
 

@@ -18,8 +18,7 @@ when_to_use: midway through a PLAN.md, before a commit or PR, or when the user a
 Check for plan file:
 
 - `specs/<slug>/PLAN.md` — structured plan from `/feature`
-- `.claude/memory/sessions/` — recent session notes
-- `.claude/memory/commits/` — recent commits
+- `git log --oneline -15` — recent commits
 
 If no plan exists → report that and skip to Stage 3.
 

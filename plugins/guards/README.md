@@ -22,10 +22,9 @@ None. This plugin is hooks only.
 | `headroom-compress`   | after Bash                            | A soft hint to compress very large output when headroom is installed                                                               |
 | `run-log`             | after Bash                            | Records each command to `.git/claude-run-log.jsonl`, so a PR's Witness line is filled from what ran, never typed                   |
 | `session-handoff`     | on stop                               | Writes a comprehensive `specs/HANDOFF.md` at session end                                                                           |
-| `state-breadcrumb`    | on stop                               | Appends a session breadcrumb to memory                                                                                             |
 | `notify-on-finish`    | on stop                               | A macOS notification when Claude finishes a turn, so long runs need no watching                                                    |
 
-Two more scripts live in the folder but are not registered here: `save-commit-memory.sh` and `agent-progress.sh` are copied into a project only by the standalone mode of `scripts/init.sh` (core).
+One more script lives in the folder but is not registered here: `agent-progress.sh` is copied into a project only by the standalone mode of `scripts/init.sh` (core).
 
 ## Depends on
 

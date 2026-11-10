@@ -103,14 +103,11 @@ your-project/
     ├── settings.json          ← hooks registered
     ├── docs/                  ← knowledge base: index, architecture, conventions, stack, entry points, test strategy
     ├── rules/                 ← project and stack rules
-    ├── skills/ hooks/         ← only in standalone mode
-    └── memory/
-        ├── MEMORY.md          ← index, loaded every session
-        ├── user.md            ← your role and preferences (gitignored: it carries your git name and email)
-        └── project/context.md ← goals, active decisions, constraints, team
+    ├── settings.local.json    ← the status line (this machine's plugin path; excluded from git)
+    └── skills/ hooks/         ← only in standalone mode
 ```
 
-Then fill in three things once: scan the generated `CLAUDE.md` (Key Rules and Common Commands), write `memory/user.md` (role, preferences such as "TypeScript strict, never `any`"), and `memory/project/context.md` (goals with dates, decisions with why and how to apply, constraints, who is who).
+`specs/` is added to `.gitignore`. Then scan the generated `CLAUDE.md` once (Key Rules and Common Commands). Your own preferences and decisions are kept by Claude Code's auto memory (`~/.claude/projects/<project>/memory/`), not in the repo.
 
 ## 5. First session
 
@@ -118,7 +115,7 @@ Then fill in three things once: scan the generated `CLAUDE.md` (Key Rules and Co
 cd my-project && claude
 ```
 
-- **Context loaded?** Ask _"what project are you working on?"_; the answer should name the stack and constraints from `CLAUDE.md` and `MEMORY.md`.
+- **Context loaded?** Ask _"what project are you working on?"_; the answer should name the stack and constraints from `CLAUDE.md` and `.claude/docs/`.
 - **Hooks working?** Try `git push origin main` from the session: `branch-guard` blocks it with the reason. Ask Claude to read `.env`: `secret-guard` refuses and asks you for the value.
 - **First push of `main`** to a new, empty remote is yours. Claude does not push to `main`; `/finish-branch` prints `git push -u origin main` for you to run, after which branches and PRs work as usual.
 - **CI secrets** (for example an evals job): `gh secret set <NAME> --repo <owner>/<repo>` before the first PR that needs them. `/finish-branch` names any the workflows read that the repo lacks.
@@ -169,8 +166,8 @@ Finish: `/verify-done` before saying done, `/review-checklist` before the PR, `/
 
 ## 8. Team workflow
 
-- `/sync-memory` at the start of a session: fetches and pulls, scans your commits since the last sync into `.claude/memory/commits/`, lists teammates' commits and flags files you both touched.
-- The first session in a repo writes `.claude/settings.json` with the kit marketplace (the GitHub mirror), `dev@harness` and the repo's packs, left uncommitted. Commit it and each teammate is offered the kit when they trust the folder. To keep a repo (a client's, say) out of it, set any `*@harness` to `false` in its `.claude/settings.json` or `.claude/settings.local.json`.
+- `/sync-memory` at the start of a session: pulls, lists the commits it brought in (yours and teammates', from git log; writes nothing) and flags files you both touched.
+- The first session in a repo writes `.claude/settings.json` with the kit marketplace (the GitHub mirror, pinned to `ref` `v<core version>`), `dev@harness` and the repo's packs, left uncommitted. The tag must exist on the GitHub mirror (`git tag v1.0.0 && git push origin v1.0.0` from `main`); a repo moves to a newer kit by bumping that `ref` in its own commit. Commit it and each teammate is offered the kit when they trust the folder. To keep a repo (a client's, say) out of it, set any `*@harness` to `false` in its `.claude/settings.json` or `.claude/settings.local.json`.
 - Everyone installs from the same marketplace, so a skill or hook change reaches the team on `/plugin marketplace update harness` (GitLab after `/sync-remote` has mirrored it).
 - Project rules and docs travel in the repo (`.claude/docs/`, `.claude/rules/`, `CLAUDE.md`), kept current by `/docs-sync` at the end of each feature.
 - `/retro` (lead) at the end of a week reads commits, PRs, reverts and CI failures and proposes what to standardise next.
@@ -205,7 +202,7 @@ Hook and CI changes take effect in a new session, not the current one. Plugin ve
 
 **`HANDOFF.md` not loading.** The project `CLAUDE.md` must contain the Session Resume line `cat specs/HANDOFF.md 2>/dev/null && rm -f specs/HANDOFF.md`, or `guards` must be installed (its `session-resume` hook injects it).
 
-**Claude forgot last session.** `/compact` was not run, or `MEMORY.md` is empty. Claude Code truncates `MEMORY.md` after 200 lines: delete stale entries and their files.
+**Claude forgot last session.** `/compact` was not run, so there was no `specs/HANDOFF.md`. Claude Code truncates its auto memory index (`~/.claude/projects/<project>/memory/MEMORY.md`) after 200 lines: delete stale entries and their files.
 
 **A plugin is installed but its skills are missing.** Run `/reload-plugins` or open a new session; check `claude plugin list` for a dependency that is disabled and pin it as in section 2.
 
