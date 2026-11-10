@@ -6,9 +6,9 @@ paths:
   - "**/db/schema.ts"
 ---
 
-# Drizzle rules (Postgres)
+# Drizzle rules
 
-Adds only what is Drizzle-specific. Owner scoping, N+1, transactions and the migration workflow in general are in core's `data-access.md`. Claims below cite orm.drizzle.team (read 2026-11-09).
+Adds only what is Drizzle-specific. Owner scoping, N+1, transactions and the migration workflow in general are in core's `data-access.md`. Claims below cite orm.drizzle.team (read 2026-11-09). The sections up to § Tests are written for Postgres. On SQLite and Cloudflare D1, § SQLite and Cloudflare D1 replaces their client, transaction, search and migrate rules.
 
 ## Schema and migrations
 
@@ -40,3 +40,14 @@ Adds only what is Drizzle-specific. Owner scoping, N+1, transactions and the mig
 ## Tests
 
 - Repository tests run on a real Postgres migrated with the committed `drizzle/` folder (`drizzle-kit migrate` or the programmatic migrator against the test database), never PGlite-only when the schema uses `unaccent`, FTS or other Postgres extensions. A test per function proves another owner's rows are invisible and untouched.
+
+## SQLite and Cloudflare D1
+
+The platform side (limits, bindings, environments) is in `cloudflare-workers.md`. Claims cite orm.drizzle.team and developers.cloudflare.com/d1 (read 2026-11-10).
+
+- Tables use `sqliteTable` from `drizzle-orm/sqlite-core`. The client is `drizzle(env.DB)` from `drizzle-orm/d1`, built from the request's binding ([Drizzle + D1](https://orm.drizzle.team/docs/connect-cloudflare-d1)) and passed to the repository. Never keep it in a module-level global.
+- An atomic multi-step write is one `db.batch([...])`. D1 runs a batch as a SQL transaction and rolls the whole sequence back when a statement fails ([D1 database API](https://developers.cloudflare.com/d1/worker-api/d1-database/)). Drizzle supports batch on D1 ([SQLite batch API](https://orm.drizzle.team/docs/sqlite/batch-api)). Every statement is built before the batch runs, so one statement cannot use another's result in JavaScript. Write the condition into the SQL instead: `INSERT … SELECT … WHERE NOT EXISTS`, `INSERT … ON CONFLICT DO NOTHING`, or an `UPDATE … WHERE` that a later statement depends on.
+- Pick the column types once and keep them across the schema. Ids are app-generated text (UUIDv7) unless a table needs an integer sequence. Timestamps are integer milliseconds. Enums are `text` with a `CHECK`. Booleans are `integer` 0/1.
+- Migrations: `drizzle-kit generate` writes one folder per migration. Point the D1 binding at it with `migrations_dir` and `"migrations_pattern": "<dir>/*/migration.sql"` ([D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/)). Apply with `wrangler d1 migrations apply <db> --env <env> --remote`, which records each file in `d1_migrations` ([D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/)). Not `drizzle-kit migrate` and never `push`. Add-only and reviewed, as § Schema and migrations says.
+- Full-text search: D1 ships the FTS5 module ([D1 SQL statements](https://developers.cloudflare.com/d1/sql-api/sql-statements/)). The `CREATE VIRTUAL TABLE … USING fts5` and the triggers that keep it in sync go in a `drizzle-kit generate --custom` migration. Index a folded column (lower-case, diacritics stripped) that one shared function produces for both writes and queries. Always join to the conversations the caller belongs to, never search the whole table and filter afterwards.
+- Tests run on local D1 inside `@cloudflare/vitest-plugin`, with the committed migrations applied (`cloudflare-workers.md` § Tests), never on a Node SQLite stand-in that lacks D1's behaviour.

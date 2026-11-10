@@ -1,6 +1,6 @@
 # devops
 
-Role pack for CI/CD, containers and infrastructure: the `devops-engineer` agent that `/feature`, `/ticket` and `/fix-bug` dispatch pipeline, image and infra slices to, the three skills it runs, and the rules it reads on demand. Off by default; core's `repo-profile` hook turns it on in a repo that holds a `Dockerfile`, `docker-compose*`, `.github/workflows/`, `.gitlab-ci.yml`, `*.tf`, `k8s/` or `Chart.yaml`.
+Role pack for CI/CD, containers and infrastructure: the `devops-engineer` agent that `/feature`, `/ticket` and `/fix-bug` dispatch pipeline, image and infra slices to, the three skills it runs, and the rules it reads on demand. Off by default; core's `repo-profile` hook turns it on in a repo that holds a `wrangler.*` config (or `wrangler` dependency), a `Dockerfile`, `docker-compose*`, `.github/workflows/`, `.gitlab-ci.yml`, `*.tf`, `k8s/` or `Chart.yaml`.
 
 **For:** DevOps and platform engineers, and every `/feature` run that includes a CI job, an image or a cloud resource.
 

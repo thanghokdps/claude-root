@@ -10,7 +10,7 @@ when_to_use: build a page, "làm màn hình", "làm giao diện bằng React", f
 
 **Invoke:** `/ui-feature <what the user should see and do>`
 
-Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT}/rules/react.md` and, on Next.js, `${CLAUDE_PLUGIN_ROOT}/rules/nextjs.md`. A design to match (Figma, frames, screenshot) → `/design-ui` builds the primitives and screens from it. This skill builds behaviour on top. A new product with no tokens and no `DESIGN.md` direction → `/design-direction` first. A working app that only looks unpolished → `/ui-polish`.
+Rules: `app-structure.md` and `testing.md` from core, plus `${CLAUDE_PLUGIN_ROOT}/rules/react.md` and, on Next.js, `${CLAUDE_PLUGIN_ROOT}/rules/nextjs.md`; in a client-only SPA with TanStack or i18next, `${CLAUDE_PLUGIN_ROOT}/rules/tanstack.md`. A design to match (Figma, frames, screenshot) → `/design-ui` builds the primitives and screens from it. This skill builds behaviour on top. A new product with no tokens and no `DESIGN.md` direction → `/design-direction` first. A working app that only looks unpolished → `/ui-polish`.
 
 ---
 

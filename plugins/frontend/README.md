@@ -18,6 +18,6 @@ Role pack for web UI: the `frontend-engineer` agent that `/feature`, `/ticket` a
 
 ## Rules and references
 
-`rules/react.md`, `rules/nextjs.md` — read by the agent and the skills when the repo uses them, never always-loaded. `references/fetchers.md` — how a screen calls its own backend. `references/taste.md` — the UI quality review every skill ends with: detector, axe, keyboard walk, independent taste review. `references/motion.md` — whether and how to animate.
+`rules/react.md`, `rules/nextjs.md`, `rules/tanstack.md` (SPA: Query, Router, Virtual, i18next) — read by the agent and the skills when the repo uses them, never always-loaded. `references/fetchers.md` — how a screen calls its own backend. `references/taste.md` — the UI quality review every skill ends with: detector, axe, keyboard walk, independent taste review. `references/motion.md` — whether and how to animate.
 
 Credits, ideas reworded with nothing copied: anthropics/skills `frontend-design`, addyosmani/agent-skills `frontend-ui-engineering`, nextlevelbuilder/ui-ux-pro-max-skill, pbakaus/impeccable.

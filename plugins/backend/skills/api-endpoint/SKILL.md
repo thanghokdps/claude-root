@@ -10,7 +10,7 @@ when_to_use: new API endpoint, "thêm endpoint", "thêm API endpoint", "viết A
 
 **Invoke:** `/api-endpoint <method> <path> — what it does`
 
-Rules: `api-contract.md`, `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`); on Python, `${CLAUDE_PLUGIN_ROOT}/rules/python.md` and `${CLAUDE_PLUGIN_ROOT}/rules/fastapi.md`; on NestJS, `${CLAUDE_PLUGIN_ROOT}/rules/nestjs.md`. An agent tool is not an endpoint: use `/agent-tool` (ai, if installed).
+Rules: `api-contract.md`, `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`); on Python, `${CLAUDE_PLUGIN_ROOT}/rules/python.md` and `${CLAUDE_PLUGIN_ROOT}/rules/fastapi.md`; on NestJS, `${CLAUDE_PLUGIN_ROOT}/rules/nestjs.md`; on Hono, `${CLAUDE_PLUGIN_ROOT}/rules/hono.md`; on a Cloudflare Worker, `${CLAUDE_PLUGIN_ROOT}/rules/cloudflare-workers.md`; touching sign-in with Better Auth, `${CLAUDE_PLUGIN_ROOT}/rules/better-auth.md`. An agent tool is not an endpoint: use `/agent-tool` (ai, if installed).
 
 ---
 
