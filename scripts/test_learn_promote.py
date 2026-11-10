@@ -165,6 +165,7 @@ def test_same_global_slug_in_two_repos_is_promoted():
     queue(first, proposal(level="global"))
     run(first, "--now")
     assert not os.path.exists(global_file)
+    assert not os.path.exists(os.path.join(first["solutions"], "piped-exit-codes.md"))  # never committed to a repo
     queue(second, proposal(level="global"))
     run(second, "--now")
     assert frontmatter(global_file)["seen"] == "2"

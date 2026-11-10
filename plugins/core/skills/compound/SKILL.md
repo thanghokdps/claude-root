@@ -56,8 +56,10 @@ Assign each learning:
 
 ## Step 3 — Write solution files
 
-**For global learnings** → write to `~/.claude/docs/solutions/<category>/<slug>.md`
-**For project learnings** → write to `.claude/docs/solutions/<category>/<slug>.md`
+**For global learnings** → write to `~/.claude/docs/solutions/<slug>.md`
+**For project learnings** → write to `.claude/docs/solutions/<slug>.md`
+
+Flat, no category folders: `learn-promote.py` dedupes, bumps and retires only `*.md` directly in the folder.
 
 Each file format:
 

@@ -3,12 +3,13 @@
 
 Drain: each <git-common-dir>/claude-learn/queue/*.json is validated (schema, no secret left, no absolute path
 in a global lesson, body <= 15 lines, evidence quoted from a saved digest, not a duplicate of an INDEX line).
-A pass becomes .claude/docs/solutions/<slug>.md (confidence, ttl_days: 90, seen: 1, last_used) plus an INDEX
-line; a failure moves to queue/rejected/ with reject_reason. A duplicate also counts as a recurrence: the
-existing lesson gets seen + 1 and last_used today.
+A project-level pass becomes .claude/docs/solutions/<slug>.md (confidence, ttl_days: 90, seen: 1, last_used)
+plus an INDEX line; a global-level pass is only recorded for Promote, never written into the repo. A failure
+moves to queue/rejected/ with reject_reason. A duplicate also counts as a recurrence: the existing lesson gets
+seen + 1 and last_used today.
 Retire: an auto-captured lesson (it has ttl_days) whose last_used is older than ttl_days moves to archive/
 and leaves the INDEX. Never deleted. Applies to the project and the global solutions folder.
-Promote: a global-level slug landed in >= 2 repos (~/.claude/claude-learn/repos.json) is copied to
+Promote: a global-level slug seen in >= 2 repos (~/.claude/claude-learn/repos.json) is copied to
 ~/.claude/docs/solutions/ with seen: N.
 
 Usage: SessionStart hook (event JSON on stdin; prints a systemMessage when something changed) ·
@@ -215,12 +216,13 @@ def drain(state, solutions, home_solutions, repo_id, counts):
             record["reject_reason"] = reason
             write(os.path.join(queue, "rejected", os.path.basename(path)), json.dumps(record, indent=1) + "\n")
             counts["rejected"] += 1
+        elif p["level"] == "global":
+            # Only repos.json remembers it until a second repo sees it: a team repo never carries kit lessons.
+            counts["promoted" if promote(p, repo_id, home_solutions) else "staged"] += 1
         else:
             write(os.path.join(solutions, p["slug"] + ".md"), lesson_text(p))
             add_index_line(os.path.join(solutions, "INDEX.md"), p["slug"], p["title"], p["confidence"])
             counts["added"] += 1
-            if p["level"] == "global" and promote(p, repo_id, home_solutions):
-                counts["promoted"] += 1
         os.remove(claimed)
 
 
@@ -247,7 +249,7 @@ def retire(solutions, counts):
 
 def run(cwd):
     top, common = git(cwd, "--show-toplevel"), git(cwd, "--git-common-dir")
-    counts = {"added": 0, "rejected": 0, "archived": 0, "promoted": 0}
+    counts = {"added": 0, "staged": 0, "rejected": 0, "archived": 0, "promoted": 0}
     if not top or not common:
         return counts, None
     state = os.path.join(common, "claude-learn")
