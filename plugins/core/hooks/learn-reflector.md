@@ -24,7 +24,11 @@ You have no tools. Reply with only a JSON array, one object per lesson, and no o
 - `slug`: kebab-case, 2-64 characters, names the class of work (`piped-test-exit-codes`, not `fix-tail-in-ci-run-3`).
 - `title`: one line.
 - `body`: the rule, at most 15 lines.
-- `level`: `project` when the lesson is about this repository (its paths, stack, conventions); `global` when it is a user preference or a general technique. Unsure → `project`. A `global` lesson must contain no absolute paths and no repository name.
+- `level`: who needs it.
+  - `project`: anyone on the team working in this repository needs it (its stack, conventions, build and test gotchas). It is committed.
+  - `personal`: about this repository, but only this user needs it (this machine's paths, their local setup, how they like to work here). It stays on their machine.
+  - `global`: a user preference or a general technique, true in any repository. It must contain no absolute paths and no repository name.
+    Unsure between `project` and `personal` → `personal`: a lesson the team did not need is noise in their repo.
 - `confidence`: `low`, `med` or `high` — how sure you are that the lesson is durable and correct.
 - `evidence`: a verbatim quote of at least 20 characters copied from the digest below (one line of it, exactly as written). Never invent or paraphrase it: the promoter rejects a quote it cannot find.
 

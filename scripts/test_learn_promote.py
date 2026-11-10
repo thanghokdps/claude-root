@@ -180,6 +180,41 @@ def test_project_lesson_is_never_promoted():
     assert not os.path.exists(os.path.join(h, ".claude", "docs", "solutions", "piped-exit-codes.md"))
 
 
+def personal_dir(r):
+    out = run(r, "--personal-dir").stdout.strip()
+    assert out.startswith(os.path.join(r["home"], ".claude", "claude-learn", "solutions") + os.sep), out
+    return out
+
+
+def test_personal_lesson_lands_outside_the_repo():
+    r = repo(home())
+    queue(r, proposal(level="personal", body="My checkout lives at /Users/me/chattra; run pnpm from there."))
+    run(r, "--now")
+    assert rejected(r) == []  # a personal lesson may name this machine's paths
+    folder = personal_dir(r)
+    assert os.path.basename(folder).startswith(os.path.basename(r["path"]) + "-")
+    assert frontmatter(os.path.join(folder, "piped-exit-codes.md"))["level"] == "personal"
+    assert "[piped-exit-codes](piped-exit-codes.md)" in read(os.path.join(folder, "INDEX.md"))
+    assert not os.path.exists(r["solutions"])  # nothing in the working tree to commit or ignore
+
+
+def test_personal_folder_is_per_repo_and_deduped_and_retired():
+    h = home()
+    first, second = repo(h), repo(h)
+    assert personal_dir(first) != personal_dir(second)
+    queue(first, proposal(level="personal"))
+    run(first, "--now")
+    queue(first, proposal(level="project"), "p2.json")  # same lesson again, now as project: still a duplicate
+    run(first, "--now")
+    assert "duplicate" in rejected(first)[0]["reject_reason"]
+    folder = personal_dir(first)
+    old = (TODAY - datetime.timedelta(days=91)).isoformat()
+    write(os.path.join(folder, "stale-one.md"),
+          f"---\ntitle: s\nconfidence: low\nttl_days: 90\nseen: 1\nlast_used: {old}\n---\n\n# s\n")
+    run(first, "--now")
+    assert os.path.exists(os.path.join(folder, "archive", "stale-one.md"))
+
+
 def test_session_start_hook_mode_and_child_guard():
     r = repo(home())
     queue(r, proposal())

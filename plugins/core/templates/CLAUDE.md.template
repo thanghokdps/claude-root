@@ -23,6 +23,8 @@
 | Path | Purpose |
 |------|---------|
 | `src/` | Main source |
+| `.claude/docs/solutions/` | Team lessons (`learn-promote.py`, `/compound`), flat `<slug>.md` + `INDEX.md`. Committed: the whole team needs them. A lesson only you need goes to your personal folder (`learn-promote.py --personal-dir`), outside the repo |
+| `specs/` | Each person's session state (`HANDOFF.md`, plans). Gitignored, never committed |
 
 ## Stack
 

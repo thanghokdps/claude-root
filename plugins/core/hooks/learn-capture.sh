@@ -33,7 +33,7 @@ if [ "$EVENT" = "PreToolUse" ]; then
   printf '%s' $((COUNT + 1)) >"$COUNT_FILE" 2>/dev/null
   if [ "$(field tool_name)" = "Read" ]; then
     FILE="$(field file_path)"
-    case "$FILE" in */docs/solutions/*.md) python3 -I "$PROMOTE" --touch "$FILE" >/dev/null 2>&1 ;; esac
+    case "$FILE" in */docs/solutions/*.md | */claude-learn/solutions/*/*.md) python3 -I "$PROMOTE" --touch "$FILE" >/dev/null 2>&1 ;; esac
   fi
   exit 0
 fi
@@ -47,7 +47,8 @@ TOP="$(git -C "${CWD:-.}" rev-parse --show-toplevel 2>/dev/null)" || exit 0
 RUN="$SID-$(date +%s)"
 mkdir -p "$STATE/digests" "$STATE/queue" 2>/dev/null || exit 0
 
-HOOK_INPUT="$INPUT" STATE="$STATE" RUN="$RUN" TOP="$TOP" HERE="$HERE" SID="$SID" python3 -I - <<'PY' || exit 0
+PERSONAL="$(cd "$TOP" && python3 -I "$PROMOTE" --personal-dir 2>/dev/null)"
+HOOK_INPUT="$INPUT" STATE="$STATE" RUN="$RUN" TOP="$TOP" HERE="$HERE" SID="$SID" PERSONAL="$PERSONAL" python3 -I - <<'PY' || exit 0
 import glob, json, os, re, sys
 
 CAP = 20_000
@@ -107,6 +108,7 @@ if not text.strip():
 
 index = []
 for idx in (os.path.join(env["TOP"], ".claude", "docs", "solutions", "INDEX.md"),
+            os.path.join(env["PERSONAL"], "INDEX.md") if env["PERSONAL"] else "",
             os.path.expanduser("~/.claude/docs/solutions/INDEX.md")):
     try:
         index += [l for l in open(idx, encoding="utf-8").read().splitlines() if l.startswith("- [")]
