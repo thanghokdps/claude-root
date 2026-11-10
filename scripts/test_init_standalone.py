@@ -48,6 +48,7 @@ def test_gitignore_gets_per_person_claude_state_once():
         subprocess.run(["bash", INIT, project], capture_output=True, text=True, env=env, check=True, timeout=120)
     with open(os.path.join(project, ".gitignore")) as f:
         assert f.read() == "node_modules/\nspecs/\n.claude/settings.local.json\n.claude/worktrees/\n"
+    assert not os.path.exists(os.path.join(project, ".claude", "templates"))  # the skills read them from the plugin
 
 
 if __name__ == "__main__":

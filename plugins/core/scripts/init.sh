@@ -187,15 +187,6 @@ if [ -d "$HARNESS_DIR/templates/project/agents" ]; then
 fi
 fi
 
-# ─── Copy Templates ───────────────────────────────────────────────────────────
-
-echo "📄  Copying templates..."
-mkdir -p "$CLAUDE_DIR/templates"
-if [ -d "$HARNESS_DIR/templates" ]; then
-  cp "$HARNESS_DIR/templates/"*.md   "$CLAUDE_DIR/templates/" 2>/dev/null || true
-  cp "$HARNESS_DIR/templates/"*.json "$CLAUDE_DIR/templates/" 2>/dev/null || true
-fi
-
 # ─── Copy Hooks ──────────────────────────────────────────────────────────────
 
 echo "🪝  Copying hooks..."
