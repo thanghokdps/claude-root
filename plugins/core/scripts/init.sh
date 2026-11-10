@@ -263,14 +263,6 @@ else:
     open(local_out, "w").write(json.dumps(local, indent=2) + "\n")
 RENDER
 
-# settings.local.json is personal: exclude it locally, as repo-profile does, without touching .gitignore.
-EXCLUDE="$(git -C "$PROJECT_DIR" rev-parse --git-path info/exclude 2>/dev/null || true)"
-if [ -n "$EXCLUDE" ]; then
-  case "$EXCLUDE" in /*) ;; *) EXCLUDE="$PROJECT_DIR/$EXCLUDE" ;; esac
-  mkdir -p "$(dirname "$EXCLUDE")"
-  grep -qxF ".claude/settings.local.json" "$EXCLUDE" 2>/dev/null || echo ".claude/settings.local.json" >> "$EXCLUDE"
-fi
-
 # ─── Drift guard: every registered hook must exist and be executable ──────────
 
 echo "🔍  Verifying hook wiring..."
@@ -293,13 +285,18 @@ else
   echo "   ✅ all registered hooks installed and executable"
 fi
 
-# specs/ is per-session state (HANDOFF.md, plans): keep it out of git and out of `prettier --check .`.
+# Per-person Claude state stays out of git and out of `prettier --check .`: specs/ (HANDOFF.md, plans),
+# settings.local.json (the status line's machine path), Claude Code's worktrees. In .gitignore, not
+# .git/info/exclude, so a teammate's fresh clone ignores them too.
 GITIGNORE="$PROJECT_DIR/.gitignore"
-if ! grep -qxE "/?specs/?" "$GITIGNORE" 2>/dev/null; then
+for entry in /specs/ .claude/settings.local.json .claude/worktrees/; do
+  bare="${entry#/}"
+  bare="${bare%/}"
+  grep -qxE "/?${bare//./\\.}/?" "$GITIGNORE" 2>/dev/null && continue
   [ -s "$GITIGNORE" ] && [ -n "$(tail -c1 "$GITIGNORE")" ] && echo >> "$GITIGNORE"
-  echo "/specs/" >> "$GITIGNORE"
-  echo "   .gitignore: added /specs/ (session state, not committed)"
-fi
+  echo "$entry" >> "$GITIGNORE"
+  echo "   .gitignore: added $entry (per person, not committed)"
+done
 
 # The copied rules and templates are not formatted to the app's Prettier config: keep them out of `prettier --check .`.
 PRETTIERIGNORE="$PROJECT_DIR/.prettierignore"
