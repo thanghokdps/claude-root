@@ -52,7 +52,7 @@ def test_state_root_is_granted():
     install()
     settings = json.load(open(os.path.join(LAST_HOME[0], ".claude", "settings.json")))
     assert settings["permissions"]["additionalDirectories"] == [
-        os.path.join(LAST_HOME[0], ".local", "share", "claude-harness")]
+        os.path.join(LAST_HOME[0], ".local", "share", "claude-harness", "repos")]
 
 
 def kit_copy(base):
