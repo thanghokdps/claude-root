@@ -8,7 +8,7 @@ node_modules/
 .claude/settings.local.json
 
 # lessons the core learn-capture hook writes per machine
-.claude/docs/solutions/
+.claude/solutions/
 
 # macOS Finder metadata
 .DS_Store

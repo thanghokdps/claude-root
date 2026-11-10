@@ -32,7 +32,7 @@ Role: execute one wave task precisely. Dispatched as background agent by Wave Ex
 
 ## Workflow
 
-1. Read `.claude/docs/conventions.md` + `.claude/docs/solutions/INDEX.md`
+1. Read `.claude/docs/conventions.md` + `.claude/solutions/INDEX.md`
 2. Fill Principles block above before writing code
 3. Implement minimal code for the assigned task only
 4. **Test coverage — mandatory for every change**:

@@ -6,6 +6,8 @@ import os
 import subprocess
 import tempfile
 
+from harness_state import specs
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SENSITIVE = os.path.join(ROOT, "plugins", "core", "hooks", "sensitive-path.sh")
 COMPACT = os.path.join(ROOT, "plugins", "core", "hooks", "compact-advisor.sh")
@@ -59,6 +61,15 @@ def test_shell_writes_to_sensitive_paths_ask():
 
 def test_path_in_ticket_plan_is_pre_approved():
     path = repo(plan="Risk: high\nSkills: /api-endpoint\n\nFiles: .github/workflows/ci.yml\n")
+    assert not asks(path, "Edit", file_path=os.path.join(path, ".github/workflows/ci.yml"))
+    assert asks(path, "Edit", file_path=os.path.join(path, ".env"))
+
+
+def test_path_in_spec_plan_outside_the_repo_is_pre_approved():
+    path = repo(branch="feat/no-ticket")
+    os.makedirs(specs(path, "ci"))
+    with open(specs(path, "ci", "PLAN.md"), "w") as f:
+        f.write("Files: .github/workflows/ci.yml\n")
     assert not asks(path, "Edit", file_path=os.path.join(path, ".github/workflows/ci.yml"))
     assert asks(path, "Edit", file_path=os.path.join(path, ".env"))
 

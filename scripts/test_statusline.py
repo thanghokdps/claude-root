@@ -5,6 +5,8 @@ import os
 import subprocess
 import tempfile
 
+from harness_state import specs
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(ROOT, "plugins", "core", "scripts", "statusline.sh")
 
@@ -41,8 +43,8 @@ def test_empty_json_exits_zero():
 
 def test_branch_ticket_and_plan_slice():
     d = repo("feat/412-x")
-    os.makedirs(os.path.join(d, "specs", "412"))
-    with open(os.path.join(d, "specs", "412", "PLAN.md"), "w") as f:
+    os.makedirs(specs(d, "412"))
+    with open(specs(d, "412", "PLAN.md"), "w") as f:
         f.write(PLAN)
     code, out = run({"model": {"display_name": "Opus"}, "workspace": {"current_dir": d}})
     assert code == 0, out

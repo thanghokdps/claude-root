@@ -75,7 +75,7 @@ Click the map for the [interactive version](https://claude.ai/artifact/UjsdkgmXN
 | A secret file is read into the context                    | `.env*`, keys and service-account files are never read, printed or edited; Claude asks you for the value                                   | `secret-guard` hook                      |
 | A ticket skips review under time pressure                 | A ticket's commit waits for the skills its plan names; its PR waits for `/verify-done` and `/review-checklist`                             | `ticket-gate` hook                       |
 | Every step runs on the most expensive model               | Opus plans, decides and reviews; Sonnet writes code from an approved plan; Haiku does mechanical work                                      | `model-cost` rule, each skill's `model:` |
-| Each session starts from zero                             | `/compact` writes a handoff the next session reads; `/compound` keeps the lessons in `docs/solutions/`                                     | `core`                                   |
+| Each session starts from zero                             | `/compact` writes a handoff the next session reads; `/compound` keeps the lessons in `solutions/`                                          | `core`                                   |
 
 Every gate has a written waiver, so a skipped step is a recorded decision rather than a silent omission. Hooks exit 0 or 2 and never crash the session. Anything beyond the core gates is opt-in (`guards`).
 
@@ -139,7 +139,7 @@ Five role packs with one shape: one `<role>-engineer` agent, skills named after 
 
 ### Memory
 
-Rules load every session or only for matching paths, so the always-on context stays small; skills load on demand from your sentence. What a project learns is written down by the skills: `.claude/docs/` (project docs, `/docs-sync`), `specs/HANDOFF.md` (`/compact`, read by the next session), `docs/solutions/` (`/compound`).
+Rules load every session or only for matching paths, so the always-on context stays small; skills load on demand from your sentence. What a project learns is written down by the skills: `.claude/docs/` (project docs, `/docs-sync`), `.claude/solutions/` (team lessons, `/compound`). What only you need stays outside the repo in `~/.local/share/claude-harness/`: plans and the handoff (`specs/`, read by the next session), personal and global lessons.
 
 ## The plugins
 

@@ -322,13 +322,15 @@ def check_role_packs():
 
 
 def check_shared_references():
-    """A reference two plugins both need is copied (no cross-plugin paths in the cache); copies must not drift."""
+    """A reference or hooks/lib helper two plugins both need is copied (no cross-plugin paths in the cache);
+    copies must not drift."""
     by_name = defaultdict(list)
     for plugin in plugin_names():
-        ref_dir = os.path.join(PLUGINS_DIR, plugin, "references")
-        if os.path.isdir(ref_dir):
-            for f in os.listdir(ref_dir):
-                by_name[f].append(os.path.join(ref_dir, f))
+        for sub in ("references", os.path.join("hooks", "lib")):
+            ref_dir = os.path.join(PLUGINS_DIR, plugin, sub)
+            if os.path.isdir(ref_dir):
+                for f in os.listdir(ref_dir):
+                    by_name[(sub, f)].append(os.path.join(ref_dir, f))
     for f, paths in by_name.items():
         for other in paths[1:]:
             if not filecmp.cmp(paths[0], other, shallow=False):

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # plan-gate.sh — a turn cannot end while an active PLAN.md still has an open task.
-# Trigger: Stop. Reads specs/*/PLAN.md under the project (the event's cwd, else the git toplevel); the first
+# Trigger: Stop. Reads specs/*/PLAN.md in the repo's state dir (lib/state-dir.sh, for the event's cwd); the first
 # one whose `**Status:**` is active and has a <task> without status="done" blocks the stop once, naming the
 # task. The retry (stop_hook_active true) always ends, so the agent can still stop after saying why. paused or
 # complete plans never block: set **Status:** paused to set a plan aside. The recall side is plan-recall.sh;
@@ -9,7 +9,7 @@
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
 
-HOOK_INPUT="$INPUT" python3 -I - <<'PY'
+HOOK_INPUT="$INPUT" STATE_LIB="$(dirname "$0")/lib/state-dir.sh" python3 -I - <<'PY'
 import glob, json, os, re, subprocess, sys
 
 try:
@@ -19,8 +19,11 @@ except ValueError:
 if ev.get("stop_hook_active"):
     sys.exit(0)
 start = ev.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-r = subprocess.run(["git", "-C", start, "rev-parse", "--show-toplevel"], capture_output=True, text=True)
-root = r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else start
+r = subprocess.run(["bash", "-c", '. "$1" && state_dir "$2"', "_", os.environ["STATE_LIB"], start],
+                   capture_output=True, text=True)
+state = r.stdout.strip()
+if not state:
+    sys.exit(0)
 
 
 def read(path):
@@ -49,16 +52,15 @@ def first_open_task(text):
     return None
 
 
-for path in sorted(glob.glob(os.path.join(root, "specs", "*", "PLAN.md")), key=os.path.getmtime, reverse=True):
+for path in sorted(glob.glob(os.path.join(state, "specs", "*", "PLAN.md")), key=os.path.getmtime, reverse=True):
     text = read(path)
     if status(text) != "active":
         continue
     task = first_open_task(text)
     if not task:
         continue
-    rel = os.path.relpath(path, root)
     print(json.dumps({"decision": "block", "reason": (
-        f"PLAN {rel}: task {task[0]} '{task[1]}' not done — finish it, mark it status=\"done\" in PLAN.md, "
+        f"PLAN {path}: task {task[0]} '{task[1]}' not done — finish it, mark it status=\"done\" in PLAN.md, "
         "or set **Status:** paused (dev references/plan-format.md). Stop again and it passes.")}))
     break
 PY

@@ -5,6 +5,8 @@ import os
 import subprocess
 import tempfile
 
+from harness_state import specs
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RECALL = os.path.join(ROOT, "plugins", "dev", "hooks", "plan-recall.sh")
 GATE = os.path.join(ROOT, "plugins", "dev", "hooks", "plan-gate.sh")
@@ -45,8 +47,8 @@ PLAN = """# Plan — pin chat
 def repo(status="active", slug="pin-chat", plan=PLAN):
     path = tempfile.mkdtemp(prefix="plan-hooks-")
     subprocess.run(["git", "-C", path, "init", "-q"], check=True)
-    os.makedirs(os.path.join(path, "specs", slug))
-    with open(os.path.join(path, "specs", slug, "PLAN.md"), "w") as f:
+    os.makedirs(specs(path, slug))
+    with open(specs(path, slug, "PLAN.md"), "w") as f:
         f.write(plan.format(status=status))
     return path
 
@@ -90,8 +92,8 @@ def test_recall_is_silent_for_paused_draft_and_complete_plans():
 def test_recall_caps_at_two_plans():
     path = repo()
     for slug in ("b-plan", "c-plan"):
-        os.makedirs(os.path.join(path, "specs", slug))
-        with open(os.path.join(path, "specs", slug, "PLAN.md"), "w") as f:
+        os.makedirs(specs(path, slug))
+        with open(specs(path, slug, "PLAN.md"), "w") as f:
             f.write(PLAN.format(status="active"))
     assert recall(path).count("Active plan ") == 2
 
@@ -105,7 +107,7 @@ def test_gate_blocks_once_then_the_retry_passes():
     path = repo()
     first = gate(path)
     assert first["decision"] == "block"
-    assert "PLAN specs/pin-chat/PLAN.md: task 1.2 'Expose POST /chats/:id/pin and the unpin route' not done" in first["reason"]
+    assert f"PLAN {specs(path, 'pin-chat', 'PLAN.md')}: task 1.2 'Expose POST /chats/:id/pin and the unpin route' not done" in first["reason"]
     assert "paused" in first["reason"]
     assert gate(path, active=True) == {}
 

@@ -107,7 +107,7 @@ your-project/
     └── skills/ hooks/         ← only in standalone mode
 ```
 
-`specs/` is added to `.gitignore`. Then scan the generated `CLAUDE.md` once (Key Rules and Common Commands). Your own preferences and decisions are kept by Claude Code's auto memory (`~/.claude/projects/<project>/memory/`), not in the repo.
+`specs/` is added to `.gitignore` as a safety net: plans and the handoff live outside the repo, in `~/.local/share/claude-harness/repos/<repo>-<hash>/specs/`. Then scan the generated `CLAUDE.md` once (Key Rules and Common Commands). Your own preferences and decisions are kept by Claude Code's auto memory (`~/.claude/projects/<project>/memory/`), not in the repo.
 
 ## 5. First session
 
@@ -175,7 +175,7 @@ Finish: `/verify-done` before saying done, `/review-checklist` before the PR, `/
 ## 9. Ending a session
 
 - `/compact` when the conversation is long or you are leaving: summarises the work, writes `specs/HANDOFF.md` for the next session, merges learnings into memory. The `compact-advisor` hook suggests it past 200k tokens of context.
-- `/compound` after a session with a hard bug or a decision worth keeping: writes a lesson to `docs/solutions/`. Lessons are also captured on their own: `learn-capture` proposes them every 50 tool calls from a scrubbed digest, and `learn-promote` lands the valid ones at the next session start.
+- `/compound` after a session with a hard bug or a decision worth keeping: writes a lesson to `.claude/solutions/` (team), your state dir (personal) or the global folder. Lessons are also captured on their own: `learn-capture` proposes them every 50 tool calls from a scrubbed digest, and `learn-promote` lands the valid ones at the next session start.
 
 ## 10. Updating
 
@@ -200,7 +200,7 @@ Hook and CI changes take effect in a new session, not the current one. Plugin ve
 
 **A skill did not fire, or the wrong one did.** Name it: `/fix-bug …`, or `/<plugin>:<skill>` when two plugins define the same name. From a clone, `bash scripts/check.sh` runs the routing eval; `/diagnose-session` (lead) reads the transcript and says why.
 
-**`HANDOFF.md` not loading.** The project `CLAUDE.md` must contain the Session Resume line `cat specs/HANDOFF.md 2>/dev/null && rm -f specs/HANDOFF.md`, or `guards` must be installed (its `session-resume` hook injects it).
+**`HANDOFF.md` not loading.** `guards` must be installed: its `session-resume` hook injects `specs/HANDOFF.md` from the repo's state dir (`python3 -I <core>/scripts/learn-promote.py --state-dir` prints it).
 
 **Claude forgot last session.** `/compact` was not run, so there was no `specs/HANDOFF.md`. Claude Code truncates its auto memory index (`~/.claude/projects/<project>/memory/MEMORY.md`) after 200 lines: delete stale entries and their files.
 

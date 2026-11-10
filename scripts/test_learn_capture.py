@@ -37,7 +37,7 @@ def setup():
     write_transcript(transcript)
     env = {**os.environ, "PATH": fakebin + os.pathsep + os.environ["PATH"], "HOME": base,
            "FAKE_CLAUDE_LOG": os.path.join(base, "log")}
-    for k in ("HARNESS_LEARN", "HARNESS_LEARN_CHILD"):
+    for k in ("HARNESS_LEARN", "HARNESS_LEARN_CHILD", "XDG_DATA_HOME"):
         env.pop(k, None)
     return {"repo": repo, "transcript": transcript, "env": env, "log": env["FAKE_CLAUDE_LOG"],
             "state": os.path.join(repo, ".git", "claude-learn")}
@@ -135,8 +135,8 @@ def test_reply_array_becomes_one_queue_file_per_lesson():
 def test_personal_lessons_are_compared_and_marked_used():
     s = setup()
     promote = os.path.join(os.path.dirname(HOOK), "..", "scripts", "learn-promote.py")
-    folder = subprocess.run(["python3", promote, "--personal-dir"], cwd=s["repo"], capture_output=True, text=True,
-                            env=s["env"], check=True).stdout.strip()
+    folder = subprocess.run(["python3", promote, "--state-dir"], cwd=s["repo"], capture_output=True, text=True,
+                            env=s["env"], check=True).stdout.strip() + "/solutions"
     os.makedirs(folder)
     with open(os.path.join(folder, "INDEX.md"), "w") as f:
         f.write("# Personal\n\n- [my-local-path](my-local-path.md) — Run pnpm from my checkout — `med`\n")

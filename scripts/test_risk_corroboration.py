@@ -7,6 +7,8 @@ import os
 import subprocess
 import tempfile
 
+from harness_state import specs
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOK = os.path.join(ROOT, "plugins", "guards", "hooks", "risk-corroboration.sh")
 
@@ -23,7 +25,7 @@ def repo(lane=None, risky=True):
     git = lambda *a: subprocess.run(["git", "-C", path, *a], check=True, capture_output=True)
     git("init", "-q")
     if lane:
-        write(path, "specs/x/SUMMARY.md", f"Lane: {lane}\n")
+        write(specs(path), "x/SUMMARY.md", f"Lane: {lane}\n")
     if risky:
         write(path, "db/migrations/001_init.sql", "CREATE TABLE t (id int);\n")
         write(path, "src/auth.py", "def login(password):\n    return bcrypt.hashpw(password)\n")

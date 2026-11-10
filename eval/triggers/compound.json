@@ -10,7 +10,7 @@
       "top_k": 3
     },
     {
-      "prompt": "save the patterns that worked in docs/solutions",
+      "prompt": "save the patterns that worked in .claude/solutions",
       "top_k": 3
     }
   ],

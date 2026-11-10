@@ -8,7 +8,7 @@
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
 
-HOOK_INPUT="$INPUT" python3 -I - <<'PY' 2>/dev/null || true
+HOOK_INPUT="$INPUT" STATE_LIB="$(dirname "$0")/../hooks/lib/state-dir.sh" python3 -I - <<'PY' 2>/dev/null || true
 import glob, json, os, re, subprocess, sys
 
 WINDOW = 200_000  # the transcript fallback has no window size; the docs' default
@@ -56,8 +56,19 @@ def context_pct(ev):
     return None if used is None else min(100, used * 100 // WINDOW)
 
 
-def active_plan(root):
-    plans = [p for p in glob.glob(os.path.join(root, "specs", "*", "PLAN.md"))
+def state_dir(cwd):
+    try:
+        r = subprocess.run(["bash", "-c", '. "$1" && state_dir "$2"', "_", os.environ["STATE_LIB"], cwd],
+                           capture_output=True, text=True, timeout=2)
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return r.stdout.strip()
+
+
+def active_plan(state):
+    if not state:
+        return None
+    plans = [p for p in glob.glob(os.path.join(state, "specs", "*", "PLAN.md"))
              if re.search(r"(?im)^\W*Status\W*:\W*active\b", open(p, encoding="utf-8", errors="replace").read())]
     return plans[0] if len(plans) == 1 else None
 
@@ -110,8 +121,7 @@ try:
         # Same shape ticket-gate.sh reads: <type>/<ID>-<slug> with ID = 412 or JIRA-412.
         m = re.match(r"^[\w.-]+/([A-Za-z]+-\d+|\d+)(?:[-_]|$)", branch)
         segments.append(branch + (f" #{m.group(1)}" if m else ""))
-    root = git(cwd, "rev-parse", "--show-toplevel") or cwd
-    plan = active_plan(root)
+    plan = active_plan(state_dir(cwd))
     if plan:
         seg = plan_segment(plan)
         if seg:

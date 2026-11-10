@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # learn-capture.sh — lessons capture themselves: every 50 tool calls a background haiku reflector proposes them.
 # PreToolUse (every tool): counts calls in <git-common-dir>/claude-learn/<session_id>.count; a Read of a
-#   .claude/docs/solutions/*.md lesson marks it used (learn-promote.py --touch), so it is not retired.
+#   lesson (.claude/solutions/, or the personal and global folders of lib/state-dir.sh) marks it used (learn-promote.py --touch), so it is not retired.
 # Stop: at >= 50 calls it resets the count, writes a digest of the transcript since the last run (user and
 #   assistant text plus tool names; never tool input or output; secret-patterns.txt scrubbed; last ~20 KB)
 #   to claude-learn/digests/, and starts `claude -p --model haiku` in the background with learn-reflector.md
@@ -33,7 +33,7 @@ if [ "$EVENT" = "PreToolUse" ]; then
   printf '%s' $((COUNT + 1)) >"$COUNT_FILE" 2>/dev/null
   if [ "$(field tool_name)" = "Read" ]; then
     FILE="$(field file_path)"
-    case "$FILE" in */docs/solutions/*.md | */claude-learn/solutions/*/*.md) python3 -I "$PROMOTE" --touch "$FILE" >/dev/null 2>&1 ;; esac
+    case "$FILE" in */.claude/solutions/*.md | */claude-harness/*/solutions/*.md) python3 -I "$PROMOTE" --touch "$FILE" >/dev/null 2>&1 ;; esac
   fi
   exit 0
 fi
@@ -47,8 +47,11 @@ TOP="$(git -C "${CWD:-.}" rev-parse --show-toplevel 2>/dev/null)" || exit 0
 RUN="$SID-$(date +%s)"
 mkdir -p "$STATE/digests" "$STATE/queue" 2>/dev/null || exit 0
 
-PERSONAL="$(cd "$TOP" && python3 -I "$PROMOTE" --personal-dir 2>/dev/null)"
-HOOK_INPUT="$INPUT" STATE="$STATE" RUN="$RUN" TOP="$TOP" HERE="$HERE" SID="$SID" PERSONAL="$PERSONAL" python3 -I - <<'PY' || exit 0
+. "$HERE/lib/state-dir.sh"
+PERSONAL="$(state_dir "$TOP")/solutions"
+GLOBAL="$(harness_home)/global/solutions"
+HOOK_INPUT="$INPUT" STATE="$STATE" RUN="$RUN" TOP="$TOP" HERE="$HERE" SID="$SID" PERSONAL="$PERSONAL" \
+  GLOBAL="$GLOBAL" python3 -I - <<'PY' || exit 0
 import glob, json, os, re, sys
 
 CAP = 20_000
@@ -107,9 +110,8 @@ if not text.strip():
     sys.exit(1)
 
 index = []
-for idx in (os.path.join(env["TOP"], ".claude", "docs", "solutions", "INDEX.md"),
-            os.path.join(env["PERSONAL"], "INDEX.md") if env["PERSONAL"] else "",
-            os.path.expanduser("~/.claude/docs/solutions/INDEX.md")):
+for idx in (os.path.join(env["TOP"], ".claude", "solutions", "INDEX.md"),
+            os.path.join(env["PERSONAL"], "INDEX.md"), os.path.join(env["GLOBAL"], "INDEX.md")):
     try:
         index += [l for l in open(idx, encoding="utf-8").read().splitlines() if l.startswith("- [")]
     except OSError:

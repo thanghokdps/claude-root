@@ -6,9 +6,12 @@ Portable skill/agent/hook/rule library. Distributed to `~/.claude/` and bootstra
 
 ## Session Resume (read FIRST every session)
 
+The core and guards hooks inject the handoff and name the lesson indexes at session start. Without them:
+
 ```bash
-cat specs/HANDOFF.md 2>/dev/null && rm -f specs/HANDOFF.md
-cat ~/.claude/docs/solutions/INDEX.md 2>/dev/null
+S=$(python3 -I plugins/core/scripts/learn-promote.py --state-dir)
+cat "$S/specs/HANDOFF.md" 2>/dev/null && rm -f "$S/specs/HANDOFF.md"
+cat ~/.local/share/claude-harness/global/solutions/INDEX.md 2>/dev/null
 ```
 
 ---

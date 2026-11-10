@@ -45,6 +45,16 @@ json.dump(sorted(on), open(state, "w"))
 """
 
 
+LAST_HOME = [None]  # the HOME the last install() ran with
+
+
+def test_state_root_is_granted():
+    install()
+    settings = json.load(open(os.path.join(LAST_HOME[0], ".claude", "settings.json")))
+    assert settings["permissions"]["additionalDirectories"] == [
+        os.path.join(LAST_HOME[0], ".local", "share", "claude-harness", "repos")]
+
+
 def kit_copy(base):
     """The files install.sh reads, outside any git repo so remote-drift.sh stays offline."""
     kit = os.path.join(base, "kit")
@@ -75,8 +85,10 @@ def install(**env):
     os.chmod(fake, os.stat(fake).st_mode | stat.S_IEXEC)
     full_env = {**os.environ, "HOME": home, "PATH": f"{bin_dir}:{os.environ['PATH']}",
                 "FAKE_KIT": kit, "FAKE_STATE": state, **env}
+    full_env.pop("XDG_DATA_HOME", None)
     r = subprocess.run(["bash", os.path.join(kit, "scripts", "install.sh")], capture_output=True, text=True, env=full_env)
     assert r.returncode == 0, r.stdout + r.stderr
+    LAST_HOME[0] = home
     with open(state) as f:
         return r.stdout, set(json.load(f))
 

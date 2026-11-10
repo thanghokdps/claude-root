@@ -16,7 +16,7 @@
   ],
   "negative": [
     {
-      "prompt": "crystallize learnings from this session into docs/solutions",
+      "prompt": "crystallize learnings from this session into .claude/solutions",
       "owner": "compound"
     }
   ]

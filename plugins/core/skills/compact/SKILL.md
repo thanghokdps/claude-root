@@ -98,8 +98,9 @@ WIP: <files or "none">
 ## Context to reload
 
 - .claude/docs/index.md
-- .claude/docs/solutions/INDEX.md
-- ~/.claude/docs/solutions/INDEX.md
+- .claude/solutions/INDEX.md
+- <state dir>/solutions/INDEX.md
+- ~/.local/share/claude-harness/global/solutions/INDEX.md
 ```
 
 ---
@@ -108,7 +109,7 @@ WIP: <files or "none">
 
 For each item in "Key decisions" and "Discoveries":
 
-- Does it belong in `docs/solutions/`? (Is it surprising? Non-obvious? Would a future agent repeat the mistake?)
+- Does it belong in a `solutions/` folder (`/compound`)? (Is it surprising? Non-obvious? Would a future agent repeat the mistake?)
 - If yes → write it now (don't wait for `/compound`)
 - If no → leave it in HANDOFF.md only
 

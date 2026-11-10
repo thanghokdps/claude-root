@@ -9,15 +9,16 @@ cd "$(project_dir "$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)")
 REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null)"
 [ -z "$REPO_DIR" ] && exit 0
 
-SPECS_DIR="$REPO_DIR/specs"
-HANDOFF="$SPECS_DIR/HANDOFF.md"
-mkdir -p "$SPECS_DIR"
+. "$(dirname "$0")/lib/state-dir.sh"
+SPECS_DIR="$(state_dir "$REPO_DIR")/specs" || exit 0
+HANDOFF="$(handoff_file "$REPO_DIR")" || exit 0
+mkdir -p "$SPECS_DIR" || exit 0
 
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M')
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "detached")
 
 # Collect open specs: a PLAN.md marked **Status:** complete (plan-format.md) is done.
-OPEN_SPECS=$(ls "$REPO_DIR/specs"/*/SUMMARY.md 2>/dev/null | while read f; do
+OPEN_SPECS=$(ls "$SPECS_DIR"/*/SUMMARY.md 2>/dev/null | while read f; do
   slug=$(basename "$(dirname "$f")")
   lane=$(grep -iE '^Lane:' "$f" 2>/dev/null | head -1 | sed 's/Lane: *//')
   status=$(grep -m1 -iE '^\*\*Status:\*\*' "$(dirname "$f")/PLAN.md" 2>/dev/null | sed -E 's/^\*\*Status:\*\* *//I')
@@ -35,7 +36,7 @@ fi
 LAST_REPLY=$(printf '%s\n' "$LAST_REPLY" | tail -n 25 | sed 's/^/> /')
 
 # Collect unresolved escalations
-ESCALATIONS=$(grep -rl "decision: pending" "$REPO_DIR/specs" 2>/dev/null | sed 's|.*/specs/||;s|/.*||' | sort -u | sed 's/^/  - /')
+ESCALATIONS=$(grep -rl "decision: pending" "$SPECS_DIR" 2>/dev/null | sed "s|^$SPECS_DIR/||;s|/.*||" | sort -u | sed 's/^/  - /')
 
 cat > "$HANDOFF" << EOF
 # Session Handoff — $TIMESTAMP
@@ -65,5 +66,5 @@ if [ "$TOTAL" -ge 5 ]; then
   echo "> ⚠ $TOTAL files changed this session. Run \`/compound\` to crystallize learnings before closing." >> "$HANDOFF"
 fi
 
-echo "[HANDOFF] Written to specs/HANDOFF.md" >&2
+echo "[HANDOFF] Written to $HANDOFF" >&2
 exit 0

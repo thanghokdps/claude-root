@@ -5,6 +5,8 @@ import os
 import subprocess
 import tempfile
 
+from harness_state import specs
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INIT = os.path.join(ROOT, "plugins", "core", "scripts", "init.sh")
 
@@ -16,8 +18,9 @@ def test_copied_guards_hooks_find_their_helper():
     subprocess.run(["bash", INIT, project], capture_output=True, text=True, env=env, check=True, timeout=120)
     hooks = os.path.join(project, ".claude", "hooks")
     assert os.path.isfile(os.path.join(hooks, "lib", "project-dir.sh"))
-    os.makedirs(os.path.join(project, "specs"), exist_ok=True)
-    with open(os.path.join(project, "specs", "HANDOFF.md"), "w") as f:
+    assert os.path.isfile(os.path.join(hooks, "lib", "state-dir.sh"))
+    os.makedirs(specs(project), exist_ok=True)
+    with open(specs(project, "HANDOFF.md"), "w") as f:
         f.write("PROJECT-HANDOFF\n")
     out = subprocess.run([os.path.join(hooks, "session-resume.sh")], input=json.dumps({"cwd": project}),
                          capture_output=True, text=True, env={**os.environ, "CLAUDE_PROJECT_DIR": project})
@@ -49,6 +52,7 @@ def test_gitignore_gets_per_person_claude_state_once():
     with open(os.path.join(project, ".gitignore")) as f:
         assert f.read() == "node_modules/\nspecs/\n.claude/settings.local.json\n.claude/worktrees/\n"
     assert not os.path.exists(os.path.join(project, ".claude", "templates"))  # the skills read them from the plugin
+    assert not os.path.exists(os.path.join(project, "specs"))  # plans and the handoff live outside the repo
 
 
 if __name__ == "__main__":

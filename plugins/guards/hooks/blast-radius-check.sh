@@ -30,12 +30,14 @@ case "$REL" in
   specs/*|docs/*|*.md|.claude/*) exit 0 ;;
 esac
 
-# Find the active PLAN.md
+# Find the active PLAN.md in the repo's state dir
+. "$(dirname "$0")/lib/state-dir.sh"
+SPECS="$(state_dir "$REPO_DIR")/specs" || exit 0
 PLAN=""
-for p in $(ls -t "$REPO_DIR"/specs/*/PLAN.md 2>/dev/null); do
+for p in $(ls -t "$SPECS"/*/PLAN.md 2>/dev/null); do
   if grep -qiE '^status:[[:space:]]*active' "$p"; then PLAN="$p"; break; fi
 done
-[ -z "$PLAN" ] && PLAN=$(ls -t "$REPO_DIR"/specs/*/PLAN.md 2>/dev/null | head -1)
+[ -z "$PLAN" ] && PLAN=$(ls -t "$SPECS"/*/PLAN.md 2>/dev/null | head -1)
 [ -z "$PLAN" ] && exit 0
 
 DECLARED=$(grep -oE '<files>[^<]*</files>' "$PLAN" 2>/dev/null \
@@ -61,7 +63,7 @@ if [ "${BLAST_RADIUS_STRICT:-0}" = "1" ]; then
   exit 2
 fi
 
-jq -cn --arg f "$REL" --arg p "${PLAN#"$REPO_DIR"/}" '{
+jq -cn --arg f "$REL" --arg p "$PLAN" '{
   hookSpecificOutput: {
     hookEventName: "PostToolUse",
     additionalContext: ("blast-radius: edited " + $f + " which is NOT in the active plan <files> set (" + $p + "). If intentional, add it to the plan; otherwise treat as scope creep.")

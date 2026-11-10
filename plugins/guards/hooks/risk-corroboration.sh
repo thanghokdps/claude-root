@@ -53,7 +53,8 @@ for f in $(echo "$STAGED_PATHS" | grep -E '(^|/)SUMMARY\.md$' || true); do
 done
 
 if [ -z "$LANE" ]; then
-  RECENT=$(ls -t specs/*/SUMMARY.md 2>/dev/null | head -1)
+  . "$(dirname "$0")/lib/state-dir.sh"
+  RECENT=$(ls -t "$(state_dir "$REPO_DIR")"/specs/*/SUMMARY.md 2>/dev/null | head -1)
   [ -n "$RECENT" ] && LANE=$(grep -iE '^Lane:' "$RECENT" | head -1)
 fi
 

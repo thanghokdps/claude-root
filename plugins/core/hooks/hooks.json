@@ -86,6 +86,15 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/sensitive-path.sh"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/specs-guard.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
