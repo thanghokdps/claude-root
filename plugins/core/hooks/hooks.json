@@ -88,6 +88,17 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/sensitive-path.sh post"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
