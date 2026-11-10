@@ -43,7 +43,7 @@ Ignore: routine implementation details, boilerplate, things already in docs.
 
 Assign each learning:
 
-- **Scope**: `global` (applies to any project) or `project` (specific to this codebase)
+- **Scope**: `global` (applies to any project), `project` (this codebase, and the whole team needs it) or `personal` (this codebase, only this user needs it: their machine, paths, local setup). Unsure between `project` and `personal` → `personal`
 - **Category**: one of:
   - `mistakes` — things agents got wrong
   - `patterns` — approaches that worked well
@@ -57,7 +57,8 @@ Assign each learning:
 ## Step 3 — Write solution files
 
 **For global learnings** → write to `~/.claude/docs/solutions/<slug>.md`
-**For project learnings** → write to `.claude/docs/solutions/<slug>.md`
+**For project learnings** → write to `.claude/docs/solutions/<slug>.md` and commit it with the work
+**For personal learnings** → write to the folder `python3 -I ${CLAUDE_PLUGIN_ROOT}/scripts/learn-promote.py --personal-dir` prints (`~/.claude/claude-learn/solutions/<repo>-<hash>/`, outside the repo, never committed)
 
 Flat, no category folders: `learn-promote.py` dedupes, bumps and retires only `*.md` directly in the folder.
 
@@ -102,8 +103,9 @@ applies_to: <global|project-name>
 
 **Global**: update `~/.claude/docs/solutions/INDEX.md`
 **Project**: update `.claude/docs/solutions/INDEX.md`
+**Personal**: update `INDEX.md` in the `--personal-dir` folder
 
-Format:
+Format (links are flat: the category is a heading, never a folder):
 
 ```markdown
 # Solutions Index
@@ -112,29 +114,29 @@ Format:
 
 ## Critical patterns (read before every task)
 
-- [slug](category/slug.md) — one-line summary — `confirmed_at`
+- [slug](slug.md) — one-line summary — `confirmed_at`
 
 ## By category
 
 ### mistakes
 
-- [slug](mistakes/slug.md) — one-line summary
+- [slug](slug.md) — one-line summary
 
 ### patterns
 
-- [slug](patterns/slug.md) — one-line summary
+- [slug](slug.md) — one-line summary
 
 ### decisions
 
-- [slug](decisions/slug.md) — one-line summary
+- [slug](slug.md) — one-line summary
 
 ### constraints
 
-- [slug](constraints/slug.md) — one-line summary
+- [slug](slug.md) — one-line summary
 
 ### solutions
 
-- [slug](solutions/slug.md) — one-line summary
+- [slug](slug.md) — one-line summary
 ```
 
 ---
@@ -149,8 +151,9 @@ Learnings crystallized: N
   normal:   <slugs>
 
 Written to:
-  global:  ~/.claude/docs/solutions/
-  project: .claude/docs/solutions/
+  global:   ~/.claude/docs/solutions/
+  project:  .claude/docs/solutions/ (commit it)
+  personal: ~/.claude/claude-learn/solutions/<repo>-<hash>/
 
 Next session: agents will load these automatically via docs/solutions/INDEX.md
 ```

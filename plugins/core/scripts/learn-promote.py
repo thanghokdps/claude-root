@@ -4,20 +4,24 @@
 Drain: each <git-common-dir>/claude-learn/queue/*.json is validated (schema, no secret left, no absolute path
 in a global lesson, body <= 15 lines, evidence quoted from a saved digest, not a duplicate of an INDEX line).
 A project-level pass becomes .claude/docs/solutions/<slug>.md (confidence, ttl_days: 90, seen: 1, last_used)
-plus an INDEX line; a global-level pass is only recorded for Promote, never written into the repo. A failure
+plus an INDEX line, committed for the team; a personal-level pass lands the same way in this person's folder for
+the repo, ~/.claude/claude-learn/solutions/<repo>-<hash>/, outside the working tree; a global-level pass is only
+recorded for Promote, never written into the repo. A failure
 moves to queue/rejected/ with reject_reason. A duplicate also counts as a recurrence: the existing lesson gets
 seen + 1 and last_used today.
 Retire: an auto-captured lesson (it has ttl_days) whose last_used is older than ttl_days moves to archive/
-and leaves the INDEX. Never deleted. Applies to the project and the global solutions folder.
+and leaves the INDEX. Never deleted. Applies to the project, personal and global solutions folders.
 Promote: a global-level slug seen in >= 2 repos (~/.claude/claude-learn/repos.json) is copied to
 ~/.claude/docs/solutions/ with seen: N.
 
 Usage: SessionStart hook (event JSON on stdin; prints a systemMessage when something changed) ·
---now (drain the current repo now and print a report; /compound runs it) · --touch <lesson.md> (mark used).
+--now (drain the current repo now and print a report; /compound runs it) · --touch <lesson.md> (mark used) ·
+--personal-dir (print this repo's personal folder; session-resume.sh computes the same path).
 HARNESS_LEARN=0 or HARNESS_LEARN_CHILD set: the hook mode does nothing. Never exits non-zero.
 """
 import datetime
 import glob
+import hashlib
 import json
 import os
 import re
@@ -138,8 +142,8 @@ def check(p, digests, indexes, patterns):
         return "schema: slug must be kebab-case, 2-64 characters"
     if "\n" in p["title"].strip():
         return "schema: title must be one line"
-    if p["level"] not in ("project", "global"):
-        return "schema: level must be project or global"
+    if p["level"] not in ("project", "personal", "global"):
+        return "schema: level must be project, personal or global"
     if p["confidence"] not in ("low", "med", "high"):
         return "schema: confidence must be low, med or high"
     fields = "\n".join(p[k] for k in ("slug", "title", "body", "evidence"))
@@ -194,10 +198,17 @@ def promote(p, repo_id, home_solutions):
     return True
 
 
-def drain(state, solutions, home_solutions, repo_id, counts):
+def personal_dir(common):
+    """This person's lesson folder for the repo: keyed by its git dir, so every worktree shares it."""
+    real = os.path.realpath(common)
+    name = os.path.basename(os.path.dirname(real)) + "-" + hashlib.sha1(real.encode()).hexdigest()[:8]
+    return os.path.join(os.path.expanduser("~"), ".claude", "claude-learn", "solutions", name)
+
+
+def drain(state, solutions, personal, home_solutions, repo_id, counts):
     queue = os.path.join(state, "queue")
     digests = [squash(read(f)) for f in glob.glob(os.path.join(state, "digests", "*.txt"))]
-    indexes = [os.path.join(solutions, "INDEX.md"), os.path.join(home_solutions, "INDEX.md")]
+    indexes = [os.path.join(d, "INDEX.md") for d in (solutions, personal, home_solutions)]
     patterns = secret_patterns()
     for path in sorted(glob.glob(os.path.join(queue, "*.json"))):
         claimed = os.path.join(queue, f".{os.path.basename(path)}.{os.getpid()}")
@@ -220,8 +231,9 @@ def drain(state, solutions, home_solutions, repo_id, counts):
             # Only repos.json remembers it until a second repo sees it: a team repo never carries kit lessons.
             counts["promoted" if promote(p, repo_id, home_solutions) else "staged"] += 1
         else:
-            write(os.path.join(solutions, p["slug"] + ".md"), lesson_text(p))
-            add_index_line(os.path.join(solutions, "INDEX.md"), p["slug"], p["title"], p["confidence"])
+            folder = personal if p["level"] == "personal" else solutions
+            write(os.path.join(folder, p["slug"] + ".md"), lesson_text(p))
+            add_index_line(os.path.join(folder, "INDEX.md"), p["slug"], p["title"], p["confidence"])
             counts["added"] += 1
         os.remove(claimed)
 
@@ -254,11 +266,12 @@ def run(cwd):
         return counts, None
     state = os.path.join(common, "claude-learn")
     solutions = os.path.join(top, ".claude", "docs", "solutions")
+    personal = personal_dir(common)
     home_solutions = os.path.join(os.path.expanduser("~"), ".claude", "docs", "solutions")
     if os.path.isdir(os.path.join(state, "queue")):
-        drain(state, solutions, home_solutions, os.path.realpath(common), counts)
-    retire(solutions, counts)
-    retire(home_solutions, counts)
+        drain(state, solutions, personal, home_solutions, os.path.realpath(common), counts)
+    for folder in (solutions, personal, home_solutions):
+        retire(folder, counts)
     return counts, os.path.join(state, "queue", "rejected")
 
 
@@ -269,6 +282,10 @@ def report(counts):
 def main(argv):
     if argv[:1] == ["--touch"] and len(argv) == 2:
         set_fields(argv[1], last_used=TODAY)
+    elif argv[:1] == ["--personal-dir"]:
+        common = git(os.getcwd(), "--git-common-dir")
+        if common:
+            print(personal_dir(common))
     elif argv[:1] == ["--now"]:
         counts, rejected = run(os.getcwd())
         print(f"learn-promote: {report(counts)}" + (f" (rejects in {rejected})" if counts["rejected"] else ""))

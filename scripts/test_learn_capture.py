@@ -132,6 +132,26 @@ def test_reply_array_becomes_one_queue_file_per_lesson():
     assert all("/" not in os.path.basename(f)[:-5] for f in found)  # names never come from the reply
 
 
+def test_personal_lessons_are_compared_and_marked_used():
+    s = setup()
+    promote = os.path.join(os.path.dirname(HOOK), "..", "scripts", "learn-promote.py")
+    folder = subprocess.run(["python3", promote, "--personal-dir"], cwd=s["repo"], capture_output=True, text=True,
+                            env=s["env"], check=True).stdout.strip()
+    os.makedirs(folder)
+    with open(os.path.join(folder, "INDEX.md"), "w") as f:
+        f.write("# Personal\n\n- [my-local-path](my-local-path.md) — Run pnpm from my checkout — `med`\n")
+    lesson = os.path.join(folder, "my-local-path.md")
+    with open(lesson, "w") as f:
+        f.write("---\ntitle: x\nttl_days: 90\nseen: 1\nlast_used: 2020-01-01\n---\n\n# x\n")
+    hook(s, "PreToolUse", tool_name="Read", tool_input={"file_path": lesson}, file_path=lesson)
+    assert "last_used: 2020-01-01" not in read(lesson)
+    calls(s, 50)
+    hook(s, "Stop")
+    spawns(s, 1)
+    prompt = read(glob.glob(os.path.join(s["state"], "digests", "*.prompt"))[0])
+    assert "[my-local-path](my-local-path.md)" in prompt  # the reflector sees it, so it is not proposed again
+
+
 def test_empty_array_queues_nothing_and_garbage_is_queued_raw():
     s = setup()
     calls(s, 50)

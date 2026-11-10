@@ -77,6 +77,24 @@ def test_resume_injects_once_and_deletes_the_file():
     assert not os.path.exists(os.path.join(r, "specs", "HANDOFF.md"))
 
 
+def resume(r, home):
+    hook = os.path.join(ROOT, "plugins", "guards", "hooks", "session-resume.sh")
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": r, "HOME": home}
+    return subprocess.run([hook], input=json.dumps({"cwd": r}), capture_output=True, text=True, check=True, env=env)
+
+
+def test_resume_points_at_the_personal_index_without_a_handoff():
+    r, home = repo(), tempfile.mkdtemp()
+    promote = os.path.join(ROOT, "plugins", "core", "scripts", "learn-promote.py")
+    folder = subprocess.run(["python3", promote, "--personal-dir"], cwd=r, capture_output=True, text=True,
+                            check=True, env={**os.environ, "HOME": home}).stdout.strip()
+    assert resume(r, home).stdout == ""  # nothing to point at yet
+    os.makedirs(folder)
+    open(os.path.join(folder, "INDEX.md"), "w").write("# Personal\n")
+    context = json.loads(resume(r, home).stdout)["hookSpecificOutput"]["additionalContext"]
+    assert os.path.join(folder, "INDEX.md") in context and "Previous session handoff" not in context
+
+
 def test_a_long_reply_is_cut_to_its_tail():
     r = repo()
     text = handoff(r, last_assistant_message="\n".join(f"line {i}" for i in range(100)))
