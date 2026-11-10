@@ -23,7 +23,7 @@ A **source library** and the `harness` marketplace of role plugins. `claude plug
   plugins/<plugin>/                ← self-contained: .claude-plugin/plugin.json (+ dependencies), skills/, references/
     progress    hooks only: skill checklist on start, ✅ per checkpoint, 🏁/⏹ at the end (never blocks)
     core        verify-done btw compact compound sync-memory project-init docs-sync constraints + branch-guard, edit-guard, secret-guard, sensitive-path, compact-advisor, step-limit, repo-profile, learn-capture, stale-install, missing-tools hooks (always on; repo-profile enables the role packs frontend, backend, mobile, devops, ai and the domain pack workplace per repo) — plus scripts/init.sh and
-                everything it copies: templates/ memory/ rules/ (rules/*.md → ~/.claude/rules/; rules/stacks/ holds only typescript, javascript, jest) hooks/stacks/ → progress
+                everything it copies: templates/ rules/ (rules/*.md → ~/.claude/rules/; rules/stacks/ holds only jest) hooks/stacks/ → progress
     plan        breakdown kickoff brainstorming grill domain-model writing-plans codebase-design design-direction → progress
                 breakdown: requirement → tasks with criteria + estimates → issues on GitHub/GitLab/Jira → /ticket each
     review      review-checklist review-diff blast-radius create-pr resolve-pr-feedback debt-ledger repo-audit → progress

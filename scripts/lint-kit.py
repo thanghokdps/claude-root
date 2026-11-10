@@ -317,7 +317,7 @@ def check_role_packs():
     for plugin in plugin_names():
         if plugin not in ROLE_PACKS and os.path.isdir(os.path.join(PLUGINS_DIR, plugin, "rules", "stacks")):
             for f in os.listdir(os.path.join(PLUGINS_DIR, plugin, "rules", "stacks")):
-                if f not in ("typescript.md", "javascript.md", "jest.md"):
+                if f != "jest.md":
                     errors.append(f"plugins/{plugin}/rules/stacks/{f}: framework rules belong to a role pack's rules/")
 
 

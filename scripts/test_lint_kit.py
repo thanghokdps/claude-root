@@ -100,7 +100,7 @@ def test_listing_text_over_cap_is_flagged():
 
 
 def test_init_sh_missing_copy_source_is_flagged():
-    script = 'cp "$HARNESS_DIR/rules/stacks/nope.md" x\ncp "$HARNESS_DIR/rules/stacks/typescript.md" y\nfor r in "$HARNESS_DIR"/rules/*.md; do :; done'
+    script = 'cp "$HARNESS_DIR/rules/stacks/nope.md" x\ncp "$HARNESS_DIR/rules/stacks/jest.md" y\nfor r in "$HARNESS_DIR"/rules/*.md; do :; done'
     assert lint_kit.missing_init_sources(script, "plugins/core") == ["rules/stacks/nope.md"]
 
 
