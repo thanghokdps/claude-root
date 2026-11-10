@@ -20,6 +20,8 @@ Read by `/project-init` (Step 1b) for any repo with `tsconfig.json` or TypeScrip
 3. **Dependencies** — exact versions, both moving together: an existing `oxlint` keeps its version and `@oxlint/plugins` is added at the same one; otherwise both at the version upstream's `package.json` pins at that SHA. Use the repo's package manager, then its audit.
 4. **Config** — `oxlint.config.ts` (or merge into the existing one): `jsPlugins: [{ name: "anti-slop", specifier: "./tools/oxlint/anti-slop/index.ts" }]`, every generic rule from upstream's README, `oxc/no-accumulating-spread`, and `ignorePatterns` for `tools/oxlint/anti-slop/**` and the agent folders (`.claude/**`, `.agents/**`, `.cursor/**`, …). The Effect rule group only when the repo depends on `effect`.
 5. **Script** — `"lint:slop": "oxlint"`; the repo's `lint` script runs it after ESLint. CI runs `lint`, so nothing else changes.
+6. **ESLint** — add `tools/oxlint/anti-slop/**` to the repo's ESLint ignores: the folder is checked by Oxlint, and the repo's own ESLint rules would turn every upstream merge into lint fixes.
+7. **Rule tests** — the copied `*.test.ts` files are the only check that an edit to a rule still works, and no package's test runner reaches `tools/`. Add a root `vitest` at the repo's pinned version and a `test:slop` script that the root `test` runs after the packages: `vitest run --root tools/oxlint/anti-slop --globals --environment node --exclude '**/*-cli.test.ts'` (the `RuleTester` from `oxlint/plugins-dev` registers through vitest's globals; without `--globals` it reports "no tests"), then `node tools/oxlint/anti-slop/rules/require-readable-spacing-cli.test.ts`, a plain assert script that vitest rejects as "No test suite found".
 
 ## Severity
 
@@ -32,4 +34,4 @@ Never silence a rule inline without a comment saying why; `require-safety-commen
 
 ## Done when
 
-`pnpm lint` (or the repo's equivalent) runs anti-slop and exits 0, `UPSTREAM` records the SHA, and `.claude/docs/conventions.md` names the vendored folder as the team's to edit.
+`pnpm lint` (or the repo's equivalent) runs anti-slop and exits 0, `pnpm test` runs the rule tests and exits 0, `UPSTREAM` records the SHA, and `.claude/docs/conventions.md` names the vendored folder as the team's to edit.
