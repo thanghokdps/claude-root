@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Tests for plugins/core/scripts/sync-team.sh. Run: python3 scripts/test_sync_team.py"""
-import datetime
 import os
 import subprocess
 import tempfile
@@ -23,11 +22,11 @@ def repo(configure_user=True):
     return d
 
 
-def commit(d, name, user="me"):
+def commit(d, name, user="me", content=None):
     with open(os.path.join(d, name), "w") as f:
-        f.write(name)
+        f.write(content or name)
     git(d, "add", name)
-    git(d, "commit", "-q", "-m", f"add {name}", user=user)
+    git(d, "commit", "-q", "-m", f"add {name} by {user}", user=user)
 
 
 def sync(d):
@@ -35,75 +34,56 @@ def sync(d):
     return subprocess.run(["bash", SCRIPT, d], capture_output=True, text=True, env=env)
 
 
-def day_file(d):
-    return os.path.join(d, ".claude", "memory", "commits", datetime.date.today().isoformat() + ".md")
+def section(out, title):
+    return out.partition(title)[2].partition("\n\n")[0]
 
 
-def test_writes_my_commits_and_last_sync():
+def test_splits_my_commits_from_the_team():
     d = repo()
     commit(d, "a.txt")
     commit(d, "b.txt", user="mate")
     p = sync(d)
     assert p.returncode == 0, p.stdout + p.stderr
-    text = open(day_file(d)).read()
-    mine = text.partition("# Team changes")[0]
-    assert "**add a.txt**" in mine and "**add b.txt**" not in mine, text
-    head_mine = git(d, "log", "--author=me", "-1", "--format=%H")
-    assert open(os.path.join(d, ".claude", "memory", "commits", "last-sync.txt")).read().strip() == head_mine
+    yours, team = p.stdout.partition("Team (")[0], p.stdout.partition("Team (")[2]
+    assert "add a.txt by me" in yours and "add b.txt" not in yours, p.stdout
+    assert "[mate] add b.txt by mate" in team and "add a.txt" not in team, p.stdout
 
 
-def test_memory_index_gets_one_entry_per_day():
+def test_writes_nothing_into_the_repo():
     d = repo()
     commit(d, "a.txt")
-    os.makedirs(os.path.join(d, ".claude", "memory"))
-    open(os.path.join(d, ".claude", "memory", "MEMORY.md"), "w").write("# Memory\n")
     assert sync(d).returncode == 0
-    idx = open(os.path.join(d, ".claude", "memory", "MEMORY.md")).read()
-    assert idx.count("Commits " + datetime.date.today().isoformat()) == 1, idx
+    assert not os.path.exists(os.path.join(d, ".claude")), os.listdir(d)
+    assert git(d, "status", "--porcelain") == ""
 
 
-def test_second_run_without_index_is_a_noop_success():
+def test_flags_a_file_both_of_us_changed():
     d = repo()
-    commit(d, "a.txt")
-    sync(d)
-    sync_file = os.path.join(d, ".claude", "memory", "commits", "last-sync.txt")
-    before = open(sync_file).read()
-    p = sync(d)
-    assert p.returncode == 0 and "No new commits from you" in p.stdout, p.stdout + p.stderr
-    assert open(sync_file).read() == before
-
-
-def test_rerun_with_index_and_no_new_commits_exits_zero():
-    d = repo()
-    commit(d, "a.txt")
-    os.makedirs(os.path.join(d, ".claude", "memory"))
-    open(os.path.join(d, ".claude", "memory", "MEMORY.md"), "w").write("# Memory\n")
-    assert sync(d).returncode == 0
+    commit(d, "shared.txt")
+    commit(d, "shared.txt", user="mate", content="theirs")
     p = sync(d)
     assert p.returncode == 0, p.stdout + p.stderr
+    assert "Re-check" in p.stdout and "- shared.txt" in p.stdout, p.stdout
 
 
-def test_same_day_rerun_appends_without_duplicates():
-    d = repo()
-    commit(d, "a.txt")
-    commit(d, "b.txt")
-    assert sync(d).returncode == 0
-    commit(d, "c.txt")
-    p = sync(d)
-    assert p.returncode == 0, p.stdout + p.stderr
-    text = open(day_file(d)).read()
-    for n in ("a.txt", "b.txt", "c.txt"):
-        assert text.count(f"**add {n}**") == 1, text
-    assert text.count("name: commits-") == 1, text
-
-
-def test_team_section_lists_mate_not_me():
+def test_no_overlap_section_without_shared_files():
     d = repo()
     commit(d, "a.txt")
     commit(d, "b.txt", user="mate")
-    assert sync(d).returncode == 0
-    team = open(day_file(d)).read().partition("# Team changes")[2]
-    assert "add b.txt" in team and "[mate]" in team and "add a.txt" not in team, team
+    assert "Re-check" not in sync(d).stdout
+
+
+def test_lists_only_what_the_pull_brought_in():
+    upstream = repo()
+    commit(upstream, "old.txt", user="mate")
+    d = tempfile.mkdtemp(prefix="sync-clone-")
+    subprocess.run(["git", "clone", "-q", upstream, d], check=True, capture_output=True)
+    git(d, "config", "user.name", "me")
+    commit(upstream, "new.txt", user="mate")
+    p = sync(d)
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "Commits the pull brought in" in p.stdout and "add new.txt" in p.stdout, p.stdout
+    assert "add old.txt" not in p.stdout, p.stdout
 
 
 def test_missing_git_user_fails_with_a_clear_line():

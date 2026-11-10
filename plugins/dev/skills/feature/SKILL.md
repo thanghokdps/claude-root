@@ -142,8 +142,6 @@ git add <specific files>
 git commit -m "<type>: <what and why in one line>"
 ```
 
-After commit: `save-commit-memory.sh` hook fires automatically and saves to memory.
-
 ---
 
 ## Confidence escalation rules
@@ -155,6 +153,6 @@ Debate, never stop, when mid-task:
 - Confidence drops below medium
 - A hard gate is discovered (the debate adds an opus red team)
 - Scope needs to expand beyond the original plan
-- A teammate's recent commit conflicts with the planned approach (check `memory/commits/`)
+- A teammate's recent commit conflicts with the planned approach (check `git log --since=14.days -- <planned files>`)
 
 Only an action no rollback undoes (push, merge, deploy, delete data) waits for the user's yes.

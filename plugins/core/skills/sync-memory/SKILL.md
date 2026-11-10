@@ -1,126 +1,32 @@
 ---
 effort: low
 name: sync-memory
-description: Pulls the latest commits and rebuilds memory from your own, updating .claude/memory/commits/ and last-sync.txt. Use at the start of a session on a team project.
+description: Pulls the latest commits and summarises what came in from git log — yours, your teammates', and files you both changed. Writes nothing. Use at the start of a session on a team project.
 when_to_use: starting a session on a shared repo, or after a teammate has pushed work you have not seen
 ---
 
-# sync-memory — Pull latest + rebuild memory from your commits
+# sync-memory — Pull latest + summarise the new commits
 
 **Invoke:** `/sync-memory`
 
 **When to use:** At the start of a work session on a team project, or after returning from time away.
 
-Memory layout and what to save: `${CLAUDE_PLUGIN_ROOT}/references/memory.md`.
+Git already holds the history, so this skill keeps no state file: it reads the range the pull brought in, or the last 14 days when the pull brought nothing.
 
 ---
 
-## What it does
-
-1. Pull latest code from remote
-2. Find your last known commit (from `.claude/memory/commits/last-sync.txt`)
-3. Scan all YOUR commits from last known → HEAD
-4. Scan all TEAM commits for context (not full analysis — just titles + files)
-5. Write a memory entry summarizing what changed
-6. Flag any areas you should re-check (files teammates touched that you also touched)
-
----
-
-## Stage 0 — Check memory state
-
-Read `.claude/memory/MEMORY.md` and `.claude/memory/commits/last-sync.txt`.
-
-Report:
-
-- Last sync date
-- Last commit by you that was recorded
-- Whether memory is stale (> 2 days old)
-
-## Stage 1 — Pull latest
+## Run
 
 ```bash
-git fetch --all --prune
-git pull
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/sync-team.sh" "$(pwd)"
 ```
 
-If pull fails (conflicts): stop, report conflict files, ask user to resolve before proceeding.
+The script stashes uncommitted changes, pulls, prints your commits and the team's (top 20), lists files you and a teammate both changed, then restores the stash. Pull conflicts → it stops and says so: report the conflicting files and ask the user to resolve them before going on.
 
-## Stage 2 — Collect your commits
+## Report
 
-```bash
-# Get your commits since last known
-LAST=$(cat .claude/memory/commits/last-sync.txt 2>/dev/null || echo "")
-if [ -n "$LAST" ]; then
-  git log ${LAST}..HEAD --author="$(git config user.name)" --format="%H|%ai|%s" --no-merges
-else
-  git log --since="14.days" --author="$(git config user.name)" --format="%H|%ai|%s" --no-merges
-fi
-```
+- N commits by you, N by the team, in the range the script names
+- Every file under **Re-check**, with the teammate's commit that touched it — read that diff before editing the file
+- A teammate commit that touches a hard gate (auth, migrations, `.claude/`, public contracts): name it
 
-For each commit: list files changed, note if any are high-blast files.
-
-## Stage 3 — Collect team context
-
-```bash
-git log ${LAST}..HEAD --not --author="$(git config user.name)" --format="%H|%an|%s" --no-merges | head -30
-```
-
-**Flag overlap**: if teammate changed a file you also changed since last sync → add to "re-check" list.
-
-## Stage 4 — Write memory
-
-Write to `.claude/memory/commits/YYYY-MM-DD.md`:
-
-```markdown
----
-name: commits-YYYY-MM-DD
-description: Commits by <user> on YYYY-MM-DD; team sync
-metadata:
-  type: project
----
-
-# Commits — YYYY-MM-DD
-
-## Your commits (N)
-
-- `<hash>` — <message> [files: ...]
-
-## Team commits (N)
-
-- `<hash>` [<author>] — <message>
-
-## Re-check (files with overlapping changes)
-
-- <file> — you + <teammate> both modified
-```
-
-Update `.claude/memory/MEMORY.md` index.
-Save latest hash to `.claude/memory/commits/last-sync.txt`.
-
-## Stage 5 — Report
-
-Print to user:
-
-- N commits by you since last sync
-- N commits by team
-- Any overlap files to re-check
-- Whether any unresolved feedback memories are still open
-
----
-
-## Memory update rules
-
-- Only YOUR commits get full detail (files, diffs summary)
-- Team commits get title + author only (context, not analysis)
-- Never write to `memory/feedback/` from this skill — that's manual or from correction
-- Never overwrite today's session if it already exists — append
-
----
-
-## Script shortcut
-
-Instead of running stages manually:
-
-```bash
-.claude/harness/scripts/sync-team.sh
-```
+Nothing is written to the repo. A lesson worth keeping goes through `/compound`; a decision through Claude Code's own memory.

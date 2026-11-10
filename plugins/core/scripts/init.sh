@@ -7,17 +7,14 @@
 # What it does:
 #   1. Detect tech stack from manifests + src/ scan
 #   2. Copy appropriate rules, skills, hooks into .claude/
-#   3. Write .claude/settings.json with hooks registered
-#   4. Bootstrap memory system at .claude/memory/
-#   5. Generate project-specific CLAUDE.md
+#   3. Write .claude/settings.json with hooks registered, and the status line in settings.local.json
+#   4. Gitignore specs/ and generate project-specific CLAUDE.md
 
 set -euo pipefail
 
 HARNESS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT_DIR="${1:-$(pwd)}"
 CLAUDE_DIR="$PROJECT_DIR/.claude"
-GIT_USER="$(git -C "$PROJECT_DIR" config user.name 2>/dev/null || echo "unknown")"
-GIT_EMAIL="$(git -C "$PROJECT_DIR" config user.email 2>/dev/null || echo "")"
 PROJECT_NAME="$(basename "$PROJECT_DIR")"
 STANDALONE="${STANDALONE:-0}"
 
@@ -134,7 +131,7 @@ echo ""
 
 # specs/ lives at the project root, not under .claude/ — session-handoff.sh and every
 # skill write to $REPO_DIR/specs. Creating .claude/specs here left an empty folder forever.
-mkdir -p "$CLAUDE_DIR"/{rules,skills,hooks,memory/{feedback,project,commits,sessions}}
+mkdir -p "$CLAUDE_DIR"/{rules,skills,hooks}
 mkdir -p "$PROJECT_DIR/specs"
 
 # ─── Copy Universal Rules ────────────────────────────────────────────────────
@@ -151,9 +148,8 @@ if [ "$STANDALONE" = 1 ]; then
   done
 fi
 
-# Stack-specific rules
-has_signal "typescript" && cp "$HARNESS_DIR/rules/stacks/typescript.md"  "$CLAUDE_DIR/rules/typescript.md"  2>/dev/null || true
-has_signal "nodejs"     && cp "$HARNESS_DIR/rules/stacks/javascript.md"  "$CLAUDE_DIR/rules/javascript.md"  2>/dev/null || true
+# Stack-specific rules. TypeScript is covered by the universal rules/typescript.md; a second copy
+# loaded twice and its JS twin advised filter/map/reduce chains that anti-slop rejects.
 has_signal "jest"       && cp "$HARNESS_DIR/rules/stacks/jest.md"        "$CLAUDE_DIR/rules/jest.md"        2>/dev/null || true
 
 if [ "$STANDALONE" = 1 ]; then
@@ -255,12 +251,25 @@ if os.path.exists(out):
     existing = json.load(open(out))
     existing.pop("hooks", None)
     merged = {**existing, **merged}
-if merged.get("statusLine"):
-    print("   statusLine: kept the one already in settings.json")
-else:  # ${CLAUDE_PLUGIN_ROOT} does not resolve in statusLine, so the path is the plugin's resolved location
-    merged["statusLine"] = {"type": "command", "command": f'bash "{statusline}"'}
 open(out, "w").write(json.dumps(merged, indent=2) + "\n")
+# ${CLAUDE_PLUGIN_ROOT} does not resolve in statusLine, so the command holds this machine's plugin path:
+# it goes in the uncommitted settings.local.json, never in the shared settings.json.
+local_out = os.path.join(os.path.dirname(out), "settings.local.json")
+local = json.load(open(local_out)) if os.path.exists(local_out) else {}
+if merged.get("statusLine") or local.get("statusLine"):
+    print("   statusLine: kept the one already set")
+else:
+    local["statusLine"] = {"type": "command", "command": f'bash "{statusline}"'}
+    open(local_out, "w").write(json.dumps(local, indent=2) + "\n")
 RENDER
+
+# settings.local.json is personal: exclude it locally, as repo-profile does, without touching .gitignore.
+EXCLUDE="$(git -C "$PROJECT_DIR" rev-parse --git-path info/exclude 2>/dev/null || true)"
+if [ -n "$EXCLUDE" ]; then
+  case "$EXCLUDE" in /*) ;; *) EXCLUDE="$PROJECT_DIR/$EXCLUDE" ;; esac
+  mkdir -p "$(dirname "$EXCLUDE")"
+  grep -qxF ".claude/settings.local.json" "$EXCLUDE" 2>/dev/null || echo ".claude/settings.local.json" >> "$EXCLUDE"
+fi
 
 # ─── Drift guard: every registered hook must exist and be executable ──────────
 
@@ -284,31 +293,12 @@ else
   echo "   ✅ all registered hooks installed and executable"
 fi
 
-# ─── Bootstrap Memory ────────────────────────────────────────────────────────
-
-echo "🧠  Bootstrapping memory..."
-cp "$HARNESS_DIR/memory/MEMORY.md.template"         "$CLAUDE_DIR/memory/MEMORY.md"
-cp "$HARNESS_DIR/memory/templates/project.md"       "$CLAUDE_DIR/memory/project/context.md"
-cp "$HARNESS_DIR/memory/templates/user.md"          "$CLAUDE_DIR/memory/user.md"
-
-# Stamp the project context
-MEM_STACK=$( [ ${#SIGNALS[@]} -gt 0 ] && printf '%s, ' "${SIGNALS[@]}" | sed 's/, $//' || echo "none detected")
-for f in "$CLAUDE_DIR/memory/MEMORY.md" "$CLAUDE_DIR/memory/project/context.md"; do
-  sed -i '' -e "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" -e "s/{{STACK_LIST}}/$MEM_STACK/g" -e "s/{{INIT_DATE}}/$(date +%F)/g" "$f" 2>/dev/null || \
-    sed -i -e "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" -e "s/{{STACK_LIST}}/$MEM_STACK/g" -e "s/{{INIT_DATE}}/$(date +%F)/g" "$f"
-done
-
-sed -i '' "s/{{GIT_USER}}/$GIT_USER/g"   "$CLAUDE_DIR/memory/user.md" 2>/dev/null || \
-  sed -i   "s/{{GIT_USER}}/$GIT_USER/g"  "$CLAUDE_DIR/memory/user.md"
-sed -i '' "s/{{GIT_EMAIL}}/$GIT_EMAIL/g" "$CLAUDE_DIR/memory/user.md" 2>/dev/null || \
-  sed -i   "s/{{GIT_EMAIL}}/$GIT_EMAIL/g" "$CLAUDE_DIR/memory/user.md"
-
-# user.md holds a name and email: keep it out of the repo (a public repo would publish them).
+# specs/ is per-session state (HANDOFF.md, plans): keep it out of git and out of `prettier --check .`.
 GITIGNORE="$PROJECT_DIR/.gitignore"
-if ! grep -qxF ".claude/memory/user.md" "$GITIGNORE" 2>/dev/null; then
+if ! grep -qxE "/?specs/?" "$GITIGNORE" 2>/dev/null; then
   [ -s "$GITIGNORE" ] && [ -n "$(tail -c1 "$GITIGNORE")" ] && echo >> "$GITIGNORE"
-  echo ".claude/memory/user.md" >> "$GITIGNORE"
-  echo "   .gitignore: added .claude/memory/user.md (personal, not committed)"
+  echo "/specs/" >> "$GITIGNORE"
+  echo "   .gitignore: added /specs/ (session state, not committed)"
 fi
 
 # The copied rules and templates are not formatted to the app's Prettier config: keep them out of `prettier --check .`.
@@ -325,7 +315,7 @@ fi
 # A re-run must not wipe a CLAUDE.md that /project-init or the team already finalized.
 CLAUDE_OUT="$PROJECT_DIR/CLAUDE.md"
 if [ -f "$CLAUDE_OUT" ]; then
-  echo "📝  CLAUDE.md exists — kept untouched (/project-init Step 8 updates it in place)"
+  echo "📝  CLAUDE.md exists — kept untouched (/project-init Step 7 updates it in place)"
   CLAUDE_OUT=/dev/null
 else
   echo "📝  Generating CLAUDE.md..."
@@ -517,11 +507,8 @@ echo "   ├── skills/        $(ls "$CLAUDE_DIR/skills/" | wc -l | tr -d ' '
 echo "   ├── hooks/         $(ls "$CLAUDE_DIR/hooks/" | wc -l | tr -d ' ') scripts"
 echo "   ├── agents/        $(ls "$CLAUDE_DIR/agents/" 2>/dev/null | wc -l | tr -d ' ') agents"
 echo "   ├── templates/     $(ls "$CLAUDE_DIR/templates/" 2>/dev/null | wc -l | tr -d ' ') templates"
-echo "   ├── memory/        bootstrapped"
-echo "   └── settings.json  hooks registered"
+echo "   └── settings.json  hooks registered (status line in settings.local.json)"
 echo ""
 echo "Next steps:"
 echo "  1. Edit CLAUDE.md — fill in run commands, architecture, constraints"
-echo "  2. Edit .claude/memory/project/context.md — add project goals"
-echo "  3. Edit .claude/memory/user.md — add your role / preferences"
 echo ""
