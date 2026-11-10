@@ -65,8 +65,17 @@ def enabled_at(path, plugin):
 local_path = at(".claude", "settings.local.json")
 shared_path = at(".claude", "settings.json")
 cfg = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
-# A constant, never this machine's registration: that one can be a personal SSH alias or a local path.
-KIT_MARKETPLACE = {"source": {"source": "github", "repo": "thanghokdps/claude-root"}}
+
+
+def kit_marketplace():
+    """The public kit repo, never this machine's registration (that can be a personal SSH alias or a local path).
+    Pinned to the tag of this core's version, so a push to the kit's main never reaches a team unreviewed; a repo
+    moves to a newer kit by bumping `ref` in its own commit."""
+    manifest = load_json(os.path.join(os.environ.get("RULES_DIR", ""), "..", ".claude-plugin", "plugin.json")) or {}
+    source = {"source": "github", "repo": "thanghokdps/claude-root"}
+    if isinstance(manifest.get("version"), str):
+        source["ref"] = "v" + manifest["version"]
+    return {"source": source}
 
 
 def is_on(plugin):
@@ -120,7 +129,7 @@ def setup_repo(plugins):
         return None
     added = []
     if "harness" not in markets:
-        settings.setdefault("extraKnownMarketplaces", {})["harness"] = KIT_MARKETPLACE
+        settings.setdefault("extraKnownMarketplaces", {})["harness"] = kit_marketplace()
         added.append("the harness marketplace")
     for plugin in ["dev@harness"] + plugins:
         if plugin not in enabled:

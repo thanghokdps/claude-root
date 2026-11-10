@@ -56,7 +56,9 @@ def shared_packs(cwd):
     return {k.split("@")[0] for k in (shared_settings(cwd) or {}).get("enabledPlugins", {})} - {"dev"}
 
 
-KIT_MARKETPLACE = {"source": {"source": "github", "repo": "thanghokdps/claude-root"}}
+CORE_VERSION = json.load(open(os.path.join(ROOT, "plugins", "core", ".claude-plugin", "plugin.json")))["version"]
+# Pinned to core's release tag: an unpinned source hands every teammate whatever the kit's main holds.
+KIT_MARKETPLACE = {"source": {"source": "github", "repo": "thanghokdps/claude-root", "ref": f"v{CORE_VERSION}"}}
 
 
 AI_PKG = {"dependencies": {"next": "15", "@langchain/langgraph": "1", "@copilotkit/react-core": "1",
