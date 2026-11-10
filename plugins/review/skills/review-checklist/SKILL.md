@@ -37,6 +37,8 @@ Do not skip ahead: a correctness bug outranks every readability note.
 | 5   | **Security basics** | Unvalidated input at a boundary, secrets, injection, authz on mutating paths, logging PII.                                                                                                                                                                                                                                      |
 | 6   | **Scope**           | Every changed line traces to the ticket? Unrelated refactors, drive-by fixes, missing pieces of the ask. Over-engineering: a new function, class, module, dependency or option nobody asked for, or new code where the codebase, stdlib or an installed dependency already does it — the finding names what to reuse or delete. |
 
+When the repo's spec, CLAUDE.md or `.claude/docs/` names an OWASP ASVS level or SOC 2 readiness, check 5 also walks `${CLAUDE_PLUGIN_ROOT}/references/asvs.md` for the chapters the diff touches.
+
 A shortcut marked `shortcut: <limit>, <when to upgrade>` is a decision, not a finding — unless the expected load already crosses its limit. An unmarked shortcut with a real limit is a finding.
 
 ## Step 2b — Refute

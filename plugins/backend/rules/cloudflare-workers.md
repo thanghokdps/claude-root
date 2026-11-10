@@ -6,7 +6,7 @@ paths:
   - "**/worker-configuration.d.ts"
 ---
 
-# Cloudflare Workers rules (Workers, D1, Durable Objects, Queues, R2)
+# Cloudflare Workers rules (Workers, D1, Durable Objects, Queues, R2, rate limits, email, Access, observability)
 
 Adds only what is Workers-specific. Routing is in `hono.md`, queries in `drizzle.md` § SQLite and Cloudflare D1, the contract and owner scoping in core's `api-contract.md` and `data-access.md`. Claims cite developers.cloudflare.com (read 2026-11-10). Cloudflare's `workers-best-practices`, `durable-objects` and `wrangler` skills, if installed, go deeper.
 
@@ -41,6 +41,13 @@ Adds only what is Workers-specific. Routing is in `hono.md`, queries in `drizzle
 
 - The R2 binding cannot presign. Sign uploads with `aws4fetch` or the AWS SDK v3 ([presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/)). Sign the content type and length, and expire in minutes, not the 7-day maximum.
 - An upload is not usable until a finalize call reads its first bytes, checks the real type and size, and only then marks it ready. Downloads go through the Worker after the permission check, never through a public bucket URL.
+
+## Rate limits, email, Access, observability
+
+- The Rate Limiting binding (`ratelimits: [{ name, namespace_id, simple: { limit, period } }]`, period 10 or 60 seconds, Wrangler 4.36.0+) is per Cloudflare location, approximate and eventually consistent ([rate limit binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/)). Use it for flood control keyed on the user id (not the IP alone, which an office shares). A limit that must be exact, such as sign-in attempts, counts in a Durable Object instead.
+- Email from a Worker uses the Email Service binding: `send_email: [{ name: "EMAIL" }]`, then `env.EMAIL.send({ to, from, subject, text })`, which throws with a `code` (for example `E_SENDER_NOT_VERIFIED`) ([Workers API](https://developers.cloudflare.com/email-service/api/send-emails/workers-api/)). Email Sending is in beta, and sending to any recipient needs Workers Paid ([Email Service](https://developers.cloudflare.com/email-service/)). Send from a Queue consumer, never inline in a request.
+- Staging and preview URLs are public by default ([previews](https://developers.cloudflare.com/workers/configuration/previews/)). Put them behind Cloudflare Access, and in the Worker verify the `Cf-Access-Jwt-Assertion` header with `jose` against `https://<team>.cloudflareaccess.com/cdn-cgi/access/certs`, checking `iss` (the team domain) and `aud` (the application's AUD tag) ([validate the Access JWT](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/)). Access is an outer gate. The app's own sign-in still runs behind it.
+- Turn on `observability: { enabled: true, head_sampling_rate }` for logs and `observability.traces.enabled: true` for traces; `enabled` alone gives logs only, and traces are kept 7 days ([Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/), [traces](https://developers.cloudflare.com/workers/observability/traces/)). Log ids and codes, never message bodies, tokens or emails.
 
 ## Tests
 

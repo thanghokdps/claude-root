@@ -10,7 +10,7 @@ when_to_use: add a table, "thêm bảng", "thêm cột", add a column to a table
 
 **Invoke:** `/db-change <what must be stored or queried>`
 
-Rules: `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`); with Prisma, `${CLAUDE_PLUGIN_ROOT}/rules/prisma.md`; with Drizzle, `${CLAUDE_PLUGIN_ROOT}/rules/drizzle.md` (on D1 also `${CLAUDE_PLUGIN_ROOT}/rules/cloudflare-workers.md` § D1). A destructive or long-running change (drop, rename, type change, backfill on a large table) is a data migration: hand it to `/write-migration` (ship, if installed) and treat it as high-risk.
+Rules: `data-access.md` and `app-structure.md` from core (in `~/.claude/rules/`); with Prisma, `${CLAUDE_PLUGIN_ROOT}/rules/prisma.md`; with Drizzle, `${CLAUDE_PLUGIN_ROOT}/rules/drizzle.md` (on D1 also `${CLAUDE_PLUGIN_ROOT}/rules/cloudflare-workers.md` § D1); on Firestore, `${CLAUDE_PLUGIN_ROOT}/rules/firestore.md` (documents and Security Rules instead of tables and migrations). A destructive or long-running change (drop, rename, type change, backfill on a large table) is a data migration: hand it to `/write-migration` (ship, if installed) and treat it as high-risk.
 
 ---
 

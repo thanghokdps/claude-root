@@ -27,6 +27,9 @@ Read before the first edit, only the ones the repo's stack needs:
 - `${CLAUDE_PLUGIN_ROOT}/rules/hono.md` — a Hono app (`hono` in package.json)
 - `${CLAUDE_PLUGIN_ROOT}/rules/cloudflare-workers.md` — a Worker (`wrangler.jsonc` / `wrangler.toml`): D1, Durable Objects, Queues, R2
 - `${CLAUDE_PLUGIN_ROOT}/rules/better-auth.md` — sign-in with Better Auth (`better-auth` in package.json); auth is high-risk
+- `${CLAUDE_PLUGIN_ROOT}/rules/firestore.md` — data on Firestore (`firebase.json`, `firestore.rules`, Firestore REST or `firebase-admin`)
+- `${CLAUDE_PLUGIN_ROOT}/rules/firebase-auth.md` — Firebase Authentication ID tokens verified on the server; auth is high-risk
+- `${CLAUDE_PLUGIN_ROOT}/rules/fcm.md` — push notifications through Firebase Cloud Messaging
 - `api-contract.md`, `data-access.md`, `security.md` from core (`~/.claude/rules/`) — always
 
 Every mutating route is authenticated and checks permission on the specific resource; every query is scoped to the caller's owner key. These are hard gates: when the brief would weaken one, stop and report instead of building.

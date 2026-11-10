@@ -10,7 +10,7 @@
 # user config both lack into .claude/rules/ (a plugin cannot ship always-loaded rules), and leaves both uncommitted.
 # An opted-out repo gets the packs in .claude/settings.local.json (personal, excluded from git) instead.
 # Packs, effective after /reload-plugins or a new session: frontend@harness for a web UI framework (not React Native alone),
-# backend@harness for a server framework, a Worker, an ORM, go, rust or an AI assistant, mobile@harness for react-native / expo / eas.json,
+# backend@harness for a server framework, a Worker, Firebase (firebase.json, firestore.rules, firebase-admin), an ORM, go, rust or an AI assistant, mobile@harness for react-native / expo / eas.json,
 # devops@harness for a Worker, Dockerfile, compose file, CI workflow, *.tf, k8s/ or Chart.yaml, ai@harness for an AI
 # assistant, workplace@harness for a
 # `Domain: workplace` line in docs/requirements.md or .claude/docs/index.md, or two or more HR/workplace module
@@ -290,14 +290,16 @@ backends = [label for cond, label in ((has_dep("@nestjs/core"), "NestJS"), (has_
                                       (has_py("fastapi"), "FastAPI"), (has_py("django"), "Django"),
                                       (has_py("flask"), "Flask")) if cond]
 workers = has_dep("wrangler") or any(os.path.exists(at(f"wrangler.{ext}")) for ext in ("toml", "jsonc", "json"))
+# The client `firebase` SDK alone is a frontend dependency; project config, rules or the Admin SDK mean server-side data.
+firebase = (has_dep("firebase-admin") or os.path.exists(at("firebase.json")) or os.path.exists(at("firestore.rules")))
 for cond, label in ((True, web_labels), (mobile, ["React Native"]), ("python" in manifests, ["Python"]),
-                    (True, backends), (workers, ["Cloudflare Workers"]),
+                    (True, backends), (workers, ["Cloudflare Workers"]), (firebase, ["Firebase"]),
                     ("go" in manifests, ["Go"]), ("rust" in manifests, ["Rust"]),
                     (has_dep("typescript"), ["TypeScript"])):
     if cond:
         stack.extend(label)
 # A Worker is a server and its wrangler config is deploy config, so it brings backend and devops.
-backend = bool(backends) or has_dep("next") or workers
+backend = bool(backends) or has_dep("next") or workers or firebase
 ai = (has_prefix("@langchain/", "@copilotkit/", "@mastra/", "@ag-ui/")
       or has_py("langgraph", "langchain", "langchain-core", "copilotkit"))
 db = [label for cond, label in ((has_dep("prisma", "@prisma/client") or os.path.isdir(at("prisma")), "Prisma"),
@@ -386,6 +388,8 @@ if backend_pack:
     prefer.append("endpoints → /api-endpoint")
 if workers:
     prefer.append("Worker code → backend's rules/cloudflare-workers.md, first deploy → /release-setup cloudflare")
+if firebase:
+    prefer.append("Firestore → backend's rules/firestore.md, sign-in → rules/firebase-auth.md, push → rules/fcm.md")
 if web:
     prefer.append("UI → /ui-feature, from a Figma → /design-ui")
 if mobile:

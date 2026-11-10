@@ -18,7 +18,7 @@ Role pack for CI/CD, containers and infrastructure: the `devops-engineer` agent 
 
 ## Rules and the gate
 
-`rules/ci.md`, `rules/container.md`, `rules/infra.md` — read by the agent and the skills, never always-loaded. The blocking hook `infra-gate` is in `ship`, not here: a gate must run before this pack is enabled, so every blocking hook of the kit lives in a process plugin.
+`rules/ci.md` (incl. Husky + commitlint, GitLab review mirrored to GitHub CI), `rules/container.md`, `rules/infra.md`, `rules/monorepo.md` (pnpm workspaces, Turborepo tasks), `rules/load-test.md` (k6 thresholds from the spec, one run per milestone), `rules/backup.md` (Firestore PITR and backups, D1 Time Travel, R2 copies, the monthly restore drill) — read by the agent and the skills, never always-loaded. The blocking hook `infra-gate` is in `ship`, not here: a gate must run before this pack is enabled, so every blocking hook of the kit lives in a process plugin.
 
 ## Install
 

@@ -80,6 +80,16 @@ def test_a_worker_turns_on_backend_and_devops_and_names_its_deploy():
     assert "Cloudflare Workers" in ctx and "/release-setup" in ctx and "cloudflare-workers.md" in ctx, ctx
 
 
+def test_firebase_turns_on_backend_and_names_its_rules():
+    for files in ({"firebase.json": "{}"}, {"firestore.rules": ""},
+                  {"package.json": {"dependencies": {"firebase-admin": "13"}}}):
+        cwd = repo({"package.json": {"dependencies": {"react": "19"}}, **files}
+                   if "package.json" not in files else files)
+        ctx = run(cwd)
+        assert "backend" in shared_packs(cwd), (files, shared_packs(cwd))
+        assert "Firebase" in ctx and "firestore.md" in ctx and "firebase-auth.md" in ctx, (files, ctx)
+
+
 def test_vue_and_svelte_count_as_web_ui():
     for deps, label in (({"nuxt": "3"}, "Nuxt"), ({"vue": "3"}, "Vue"), ({"@sveltejs/kit": "2"}, "SvelteKit")):
         ctx = run(repo({"package.json": {"dependencies": deps}}))

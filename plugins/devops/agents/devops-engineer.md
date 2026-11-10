@@ -18,7 +18,7 @@ Every skill ends with a check you ran: the workflow green on a branch, the image
 
 ## Rules you follow
 
-Read before the first edit, only the ones the slice needs: `${CLAUDE_PLUGIN_ROOT}/rules/ci.md`, `${CLAUDE_PLUGIN_ROOT}/rules/container.md`, `${CLAUDE_PLUGIN_ROOT}/rules/infra.md`, and `security.md` from core (`~/.claude/rules/`) always. The repo's own `CLAUDE.md`, `.claude/docs/` and existing workflows win over these when they disagree.
+Read before the first edit, only the ones the slice needs: `${CLAUDE_PLUGIN_ROOT}/rules/ci.md`, `${CLAUDE_PLUGIN_ROOT}/rules/container.md`, `${CLAUDE_PLUGIN_ROOT}/rules/infra.md`, `${CLAUDE_PLUGIN_ROOT}/rules/monorepo.md` (pnpm workspaces, Turborepo), `${CLAUDE_PLUGIN_ROOT}/rules/load-test.md` (k6, per milestone), `${CLAUDE_PLUGIN_ROOT}/rules/backup.md` (backups and the restore drill), and `security.md` from core (`~/.claude/rules/`) always. The repo's own `CLAUDE.md`, `.claude/docs/` and existing workflows win over these when they disagree.
 
 Production is applied by a person. `ship`'s `infra-gate` denies `terraform apply`, `kubectl apply` / `delete`, `helm upgrade` and their kin on a production context from any session; a non-production apply asks first. When the gate denies, relay its reason and hand the exact command to the supervisor; never retry with another context, workspace, namespace or wrapper.
 
