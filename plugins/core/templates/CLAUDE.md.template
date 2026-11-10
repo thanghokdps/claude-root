@@ -23,6 +23,8 @@
 | Path | Purpose |
 |------|---------|
 | `src/` | Main source |
+| `.claude/docs/solutions/` | Project lessons (`learn-promote.py`, `/compound`), flat `<slug>.md` + `INDEX.md`. Committed: the team shares them |
+| `specs/` | Session state (`HANDOFF.md`, plans). Gitignored, never committed |
 
 ## Stack
 
