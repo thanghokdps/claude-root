@@ -7,9 +7,10 @@ DIR=$(project_dir "$(jq -r '.cwd // empty' 2>/dev/null)")
 HANDOFF="$DIR/specs/HANDOFF.md"
 [ -f "$HANDOFF" ] || exit 0
 
-CONTEXT="Previous session handoff (specs/HANDOFF.md) — continue from its Next steps, then delete the file:
+CONTEXT="Previous session handoff (specs/HANDOFF.md) — pick up from \"Where it stood\" if the user's request continues it:
 
 $(head -c 8000 "$HANDOFF")"
+rm -f "$HANDOFF"  # injected once; the next Stop rewrites it
 for idx in "$DIR/.claude/docs/solutions/INDEX.md" "$HOME/.claude/docs/solutions/INDEX.md"; do
   [ -f "$idx" ] && CONTEXT="$CONTEXT
 

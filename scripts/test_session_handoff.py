@@ -61,6 +61,22 @@ def test_next_steps_fall_back_to_the_transcript():
     assert "Done: tests pass." in text and "old reply" not in text
 
 
+def test_git_state_and_reload_list_are_left_to_the_session():
+    text = handoff(repo())
+    assert "## Last commits" not in text and "## Git state" not in text and "## Context to reload" not in text
+    assert "## Branch" in text and "## Where it stood" in text
+
+
+def test_resume_injects_once_and_deletes_the_file():
+    r = repo()
+    handoff(r, last_assistant_message="Next: open the PR.")
+    resume = os.path.join(ROOT, "plugins", "guards", "hooks", "session-resume.sh")
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": r}
+    out = subprocess.run([resume], input=json.dumps({"cwd": r}), capture_output=True, text=True, check=True, env=env)
+    assert "Next: open the PR." in json.loads(out.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert not os.path.exists(os.path.join(r, "specs", "HANDOFF.md"))
+
+
 def test_a_long_reply_is_cut_to_its_tail():
     r = repo()
     text = handoff(r, last_assistant_message="\n".join(f"line {i}" for i in range(100)))

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Stop hook: write a comprehensive HANDOFF.md at session end.
-# Next session reads this automatically via CLAUDE.md — no manual update needed.
+# Stop hook (fires after every reply): rewrite HANDOFF.md with only what git and the transcript cannot tell a
+# fresh session — open specs, pending escalations, where the last reply left off. session-resume.sh injects it.
 
 INPUT=$(cat 2>/dev/null)
 . "$(dirname "$0")/lib/project-dir.sh"
@@ -15,10 +15,6 @@ mkdir -p "$SPECS_DIR"
 
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M')
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "detached")
-LAST_COMMITS=$(git log --oneline -8 2>/dev/null | sed 's/^/  /')
-STAGED=$(git diff --cached --name-only 2>/dev/null)
-UNSTAGED=$(git diff --name-only 2>/dev/null)
-UNTRACKED=$(git ls-files --others --exclude-standard 2>/dev/null | head -10)
 
 # Collect open specs: a PLAN.md marked **Status:** complete (plan-format.md) is done.
 OPEN_SPECS=$(ls "$REPO_DIR/specs"/*/SUMMARY.md 2>/dev/null | while read f; do
@@ -44,34 +40,10 @@ ESCALATIONS=$(grep -rl "decision: pending" "$REPO_DIR/specs" 2>/dev/null | sed '
 cat > "$HANDOFF" << EOF
 # Session Handoff — $TIMESTAMP
 
-> Auto-generated at session end. Read this at the start of the next session.
-> Delete after reading and starting new work.
+> Rewritten after every reply; the next fresh session gets it once, then it is deleted.
 
 ## Branch
 \`$BRANCH\`
-
-## Last commits
-$LAST_COMMITS
-
-## Git state
-EOF
-
-if [ -n "$STAGED" ]; then
-  echo "### Staged (ready to commit)" >> "$HANDOFF"
-  echo "$STAGED" | sed 's/^/  /' >> "$HANDOFF"
-fi
-
-if [ -n "$UNSTAGED" ]; then
-  echo "### Unstaged (modified)" >> "$HANDOFF"
-  echo "$UNSTAGED" | sed 's/^/  /' >> "$HANDOFF"
-fi
-
-if [ -n "$UNTRACKED" ]; then
-  echo "### Untracked" >> "$HANDOFF"
-  echo "$UNTRACKED" | sed 's/^/  /' >> "$HANDOFF"
-fi
-
-cat >> "$HANDOFF" << EOF
 
 ## Open specs
 ${OPEN_SPECS:-  none}
@@ -81,12 +53,6 @@ ${ESCALATIONS:-  none}
 
 ## Where it stood (end of the last reply)
 ${LAST_REPLY:-  unknown}
-
-## Context to reload
-- Project docs: \`.claude/docs/index.md\`
-- Solutions: \`.claude/docs/solutions/INDEX.md\`
-- Global solutions: \`~/.claude/docs/solutions/INDEX.md\`
-
 EOF
 
 # Large session hint
