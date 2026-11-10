@@ -12,7 +12,7 @@ None. This plugin is hooks only.
 
 | Hook                  | Event                                 | Does                                                                                                                               |
 | --------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `session-resume`      | session start, resume, clear, compact | Injects `specs/HANDOFF.md` once, then deletes it, and points at the team, personal and global lesson indexes                       |
+| `session-resume`      | session start, resume, clear, compact | Injects the handoff from your state dir once, then deletes it, and points at the team, personal and global lesson indexes          |
 | `scope-gate`          | every prompt                          | Flags implementation-intent prompts for the Auto-Coordinator: high-risk patterns, stale memory                                     |
 | `commit-quality-gate` | before `git commit`                   | Blocks a commit with secrets, debug artifacts or failing tests                                                                     |
 | `risk-corroboration`  | before `git commit`                   | Blocks a commit whose staged diff trips a hard-gate signal (auth, migration, security, provider, contract) above the declared lane |
@@ -21,7 +21,7 @@ None. This plugin is hooks only.
 | `format-on-edit`      | after Edit, Write                     | Formats the edited file with the project's own formatter                                                                           |
 | `headroom-compress`   | after Bash                            | A soft hint to compress very large output when headroom is installed                                                               |
 | `run-log`             | after Bash                            | Records each command to `.git/claude-run-log.jsonl`, so a PR's Witness line is filled from what ran, never typed                   |
-| `session-handoff`     | on stop                               | Rewrites `specs/HANDOFF.md` after every reply: open specs, pending escalations, where the last reply stood                         |
+| `session-handoff`     | on stop                               | Rewrites the handoff in your state dir after every reply: open specs, pending escalations, where the last reply stood              |
 | `notify-on-finish`    | on stop                               | A macOS notification when Claude finishes a turn, so long runs need no watching                                                    |
 
 One more script lives in the folder but is not registered here: `agent-progress.sh` is copied into a project only by the standalone mode of `scripts/init.sh` (core).

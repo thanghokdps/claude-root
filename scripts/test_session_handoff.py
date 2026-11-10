@@ -5,6 +5,8 @@ import os
 import subprocess
 import tempfile
 
+from harness_state import specs, state_dir
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOK = os.path.join(ROOT, "plugins", "guards", "hooks", "session-handoff.sh")
 
@@ -12,15 +14,13 @@ HOOK = os.path.join(ROOT, "plugins", "guards", "hooks", "session-handoff.sh")
 def repo():
     path = tempfile.mkdtemp(prefix="handoff-")
     subprocess.run(["git", "-C", path, "init", "-q", "-b", "feat/x"], check=True)
-    with open(os.path.join(path, ".git", "info", "exclude"), "a") as f:
-        f.write("specs/\n")  # as in the kit's projects, where specs/ is gitignored
     subprocess.run(["git", "-C", path, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty",
                     "-m", "init"], check=True)
     return path
 
 
 def spec(r, slug, status=None):
-    d = os.path.join(r, "specs", slug)
+    d = specs(r, slug)
     os.makedirs(d)
     with open(os.path.join(d, "SUMMARY.md"), "w") as f:
         f.write(f"# Summary — {slug}\n\nLane: normal\n")
@@ -31,7 +31,8 @@ def spec(r, slug, status=None):
 def handoff(r, **event):
     env = {**os.environ, "CLAUDE_PROJECT_DIR": r}
     subprocess.run([HOOK], input=json.dumps({"cwd": r, **event}), capture_output=True, text=True, check=True, env=env)
-    return open(os.path.join(r, "specs", "HANDOFF.md")).read()
+    assert not os.path.exists(os.path.join(r, "specs"))  # never in the working tree
+    return open(specs(r, "HANDOFF.md")).read()
 
 
 def test_complete_specs_are_left_out_and_the_rest_show_their_status():
@@ -74,24 +75,22 @@ def test_resume_injects_once_and_deletes_the_file():
     env = {**os.environ, "CLAUDE_PROJECT_DIR": r}
     out = subprocess.run([resume], input=json.dumps({"cwd": r}), capture_output=True, text=True, check=True, env=env)
     assert "Next: open the PR." in json.loads(out.stdout)["hookSpecificOutput"]["additionalContext"]
-    assert not os.path.exists(os.path.join(r, "specs", "HANDOFF.md"))
+    assert not os.path.exists(specs(r, "HANDOFF.md"))
 
 
-def resume(r, home):
+def resume(r):
     hook = os.path.join(ROOT, "plugins", "guards", "hooks", "session-resume.sh")
-    env = {**os.environ, "CLAUDE_PROJECT_DIR": r, "HOME": home}
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": r}
     return subprocess.run([hook], input=json.dumps({"cwd": r}), capture_output=True, text=True, check=True, env=env)
 
 
 def test_resume_points_at_the_personal_index_without_a_handoff():
-    r, home = repo(), tempfile.mkdtemp()
-    promote = os.path.join(ROOT, "plugins", "core", "scripts", "learn-promote.py")
-    folder = subprocess.run(["python3", promote, "--personal-dir"], cwd=r, capture_output=True, text=True,
-                            check=True, env={**os.environ, "HOME": home}).stdout.strip()
-    assert resume(r, home).stdout == ""  # nothing to point at yet
+    r = repo()
+    folder = os.path.join(state_dir(r), "solutions")
+    assert resume(r).stdout == ""  # nothing to point at yet
     os.makedirs(folder)
     open(os.path.join(folder, "INDEX.md"), "w").write("# Personal\n")
-    context = json.loads(resume(r, home).stdout)["hookSpecificOutput"]["additionalContext"]
+    context = json.loads(resume(r).stdout)["hookSpecificOutput"]["additionalContext"]
     assert os.path.join(folder, "INDEX.md") in context and "Previous session handoff" not in context
 
 

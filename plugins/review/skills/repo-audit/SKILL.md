@@ -14,7 +14,7 @@ A diff review sees what changed; this sees what is already there. Order of impor
 
 ## Step 0 — Read the ledger
 
-One run finds about half of what repeated runs find, so each run starts from the last one's gaps. Follow `${CLAUDE_PLUGIN_ROOT}/references/audit-ledger.md`: read both files under `specs/audit/` if they exist (none → run 1), mark a unit `stale` when `git log -1 --format=%H -- <path>` differs from its `last_commit`, and note which `confirmed` findings sit in a changed file. A ledger that fails `python3 -I ${CLAUDE_PLUGIN_ROOT}/scripts/validate-audit.py specs/audit` is reported, never treated as empty.
+One run finds about half of what repeated runs find, so each run starts from the last one's gaps. Follow `${CLAUDE_PLUGIN_ROOT}/references/audit-ledger.md`: read both files under `specs/audit/` if they exist (none → run 1), mark a unit `stale` when `git log -1 --format=%H -- <path>` differs from its `last_commit`, and note which `confirmed` findings sit in a changed file. `<S>` is the personal state dir the session start context names. A ledger that fails `python3 -I ${CLAUDE_PLUGIN_ROOT}/scripts/validate-audit.py <S>/specs/audit` is reported, never treated as empty.
 
 ## Step 1 — Map first
 
@@ -54,7 +54,7 @@ Then send every candidate through `${CLAUDE_PLUGIN_ROOT}/references/refute.md` �
 Append this run to `runs`, set every unit read this run to `audited` with its `last_commit`, `axes_checked` and `run_id`, and write every verdict (confirmed, needs_validation and rejected) to `specs/audit/findings.json`, keeping a carried finding's `id`. Then run:
 
 ```bash
-python3 -I ${CLAUDE_PLUGIN_ROOT}/scripts/validate-audit.py specs/audit --summary
+python3 -I ${CLAUDE_PLUGIN_ROOT}/scripts/validate-audit.py <S>/specs/audit --summary
 ```
 
 Fix every `file:id: message` line it prints and run it again before reporting; the summary's counts feed the Coverage section. A unit whose only findings are `needs_validation` is not covered.

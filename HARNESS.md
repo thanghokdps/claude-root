@@ -65,12 +65,12 @@ Opus plans, decides and reviews. Code from an approved plan is written by Sonnet
 ## What the session remembers
 
 ```text
-session start   specs/HANDOFF.md is read and deleted (CLAUDE.md "Session Resume", or guards' session-resume)
+session start   specs/HANDOFF.md (in the state dir, outside the repo) is read and deleted by guards' session-resume
                 repo-profile tells the session what the repo is; learn-promote lands queued lessons
 during work     Claude Code's own auto memory keeps feedback and decisions (~/.claude/projects/<project>/memory/)
 git commit      ticket-ledger records which skills ran on the branch (dev)
 session end     /compact writes specs/HANDOFF.md and merges learnings
-                /compound writes a lesson to docs/solutions/; learn-capture proposes lessons on its own
+                /compound writes a lesson to a solutions/ folder; learn-capture proposes lessons on its own
                 guards: session-handoff
 team project    /sync-memory at the start of a session: pull, summarise the new commits from git log, flag overlaps
 ```

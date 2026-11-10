@@ -36,6 +36,7 @@ python3 scripts/test_run_evidence.py
 python3 scripts/test_thunderkds_hooks.py
 python3 scripts/test_learn_capture.py
 python3 scripts/test_learn_promote.py
+python3 scripts/test_specs_guard.py
 python3 scripts/test_stale_install.py
 python3 scripts/test_missing_tools.py
 python3 scripts/test_check_upstream.py

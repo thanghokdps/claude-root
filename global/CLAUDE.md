@@ -43,5 +43,5 @@ Show `Intent · Lane · Routing` for normal/high-risk. Use a task list when the 
 
 ## Gotchas
 
-- `specs/` is gitignored. `settings.local.json` overrides `settings.json`.
+- `specs/` (plans, handoff, audits) means the personal state dir the session start names, `~/.local/share/claude-harness/repos/<repo>-<hash>/specs/`, never the repo. `settings.local.json` overrides `settings.json`.
 - Personal playbook: `PLAYBOOK.md` in the kit checkout.

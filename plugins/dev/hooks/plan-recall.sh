@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # plan-recall.sh — an active PLAN.md is recalled every turn, so /clear or a compaction never loses the slice.
-# Trigger: UserPromptSubmit. Reads specs/*/PLAN.md under the project (the event's cwd, else the git toplevel)
+# Trigger: UserPromptSubmit. Reads specs/*/PLAN.md in the repo's state dir (lib/state-dir.sh, for the event's cwd)
 # whose `**Status:**` is active — the two most recently touched — and injects each one's path, first open task
 # (a <task> without status="done"; format in ${CLAUDE_PLUGIN_ROOT}/references/plan-format.md) and the last 3
 # lines of its ## Status log, ~1500 chars in all. draft, paused and complete plans are silent. The Stop side
@@ -9,7 +9,7 @@
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
 
-HOOK_INPUT="$INPUT" python3 -I - <<'PY'
+HOOK_INPUT="$INPUT" STATE_LIB="$(dirname "$0")/lib/state-dir.sh" python3 -I - <<'PY'
 import glob, json, os, re, subprocess, sys
 
 try:
@@ -17,8 +17,11 @@ try:
 except ValueError:
     sys.exit(0)
 start = ev.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-r = subprocess.run(["git", "-C", start, "rev-parse", "--show-toplevel"], capture_output=True, text=True)
-root = r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else start
+r = subprocess.run(["bash", "-c", '. "$1" && state_dir "$2"', "_", os.environ["STATE_LIB"], start],
+                   capture_output=True, text=True)
+state = r.stdout.strip()
+if not state:
+    sys.exit(0)
 
 
 def read(path):
@@ -52,17 +55,16 @@ def log_tail(text, n=3):
     return lines[-n:]
 
 
-plans = sorted(glob.glob(os.path.join(root, "specs", "*", "PLAN.md")), key=os.path.getmtime, reverse=True)
+plans = sorted(glob.glob(os.path.join(state, "specs", "*", "PLAN.md")), key=os.path.getmtime, reverse=True)
 chunks = []
 for path in plans:
     text = read(path)
     if status(text) != "active":
         continue
-    rel = os.path.relpath(path, root)
     ts = tasks(text)
     done = sum(1 for _, d, _ in ts if d)
     nxt = next(((i, t) for i, d, t in ts if not d), None)
-    head = f"Active plan {rel} ({done}/{len(ts)} tasks done)"
+    head = f"Active plan {path} ({done}/{len(ts)} tasks done)"
     head += f" — next: task {nxt[0]} '{nxt[1]}'" if nxt else " — every task is done: set **Status:** complete"
     tail = log_tail(text)
     chunks.append(head + ("\nStatus log:\n" + "\n".join(tail) if tail else ""))

@@ -8,6 +8,8 @@ import os
 import subprocess
 import tempfile
 
+from harness_state import specs
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOKS = os.path.join(ROOT, "plugins", "guards", "hooks")
 
@@ -88,8 +90,9 @@ def test_format_on_edit_runs_in_the_worktree():
 
 def test_session_resume_injects_the_worktree_handoff():
     root, wt = project_with_worktree()
-    write(root, "specs/HANDOFF.md", "ROOT-HANDOFF\n")
-    write(wt, "specs/HANDOFF.md", "WORKTREE-HANDOFF\n")
+    assert specs(root) == specs(wt)  # one state dir per repo
+    write(specs(root), "HANDOFF.md", "ROOT-HANDOFF\n")
+    write(specs(root), "HANDOFF-wt.md", "WORKTREE-HANDOFF\n")
     ctx = json.loads(run("session-resume.sh", root, wt).stdout)["hookSpecificOutput"]["additionalContext"]
     assert "WORKTREE-HANDOFF" in ctx and "ROOT-HANDOFF" not in ctx
 
@@ -97,14 +100,15 @@ def test_session_resume_injects_the_worktree_handoff():
 def test_session_handoff_describes_the_worktree():
     root, wt = project_with_worktree()
     run("session-handoff.sh", root, wt)
-    assert not os.path.exists(os.path.join(root, "specs", "HANDOFF.md"))
-    assert "feat/x" in open(os.path.join(wt, "specs", "HANDOFF.md")).read()
+    assert not os.path.exists(specs(root, "HANDOFF.md"))
+    assert "feat/x" in open(specs(root, "HANDOFF-wt.md")).read()
+    assert not os.path.exists(os.path.join(wt, "specs")) and not os.path.exists(os.path.join(root, "specs"))
 
 
 def test_a_folder_outside_the_project_is_not_trusted():
     root, other = repo("main"), repo("feat/x")  # e.g. a repo the shell cloned and cd'd into
-    write(root, "specs/HANDOFF.md", "ROOT-HANDOFF\n")
-    write(other, "specs/HANDOFF.md", "OTHER-HANDOFF\n")
+    write(specs(root), "HANDOFF.md", "ROOT-HANDOFF\n")
+    write(specs(other), "HANDOFF.md", "OTHER-HANDOFF\n")
     ctx = json.loads(run("session-resume.sh", root, other).stdout)["hookSpecificOutput"]["additionalContext"]
     assert "ROOT-HANDOFF" in ctx and "OTHER-HANDOFF" not in ctx
     write(other, ".prettierrc", "{}\n")
@@ -130,7 +134,7 @@ def test_format_on_edit_leaves_a_file_outside_the_project_alone():
 
 def test_without_a_cwd_the_project_dir_still_works():
     root = repo("feat/y")
-    write(root, "specs/HANDOFF.md", "ROOT-HANDOFF\n")
+    write(specs(root), "HANDOFF.md", "ROOT-HANDOFF\n")
     env = {**os.environ, "CLAUDE_PROJECT_DIR": root}
     out = subprocess.run([os.path.join(HOOKS, "session-resume.sh")], input="{}", capture_output=True, text=True, env=env)
     assert "ROOT-HANDOFF" in out.stdout

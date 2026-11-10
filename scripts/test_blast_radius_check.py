@@ -7,6 +7,8 @@ import os
 import subprocess
 import tempfile
 
+from harness_state import specs
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOK = os.path.join(ROOT, "plugins", "guards", "hooks", "blast-radius-check.sh")
 
@@ -22,7 +24,7 @@ def repo(declared="src/app.ts, src/util.ts", plan=True):
     path = tempfile.mkdtemp(prefix="blast-")
     subprocess.run(["git", "-C", path, "init", "-q"], check=True)
     if plan:
-        write(path, "specs/x/PLAN.md", f"status: active\n<task><files>{declared}</files></task>\n")
+        write(specs(path), "x/PLAN.md", f"status: active\n<task><files>{declared}</files></task>\n")
     return path
 
 
@@ -53,7 +55,7 @@ def test_in_scope_and_bookkeeping_files_pass():
 def test_no_plan_or_no_files_tag_passes():
     assert run(repo(plan=False), "src/other.ts", strict=True).returncode == 0
     r = repo()
-    write(r, "specs/x/PLAN.md", "status: active\nno files tag\n")
+    write(specs(r), "x/PLAN.md", "status: active\nno files tag\n")
     assert run(r, "src/other.ts", strict=True).returncode == 0
 
 

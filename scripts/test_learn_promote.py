@@ -17,6 +17,10 @@ def home():
     return tempfile.mkdtemp(prefix="learn-home-")
 
 
+def harness(home_dir):
+    return os.path.join(home_dir, ".local", "share", "claude-harness")
+
+
 def repo(home_dir, digest=EVIDENCE):
     path = tempfile.mkdtemp(prefix="learn-promote-")
     subprocess.run(["git", "-C", path, "init", "-q"], check=True)
@@ -24,7 +28,7 @@ def repo(home_dir, digest=EVIDENCE):
     os.makedirs(os.path.join(state, "digests"))
     write(os.path.join(state, "digests", "sess-1.txt"), "assistant: [tool: Bash]\n" + digest + "\n")
     return {"path": path, "home": home_dir, "queue": os.path.join(state, "queue"),
-            "solutions": os.path.join(path, ".claude", "docs", "solutions")}
+            "solutions": os.path.join(path, ".claude", "solutions")}
 
 
 def write(path, text):
@@ -51,7 +55,7 @@ def queue(r, p, name="p1.json"):
 
 
 def run(r, *args, stdin="", env=None):
-    e = {k: v for k, v in os.environ.items() if not k.startswith("HARNESS_LEARN")}
+    e = {k: v for k, v in os.environ.items() if not k.startswith("HARNESS_LEARN") and k != "XDG_DATA_HOME"}
     e.update({"HOME": r["home"], **(env or {})})
     res = subprocess.run(["python3", PROMOTE, *args], cwd=r["path"], input=stdin, capture_output=True,
                          text=True, env=e)
@@ -161,7 +165,7 @@ def test_reading_a_lesson_marks_it_used():
 def test_same_global_slug_in_two_repos_is_promoted():
     h = home()
     first, second = repo(h), repo(h)
-    global_file = os.path.join(h, ".claude", "docs", "solutions", "piped-exit-codes.md")
+    global_file = os.path.join(harness(h), "global", "solutions", "piped-exit-codes.md")
     queue(first, proposal(level="global"))
     run(first, "--now")
     assert not os.path.exists(global_file)
@@ -177,13 +181,17 @@ def test_project_lesson_is_never_promoted():
     for r in (repo(h), repo(h)):
         queue(r, proposal())
         run(r, "--now")
-    assert not os.path.exists(os.path.join(h, ".claude", "docs", "solutions", "piped-exit-codes.md"))
+    assert not os.path.exists(os.path.join(harness(h), "global", "solutions", "piped-exit-codes.md"))
+
+
+def state_dir(r):
+    out = run(r, "--state-dir").stdout.strip()
+    assert out.startswith(os.path.join(harness(r["home"]), "repos") + os.sep), out
+    return out
 
 
 def personal_dir(r):
-    out = run(r, "--personal-dir").stdout.strip()
-    assert out.startswith(os.path.join(r["home"], ".claude", "claude-learn", "solutions") + os.sep), out
-    return out
+    return os.path.join(state_dir(r), "solutions")
 
 
 def test_personal_lesson_lands_outside_the_repo():
@@ -192,7 +200,7 @@ def test_personal_lesson_lands_outside_the_repo():
     run(r, "--now")
     assert rejected(r) == []  # a personal lesson may name this machine's paths
     folder = personal_dir(r)
-    assert os.path.basename(folder).startswith(os.path.basename(r["path"]) + "-")
+    assert os.path.basename(state_dir(r)).startswith(os.path.basename(r["path"]) + "-")
     assert frontmatter(os.path.join(folder, "piped-exit-codes.md"))["level"] == "personal"
     assert "[piped-exit-codes](piped-exit-codes.md)" in read(os.path.join(folder, "INDEX.md"))
     assert not os.path.exists(r["solutions"])  # nothing in the working tree to commit or ignore
@@ -220,9 +228,70 @@ def test_session_start_hook_mode_and_child_guard():
     queue(r, proposal())
     out = run(r, stdin=json.dumps({"cwd": r["path"]}), env={"HARNESS_LEARN_CHILD": "1"})
     assert out.stdout == "" and os.listdir(r["queue"]) == ["p1.json"]
-    out = run(r, stdin=json.dumps({"cwd": r["path"]}))
-    assert "1 added" in json.loads(out.stdout)["systemMessage"]
+    out = json.loads(run(r, stdin=json.dumps({"cwd": r["path"]})).stdout)
+    assert "1 added" in out["systemMessage"]
+    assert f"{state_dir(r)}/specs/" in out["hookSpecificOutput"]["additionalContext"]
+    out = json.loads(run(r, stdin=json.dumps({"cwd": r["path"]})).stdout)
+    assert "systemMessage" not in out  # nothing changed: context only, no noise
     assert run(r, stdin="garbage").stdout == ""
+
+
+def test_bash_state_dir_matches_python_for_repo_and_worktree():
+    r = repo(home())
+    subprocess.run(["git", "-C", r["path"], "commit", "-q", "--allow-empty", "-m", "x"], check=True,
+                   env={**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
+                        "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"})
+    wt = r["path"] + "-wt"
+    subprocess.run(["git", "-C", r["path"], "worktree", "add", "-q", wt], check=True)
+    lib = os.path.join(ROOT, "plugins", "core", "hooks", "lib", "state-dir.sh")
+    env = {k: v for k, v in os.environ.items() if k != "XDG_DATA_HOME"}
+    env["HOME"] = r["home"]
+    for where in (r["path"], wt):
+        got = subprocess.run(["bash", "-c", f'. "{lib}"; state_dir "$1"', "_", where], capture_output=True,
+                             text=True, env=env, check=True).stdout.strip()
+        assert got == state_dir(r), (where, got)
+
+
+def test_old_locations_migrate_once_without_overwriting():
+    r = repo(home())
+    old = os.path.join(r["home"], ".claude")
+    write(os.path.join(old, "docs", "solutions", "INDEX.md"), "- [a](a.md) — a\n")
+    write(os.path.join(old, "docs", "solutions", "a.md"), "OLD-GLOBAL\n")
+    write(os.path.join(old, "claude-learn", "repos.json"), "{}\n")
+    write(os.path.join(r["path"], "specs", "HANDOFF.md"), "OLD-HANDOFF\n")
+    write(os.path.join(r["path"], "specs", "feat", "PLAN.md"), "OLD-PLAN\n")
+    s = state_dir(r)
+    write(os.path.join(s, "specs", "feat", "PLAN.md"), "NEWER-PLAN\n")  # already there: must win
+    out = run(r, "--now").stdout
+    g = os.path.join(harness(r["home"]), "global")
+    assert read(os.path.join(g, "solutions", "a.md")) == "OLD-GLOBAL\n"
+    assert os.path.exists(os.path.join(g, "repos.json"))
+    assert not os.path.exists(os.path.join(old, "docs", "solutions"))
+    assert read(os.path.join(s, "specs", "HANDOFF.md")) == "OLD-HANDOFF\n"
+    assert read(os.path.join(s, "specs", "feat", "PLAN.md")) == "NEWER-PLAN\n"
+    assert read(os.path.join(r["path"], "specs", "feat", "PLAN.md")) == "OLD-PLAN\n"  # left, never overwritten
+    assert not os.path.exists(os.path.join(r["path"], "specs", "HANDOFF.md"))
+    assert "migrated" in out
+
+
+def test_tracked_specs_stay_and_old_team_folder_gets_a_hint():
+    r = repo(home())
+    write(os.path.join(r["path"], "specs", "README.md"), "team spec\n")
+    write(os.path.join(r["path"], ".claude", "docs", "solutions", "INDEX.md"), "x\n")
+    subprocess.run(["git", "-C", r["path"], "add", "specs", ".claude"], check=True)
+    out = run(r, "--now").stdout
+    assert os.path.exists(os.path.join(r["path"], "specs", "README.md"))
+    assert os.path.exists(os.path.join(r["path"], ".claude", "docs", "solutions", "INDEX.md"))
+    assert "git mv .claude/docs/solutions .claude/solutions" in out
+
+
+def test_untracked_old_team_folder_is_personal():
+    r = repo(home())
+    write(os.path.join(r["path"], ".claude", "docs", "solutions", "mine.md"), "MINE\n")
+    out = run(r, "--now").stdout
+    assert read(os.path.join(personal_dir(r), "mine.md")) == "MINE\n"
+    assert not os.path.exists(os.path.join(r["path"], ".claude", "docs", "solutions"))
+    assert "git mv" not in out
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ Always-loaded context is the budget. Anything not needed on every task goes into
 | Skills              | on demand, routed by `description` / `when_to_use` | `plugins/<plugin>/skills/<name>/SKILL.md`                                                                             | a step-by-step workflow with a "Done when" check                                                                          |
 | References          | read by a skill when it needs them                 | `plugins/<plugin>/references/`, `skills/<name>/references/`, `plugins/<pack>/rules/`                                  | detail that would bloat the skill; the agent framework invariants                                                         |
 | Hooks               | on events                                          | `plugins/core/hooks/`, `dev/hooks/` (always on with the role); `ship/hooks/` (release gate); `guards/hooks/` (opt-in) | the checks that must happen rather than be remembered                                                                     |
-| Project workspace   | per project                                        | `.claude/` written by `/project-init`, `docs/solutions/`, `specs/`                                                    | project docs, memory, lessons, handoffs                                                                                   |
+| Project workspace   | per project                                        | `.claude/` written by `/project-init`, `.claude/solutions/`                                                           | project docs, memory, lessons, handoffs                                                                                   |
 
 ## 3. How a request flows
 

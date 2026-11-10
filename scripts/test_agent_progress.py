@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Tests for plugins/guards/hooks/agent-progress.sh. Run: python3 scripts/test_agent_progress.py
 
-The hook writes to $HOME/.claude/progress.log and reads specs/**/WAVE_STATE.json under its own process cwd."""
+The hook writes to $HOME/.claude/progress.log and reads specs/**/WAVE_STATE.json in the cwd repo's state dir."""
 import json
 import os
 import subprocess
 import tempfile
+
+from harness_state import specs
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOK = os.path.join(ROOT, "plugins", "guards", "hooks", "agent-progress.sh")
@@ -14,7 +16,9 @@ HOOK = os.path.join(ROOT, "plugins", "guards", "hooks", "agent-progress.sh")
 def sandbox():
     home = tempfile.mkdtemp(prefix="progress-home-")
     os.makedirs(os.path.join(home, ".claude"))
-    return home, tempfile.mkdtemp(prefix="progress-cwd-")
+    cwd = tempfile.mkdtemp(prefix="progress-cwd-")
+    subprocess.run(["git", "-C", cwd, "init", "-q"], check=True)
+    return home, cwd
 
 
 def log(home):
@@ -80,8 +84,8 @@ def test_wave_board_follows_the_cwd_the_hook_runs_in():
     state = {"slug": "demo", "issue": "#7", "waves": [{"wave": 1, "tasks": [
         {"title": "first task", "status": "in_progress", "agent": "backend"},
         {"title": "second task", "status": "pending", "blocked_by": [1]}]}]}
-    os.makedirs(os.path.join(cwd, "specs", "demo"))
-    with open(os.path.join(cwd, "specs", "demo", "WAVE_STATE.json"), "w") as f:
+    os.makedirs(specs(cwd, "demo"))
+    with open(specs(cwd, "demo", "WAVE_STATE.json"), "w") as f:
         json.dump(state, f)
     r = run(home, cwd, "Agent", {"description": "d"}, "pre")
     assert r.returncode == 0
@@ -95,8 +99,8 @@ def test_wave_board_follows_the_cwd_the_hook_runs_in():
 def test_event_cwd_beats_an_unrelated_process_cwd():
     home, fixture = sandbox()
     elsewhere = tempfile.mkdtemp(prefix="progress-else-")
-    os.makedirs(os.path.join(fixture, "specs", "demo"))
-    with open(os.path.join(fixture, "specs", "demo", "WAVE_STATE.json"), "w") as f:
+    os.makedirs(specs(fixture, "demo"))
+    with open(specs(fixture, "demo", "WAVE_STATE.json"), "w") as f:
         json.dump({"slug": "demo", "waves": [{"wave": 1, "tasks": [{"title": "fixture task", "status": "pending"}]}]}, f)
     event = {"hook_event_name": "PreToolUse", "tool_name": "Agent", "cwd": fixture, "tool_input": {"description": "d"}}
     r = subprocess.run([HOOK, "pre"], input=json.dumps(event), capture_output=True, text=True,

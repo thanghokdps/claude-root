@@ -104,6 +104,23 @@ def test_init_sh_missing_copy_source_is_flagged():
     assert lint_kit.missing_init_sources(script, "plugins/core") == ["rules/stacks/nope.md"]
 
 
+def test_drifted_hooks_lib_copy_is_flagged():
+    base = tempfile.mkdtemp()
+    for plugin, text in (("a", "x\n"), ("b", "y\n")):
+        os.makedirs(os.path.join(base, plugin, "hooks", "lib"))
+        with open(os.path.join(base, plugin, "hooks", "lib", "state-dir.sh"), "w") as f:
+            f.write(text)
+    saved = lint_kit.PLUGINS_DIR, lint_kit.plugin_names, list(lint_kit.errors)
+    lint_kit.PLUGINS_DIR, lint_kit.plugin_names = base, lambda: ["a", "b"]
+    try:
+        lint_kit.errors.clear()
+        lint_kit.check_shared_references()
+        assert len(lint_kit.errors) == 1 and "state-dir.sh: differs" in lint_kit.errors[0], lint_kit.errors
+    finally:
+        lint_kit.PLUGINS_DIR, lint_kit.plugin_names = saved[0], saved[1]
+        lint_kit.errors[:] = saved[2]
+
+
 def test_role_pack_shape():
     ok = {"dependencies": ["progress", "dev"]}
     assert lint_kit.role_pack_errors("frontend", ["frontend-engineer.md"], ok, False) == []

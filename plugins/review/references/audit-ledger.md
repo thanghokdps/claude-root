@@ -2,11 +2,11 @@
 
 Read by `/repo-audit` before mapping and after refuting. One run of an audit finds about half of what repeated runs find in total, so every run records what it covered and the next run starts from the gaps instead of re-reading the same files. Adapted from cloudflare/security-audit-skill `RECONNAISSANCE.md` (coverage units, prior-run input), `report-schema.json` and `validate-coverage-ledger.cjs` / `validate-findings.cjs`; cut to the six axes of `/repo-audit` and to two files a person can read.
 
-Both files live under `specs/audit/` in the audited repo. `specs/` is gitignored in user projects, so the ledger is per checkout and never lands in a commit. Validate both after every write:
+Both files live under `specs/audit/` in the repo's personal state dir `<S>`, outside the repo (the session start context names it), so the ledger is per person and never lands in a commit. Validate both after every write:
 
 ```bash
-python3 -I "${CLAUDE_PLUGIN_ROOT}"/scripts/validate-audit.py specs/audit            # errors as file:id: message, exit 2
-python3 -I "${CLAUDE_PLUGIN_ROOT}"/scripts/validate-audit.py specs/audit --summary  # counts per verdict and unit status
+python3 -I "${CLAUDE_PLUGIN_ROOT}"/scripts/validate-audit.py <S>/specs/audit            # errors as file:id: message, exit 2
+python3 -I "${CLAUDE_PLUGIN_ROOT}"/scripts/validate-audit.py <S>/specs/audit --summary  # counts per verdict and unit status
 ```
 
 ## `coverage-ledger.json`

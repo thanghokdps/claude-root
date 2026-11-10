@@ -114,6 +114,13 @@ s = json.load(open(path)) if os.path.exists(path) else {}
 if s.get("skillListingBudgetFraction", 0) < 0.03:
     s["skillListingBudgetFraction"] = 0.03
     print("  settings.json: skillListingBudgetFraction = 0.03 so every kit skill keeps its description")
+# Plans, handoffs and personal lessons live outside every repo (core hooks/lib/state-dir.sh); granting the folder
+# lets Write/Edit reach it without a prompt (code.claude.com/docs/en/settings § permissions.additionalDirectories).
+state_root = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "claude-harness")
+dirs = s.setdefault("permissions", {}).setdefault("additionalDirectories", [])
+if state_root not in dirs:
+    dirs.append(state_root)
+    print(f"  settings.json: additionalDirectories += {state_root} (per-person plans, handoffs, lessons)")
 removed = 0
 for event, matchers in list(s.get("hooks", {}).items()):
     kept = []

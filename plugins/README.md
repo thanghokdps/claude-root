@@ -61,7 +61,7 @@ design   /kickoff or /brainstorming → design.md → /grill → /writing-plans 
 build    PLAN.md → /feature dispatches each slice to its pack's engineer (backend: api-endpoint, db-change, api-client · frontend: ui-feature, design-ui, ui-polish · mobile: mobile-feature, mobile-design · devops: pipeline, container, infra-change · ai: agent-*) → /checkpoint
 prove    /verify-done → /review-checklist (+ /blast-radius on shared code) → /docs-sync → /finish-branch
 agent    /agent-architect → ADR + scaffold → /agent-feature → agent-tool · agent-hitl · agent-graph · agent-frontend → /agent-verify-turn → /agent-evals → /agent-security
-end      /compact (handoff for the next session) · /compound (lessons to docs/solutions/)
+end      /compact (handoff for the next session) · /compound (lessons to solutions/)
 ```
 
 ## Adding a skill

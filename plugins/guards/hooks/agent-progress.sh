@@ -7,6 +7,7 @@
 # Acts on the event's cwd (process cwd only when .cwd is empty).
 
 INPUT=$(cat /dev/stdin)
+. "$(dirname "$0")/lib/state-dir.sh"
 CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null)
 [ -n "$CWD" ] && { cd -P "$CWD" 2>/dev/null || true; }
 HOOK_TYPE="${1:-post}"
@@ -30,7 +31,9 @@ log() {
 
 # Print wave board from WAVE_STATE.json if it exists
 print_wave_board() {
-  STATE_FILE=$(find "$(pwd)/specs" -name "WAVE_STATE.json" -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1)
+  local state
+  state=$(state_dir "$(pwd)") || return
+  STATE_FILE=$(find "$state/specs" -name "WAVE_STATE.json" -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1)
   [ -z "$STATE_FILE" ] && return
 
   # Path goes in as an argument, never into the Python source: a quote in a dir name would run code.

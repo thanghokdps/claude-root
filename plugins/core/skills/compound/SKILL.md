@@ -2,13 +2,13 @@
 model: opus
 effort: high
 name: compound
-description: Crystallize learnings from the current session into persistent docs/solutions/ files. Run at the end of any session with significant work — mistakes found, solutions discovered, patterns identified. Prevents agents from repeating the same mistakes across sessions.
+description: Crystallize learnings from the current session into persistent solutions/ lesson files (team, personal or global). Run at the end of any session with significant work — mistakes found, solutions discovered, patterns identified. Prevents agents from repeating the same mistakes across sessions.
 when_to_use: end of a session with a tricky fix or a mistake that cost time, "save this learning", "lưu bài học", "ghi lại để lần sau không lặp lại", after /retro, a commit hook reminds that many files changed
 ---
 
 # Compound — Crystallize Session Learnings
 
-Extract what was learned in this session and write it to `docs/solutions/` so future agents start with this knowledge already loaded.
+Extract what was learned in this session and write it to a `solutions/` folder (Step 3) so future agents start with this knowledge already loaded.
 
 **Run when:**
 
@@ -56,9 +56,11 @@ Assign each learning:
 
 ## Step 3 — Write solution files
 
-**For global learnings** → write to `~/.claude/docs/solutions/<slug>.md`
-**For project learnings** → write to `.claude/docs/solutions/<slug>.md` and commit it with the work
-**For personal learnings** → write to the folder `python3 -I ${CLAUDE_PLUGIN_ROOT}/scripts/learn-promote.py --personal-dir` prints (`~/.claude/claude-learn/solutions/<repo>-<hash>/`, outside the repo, never committed)
+The session start context names all three folders; `python3 -I ${CLAUDE_PLUGIN_ROOT}/scripts/learn-promote.py --state-dir` prints this repo's state dir `<S>`.
+
+**For global learnings** → write to `~/.local/share/claude-harness/global/solutions/<slug>.md`
+**For project learnings** → write to `.claude/solutions/<slug>.md` and commit it with the work
+**For personal learnings** → write to `<S>/solutions/<slug>.md` (outside the repo, never committed)
 
 Flat, no category folders: `learn-promote.py` dedupes, bumps and retires only `*.md` directly in the folder.
 
@@ -101,9 +103,9 @@ applies_to: <global|project-name>
 
 ## Step 4 — Update INDEX.md
 
-**Global**: update `~/.claude/docs/solutions/INDEX.md`
-**Project**: update `.claude/docs/solutions/INDEX.md`
-**Personal**: update `INDEX.md` in the `--personal-dir` folder
+**Global**: update `~/.local/share/claude-harness/global/solutions/INDEX.md`
+**Project**: update `.claude/solutions/INDEX.md`
+**Personal**: update `<S>/solutions/INDEX.md`
 
 Format (links are flat: the category is a heading, never a folder):
 
@@ -151,11 +153,11 @@ Learnings crystallized: N
   normal:   <slugs>
 
 Written to:
-  global:   ~/.claude/docs/solutions/
-  project:  .claude/docs/solutions/ (commit it)
-  personal: ~/.claude/claude-learn/solutions/<repo>-<hash>/
+  global:   ~/.local/share/claude-harness/global/solutions/
+  project:  .claude/solutions/ (commit it)
+  personal: <S>/solutions/
 
-Next session: agents will load these automatically via docs/solutions/INDEX.md
+Next session: agents will load these automatically via each folder's INDEX.md
 ```
 
 ---

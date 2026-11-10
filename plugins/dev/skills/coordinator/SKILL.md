@@ -22,10 +22,10 @@ References (read when the step needs them, not up front): `${CLAUDE_PLUGIN_ROOT}
 
 ```bash
 # Global learnings (apply to all projects)
-cat ~/.claude/docs/solutions/INDEX.md 2>/dev/null
+cat ~/.local/share/claude-harness/global/solutions/INDEX.md 2>/dev/null
 
-# Project-specific learnings
-cat .claude/docs/solutions/INDEX.md 2>/dev/null
+# Project-specific learnings (team; personal ones sit in the state dir the session context names)
+cat .claude/solutions/INDEX.md 2>/dev/null
 ```
 
 Read any file marked `severity: critical` in the index. These are mistakes agents have made before — do not repeat them.
@@ -319,7 +319,7 @@ After all agents complete:
 ### Context loading
 
 - **Load `.claude/docs/` first.** If missing → prompt user to run `/project-init`.
-- **Load `~/.claude/docs/solutions/INDEX.md` and `.claude/docs/solutions/INDEX.md`** — read any critical-severity entries before dispatching.
+- **Load the global, personal and `.claude/solutions/INDEX.md` lesson indexes** — read any critical-severity entries before dispatching.
 - **Pass project context explicitly** to every agent prompt. Agents inherit nothing.
 - **Never let agents re-scan the codebase.** Docs + targeted source files only.
 

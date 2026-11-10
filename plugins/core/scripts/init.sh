@@ -129,10 +129,8 @@ echo ""
 
 # ─── Create .claude/ structure ───────────────────────────────────────────────
 
-# specs/ lives at the project root, not under .claude/ — session-handoff.sh and every
-# skill write to $REPO_DIR/specs. Creating .claude/specs here left an empty folder forever.
+# No specs/ here: plans and the handoff live outside the repo, in hooks/lib/state-dir.sh's folder.
 mkdir -p "$CLAUDE_DIR"/{rules,skills,hooks}
-mkdir -p "$PROJECT_DIR/specs"
 
 # ─── Copy Universal Rules ────────────────────────────────────────────────────
 
@@ -276,8 +274,8 @@ else
   echo "   ✅ all registered hooks installed and executable"
 fi
 
-# Per-person Claude state stays out of git and out of `prettier --check .`: specs/ (HANDOFF.md, plans),
-# settings.local.json (the status line's machine path), Claude Code's worktrees. In .gitignore, not
+# Per-person Claude state stays out of git and out of `prettier --check .`: specs/ (a stray write from an
+# older kit; plans now live outside the repo), settings.local.json (the status line's machine path), Claude Code's worktrees. In .gitignore, not
 # .git/info/exclude, so a teammate's fresh clone ignores them too.
 GITIGNORE="$PROJECT_DIR/.gitignore"
 for entry in /specs/ .claude/settings.local.json .claude/worktrees/; do

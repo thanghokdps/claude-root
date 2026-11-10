@@ -3,20 +3,24 @@
 
 Drain: each <git-common-dir>/claude-learn/queue/*.json is validated (schema, no secret left, no absolute path
 in a global lesson, body <= 15 lines, evidence quoted from a saved digest, not a duplicate of an INDEX line).
-A project-level pass becomes .claude/docs/solutions/<slug>.md (confidence, ttl_days: 90, seen: 1, last_used)
-plus an INDEX line, committed for the team; a personal-level pass lands the same way in this person's folder for
-the repo, ~/.claude/claude-learn/solutions/<repo>-<hash>/, outside the working tree; a global-level pass is only
-recorded for Promote, never written into the repo. A failure
+Folders: <H> = ${XDG_DATA_HOME:-~/.local/share}/claude-harness, outside every repo and outside ~/.claude (Claude Code
+refuses Write/Edit there). <S> = <H>/repos/<repo>-<sha8>, this person's state for the repo (hooks/lib/state-dir.sh
+computes the same path): <S>/specs/ (handoff, plans) and <S>/solutions/.
+A project-level pass becomes .claude/solutions/<slug>.md (confidence, ttl_days: 90, seen: 1, last_used) plus an
+INDEX line, committed for the team; a personal-level pass lands the same way in <S>/solutions/; a global-level pass
+is only recorded for Promote, never written into the repo. A failure
 moves to queue/rejected/ with reject_reason. A duplicate also counts as a recurrence: the existing lesson gets
 seen + 1 and last_used today.
 Retire: an auto-captured lesson (it has ttl_days) whose last_used is older than ttl_days moves to archive/
 and leaves the INDEX. Never deleted. Applies to the project, personal and global solutions folders.
-Promote: a global-level slug seen in >= 2 repos (~/.claude/claude-learn/repos.json) is copied to
-~/.claude/docs/solutions/ with seen: N.
+Promote: a global-level slug seen in >= 2 repos (<H>/global/repos.json) is copied to <H>/global/solutions/ with seen: N.
+Migrate: what older kits kept in ~/.claude/docs/solutions, ~/.claude/claude-learn/ and an untracked <repo>/specs/
+moves to <H> once, and so does an untracked .claude/docs/solutions/ (never shared, so personal). Nothing is
+overwritten; a tracked .claude/docs/solutions/ is only reported, for a `git mv`.
 
-Usage: SessionStart hook (event JSON on stdin; prints a systemMessage when something changed) ·
---now (drain the current repo now and print a report; /compound runs it) · --touch <lesson.md> (mark used) ·
---personal-dir (print this repo's personal folder; session-resume.sh computes the same path).
+Usage: SessionStart hook (event JSON on stdin; adds <S> to the session context, prints a systemMessage when
+something changed) · --now (drain the current repo now and print a report; /compound runs it) ·
+--touch <lesson.md> (mark used) · --state-dir (print <S>).
 HARNESS_LEARN=0 or HARNESS_LEARN_CHILD set: the hook mode does nothing. Never exits non-zero.
 """
 import datetime
@@ -25,6 +29,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -174,9 +179,21 @@ def lesson_text(p, seen=1):
     return join_frontmatter(pairs, rest)
 
 
+def harness_home():
+    data = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
+    return os.path.join(data, "claude-harness")
+
+
+def repo_state_dir(common):
+    """<S>: keyed by the repo's resolved git common dir, so every worktree shares it."""
+    real = os.path.realpath(common)
+    name = os.path.basename(os.path.dirname(real)) + "-" + hashlib.sha1(real.encode()).hexdigest()[:8]
+    return os.path.join(harness_home(), "repos", name)
+
+
 def promote(p, repo_id, home_solutions):
     """Record the repo for a global slug; copy it to the global folder once >= 2 repos have it."""
-    registry_path = os.path.join(os.path.expanduser("~"), ".claude", "claude-learn", "repos.json")
+    registry_path = os.path.join(harness_home(), "global", "repos.json")
     try:
         registry = json.loads(read(registry_path) or "{}")
     except ValueError:
@@ -198,11 +215,44 @@ def promote(p, repo_id, home_solutions):
     return True
 
 
-def personal_dir(common):
-    """This person's lesson folder for the repo: keyed by its git dir, so every worktree shares it."""
-    real = os.path.realpath(common)
-    name = os.path.basename(os.path.dirname(real)) + "-" + hashlib.sha1(real.encode()).hexdigest()[:8]
-    return os.path.join(os.path.expanduser("~"), ".claude", "claude-learn", "solutions", name)
+def move_missing(src, dst, counts):
+    """Move src to dst, entry by entry, where dst has nothing yet; an empty source folder is then removed."""
+    if not os.path.lexists(src):
+        return
+    if not os.path.lexists(dst):
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.move(src, dst)
+        counts["migrated"] += 1
+    elif os.path.isdir(src) and not os.path.islink(src) and os.path.isdir(dst):
+        for name in sorted(os.listdir(src)):
+            move_missing(os.path.join(src, name), os.path.join(dst, name), counts)
+        try:
+            os.rmdir(src)
+        except OSError:
+            pass  # something stayed because dst already had it: left in place, never overwritten
+
+
+def tracked(top, rel):
+    r = subprocess.run(["git", "-C", top, "ls-files", "--", rel], capture_output=True, text=True)
+    return r.returncode != 0 or bool(r.stdout.strip())
+
+
+def migrate(top, state_dir, counts):
+    """Older kits: global lessons in ~/.claude/docs/solutions, state in ~/.claude/claude-learn, specs/ in the repo."""
+    old = os.path.join(os.path.expanduser("~"), ".claude")
+    home = harness_home()
+    move_missing(os.path.join(old, "docs", "solutions"), os.path.join(home, "global", "solutions"), counts)
+    move_missing(os.path.join(old, "claude-learn", "repos.json"), os.path.join(home, "global", "repos.json"), counts)
+    move_missing(os.path.join(old, "claude-learn", "solutions", os.path.basename(state_dir)),
+                 os.path.join(state_dir, "solutions"), counts)
+    if not tracked(top, "specs"):
+        move_missing(os.path.join(top, "specs"), os.path.join(state_dir, "specs"), counts)
+    old_team = os.path.join(".claude", "docs", "solutions")
+    if not tracked(top, old_team):  # never committed, so nobody else had it: personal
+        move_missing(os.path.join(top, old_team), os.path.join(state_dir, "solutions"), counts)
+    elif os.path.isdir(os.path.join(top, old_team)):
+        return "team lessons moved to .claude/solutions/: run `git mv .claude/docs/solutions .claude/solutions`"
+    return None
 
 
 def drain(state, solutions, personal, home_solutions, repo_id, counts):
@@ -260,19 +310,21 @@ def retire(solutions, counts):
 
 
 def run(cwd):
+    """(counts, rejected dir, <S>, folders, hint); <S> is None outside a repo."""
     top, common = git(cwd, "--show-toplevel"), git(cwd, "--git-common-dir")
-    counts = {"added": 0, "staged": 0, "rejected": 0, "archived": 0, "promoted": 0}
+    counts = {"added": 0, "staged": 0, "rejected": 0, "archived": 0, "promoted": 0, "migrated": 0}
     if not top or not common:
-        return counts, None
+        return counts, None, None, None, None
     state = os.path.join(common, "claude-learn")
-    solutions = os.path.join(top, ".claude", "docs", "solutions")
-    personal = personal_dir(common)
-    home_solutions = os.path.join(os.path.expanduser("~"), ".claude", "docs", "solutions")
+    state_dir = repo_state_dir(common)
+    hint = migrate(top, state_dir, counts)
+    folders = (os.path.join(top, ".claude", "solutions"), os.path.join(state_dir, "solutions"),
+               os.path.join(harness_home(), "global", "solutions"))
     if os.path.isdir(os.path.join(state, "queue")):
-        drain(state, solutions, personal, home_solutions, os.path.realpath(common), counts)
-    for folder in (solutions, personal, home_solutions):
+        drain(state, *folders, os.path.realpath(common), counts)
+    for folder in folders:
         retire(folder, counts)
-    return counts, os.path.join(state, "queue", "rejected")
+    return counts, os.path.join(state, "queue", "rejected"), state_dir, folders, hint
 
 
 def report(counts):
@@ -282,13 +334,14 @@ def report(counts):
 def main(argv):
     if argv[:1] == ["--touch"] and len(argv) == 2:
         set_fields(argv[1], last_used=TODAY)
-    elif argv[:1] == ["--personal-dir"]:
+    elif argv[:1] == ["--state-dir"]:
         common = git(os.getcwd(), "--git-common-dir")
         if common:
-            print(personal_dir(common))
+            print(repo_state_dir(common))
     elif argv[:1] == ["--now"]:
-        counts, rejected = run(os.getcwd())
-        print(f"learn-promote: {report(counts)}" + (f" (rejects in {rejected})" if counts["rejected"] else ""))
+        counts, rejected, _, _, hint = run(os.getcwd())
+        print(f"learn-promote: {report(counts)}" + (f" (rejects in {rejected})" if counts["rejected"] else "")
+              + (f"; {hint}" if hint else ""))
     elif not argv:
         if os.environ.get("HARNESS_LEARN") == "0" or os.environ.get("HARNESS_LEARN_CHILD"):
             return
@@ -296,10 +349,19 @@ def main(argv):
             ev = json.loads(sys.stdin.read() or "{}")
         except ValueError:
             return
-        counts, rejected = run(ev.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
-        if any(counts.values()):
-            msg = f"Learnings: {report(counts)}." + (f" Rejects: {rejected}" if counts["rejected"] else "")
-            print(json.dumps({"systemMessage": msg}))
+        counts, rejected, state_dir, folders, hint = run(
+            ev.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+        if not state_dir:
+            return
+        out = {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": (
+            f"Personal Claude state for this repo: {state_dir}. In every skill, rule and hook, specs/ means "
+            f"{state_dir}/specs/ (HANDOFF.md, <slug>/PLAN.md, audit/): never create specs/ in the repo. "
+            f"Lessons: team {folders[0]}/ (committed), personal {folders[1]}/, global {folders[2]}/.")}}
+        notes = ([f"Learnings: {report(counts)}."] if any(counts.values()) else []) + \
+                ([f"Rejects: {rejected}"] if counts["rejected"] else []) + ([hint] if hint else [])
+        if notes:
+            out["systemMessage"] = " ".join(notes)
+        print(json.dumps(out))
 
 
 if __name__ == "__main__":
