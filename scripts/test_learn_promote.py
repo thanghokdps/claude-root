@@ -76,12 +76,14 @@ def test_valid_proposal_lands_with_frontmatter_and_index_line():
     r = repo(home())
     queue(r, proposal())
     run(r, "--now")
-    fm = frontmatter(os.path.join(r["solutions"], "piped-exit-codes.md"))
+    folder = personal_dir(r)
+    fm = frontmatter(os.path.join(folder, "piped-exit-codes.md"))
     assert fm["confidence"] == "med" and fm["ttl_days"] == "90" and fm["seen"] == "1"
-    assert fm["last_used"] == TODAY.isoformat()
-    assert EVIDENCE in read(os.path.join(r["solutions"], "piped-exit-codes.md"))
-    assert "[piped-exit-codes](piped-exit-codes.md)" in read(os.path.join(r["solutions"], "INDEX.md"))
+    assert fm["last_used"] == TODAY.isoformat() and fm["level"] == "project"
+    assert EVIDENCE in read(os.path.join(folder, "piped-exit-codes.md"))
+    assert "[piped-exit-codes](piped-exit-codes.md)" in read(os.path.join(folder, "INDEX.md"))
     assert os.listdir(r["queue"]) == []
+    assert not os.path.exists(r["solutions"])  # an auto-captured lesson never lands in the team's folder
 
 
 def test_each_reject_reason():
@@ -118,7 +120,7 @@ def test_duplicate_of_index_line_is_rejected_and_bumps_seen():
     run(r, "--now")
     got = rejected(r)
     assert len(got) == 1 and "duplicate" in got[0]["reject_reason"]
-    assert frontmatter(os.path.join(r["solutions"], "piped-exit-codes.md"))["seen"] == "2"
+    assert frontmatter(os.path.join(personal_dir(r), "piped-exit-codes.md"))["seen"] == "2"
     queue(r, proposal(slug="other-slug", title="never judge tests through a pipe."), "p3.json")
     run(r, "--now")
     assert len(rejected(r)) == 2  # same title under another slug is still a duplicate
