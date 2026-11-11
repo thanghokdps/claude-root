@@ -6,9 +6,10 @@ in a global lesson, body <= 15 lines, evidence quoted from a saved digest, not a
 Folders: <H> = ${XDG_DATA_HOME:-~/.local/share}/claude-harness, outside every repo and outside ~/.claude (Claude Code
 refuses Write/Edit there). <S> = <H>/repos/<repo>-<sha8>, this person's state for the repo (hooks/lib/state-dir.sh
 computes the same path): <S>/specs/ (handoff, plans) and <S>/solutions/.
-A project-level pass becomes .claude/solutions/<slug>.md (confidence, ttl_days: 90, seen: 1, last_used) plus an
-INDEX line, committed for the team; a personal-level pass lands the same way in <S>/solutions/; a global-level pass
-is only recorded for Promote, never written into the repo. A failure
+A project- or personal-level pass becomes <S>/solutions/<slug>.md (level, confidence, ttl_days: 90, seen: 1,
+last_used) plus an INDEX line: nothing auto-captured is written into the repo. The team's .claude/solutions/ is
+only read here (duplicates, retirement); /compound is what shares a lesson there. A global-level pass
+is only recorded for Promote. A failure
 moves to queue/rejected/ with reject_reason. A duplicate also counts as a recurrence: the existing lesson gets
 seen + 1 and last_used today.
 Retire: an auto-captured lesson (it has ttl_days) whose last_used is older than ttl_days moves to archive/
@@ -281,9 +282,10 @@ def drain(state, solutions, personal, home_solutions, repo_id, counts):
             # Only repos.json remembers it until a second repo sees it: a team repo never carries kit lessons.
             counts["promoted" if promote(p, repo_id, home_solutions) else "staged"] += 1
         else:
-            folder = personal if p["level"] == "personal" else solutions
-            write(os.path.join(folder, p["slug"] + ".md"), lesson_text(p))
-            add_index_line(os.path.join(folder, "INDEX.md"), p["slug"], p["title"], p["confidence"])
+            # A project-level lesson lands outside the repo too: the team's folder takes only what a person
+            # chose to share (/compound), never what a background reflector guessed.
+            write(os.path.join(personal, p["slug"] + ".md"), lesson_text(p))
+            add_index_line(os.path.join(personal, "INDEX.md"), p["slug"], p["title"], p["confidence"])
             counts["added"] += 1
         os.remove(claimed)
 

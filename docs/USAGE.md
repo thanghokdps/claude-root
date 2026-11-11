@@ -175,7 +175,7 @@ Finish: `/verify-done` before saying done, `/review-checklist` before the PR, `/
 ## 9. Ending a session
 
 - `/compact` when the conversation is long or you are leaving: summarises the work, writes `specs/HANDOFF.md` for the next session, merges learnings into memory. The `compact-advisor` hook suggests it past 200k tokens of context.
-- `/compound` after a session with a hard bug or a decision worth keeping: writes a lesson to `.claude/solutions/` (team), your state dir (personal) or the global folder. Lessons are also captured on their own: `learn-capture` proposes them every 50 tool calls from a scrubbed digest, and `learn-promote` lands the valid ones at the next session start.
+- `/compound` after a session with a hard bug or a decision worth keeping: writes a lesson to `.claude/solutions/` (team), your state dir (personal) or the global folder. Lessons are also captured on their own: `learn-capture` proposes them every 50 tool calls from a scrubbed digest, and `learn-promote` lands the valid ones at the next session start, in your state dir and never in the repo.
 
 ## 10. Updating
 

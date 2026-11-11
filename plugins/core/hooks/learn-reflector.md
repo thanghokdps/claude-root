@@ -25,10 +25,10 @@ You have no tools. Reply with only a JSON array, one object per lesson, and no o
 - `title`: one line.
 - `body`: the rule, at most 15 lines.
 - `level`: who needs it.
-  - `project`: anyone on the team working in this repository needs it (its stack, conventions, build and test gotchas). It is committed.
+  - `project`: anyone on the team working in this repository needs it (its stack, conventions, build and test gotchas). It stays on this user's machine until they share it with `/compound`.
   - `personal`: about this repository, but only this user needs it (this machine's paths, their local setup, how they like to work here). It stays on their machine.
   - `global`: a user preference or a general technique, true in any repository. It must contain no absolute paths and no repository name.
-    Unsure between `project` and `personal` → `personal`: a lesson the team did not need is noise in their repo.
+    Unsure between `project` and `personal` → `personal`.
 - `confidence`: `low`, `med` or `high` — how sure you are that the lesson is durable and correct.
 - `evidence`: a verbatim quote of at least 20 characters copied from the digest below (one line of it, exactly as written). Never invent or paraphrase it: the promoter rejects a quote it cannot find.
 
