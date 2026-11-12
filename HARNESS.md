@@ -19,7 +19,7 @@ The Auto-Coordinator in the global `CLAUDE.md` (full logic in `dev:coordinator`)
 | ------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **tiny**      | one file, reversible    | just do it; the hooks are the safety net                                                                                                                                 |
 | **normal**    | several files, internal | plan mode → approve → implement → `/verify-done`                                                                                                                         |
-| **high-risk** | a hard gate is hit      | `specs/<slug>/` with SUMMARY, PLAN, TEST_MATRIX and ESCALATIONS (or `docs/tickets/<id>/` for a ticket) → the user confirms → build → review including `/security-review` |
+| **high-risk** | a hard gate is hit      | `specs/<slug>/` with SUMMARY, PLAN, TEST_MATRIX and ESCALATIONS (or `specs/<id>-<slug>/` for a ticket) → the user confirms → build → review including `/security-review` |
 
 **Hard gates**, always high-risk and never self-downgraded: auth or authorisation, data migration, security or audit, external providers, public contracts, weakening validation, `.claude/` config. A hard gate discovered mid-task escalates the lane regardless of where it started. Stopping rules: three turns still broken → stop patching, name the assumption that may be wrong, ask one diagnostic question.
 

@@ -12,7 +12,7 @@ when_to_use: a new capability is requested, "make me a feature", "làm feature m
 
 **What it does:** Risk intake → (research) → plan → build → review → commit
 
-Work that has a tracker id goes through `/ticket` instead: it writes the contract to `docs/tickets/<id>/` (committed, unlike `specs/`) and then runs this skill with that plan.
+Work that has a tracker id goes through `/ticket` instead: it writes the contract to `specs/<id>-<slug>/` (personal like every `specs/` plan, never committed) and then runs this skill with that plan.
 
 This skill is the supervisor: it plans, splits the feature into slices, dispatches each slice to the role pack's engineer (Stage 3), reviews and integrates. It writes no slice itself when a pack is enabled.
 

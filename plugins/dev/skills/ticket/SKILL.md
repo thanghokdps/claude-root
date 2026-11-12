@@ -2,15 +2,15 @@
 model: opus
 effort: high
 name: ticket
-description: Works a tracker ticket by its id — reads the issue (GitHub, GitLab or Jira), writes the ticket's contract into the repo as docs/tickets/<id>/intent.md, spec.md and plan.md, builds it through /feature, and ships the contract in the same PR as the code. Several ids run in parallel, one git worktree and one PR per ticket. Use when the user names a ticket or issue number to implement, or hands over several tickets at once.
-when_to_use: /ticket 412, "làm ticket 412", "implement issue 412", "pick up JIRA-1234", "làm song song ticket 412 413 414", work these tickets in parallel, start a ticket, ticket contract, docs/tickets
+description: Works a tracker ticket by its id — reads the issue (GitHub, GitLab or Jira), writes the ticket's contract (intent.md, spec.md, plan.md) to the personal specs/<id>-<slug>/ outside the repo, builds it through /feature, and opens a PR with the code only, its description carrying the decisions. Several ids run in parallel, one git worktree and one PR per ticket. Use when the user names a ticket or issue number to implement, or hands over several tickets at once.
+when_to_use: /ticket 412, "làm ticket 412", "implement issue 412", "pick up JIRA-1234", "làm song song ticket 412 413 414", work these tickets in parallel, start a ticket, ticket contract
 ---
 
-# ticket — From a ticket id to a PR, with its contract in the repo
+# ticket — From a ticket id to a PR, its contract kept outside the repo
 
 **Invoke:** `/ticket <id> [<id> …]`
 
-`specs/` is gitignored and dies with the session; a ticket's intent, contract and plan are what a reviewer needs next to the diff, and what the next person reads when the code changes again. So they live in the repo, one folder per ticket, and ship in the same PR as the code.
+A ticket's intent, contract and plan are personal working state, like any plan: they live in `specs/<id>-<slug>/`, in the repo's state dir that the session start names (`~/.local/share/claude-harness/repos/<repo>-<hash>/specs/`), shared by every worktree of the repo. Never write them under `docs/tickets/` or anywhere else in the repo, never stage them, never put them in a PR. What the PR reviewer and the next person need from them — the decisions with their why and revert, the answered concerns, the deviations and waivers, the plan review's verdict — goes into the PR description (Step 4).
 
 The three files and their templates are in `${CLAUDE_SKILL_DIR}/references/contract.md`. Read it before Step 2.
 
@@ -32,7 +32,7 @@ Then search the code for what the ticket asks (its route, the entity and verb in
 
 ## Step 2 — Write the contract
 
-Create `docs/tickets/<id>/` on a branch `<type>/<id>-<slug>` (never on `main`/`dev`/`stag`/`prod`):
+Cut a branch `<type>/<id>-<slug>` (never work on `main`/`dev`/`stag`/`prod`) and create `specs/<id>-<slug>/` in the state dir, named as the branch without its type: the hooks find the contract by that name.
 
 1. `intent.md` — the ticket quoted verbatim, the link, the user and the outcome in one sentence each, and `Estimate: <range>` when the ticket carries one (`/breakdown` (plan, if installed) writes it into the issue). No new words for what the ticket said.
 2. `spec.md` — acceptance criteria as Given/When/Then, the contract that changes (endpoint, schema, event, UI state), out of scope, and the test matrix row per criterion. A criterion the ticket does not state is an open question, not an invention: its Source cell cites the concern (`C2`), never `ticket` — `Source: ticket` is only for a Then that restates the ticket's own words (a column list, a header row, a format or a mechanism the ticket never mentions cannot carry it).
@@ -48,9 +48,9 @@ Each mismatch (ticket ↔ design, design ↔ API, ticket ↔ app, design ↔ app
 
 A high-risk ticket waits for the user's approval of the three files before Step 3. Worked in auto mode ("implement all, don't ask"), every choice taken for the user is challenged and recorded under `## Auto decisions` in `plan.md` (`${CLAUDE_PLUGIN_ROOT}/references/auto-decisions.md`); the `auto-decisions` hook blocks the stop until it is.
 
-Open questions → run `/resolve-question` on them now, before any code: it answers the facts from the repo with a citation and asks the user only the choices, one per turn as options. An existing `docs/tickets/<id>/` is updated, not overwritten: keep earlier decisions and add a dated entry under § Changes.
+Open questions → run `/resolve-question` on them now, before any code: it answers the facts from the repo with a citation and asks the user only the choices, one per turn as options. An existing `specs/<id>-<slug>/` is updated, not overwritten: keep earlier decisions and add a dated entry under § Changes.
 
-Then `plan.md` is reviewed by an agent that has not seen this conversation (`${CLAUDE_PLUGIN_ROOT}/references/plan-review.md`): one fresh `opus` agent, verdict `APPROVED` / `REVISE` / `BLOCKED` with a `path:line` per finding, at most 2 rounds, logged in `docs/tickets/<id>/plan-review.md` so the PR reviewer reads it next to the diff. A changed `plan.md` is reviewed again (the log's `Plan: … @ <hash>` line says which version was approved).
+Then `plan.md` is reviewed by an agent that has not seen this conversation (`${CLAUDE_PLUGIN_ROOT}/references/plan-review.md`): one fresh `opus` agent, verdict `APPROVED` / `REVISE` / `BLOCKED` with a `path:line` per finding, at most 2 rounds, logged in `specs/<id>-<slug>/plan-review.md`; its verdict and any open finding go into the PR description. A changed `plan.md` is reviewed again (the log's `Plan: … @ <hash>` line says which version was approved).
 
 **Done when:** the four files exist (`plan-review.md` says `Verdict: APPROVED`, or lists its open findings with their arbitration), every criterion has a test row and a cross-check row, no open question is unanswered or unrecorded, and no `blocking` concern lacks a Decision (or the user waived it: `skip concerns: <reason>` under plan.md § Deviations; `ticket-gate.sh` blocks code commits otherwise).
 
@@ -66,12 +66,12 @@ The plugin's hooks enforce this. `ticket-ledger.sh` records every skill and suba
 
 1. Tick the matrix in `spec.md` (status and evidence per row).
 2. `/verify-done` (core), then `/review-checklist` (review). High-risk lane (auth, data writes, migrations, external providers): also `/security-review` and `/code-review`; their findings are fixed or listed in `plan.md` § Deviations. The ticket's folder replaces `specs/<slug>/` from the global rules.
-3. Commit `docs/tickets/<id>/` (incl. `plan-review.md`) with the code, `<type>: <what> (#<id>)`.
-4. Record the actual: the hours between the branch's first commit and now (`git log --reverse --format=%cI <base>..HEAD | head -1`), rounded to the half hour, in the row for `<id>` of `docs/tickets/README.md` (`| id | title | estimate | actual | note |`; create the file and the row when missing). An actual outside the estimate's range gets a one-line note of why — that line is what `/retro` (lead, if installed) reads.
-5. `/finish-branch` (ship, if installed) opens the PR; its description links the ticket and `docs/tickets/<id>/`.
+3. Commit the code only, `<type>: <what> (#<id>)`: every commit of the ticket ends `(#<id>)`, which `/retro` (lead, if installed) reads. Nothing from `specs/` is staged; a `docs/tickets/` path in `git diff --staged` is a mistake to unstage and delete.
+4. Record the actual: the hours between the branch's first commit and now (`git log --reverse --format=%cI <base>..HEAD | head -1`), rounded to the half hour, in the row for `<id>` of `specs/TICKETS.md` in the state dir (`| id | title | estimate | actual | note |`; create the file and the row when missing). An actual outside the estimate's range gets a one-line note of why — that line is what `/retro` (lead, if installed) reads.
+5. `/finish-branch` (ship, if installed) opens the PR. Its description links the ticket and carries, copied from the contract: every § Decisions entry (`(user)` and `(agent)` with `why:` and `revert:`), every answered concern (`C#`, question, decision), the § Auto decisions, every § Deviations line (waivers with their reason), the plan review's `Verdict:` with any open finding, and estimate → actual. Never a path into `specs/` or the state dir: the reader has no access to it.
 6. Wait for the PR's checks. Red → fix on the branch (`/ci-triage` (ship, if installed)). Never call the ticket done, or suggest merging, while a check is red.
 
-**Done when:** the PR is open with the contract in its diff, and its checks are green, or each failure is named with its fix on the branch.
+**Done when:** the PR is open with no contract file in its diff and the decisions in its description, and its checks are green, or each failure is named with its fix on the branch.
 
 ## Step 5 — Several tickets in parallel
 

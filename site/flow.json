@@ -65,7 +65,7 @@
           "skip": "No ticket: the request is worked straight from the prompt."
         },
         "normal": {
-          "text": "Reads issue #412, cuts feat/412-due-date-filter and writes the contract into the repo, docs/tickets/412/: intent.md (the ticket verbatim), spec.md (Given/When/Then and a test row per criterion), plan.md opening with Risk: normal and Skills: /api-endpoint, /ui-feature.",
+          "text": "Reads issue #412, cuts feat/412-due-date-filter and writes the contract to the personal specs/412-due-date-filter/, outside the repo: intent.md (the ticket verbatim), spec.md (Given/When/Then and a test row per criterion), plan.md opening with Risk: normal and Skills: /api-endpoint, /ui-feature.",
           "hooks": [
             {
               "name": "branch-guard",
@@ -80,7 +80,7 @@
           ]
         },
         "high-risk": {
-          "text": "Reads issue #431, cuts feat/431-google-sign-in and writes docs/tickets/431/. plan.md opens with Risk: high (auth, data writes, migrations and external providers are high). Every mismatch between ticket, design, API and app becomes a concern in spec.md with a severity and an owner.",
+          "text": "Reads issue #431, cuts feat/431-google-sign-in and writes the personal specs/431-google-sign-in/. plan.md opens with Risk: high (auth, data writes, migrations and external providers are high). Every mismatch between ticket, design, API and app becomes a concern in spec.md with a severity and an owner.",
           "hooks": [
             {
               "name": "branch-guard",
@@ -298,12 +298,12 @@
             {
               "name": "ticket-gate",
               "state": "idle",
-              "note": "Applies only on a <type>/<id>-<slug> branch with docs/tickets/<id>/plan.md."
+              "note": "Applies only on a <type>/<id>-<slug> branch with a personal specs/<id>-<slug>/plan.md."
             }
           ]
         },
         "normal": {
-          "text": "feat: filter the task list by due date (#412), with docs/tickets/412/ in the same commit as the code.",
+          "text": "feat: filter the task list by due date (#412), the code only: the contract stays in specs/, out of the repo.",
           "hooks": [
             {
               "name": "ticket-gate",
@@ -323,7 +323,7 @@
           ]
         },
         "high-risk": {
-          "text": "feat: sign in with Google (#431), with docs/tickets/431/ and its plan review in the same commit.",
+          "text": "feat: sign in with Google (#431), the code only: the contract and its plan review stay in specs/, out of the repo.",
           "hooks": [
             {
               "name": "ticket-gate",
@@ -355,7 +355,7 @@
           "hooks": []
         },
         "normal": {
-          "text": "The PR links the ticket and docs/tickets/412/. Then its checks are watched: a red one is fixed on the branch with /ci-triage, never called done.",
+          "text": "The PR links the ticket, and its description carries the contract's decisions and deviations. Then its checks are watched: a red one is fixed on the branch with /ci-triage, never called done.",
           "source": "plugins/dev/skills/ticket/SKILL.md",
           "hooks": [
             {
@@ -366,7 +366,7 @@
           ]
         },
         "high-risk": {
-          "text": "The PR links the ticket and docs/tickets/431/, plan review included, so the reviewer reads the contract next to the diff.",
+          "text": "The PR links the ticket; its description carries the decisions with why and revert, the answered concerns, the waivers and the plan review's verdict, so the reviewer reads them next to the diff.",
           "source": "plugins/dev/skills/ticket/SKILL.md",
           "hooks": [
             {

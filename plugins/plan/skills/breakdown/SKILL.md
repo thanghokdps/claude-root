@@ -66,7 +66,7 @@ The body of every issue holds: the requirement quoted, the acceptance criteria, 
 
 ## Step 5 — Hand over
 
-Print the order to work them: `/ticket <id>` (dev, if installed) per task, in dependency order; parallel tickets run in separate worktrees. Record the breakdown in `docs/tickets/README.md` as a table `| id | title | estimate | actual | note |` (one row per task, `actual` empty; create the file when missing). `/ticket` fills `actual` when the task ships and `/retro` (lead, if installed) compares the two columns, so the next estimate is calibrated on this team, not on a guess.
+Print the order to work them: `/ticket <id>` (dev, if installed) per task, in dependency order; parallel tickets run in separate worktrees. Record the breakdown in `specs/TICKETS.md` (the repo's personal state dir, never the repo) as a table `| id | title | estimate | actual | note |` (one row per task, `actual` empty; create the file when missing). `/ticket` fills `actual` when the task ships and `/retro` (lead, if installed) compares the two columns, so the next estimate is calibrated on this team, not on a guess.
 
 ---
 

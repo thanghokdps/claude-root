@@ -1,12 +1,15 @@
-# Ticket contract — `docs/tickets/<id>/`
+# Ticket contract — `specs/<id>-<slug>/`
 
-Committed with the code, in the same PR. `<id>` is the tracker's id as written (`412`, `ABC-123`). One folder per ticket; a follow-up ticket gets its own folder and links back.
+Personal, outside the repo: `specs/` is the repo's state dir the session start names (`~/.local/share/claude-harness/repos/<repo>-<hash>/specs/`). Never in `docs/tickets/` or any other repo path, never staged, never in the PR; the decisions reach the reviewer through the PR description (SKILL.md Step 4). `<id>` is the tracker's id as written (`412`, `ABC-123`); `<id>-<slug>` is the branch name without its type (`feat/412-due-date-filter` → `specs/412-due-date-filter/`), which is how the hooks find it. One folder per ticket; a follow-up ticket gets its own folder and names the earlier id.
 
-| File        | Answers                               | Written in                   | Changes after merge                            |
-| ----------- | ------------------------------------- | ---------------------------- | ---------------------------------------------- |
-| `intent.md` | Why: what the ticket asked, for whom  | Step 2                       | Never — a new ticket instead                   |
-| `spec.md`   | What: criteria, contract, test matrix | Step 2, ticked in Step 4     | Only by a later ticket, with a § Changes entry |
-| `plan.md`   | How: slices, files, waves, deviations | Step 2, deviations in Step 3 | Never                                          |
+| File             | Answers                                | Written in                   | Changes after merge                            |
+| ---------------- | -------------------------------------- | ---------------------------- | ---------------------------------------------- |
+| `intent.md`      | Why: what the ticket asked, for whom   | Step 2                       | Never — a new ticket instead                   |
+| `spec.md`        | What: criteria, contract, test matrix  | Step 2, ticked in Step 4     | Only by a later ticket, with a § Changes entry |
+| `plan.md`        | How: slices, files, waves, deviations  | Step 2, deviations in Step 3 | Never                                          |
+| `plan-review.md` | Was the plan approved by a fresh agent | Step 2                       | Never                                          |
+
+`specs/TICKETS.md` (beside the folders) holds one row per ticket, `| id | title | estimate | actual | note |`, filled in Step 4.
 
 ## `intent.md`
 

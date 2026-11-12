@@ -6,7 +6,9 @@ import os
 import subprocess
 import tempfile
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from harness_state import specs
+
+ROOT =os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOK = os.path.join(ROOT, "plugins", "core", "hooks", "repo-profile.sh")
 
 
@@ -573,8 +575,12 @@ def test_workplace_opt_out_is_respected_and_agent_still_enabled():
                                                      "mobile@harness": True, "ai@harness": True}
 
 
-def test_ticket_folder_is_mentioned():
-    cwd = repo({"package.json": {"dependencies": {"react": "19"}}, "docs/tickets/412/intent.md": ""})
+def test_ticket_ledger_in_the_state_dir_is_mentioned():
+    cwd = repo({"package.json": {"dependencies": {"react": "19"}}})
+    assert "/ticket" not in run(cwd)
+    os.makedirs(specs(cwd))
+    with open(specs(cwd, "TICKETS.md"), "w") as f:
+        f.write("| id | title | estimate | actual | note |\n")
     assert "/ticket" in run(cwd)
 
 

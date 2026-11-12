@@ -17,9 +17,9 @@ AUTO = os.path.join(ROOT, "plugins", "dev", "hooks", "auto-decisions.sh")
 def repo(branch="feat/7-pin-chat", plan=None):
     path = tempfile.mkdtemp(prefix="tk-hooks-")
     subprocess.run(["git", "-C", path, "init", "-q", "-b", branch], check=True)
-    if plan is not None:
-        os.makedirs(os.path.join(path, "docs", "tickets", "7"))
-        with open(os.path.join(path, "docs", "tickets", "7", "plan.md"), "w") as f:
+    if plan is not None:  # the ticket's contract lives in the state dir, never in the repo
+        os.makedirs(specs(path, "7-pin-chat"))
+        with open(specs(path, "7-pin-chat", "plan.md"), "w") as f:
             f.write(plan)
     return path
 
@@ -63,6 +63,14 @@ def test_path_in_ticket_plan_is_pre_approved():
     path = repo(plan="Risk: high\nSkills: /api-endpoint\n\nFiles: .github/workflows/ci.yml\n")
     assert not asks(path, "Edit", file_path=os.path.join(path, ".github/workflows/ci.yml"))
     assert asks(path, "Edit", file_path=os.path.join(path, ".env"))
+
+
+def test_a_ticket_plan_inside_the_repo_does_not_pre_approve():
+    path = repo()
+    os.makedirs(os.path.join(path, "docs", "tickets", "7"))
+    with open(os.path.join(path, "docs", "tickets", "7", "plan.md"), "w") as f:
+        f.write("Files: .github/workflows/ci.yml\n")
+    assert asks(path, "Edit", file_path=os.path.join(path, ".github/workflows/ci.yml"))
 
 
 def test_path_in_spec_plan_outside_the_repo_is_pre_approved():
@@ -169,6 +177,12 @@ def test_entries_need_a_challenge():
     ok = "## Auto decisions\n- chose the click · options: a / b · challenged: b audits → kept\n\n## Deviations\n"
     assert stop(repo(plan=PLAN.format(risk="high", section=ok))) == "allow"
     assert stop(repo(plan=PLAN.format(risk="high", section="## Auto decisions\n- none: user answered all\n"))) == "allow"
+
+
+def test_block_reason_names_the_plan_in_the_state_dir():
+    path = repo(plan=PLAN.format(risk="high", section=""))
+    out = run(AUTO, {"cwd": path, "permission_mode": "auto"})[1]
+    assert specs(path, "7-pin-chat", "plan.md") in json.loads(out)["reason"], out
 
 
 def test_auto_decisions_skip_normal_risk_default_mode_and_other_branches():

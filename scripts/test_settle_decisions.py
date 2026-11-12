@@ -5,7 +5,9 @@ import os
 import subprocess
 import tempfile
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from harness_state import specs
+
+ROOT =os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(ROOT, "plugins", "lead", "skills", "retro", "scripts", "settle-decisions.py")
 
 PLAN = """# Plan
@@ -43,15 +45,20 @@ def commit(repo, msg, *files):
     for rel in files:
         write(repo, rel, msg + "\n")
     git(repo, "add", "-A")
-    git(repo, "commit", "-q", "-m", msg)
+    git(repo, "commit", "-q", "--allow-empty", "-m", msg)
+
+
+def contract(repo, folder, name, text):
+    """A ticket's contract file, in the repo's state dir: never in the repo."""
+    write(specs(repo, folder), name, text)
 
 
 def setup():
     repo = tempfile.mkdtemp(prefix="settle-")
     git(repo, "init", "-q", "-b", "main")
-    write(repo, "docs/tickets/412/plan.md", PLAN)
-    write(repo, "docs/tickets/412/spec.md", SPEC)
-    commit(repo, "feat: 412 build", "src/tools/rename.ts", "src/cache.ts", "lib/page.ts", "src/http.ts")
+    contract(repo, "412-rename", "plan.md", PLAN)
+    contract(repo, "412-rename", "spec.md", SPEC)
+    commit(repo, "feat: rename via route (#412)", "src/tools/rename.ts", "src/cache.ts", "lib/page.ts", "src/http.ts")
     return repo
 
 
@@ -85,9 +92,27 @@ def test_later_revert_and_fix_settle_the_decision():
 
 def test_commit_inside_the_ticket_is_its_build_not_a_change():
     repo = setup()
-    write(repo, "docs/tickets/412/plan.md", PLAN + "\n- [x] fix review comment\n")
-    commit(repo, "fix: 412 review comment", "src/cache.ts")
+    commit(repo, "fix: review comment (#412)", "src/cache.ts")
     assert run(repo, "--min-days", "0")["[412] Cache key"]["status"] == "kept"
+    commit(repo, "Revert \"fix: review comment (#412)\"", "src/cache.ts")
+    assert run(repo, "--min-days", "0")["[412] Cache key"]["status"] == "reverted"
+
+
+def test_a_ticket_with_no_commit_yet_and_feature_plans_are_skipped():
+    repo = tempfile.mkdtemp(prefix="settle-")
+    git(repo, "init", "-q", "-b", "main")
+    contract(repo, "412-rename", "plan.md", PLAN)
+    contract(repo, "cache", "PLAN.md", PLAN)  # a /feature plan, not a ticket's contract
+    commit(repo, "feat: unrelated", "src/cache.ts")
+    assert run(repo, "--all", "--min-days", "0") == {}
+
+
+def test_a_contract_committed_in_the_repo_is_not_read():
+    repo = tempfile.mkdtemp(prefix="settle-")
+    git(repo, "init", "-q", "-b", "main")
+    write(repo, "docs/tickets/412/plan.md", PLAN)
+    commit(repo, "feat: rename via route (#412)", "src/tools/rename.ts")
+    assert run(repo, "--all") == {}
 
 
 def test_settled_keys_in_the_ledger_are_skipped():
@@ -106,8 +131,8 @@ def test_a_longer_settled_key_does_not_hide_a_shorter_one():
 
 def test_revert_naming_no_file_is_unreadable():
     repo = setup()
-    write(repo, "docs/tickets/9/plan.md", "## Auto decisions\n- Tone · chose terse · challenged: x · revert: be chatty\n")
-    commit(repo, "docs: 9")
+    contract(repo, "9-tone", "plan.md", "## Auto decisions\n- Tone · chose terse · challenged: x · revert: be chatty\n")
+    commit(repo, "docs: tone (#9)")
     assert run(repo, "--all")["[9] Tone"]["status"] == "unreadable"
 
 

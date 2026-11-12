@@ -56,6 +56,6 @@ Write `postmortem.md` beside `incident.md` from the template, within the severit
 - What went well, what went badly, where we got lucky.
 - Action items: each with one owner, a due date and a tracker link — preventive (stop it recurring), detective (notice sooner), mitigating (recover faster). An item without an owner is a wish; ask for one.
 
-Commit both files in the fix PR, or in their own PR when the fix shipped as a hotfix. Link the postmortem from the tracker and from any `docs/tickets/<id>/` it changes.
+Commit both files in the fix PR, or in their own PR when the fix shipped as a hotfix. Link the postmortem from the tracker and from the issue of any ticket it changes.
 
 **Done when:** `postmortem.md` is committed, every action item has an owner and a link, and the user has reviewed it.

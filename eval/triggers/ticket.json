@@ -2,7 +2,7 @@
   "skill": "ticket",
   "positive": [
     {
-      "prompt": "/ticket 412 — implement it and write the intent, spec and plan into docs/tickets",
+      "prompt": "/ticket 412 — implement it and write the ticket's intent, spec and plan first",
       "top_k": 3
     },
     {

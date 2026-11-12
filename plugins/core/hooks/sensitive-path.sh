@@ -3,8 +3,8 @@
 # Trigger: PreToolUse(Edit|Write|MultiEdit|NotebookEdit|Bash). Matches the target against sensitive-paths.txt
 # (beside this script) plus the repo's .claude/sensitive-paths.txt, and answers `ask` so the user approves it.
 # Bash counts when it writes the path (>, >>, tee, sed -i, cp/mv onto it): edit-guard lets gitignored files
-# like .env through, this does not. A path named in the current ticket's plan (docs/tickets/<id>/plan.md) or
-# in specs/*/PLAN.md (the repo's state dir, lib/state-dir.sh) was approved with the plan and passes. Anything unparseable passes: the rule is a prompt,
+# like .env through, this does not. A path named in the current ticket's plan (specs/<id>-<slug>/plan.md) or
+# in specs/*/PLAN.md (both in the repo's state dir, lib/state-dir.sh) was approved with the plan and passes. Anything unparseable passes: the rule is a prompt,
 # not a sandbox. CLAUDE_SENSITIVE_PATHS=0 turns it off.
 # `sensitive-path.sh post` runs on PostToolUse: an edit approved with "allow all edits during this session" (the
 # mode switched to acceptEdits or auto) unlocks every path of that repo and its worktrees for the rest of the
@@ -120,11 +120,10 @@ def sensitive(path):
 
 
 def planned(path):
-    branch = subprocess.run(["git", "-C", top, "symbolic-ref", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
-    m = re.match(r"^[\w.-]+/([A-Za-z]+-\d+|\d+)(?:[-_]|$)", branch)
-    plans = [os.path.join(top, "docs", "tickets", m.group(1), "plan.md")] if m else []
-    state = subprocess.run(["bash", "-c", '. "$1" && state_dir "$2"', "_", os.environ["STATE_LIB"], top],
-                           capture_output=True, text=True).stdout.strip()
+    lib = lambda fn: subprocess.run(["bash", "-c", f'. "$1" && {fn} "$2"', "_", os.environ["STATE_LIB"], top],
+                                    capture_output=True, text=True).stdout.strip()
+    ticket, state = lib("ticket_dir"), lib("state_dir")
+    plans = [os.path.join(ticket, "plan.md")] if ticket else []
     plans += glob.glob(os.path.join(state, "specs", "*", "PLAN.md")) if state else []
     for p in plans:
         try:
