@@ -17,12 +17,12 @@ Runs after the plan is written and before the first slice, on the normal and hig
 
 ### Log
 
-`/feature`: `specs/<slug>/PLAN-REVIEW.md`. `/ticket`: `docs/tickets/<id>/plan-review.md`, committed with the code (the reviewer of the PR reads it next to the diff; `ticket-gate.sh` blocks a code commit until it says `Verdict: APPROVED`, waiver `skip plan-review: <reason>` in plan.md § Deviations).
+`/feature`: `specs/<slug>/PLAN-REVIEW.md`. `/ticket`: `specs/<id>-<slug>/plan-review.md`. Both in the repo's state dir, never committed; for a ticket the PR description carries the `Verdict:` line and any `## Open` finding (`ticket-gate.sh` blocks a code commit until it says `Verdict: APPROVED`, waiver `skip plan-review: <reason>` in plan.md § Deviations).
 
 ```markdown
 Verdict: APPROVED
 Rounds: 2/2
-Plan: docs/tickets/412/plan.md @ 3f9a1c2
+Plan: specs/412-due-date-filter/plan.md @ 3f9a1c2
 
 ## Round 1 — REVISE
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ticket-gate.sh — a ticket's code is committed and its PR opened only after the process in its plan ran.
 # Trigger: PreToolUse(Bash) on `git commit` / `gh pr create`, PreToolUse(mcp__github__create_pull_request).
-# Applies on a branch <type>/<id>-<slug> whose docs/tickets/<id>/plan.md exists. It reads from plan.md:
+# Applies on a branch <type>/<id>-<slug> whose contract folder has a plan.md: specs/<id>-<slug>/ in the repo's state
+# dir (lib/state-dir.sh ticket_dir), outside the repo and never committed. It reads from plan.md:
 #   Risk: high|normal
 #   Skills: /agent-tool, /agent-frontend, ...      every layer skill a slice names
 # and from <git-dir>/claude-ticket-ledger.jsonl (written by ticket-ledger.sh) what ran on this branch.
@@ -16,12 +17,10 @@
 # A line `skip /<skill>: <reason>` (or `skip subagents: <reason>`) in plan.md waives one check, with the reason on record.
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
-# No docs/tickets/ → no plan.md to gate on: exit before python starts (it runs on every Bash call)
-CWD=$(jq -r '.cwd // empty' <<<"$INPUT" 2>/dev/null) &&
-  TOP=$(git -C "${CWD:-${CLAUDE_PROJECT_DIR:-$PWD}}" rev-parse --show-toplevel 2>/dev/null) &&
-  [ ! -d "$TOP/docs/tickets" ] && exit 0
+# Neither a commit nor a PR → nothing to gate: exit before python starts (it runs on every Bash call)
+case "$INPUT" in *commit* | *"pr create"* | *create_pull_request*) ;; *) exit 0 ;; esac
 
-HOOK_INPUT="$INPUT" python3 -I - <<'PY'
+HOOK_INPUT="$INPUT" STATE_LIB="$(dirname "$0")/lib/state-dir.sh" python3 -I - <<'PY'
 import json, os, re, subprocess, sys
 
 try:
@@ -53,12 +52,14 @@ def git(*args):
 
 branch = git("symbolic-ref", "--short", "HEAD")
 m = re.match(r"^[\w.-]+/([A-Za-z]+-\d+|\d+)(?:[-_]|$)", branch)
-top = git("rev-parse", "--show-toplevel")
-if not m or not top:
+if not m:
     sys.exit(0)
 ticket = m.group(1)
-plan_path = os.path.join(top, "docs", "tickets", ticket, "plan.md")
-if not os.path.exists(plan_path):
+r = subprocess.run(["bash", "-c", '. "$1" && ticket_dir "$2"', "_", os.environ["STATE_LIB"], cwd],
+                   capture_output=True, text=True)
+contract = r.stdout.strip()
+plan_path = os.path.join(contract, "plan.md")
+if not contract or not os.path.exists(plan_path):
     sys.exit(0)
 
 if action == "commit":
@@ -80,7 +81,7 @@ if not risk:
 listed = [s.rpartition(":")[2].lower() for s in re.findall(r"/([\w:-]+)", skills_line.group(1))] if skills_line else []
 
 if "plan-review" not in waived:
-    review_path = os.path.join(top, "docs", "tickets", ticket, "plan-review.md")
+    review_path = os.path.join(contract, "plan-review.md")
     try:
         verdict = re.search(r"(?im)^[\s*>-]*Verdict\**\s*:\**\s*`?(APPROVED|REVISE|BLOCKED)\b", open(review_path, encoding="utf-8").read())
     except OSError:
@@ -121,7 +122,7 @@ cheap = [a for a in agents if re.search(r"sonnet|haiku", a.get("model") or "", r
 if not cheap and "subagents" not in waived:
     problems.append("no subagent ran with model sonnet or haiku; dispatch the slice's code to one (Agent tool, model: sonnet)")
 
-spec_path = os.path.join(top, "docs", "tickets", ticket, "spec.md")
+spec_path = os.path.join(contract, "spec.md")
 if action == "commit" and "concerns" not in waived and os.path.exists(spec_path):
     in_concerns = False
     for line in open(spec_path, encoding="utf-8").read().splitlines():
@@ -151,7 +152,7 @@ if problems:
     print(f"ticket-gate: cannot {what} for ticket {ticket} yet —", file=sys.stderr)
     for p in problems:
         print(f"  - {p}", file=sys.stderr)
-    print(f"Run what is missing, or record a waiver in docs/tickets/{ticket}/plan.md as `skip /<skill>: <reason>` "
+    print(f"Run what is missing, or record a waiver in {plan_path} as `skip /<skill>: <reason>` "
           "(`skip subagents: <reason>`), then retry.", file=sys.stderr)
     sys.exit(2)
 sys.exit(0)

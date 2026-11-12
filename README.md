@@ -90,7 +90,7 @@ Every request, whatever the role, moves through the same stages:
 ```text
 a requirement
   → intake     /breakdown: analysed against the code, split into tasks with criteria and estimates, created on GitLab / Jira / GitHub
-  → ticket     /ticket <id>: the task's intent, spec and plan written into docs/tickets/<id>/, then built as below
+  → ticket     /ticket <id>: the task's intent, spec and plan written to the personal specs/<id>-<slug>/ (never the repo), then built as below
 your sentence
   → routing    the skill whose description matches fires (tested on every kit change, no model call)
   → lane       tiny: just do it · normal: plan mode → build → verify · high-risk: spec → confirm → build → review

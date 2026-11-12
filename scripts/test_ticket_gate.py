@@ -5,10 +5,17 @@ import os
 import subprocess
 import tempfile
 
+from harness_state import LIB, specs
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOKS = os.path.join(ROOT, "plugins", "dev", "hooks")
 
 PLAN = "# 7 — Plan\n\nRisk: {risk}\nSkills: /agent-tool, /agent-frontend\n\n## Deviations\n{waivers}\n"
+
+
+def contract(path, *parts):
+    """The ticket's contract folder: specs/7-pin-chat/ in the repo's state dir, never in the repo."""
+    return specs(path, "7-pin-chat", *parts)
 
 
 def repo(branch="feat/7-pin-chat", risk="normal", waivers="", plan=True, review="Verdict: APPROVED\nRounds: 1/2\n"):
@@ -16,17 +23,26 @@ def repo(branch="feat/7-pin-chat", risk="normal", waivers="", plan=True, review=
     git = lambda *a: subprocess.run(["git", "-C", path, *a], check=True, capture_output=True)
     git("init", "-q", "-b", branch)
     if plan:
-        os.makedirs(os.path.join(path, "docs", "tickets", "7"))
-        with open(os.path.join(path, "docs", "tickets", "7", "plan.md"), "w") as f:
+        os.makedirs(contract(path))
+        with open(contract(path, "plan.md"), "w") as f:
             f.write(PLAN.format(risk=risk, waivers=waivers))
         if review is not None:
-            with open(os.path.join(path, "docs", "tickets", "7", "plan-review.md"), "w") as f:
+            with open(contract(path, "plan-review.md"), "w") as f:
                 f.write(review)
     os.makedirs(os.path.join(path, "src"))
     with open(os.path.join(path, "src", "app.ts"), "w") as f:
         f.write("export {}\n")
     git("add", "-A")
     return path
+
+
+def docs_only(path):
+    """Unstage the code and stage a docs/ file instead."""
+    subprocess.run(["git", "-C", path, "reset", "-q", "src/app.ts"], check=True)
+    os.makedirs(os.path.join(path, "docs"), exist_ok=True)
+    with open(os.path.join(path, "docs", "guide.md"), "w") as f:
+        f.write("# Guide\n")
+    subprocess.run(["git", "-C", path, "add", "docs/guide.md"], check=True)
 
 
 def run(hook, path, payload):
@@ -124,22 +140,57 @@ def test_plan_review_waiver_and_docs_only_commit_pass():
     full_build(path)
     assert gate(path)[0] == 0
     path = repo(review=None)
-    subprocess.run(["git", "-C", path, "reset", "-q", "src/app.ts"], check=True)
+    docs_only(path)
     assert gate(path)[0] == 0
 
 
 def test_plan_without_skills_or_risk_line_is_blocked():
     path = repo()
-    with open(os.path.join(path, "docs", "tickets", "7", "plan.md"), "w") as f:
+    with open(contract(path, "plan.md"), "w") as f:
         f.write("# 7 — Plan\n")
     code, err = gate(path)
     assert code == 2 and "Skills:" in err and "Risk:" in err, err
 
 
-def test_contract_only_commit_other_branches_and_other_commands_pass():
+def test_waiver_hint_names_the_plan_in_the_state_dir():
     path = repo()
-    subprocess.run(["git", "-C", path, "reset", "-q", "src/app.ts"], check=True)
-    assert gate(path)[0] == 0  # only docs/tickets/7/ staged
+    code, err = gate(path)
+    assert code == 2 and contract(path, "plan.md") in err and "docs/tickets" not in err, err
+
+
+def test_a_plan_inside_the_repo_is_not_a_contract():
+    path = repo(plan=False)
+    os.makedirs(os.path.join(path, "docs", "tickets", "7"))
+    with open(os.path.join(path, "docs", "tickets", "7", "plan.md"), "w") as f:
+        f.write(PLAN.format(risk="high", waivers=""))
+    assert gate(path)[0] == 0
+
+
+def test_contract_folder_by_id_when_the_slug_differs():
+    for folder in ("ABC-12-old-slug", "ABC-12"):
+        path = repo(branch="feat/ABC-12-new-slug", plan=False)
+        os.makedirs(specs(path, folder))
+        with open(specs(path, folder, "plan.md"), "w") as f:
+            f.write("# ABC-12 — Plan\n")
+        code, err = gate(path)
+        assert code == 2 and "ticket ABC-12" in err and specs(path, folder, "plan.md") in err, (folder, err)
+    path = repo(branch="feat/ABC-123-x", plan=False)
+    os.makedirs(specs(path, "ABC-12-x"))
+    with open(specs(path, "ABC-12-x", "plan.md"), "w") as f:
+        f.write("# ABC-12 — Plan\n")
+    assert gate(path)[0] == 0  # another ticket's folder is not this one's
+
+
+def test_ticket_dir_fails_off_a_ticket_branch():
+    path = repo(branch="chore/deps")
+    r = subprocess.run(["bash", "-c", '. "$1" && ticket_dir "$2"', "_", LIB, path], capture_output=True, text=True)
+    assert r.returncode == 1 and r.stdout == "", r.stdout
+
+
+def test_docs_only_commit_other_branches_and_other_commands_pass():
+    path = repo()
+    docs_only(path)
+    assert gate(path)[0] == 0
     assert gate(repo(branch="chore/deps"))[0] == 0
     assert gate(repo(plan=False))[0] == 0
     assert gate(repo(), "git status")[0] == 0
@@ -161,7 +212,7 @@ SPEC = ("# 7 — Spec\n\n## Concerns\n| C# | Between | Severity | Owner | Questi
 def ready_repo(rows, decisions="- none", **kw):
     path = repo(**kw)
     full_build(path)
-    with open(os.path.join(path, "docs", "tickets", "7", "spec.md"), "w") as f:
+    with open(contract(path, "spec.md"), "w") as f:
         f.write(SPEC.format(rows=rows, decisions=decisions))
     return path
 
@@ -203,7 +254,7 @@ def test_agent_decision_with_note_and_user_decision_pass():
 
 def test_docs_only_commit_ignores_an_open_blocking_concern():
     path = ready_repo("| C1 | design ↔ API | blocking | backend | Which field? Recommended: id | |")
-    subprocess.run(["git", "-C", path, "reset", "-q", "src/app.ts"], check=True)
+    docs_only(path)
     assert gate(path)[0] == 0
 
 

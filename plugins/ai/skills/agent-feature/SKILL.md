@@ -12,7 +12,7 @@ when_to_use: add a feature to the chatbot, "thêm tính năng cho chatbot", "là
 
 A feature built without reading the architecture creates a second way of doing what the repo already does. This skill decides _where_ each piece goes and _what it reuses_; the layer skills do the building. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/agent-stock-first.md`, `${CLAUDE_PLUGIN_ROOT}/rules/agent-identity-and-tools.md`.
 
-Everything decided here goes in `docs/features/<slug>.md`. Started from `/ticket <id>`: its `docs/tickets/<id>/plan.md` is the brief, and the decisions go there instead.
+Everything decided here goes in `docs/features/<slug>.md`. Started from `/ticket <id>`: its `specs/<id>-<slug>/plan.md` (personal, outside the repo) is the brief, and the decisions go there instead, then into the PR description.
 
 ---
 

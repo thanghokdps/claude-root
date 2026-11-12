@@ -4,7 +4,7 @@
 # Trigger: SessionStart (startup|resume|clear|compact), and SubagentStart so subagents get the same profile (they
 # never write settings). Reads manifests and marker folders only — no model call:
 # root, apps/*, packages/* package.json; pyproject.toml / requirements*.txt; go.mod, Cargo.toml; prisma/, drizzle/,
-# alembic/, eas.json, .claude/docs/, docs/tickets/. A folder with no manifest gets only the role packs still off and how to enable one.
+# alembic/, eas.json, .claude/docs/, and specs/TICKETS.md in the repo's state dir (lib/state-dir.sh). A folder with no manifest gets only the role packs still off and how to enable one.
 # Team setup: in a git repo (not $HOME) with no *@harness: false in its settings, SessionStart merges the kit
 # marketplace, dev@harness and the packs below into .claude/settings.json, copies core's rules the repo and the
 # user config both lack into .claude/rules/ (a plugin cannot ship always-loaded rules), and leaves both uncommitted.
@@ -23,7 +23,8 @@ command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
 
 # -I: the cwd is an untrusted repo, so its json.py or PYTHON* env must never load into this hook.
-HOOK_INPUT="$INPUT" RULES_DIR="$(dirname "${BASH_SOURCE[0]}")/../rules" python3 -I - <<'PY'
+HOOK_INPUT="$INPUT" RULES_DIR="$(dirname "${BASH_SOURCE[0]}")/../rules" \
+  STATE_LIB="$(dirname "${BASH_SOURCE[0]}")/lib/state-dir.sh" python3 -I - <<'PY'
 import glob, json, os, re, subprocess, sys
 
 try:
@@ -405,7 +406,9 @@ if mobile:
     prefer.append("screens → /mobile-feature, releases → /release-checklist")
 if devops:
     prefer.append("CI → /pipeline, images → /container, terraform / k8s / helm → /infra-change")
-if os.path.isdir(at("docs", "tickets")):
+state = subprocess.run(["bash", "-c", '. "$1" && state_dir "$2"', "_", os.environ["STATE_LIB"], top],
+                       capture_output=True, text=True).stdout.strip() if in_git else ""
+if state and os.path.exists(os.path.join(state, "specs", "TICKETS.md")):  # /breakdown and /ticket write it
     prefer.append("tracker work → /ticket <id>")
 
 kind = ", ".join(stack + (["AI assistant"] if ai else []) + db) or "unrecognised stack"

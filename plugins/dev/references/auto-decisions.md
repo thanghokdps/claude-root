@@ -24,7 +24,7 @@ Cost: one sonnet call per option per choice; on a hard-gate choice, one more son
 
 ## Format
 
-In `docs/tickets/<id>/plan.md` for a ticket, the plan's § Decisions for `/feature`, else the **Decided for you** list at the end of the reply:
+In `specs/<id>-<slug>/plan.md` (the repo's state dir, never committed; copied into the PR description) for a ticket, the plan's § Decisions for `/feature`, else the **Decided for you** list at the end of the reply:
 
 ```markdown
 ## Auto decisions

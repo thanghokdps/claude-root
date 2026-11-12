@@ -18,6 +18,19 @@ state_dir() {
     "$(printf '%s' "$real" | shasum | cut -c1-8)"
 }
 
+# ticket_dir <dir>: the contract folder (/ticket) of the branch <type>/<id>-<slug> checked out at <dir>:
+# specs/<id>-<slug>/ in the state dir, else specs/<id>[-_]*/ or specs/<id>/. Fails off a ticket branch or with no folder.
+ticket_dir() {
+  local branch state d
+  branch=$(git -C "$1" symbolic-ref --short HEAD 2>/dev/null) || return 1
+  [[ $branch =~ ^[A-Za-z0-9_.-]+/([A-Za-z]+-[0-9]+|[0-9]+)([-_]|$) ]] || return 1
+  state=$(state_dir "$1") || return 1
+  for d in "$state/specs/${branch#*/}" "$state/specs/${BASH_REMATCH[1]}"[-_]* "$state/specs/${BASH_REMATCH[1]}"; do
+    [ -d "$d" ] && printf '%s\n' "$d" && return 0
+  done
+  return 1
+}
+
 # handoff_file <dir>: per checkout, since parallel worktree sessions share the state dir:
 # specs/HANDOFF.md for the main checkout, specs/HANDOFF-<worktree folder>.md for a linked worktree.
 handoff_file() {

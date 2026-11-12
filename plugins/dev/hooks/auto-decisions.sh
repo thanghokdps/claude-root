@@ -2,13 +2,14 @@
 # auto-decisions.sh — on a high-risk ticket worked without the user (auto mode), every choice Claude made for
 # the user is written down and argued against before the session stops.
 # Trigger: Stop. Applies when permission_mode is auto or bypassPermissions (or CLAUDE_AUTO_DECISIONS=1), the
-# branch is <type>/<id>-<slug> and docs/tickets/<id>/plan.md says `Risk: high`. Blocks the stop once when
+# branch is <type>/<id>-<slug> and the ticket's plan.md (specs/<id>-<slug>/ in the repo's state dir, lib/state-dir.sh
+# ticket_dir) says `Risk: high`. Blocks the stop once when
 # plan.md has no `## Auto decisions` section, or an entry in it has no `challenged:` part. An entry
 # `- none: <why>` records that every choice was the user's. Format: ${CLAUDE_PLUGIN_ROOT}/references/auto-decisions.md
 command -v python3 >/dev/null 2>&1 || exit 0
 INPUT="$(cat)"
 
-HOOK_INPUT="$INPUT" python3 -I - <<'PY'
+HOOK_INPUT="$INPUT" STATE_LIB="$(dirname "$0")/lib/state-dir.sh" python3 -I - <<'PY'
 import json, os, re, subprocess, sys
 
 try:
@@ -21,16 +22,11 @@ if not auto or ev.get("stop_hook_active"):
 cwd = ev.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
 
 
-def git(*args):
-    r = subprocess.run(["git", "-C", cwd, *args], capture_output=True, text=True)
-    return r.stdout.strip() if r.returncode == 0 else ""
-
-
-branch, top = git("symbolic-ref", "--short", "HEAD"), git("rev-parse", "--show-toplevel")
-m = re.match(r"^[\w.-]+/([A-Za-z]+-\d+|\d+)(?:[-_]|$)", branch)
-if not m or not top:
+r = subprocess.run(["bash", "-c", '. "$1" && ticket_dir "$2"', "_", os.environ["STATE_LIB"], cwd],
+                   capture_output=True, text=True)
+if not r.stdout.strip():
     sys.exit(0)
-plan_path = os.path.join(top, "docs", "tickets", m.group(1), "plan.md")
+plan_path = os.path.join(r.stdout.strip(), "plan.md")
 try:
     plan = open(plan_path, encoding="utf-8").read()
 except OSError:
@@ -49,9 +45,8 @@ else:
         problem = f"has {len(open_)} auto decision(s) without a `challenged:` result, e.g. “{open_[0][:80]}”"
 if not problem:
     sys.exit(0)
-rel = os.path.relpath(plan_path, top)
 print(json.dumps({"decision": "block", "reason": (
-    f"auto-decisions: this is a Risk: high ticket worked in auto mode, and {rel} {problem}. "
+    f"auto-decisions: this is a Risk: high ticket worked in auto mode, and {plan_path} {problem}. "
     "For each choice the user did not make, run the debate in the dev plugin's references/auto-decisions.md "
     "(one sonnet advocate per option, a rebuttal round and an opus red team on hard gates), then record "
     "`- <decision> · options: … · chose … because … · challenged: <best counter-argument> → kept | switched "

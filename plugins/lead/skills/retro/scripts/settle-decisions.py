@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Settle the decisions agents made for the user against what git did with them afterwards.
 
-Reads every agent decision committed in docs/tickets/<id>/plan.md (§ Auto decisions) and
-spec.md (`(agent)` lines), finds the commit that recorded it, and looks at the later commits
-on the files its `revert:` names:
+Reads every agent decision in a ticket's contract, specs/<id>-<slug>/plan.md (§ Auto decisions) and
+spec.md (`(agent)` lines) in the repo's personal state dir (never committed), finds the ticket's
+first commit (subject ending `(#<id>)`), and looks at the later commits on the files its `revert:` names:
   reverted  a later commit's subject starts with "revert"
   changed   a later commit's subject starts with "fix"
   kept      neither, and the decision is at least --min-days old
@@ -13,6 +13,7 @@ Prints one JSON object per line. Usage: settle-decisions.py [repo] [--min-days N
 (--all also prints pending ones). Read-only.
 """
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -22,11 +23,36 @@ import time
 
 LEDGER = os.path.join(".claude", "docs", "decisions.md")
 PATH_RE = re.compile(r"[\w.@-]+(?:/[\w.@-]+)+|[\w-]+\.[A-Za-z]{1,5}\b")
+TICKET_RE = re.compile(r"^([A-Za-z]+-\d+|\d+)(?:[-_]|$)")
 
 
 def git(repo, *args):
     r = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True)
     return r.stdout.strip() if r.returncode == 0 else ""
+
+
+def specs_dir(repo):
+    """<state>/specs: the same path as core's hooks/lib/state-dir.sh, keyed by the resolved git common dir."""
+    real = os.path.realpath(git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
+    data = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
+    name = os.path.basename(os.path.dirname(real)) + "-" + hashlib.sha1(real.encode()).hexdigest()[:8]
+    return os.path.join(data, "claude-harness", "repos", name, "specs")
+
+
+def contracts(specs):
+    """(ticket id, path) of every plan.md / spec.md in a ticket's contract folder."""
+    try:
+        folders = sorted(os.listdir(specs))
+    except OSError:
+        return []
+    found = []
+    for folder in folders:
+        m = TICKET_RE.match(folder)
+        if not m or not os.path.isdir(os.path.join(specs, folder)):
+            continue
+        names = os.listdir(os.path.join(specs, folder))  # exact case: a feature's PLAN.md is not a contract
+        found += [(m.group(1), os.path.join(specs, folder, n)) for n in ("plan.md", "spec.md") if n in names]
+    return found
 
 
 def decision_lines(text, name):
@@ -48,30 +74,31 @@ def revert_paths(repo, decision):
     return paths
 
 
-def settle(repo, ticket, rel, decision, min_days, now):
+def settle(repo, ticket, path, decision, min_days, now):
     head = decision.split(" · ")[0].strip()
     key = f"[{ticket}] {head}"
-    first = git(repo, "log", "--reverse", "--format=%H %ct", "-S", decision[:120], "--", rel).splitlines()
+    own = f"(#{ticket})"
+    first = git(repo, "log", "--reverse", "--format=%H %ct", "--fixed-strings", f"--grep={own}").splitlines()
     if not first:
-        return None
+        return None  # the ticket has no commit yet: nothing to settle against
     sha, when = first[0].split()
-    row = {"ticket": ticket, "file": rel, "key": key, "decision": decision, "since": sha[:7], "evidence": []}
+    row = {"ticket": ticket, "file": path, "key": key, "decision": decision, "since": sha[:7], "evidence": []}
     paths = revert_paths(repo, decision)
     if not paths:
         return {**row, "status": "unreadable", "why": "revert: names no file in the repo"}
-    # shortcut: commits that also touch the ticket's own docs count as its build, not a later
-    # change; a squash merge keeps it right, a ticket fixed later without its docs is missed.
-    own = f"docs/tickets/{ticket}/"
-    log = git(repo, "log", "--format=%x1e%H%x09%s", "--name-only", f"{sha}..HEAD", "--", *paths, own)
+    # shortcut: commits whose subject carries the ticket's `(#<id>)` count as its build, not a later
+    # change; a squash merge keeps it right, a later fix that reuses the ticket's tag is missed.
+    log = git(repo, "log", "--format=%x1e%H%x09%s", f"{sha}..HEAD", "--", *paths)
     status = None
     for block in log.split("\x1e"):
         lines = [x for x in block.splitlines() if x.strip()]
         if not lines or "\t" not in lines[0]:
             continue
         csha, subject = lines[0].split("\t", 1)
-        if any(f.startswith(own) for f in lines[1:]):
+        reverted = re.match(r"(?i)revert\b", subject)  # git revert keeps the reverted subject, `(#<id>)` included
+        if own in subject and not reverted:
             continue
-        kind = "reverted" if re.match(r"(?i)revert\b", subject) else "changed" if re.match(r"(?i)fix\b", subject) else None
+        kind = "reverted" if reverted else "changed" if re.match(r"(?i)fix\b", subject) else None
         if kind:
             row["evidence"].append({"sha": csha[:7], "subject": subject})
             status = "reverted" if "reverted" in (status, kind) else kind
@@ -96,11 +123,10 @@ def main(argv):
     except OSError:
         settled = ""
     now = int(time.time())
-    for rel in git(top, "ls-files", "docs/tickets/*/plan.md", "docs/tickets/*/spec.md").splitlines():
-        ticket = rel.split("/")[2]
-        text = open(os.path.join(top, rel), encoding="utf-8").read()
-        for decision in decision_lines(text, os.path.basename(rel)):
-            row = settle(top, ticket, rel, decision, opts.min_days, now)
+    for ticket, path in contracts(specs_dir(top)):
+        text = open(path, encoding="utf-8").read()
+        for decision in decision_lines(text, os.path.basename(path)):
+            row = settle(top, ticket, path, decision, opts.min_days, now)
             if not row or f" · {row['key']} · " in settled:
                 continue
             if row["status"] != "pending" or opts.all:

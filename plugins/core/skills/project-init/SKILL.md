@@ -266,7 +266,7 @@ For small fixes, chores, single-file changes.
 
 Add more skills if the project's workflow warrants it:
 
-- Team uses a ticket system → no project skill: `/ticket` (dev, if installed) writes each ticket's contract to `docs/tickets/<id>/`
+- Team uses a ticket system → no project skill: `/ticket` (dev, if installed) writes each ticket's contract to the personal `specs/<id>-<slug>/`, outside the repo
 - Has staging deploys → `skills/deploy/SKILL.md`
 - Has DB migrations → no project skill: `/db-change` (backend, if installed) and `/write-migration` (ship) cover them; put the repo's migration commands in `docs/stack.md`
 - Is a monorepo → `skills/add-package/SKILL.md`
