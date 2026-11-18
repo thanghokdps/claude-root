@@ -1,0 +1,23 @@
+{
+  "skill": "worklog",
+  "positive": [
+    {
+      "prompt": "what are the other sessions on this repo doing right now, show the work log",
+      "top_k": 3
+    },
+    {
+      "prompt": "leave a note in the work log for the other sessions that inJson moved to db/fragments",
+      "top_k": 3
+    },
+    {
+      "prompt": "is another session already editing this file or writing this helper",
+      "top_k": 3
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "summarize what's been done and write the handoff before I end this session",
+      "owner": "compact"
+    }
+  ]
+}

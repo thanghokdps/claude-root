@@ -51,6 +51,7 @@ python3 scripts/test_blast_radius_check.py
 python3 scripts/test_headroom_compress.py
 python3 scripts/test_risk_corroboration.py
 python3 scripts/test_notify_on_finish.py
+python3 scripts/test_worklog.py
 python3 scripts/test_agent_progress.py
 python3 scripts/test_statusline.py
 python3 scripts/test_sync_team.py
