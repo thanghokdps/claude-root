@@ -48,7 +48,7 @@ A **source library** and the `harness` marketplace of role plugins. `claude plug
     reverse     domain pack: reverse-engineer-anything (vendored from morluto/rea) + the `rea` MCP server   → progress
                 a domain pack = a plugin folder + its detect condition in core's repo-profile.sh + install.sh's off list
     lead        retro diagnose-session writing-skills                                 → core
-    guards      hooks/hooks.json + hook scripts (opt-in)                              → dev
+    guards      hooks/hooks.json + hook scripts (opt-in) + worklog (the work log parallel sessions on one clone share) → dev
     harness     bundle of the eight process plugins — never the packs (frontend, backend, mobile, devops, ai, workplace, reverse): a bundle
                 dependency cannot be disabled, so it could not stay off at user scope
   global/CLAUDE.md    ← installed to ~/.claude/CLAUDE.md
